@@ -1,0 +1,5 @@
+{
+  "packageManager": "python",
+  "packageName": "xautoml",
+  "uninstallInstructions": "Use your Python package manager (pip, conda, etc.) to uninstall the package xautoml"
+}
