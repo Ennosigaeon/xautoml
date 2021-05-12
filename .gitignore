@@ -1,23 +1,14 @@
-*.egg-info
-
-/lib
-
-# dependencies
-/node_modules
-
-# testing
 /coverage
-
-# production
 /build
-
-# misc
 .DS_Store
 .env
 npm-debug.log
-
-
 /.idea
 /xautoml/labextension/
 /jupyter-config/
+*.bundle.*
+lib/
+node_modules/
+*.egg-info/
+.ipynb_checkpoints
 *.tsbuildinfo
