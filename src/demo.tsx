@@ -1,38 +1,41 @@
 import React from "react";
 import {ReactWidget} from "@jupyterlab/apputils";
+import {IRenderMime} from "@jupyterlab/rendermime-interfaces";
+import {requestAPI} from "./handler";
 
 class SearchSettings {
     constructor(public filterText: string, public availableOnly: boolean) {
     }
 }
 
-interface FilterableProductTableState {
-    searchSettings: SearchSettings
+interface FilterableProductProps {
     products: Product[]
 }
 
-class FilterableProductTable extends React.Component<{}, FilterableProductTableState> {
+interface FilterableProductTableState {
+    searchSettings: SearchSettings
+    message: String
+}
+
+class FilterableProductTable extends React.Component<FilterableProductProps, FilterableProductTableState> {
 
     constructor(props: any) {
         super(props);
 
         this.state = {
             searchSettings: new SearchSettings('', false),
-            products: []
+            message: undefined
         }
     }
 
     componentDidMount() {
-        this.setState({
-            products: [
-                {category: 'Sporting Goods', price: '$49.99', available: true, name: 'Football'},
-                {category: 'Sporting Goods', price: '$9.99', available: true, name: 'Baseball'},
-                {category: 'Sporting Goods', price: '$29.99', available: false, name: 'Basketball'},
-                {category: 'Electronics', price: '$99.99', available: true, name: 'iPod Touch'},
-                {category: 'Electronics', price: '$399.99', available: false, name: 'iPhone 5'},
-                {category: 'Electronics', price: '$199.99', available: true, name: 'Nexus 7'}
-            ]
-        })
+        requestAPI<any>('get_example')
+            .then(data => {
+                this.setState({message: data["data"]})
+            })
+            .catch(reason => {
+                this.setState({message: `The xautoml server extension appears to be missing.\n${reason}`})
+            });
     }
 
     handleSearchSettingsChange(searchSettings: SearchSettings) {
@@ -42,13 +45,16 @@ class FilterableProductTable extends React.Component<{}, FilterableProductTableS
     }
 
     render() {
-        return (
-            <>
+        if (this.state.message !== undefined) {
+            return (<>
+                <p>{this.state.message}</p>
                 <SearchBar searchSettings={this.state.searchSettings}
                            onSettingsChange={(e) => this.handleSearchSettingsChange(e)}/>
-                <ProductTable products={this.state.products} searchSettings={this.state.searchSettings}/>
-            </>
-        )
+                <ProductTable products={this.props.products} searchSettings={this.state.searchSettings}/>
+            </>)
+        } else {
+            return (<p>Loading...</p>)
+        }
     }
 }
 
@@ -157,13 +163,34 @@ class ProductRow extends React.Component<ProductRowProps> {
     }
 }
 
-export class DemoWidget extends ReactWidget {
+/**
+ * The class name added to the extension.
+ */
+const CLASS_NAME = 'mimerenderer-xautoml';
 
-    constructor() {
+/**
+ * A widget for rendering application/xautoml.
+ */
+export class OutputWidget extends ReactWidget implements IRenderMime.IRenderer {
+    private readonly _mimeType: string;
+    private data: Product[] = undefined;
+
+    constructor(options: IRenderMime.IRendererOptions) {
         super();
+        this._mimeType = options.mimeType;
+        this.addClass(CLASS_NAME);
     }
 
-    render(): JSX.Element {
-        return <FilterableProductTable/>;
+    renderModel(model: IRenderMime.IMimeModel): Promise<void> {
+        // TODO model.data cast is not typesafe
+        this.data = model.data[this._mimeType] as unknown as Product[];
+
+        // Trigger call of render().
+        this.onUpdateRequest(undefined);
+        return this.renderPromise;
+    }
+
+    protected render() {
+        return <FilterableProductTable products={this.data}/>
     }
 }

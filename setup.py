@@ -23,9 +23,9 @@ labext_name = "xautoml"
 
 data_files_spec = [
     ("share/jupyter/labextensions/%s" % labext_name, str(lab_path), "**"),
-    ("share/jupyter/labextensions/%s" % labext_name, str(HERE), "install.json"),("etc/jupyter/jupyter_server_config.d",
-     "jupyter-config", "xautoml.json"),
-    
+    ("share/jupyter/labextensions/%s" % labext_name, str(HERE), "install.json"), ("etc/jupyter/jupyter_server_config.d",
+                                                                                  "jupyter-config", "xautoml.json"),
+
 ]
 
 long_description = (HERE / "README.md").read_text()
@@ -45,7 +45,7 @@ setup_args = dict(
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(),
     install_requires=[
-        "jupyter_server>=1.6,<2"
+        "jupyterlab~=3.0",
     ],
     zip_safe=False,
     include_package_data=True,
@@ -70,6 +70,7 @@ try:
         npm_builder,
         get_data_files
     )
+
     post_develop = npm_builder(
         build_cmd="install:extension", source_dir="src", build_dir=lab_path
     )
