@@ -1,90 +1,8 @@
 import React from "react";
 import {ReactWidget} from "@jupyterlab/apputils";
 import {IRenderMime} from "@jupyterlab/rendermime-interfaces";
-import {requestAPI} from "./handler";
 
-class SearchSettings {
-    constructor(public filterText: string, public availableOnly: boolean) {
-    }
-}
-
-interface FilterableProductProps {
-    products: Product[]
-}
-
-interface FilterableProductTableState {
-    searchSettings: SearchSettings
-    message: String
-}
-
-class FilterableProductTable extends React.Component<FilterableProductProps, FilterableProductTableState> {
-
-    constructor(props: any) {
-        super(props);
-
-        this.state = {
-            searchSettings: new SearchSettings('', false),
-            message: undefined
-        }
-    }
-
-    componentDidMount() {
-        requestAPI<any>('get_example')
-            .then(data => {
-                this.setState({message: data["data"]})
-            })
-            .catch(reason => {
-                this.setState({message: `The xautoml server extension appears to be missing.\n${reason}`})
-            });
-    }
-
-    handleSearchSettingsChange(searchSettings: SearchSettings) {
-        this.setState({
-            searchSettings: searchSettings
-        });
-    }
-
-    render() {
-        if (this.state.message !== undefined) {
-            return (<>
-                <p>{this.state.message}</p>
-                <SearchBar searchSettings={this.state.searchSettings}
-                           onSettingsChange={(e) => this.handleSearchSettingsChange(e)}/>
-                <ProductTable products={this.props.products} searchSettings={this.state.searchSettings}/>
-            </>)
-        } else {
-            return (<p>Loading...</p>)
-        }
-    }
-}
-
-interface SearchBarProps {
-    searchSettings: SearchSettings,
-    onSettingsChange: (settings: SearchSettings) => void
-}
-
-class SearchBar extends React.Component<SearchBarProps> {
-
-    render() {
-        return (
-            <div>
-                <input type="text" placeholder="Search..." value={this.props.searchSettings.filterText}
-                       onChange={event => {
-                           this.props.searchSettings.filterText = event.target.value;
-                           this.props.onSettingsChange(this.props.searchSettings)
-                       }}/>
-                <div>
-                    <input type="checkbox" id="stock" checked={this.props.searchSettings.availableOnly}
-                           onChange={event => {
-                               this.props.searchSettings.availableOnly = event.target.checked;
-                               this.props.onSettingsChange(this.props.searchSettings)
-                           }}/>
-                    <label htmlFor="stock">Only show products in stock</label>
-                </div>
-            </div>
-        );
-    }
-}
+import * as d3 from "d3"
 
 interface Product {
     name: string
@@ -93,72 +11,57 @@ interface Product {
     available: boolean
 }
 
-interface ProductTableProps {
-    products: Product[]
-    searchSettings: SearchSettings
+interface CirclesProps {
+    count?: number
 }
 
-class ProductTable extends React.Component<ProductTableProps> {
-
-    render() {
-        let lastCategory: string = null
-        const rows: React.ReactNode[] = []
-
-        this.props.products.forEach((product) => {
-            if (product.name.indexOf(this.props.searchSettings.filterText) === -1 ||
-                (this.props.searchSettings.availableOnly && !product.available)) {
-                return;
-            }
-            if (product.category !== lastCategory) {
-                rows.push(<ProductCategoryRow category={product.category}/>)
-                lastCategory = product.category
-            }
-            rows.push(<ProductRow product={product}/>)
-        });
-
-        return (
-            <table>
-                <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Price</th>
-                </tr>
-                </thead>
-                <tbody>{rows}</tbody>
-            </table>
-        )
-    }
+interface CirclesState {
+    positions: number[][]
 }
 
-interface ProductCategoryRowProps {
-    category: string
-}
+class Circles extends React.Component<CirclesProps, CirclesState> {
 
-class ProductCategoryRow extends React.Component<ProductCategoryRowProps> {
+    private timerId: number;
+    private readonly svgRef: React.RefObject<any>
 
-    render() {
-        return (
-            <tr key={this.props.category}>
-                <td colSpan={2}>{this.props.category}</td>
-            </tr>
-        )
+    static defaultProps = {
+        count: 10
     }
 
-}
+    constructor(props: any) {
+        super(props);
+        this.svgRef = React.createRef<HTMLOrSVGElement>();
+    }
 
-interface ProductRowProps {
-    product: Product
-}
+    private generateDataset() {
+        const positions: number[][] = Array.from(Array(this.props.count).keys()).map(_ =>
+            [Math.random(), Math.random()]
+        );
+        this.setState({positions: positions})
+    }
 
-class ProductRow extends React.Component<ProductRowProps> {
+    componentDidMount() {
+        this.generateDataset()
+        this.timerId = setInterval(() => this.generateDataset(), 2000);
+    }
+
+    componentDidUpdate(prevProps: Readonly<CirclesProps>, prevState: Readonly<CirclesState>, snapshot?: any) {
+        const svgElement = d3.select(this.svgRef.current)
+        svgElement.selectAll('circle')
+            .data(this.state.positions)
+            .join('circle')
+            .attr("cx", d => `${d[0] * 100}%`)
+            .attr("cy", d => `${d[1] * 100}%`)
+            .attr("r", 3)
+    }
+
+    componentWillUnmount() {
+        clearInterval(this.timerId);
+    }
 
     render() {
         return (
-            <tr style={{color: this.props.product.available ? "" : "red"}}
-                key={`${this.props.product.category}_${this.props.product.name}`}>
-                <td>{this.props.product.name}</td>
-                <td>{this.props.product.price}</td>
-            </tr>
+            <svg style={{border: "2px solid gold"}} ref={this.svgRef}/>
         )
     }
 }
@@ -191,6 +94,6 @@ export class OutputWidget extends ReactWidget implements IRenderMime.IRenderer {
     }
 
     protected render() {
-        return <FilterableProductTable products={this.data}/>
+        return <Circles/>
     }
 }
