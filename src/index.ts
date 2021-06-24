@@ -1,7 +1,7 @@
 import {IRenderMime} from '@jupyterlab/rendermime-interfaces';
 import {OutputWidget} from "./demo";
 
-const MIME_TYPE = 'application/xautoml';
+const MIME_TYPE = 'application/xautoml+json';
 export const rendererFactory: IRenderMime.IRendererFactory = {
     safe: true,
     mimeTypes: [MIME_TYPE],

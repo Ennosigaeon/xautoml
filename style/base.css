@@ -7,3 +7,29 @@
   justify-content: center;
   text-align: center;
 }
+
+.base-container {
+    display: block;
+    width: 99%;
+    border: 2px solid gold;
+    font: 10px sans-serif;
+    user-select: none;
+}
+
+.node circle {
+  fill: #fff;
+  stroke: steelblue;
+  stroke-width: 3px;
+  cursor: pointer;
+}
+
+.node text {
+  font: 12px sans-serif;
+  text-anchor: start;
+}
+
+.link {
+  fill: none;
+  stroke: #ccc;
+  stroke-width: 2px;
+}
