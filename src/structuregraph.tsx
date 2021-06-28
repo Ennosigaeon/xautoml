@@ -1,41 +1,118 @@
 import React from "react";
 import * as d3 from "d3";
-import {BaseType, HierarchyNode, HierarchyPointNode, TreeLayout} from "d3";
+import {HierarchyNode, HierarchyPointNode, TreeLayout} from "d3";
+import {Animate} from "react-move";
+import {easeExpInOut} from "d3-ease";
 
 interface StructureGraphProps {
-    data: StructureGraphPayload
+    data: StructureGraphPayload;
 }
 
 interface StructureGraphState {
-    loaded: boolean;
+    nodes: CollapsibleHierarchyPointNode<StructureGraphPayload>;
+    source: CollapsibleHierarchyPointNode<StructureGraphPayload>;
 }
 
 interface CollapsibleHierarchyNode<Datum> extends HierarchyNode<Datum> {
-    x0?: number;
-    y0?: number;
     _children?: this[];
 }
 
 interface CollapsibleHierarchyPointNode<Datum> extends HierarchyPointNode<Datum> {
-    x0?: number;
-    y0?: number;
     _children?: this[];
 }
 
-type SelectionType = d3.Selection<BaseType, CollapsibleHierarchyPointNode<StructureGraphPayload>, BaseType, CollapsibleHierarchyPointNode<StructureGraphPayload>>;
+interface StructureGraphElementProps {
+    source: CollapsibleHierarchyPointNode<StructureGraphPayload>;
+    node: CollapsibleHierarchyPointNode<StructureGraphPayload>;
+    onClickHandler?: (d: CollapsibleHierarchyPointNode<StructureGraphPayload>) => void;
+}
+
+export class StructureGraphNode extends React.Component<StructureGraphElementProps, any> {
+
+    constructor(props: StructureGraphElementProps) {
+        super(props);
+        this.handleClick = this.handleClick.bind(this);
+    }
+
+    private handleClick() {
+        if (this.props.onClickHandler) {
+            this.props.onClickHandler(this.props.node);
+        }
+    }
+
+    render() {
+        const node = this.props.node;
+        const source = this.props.source;
+        const parent = node.parent ? node.parent : source;
+
+        return (
+            <Animate
+                start={{x: parent.x, y: parent.y, opacity: 0, r: 1e-6}}
+                update={{x: [node.x], y: [node.y], opacity: [1], r: [10], timing: {duration: 750, ease: easeExpInOut}}}
+                enter={{x: [node.x], y: [node.y], opacity: [1], r: [10], timing: {duration: 750, ease: easeExpInOut}}}
+            >{({x: x, y: y, opacity: opacity, r: r}) =>
+                <g className={'node'} transform={`translate(${y},${x})`} onClick={this.handleClick}>
+                    <circle r={r} style={{fill: node._children ? "lightsteelblue" : "#fff"}}/>
+                    <text dy={"0.35em"} x={13} opacity={opacity}>{node.data.data.label}</text>
+                </g>
+            }
+            </Animate>
+        )
+    }
+
+}
+
+export class StructureGraphEdge extends React.Component<StructureGraphElementProps, any> {
+
+    constructor(props: StructureGraphElementProps) {
+        super(props);
+    }
+
+    render() {
+        const node = this.props.node;
+        const parent = node.parent ? node.parent : this.props.source;
+
+        return (
+            <Animate
+                start={{
+                    source: {x: parent.x, y: parent.y},
+                    target: {x: parent.x, y: parent.y}
+                }}
+                update={{
+                    source: {x: [parent.x], y: [parent.y]},
+                    target: {x: [node.x], y: [node.y]},
+                    timing: {duration: 750, ease: easeExpInOut}
+                }}
+                enter={{
+                    source: {x: [parent.x], y: [parent.y]},
+                    target: {x: [node.x], y: [node.y]},
+                    timing: {duration: 750, ease: easeExpInOut}
+                }}
+            >{({source: source, target: target}) =>
+                <path className={'link'} d={
+                    d3.linkHorizontal().x(d => d[1]).y(d => d[0])({
+                        source: [source.x, source.y],
+                        target: [target.x, target.y]
+                    })}/>
+            }
+            </Animate>
+        )
+    }
+}
 
 export class StructureGraphComponent extends React.Component<StructureGraphProps, StructureGraphState> {
 
     private readonly containerRef: React.RefObject<SVGSVGElement>;
     private layout: TreeLayout<StructureGraphPayload>;
-    private root: CollapsibleHierarchyNode<StructureGraphPayload>;
-    private margin: number;
+    private readonly margin: number;
 
     constructor(props: StructureGraphProps) {
         super(props);
         this.containerRef = React.createRef<SVGSVGElement>();
         this.margin = 20;
-        this.state = {loaded: false};
+        this.state = {nodes: undefined, source: undefined};
+
+        this.click = this.click.bind(this);
     }
 
     componentDidMount() {
@@ -45,20 +122,13 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
             const height = this.containerRef.current?.getBoundingClientRect().height - 2 * this.margin;
 
             this.layout = d3.tree<StructureGraphPayload>().size([height, width]);
-            this.root = d3.hierarchy(this.props.data, d => d.children);
-            this.root.x0 = height / 2;
-            this.root.y0 = 0;
+            const nodes: CollapsibleHierarchyNode<StructureGraphPayload> = d3.hierarchy(this.props.data, d => d.children);
 
-            StructureGraphComponent.collapseAll(this.root);
+            StructureGraphComponent.collapseAll(nodes);
 
-            this.setState({loaded: true})
+            const root = this.layout(nodes)
+            this.setState({nodes: root, source: root});
         }, 500)
-    }
-
-    componentDidUpdate(prevProps: Readonly<StructureGraphProps>, prevState: Readonly<any>, snapshot?: any) {
-        if (this.state.loaded) {
-            this.renderTree(this.layout(this.root));
-        }
     }
 
     private static collapseAll(d: CollapsibleHierarchyNode<StructureGraphPayload>) {
@@ -81,115 +151,6 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
         }
     }
 
-    private renderTree(source: CollapsibleHierarchyPointNode<StructureGraphPayload>) {
-        const treeData = this.layout(this.root) as CollapsibleHierarchyPointNode<StructureGraphPayload>;
-
-        const duration = 750;
-        const svg = d3.select(this.containerRef.current).select('g');
-
-        const nodes = treeData.descendants() as CollapsibleHierarchyPointNode<StructureGraphPayload>[];
-        const links = treeData.descendants().slice(1) as CollapsibleHierarchyPointNode<StructureGraphPayload>[];
-
-        // Normalize for fixed-depth.
-        nodes.forEach(d => d.y = d.depth * 180);
-
-        // Update the nodes...
-        const node = (svg.selectAll('g.node') as SelectionType)
-            .data(nodes, d => d.data.id);
-
-        // Enter any new nodes at the parent's previous position.
-        const nodeEnter = node.enter().append('g')
-            .attr('class', 'node')
-            .attr("transform", () => `translate(${source.y0},${source.x0})`)
-            .on('click', (event, d) => this.click(d));
-
-        // Add Circle for the nodes
-        nodeEnter.append('circle')
-            .attr('class', 'node')
-            .attr('r', 1e-6)
-            .style("fill", d => d._children ? "lightsteelblue" : "#fff"); // Currently collapsed?
-
-        // Add labels for the nodes
-        nodeEnter.append('text')
-            .attr("dy", ".35em")
-            .attr("x", 13)
-            .text(d => d.data.data.label);
-
-
-        // UPDATE
-        // @ts-ignore
-        const nodeUpdate = nodeEnter.merge(node);
-
-        // Transition to the proper position for the node
-        nodeUpdate.transition()
-            .duration(duration)
-            .attr("transform", d => `translate(${d.y},${d.x})`);
-
-        // Update the node attributes and style
-        nodeUpdate.select('circle.node')
-            .attr('r', 10)
-            .style("fill", d => d._children ? "lightsteelblue" : "#fff") // Currently collapsed?
-            .attr('cursor', 'pointer');
-
-        // Remove any exiting nodes
-        const nodeExit = node.exit().transition()
-            .duration(duration)
-            .attr("transform", () => `translate(${source.y},${source.x})`)
-            .remove();
-
-        // On exit reduce the node circles size to 0
-        nodeExit.select('circle')
-            .attr('r', 1e-6);
-
-        // On exit reduce the opacity of text labels
-        nodeExit.select('text')
-            .style('fill-opacity', 1e-6);
-
-        // Update the links...
-        const link = (svg.selectAll('path.link') as SelectionType)
-            .data(links, d => d.data.id);
-
-        // Enter any new links at the parent's previous position.
-        const linkEnter = link.enter().insert('path', "g")
-            .attr("class", "link")
-            .attr('d', () =>
-                d3.linkHorizontal().x(d => d[1]).y(d => d[0])({
-                    source: [source.x0, source.y0],
-                    target: [source.x0, source.y0]
-                })
-            );
-
-        // UPDATE
-        // @ts-ignore
-        const linkUpdate = linkEnter.merge(link);
-
-        // Transition back to the parent element position
-        linkUpdate.transition()
-            .duration(duration)
-            .attr('d', d =>
-                d3.linkHorizontal().x(d => d[1]).y(d => d[0])({
-                    source: [d.x, d.y],
-                    target: [d.parent.x, d.parent.y]
-                }));
-
-        // Remove any exiting links
-        link.exit().transition()
-            .duration(duration)
-            .attr('d', () =>
-                d3.linkHorizontal().x(d => d[1]).y(d => d[0])({
-                    source: [source.x, source.y],
-                    target: [source.x, source.y]
-                })
-            )
-            .remove();
-
-        // Store the old positions for transition.
-        nodes.forEach(d => {
-            d.x0 = d.x;
-            d.y0 = d.y;
-        });
-    }
-
     private click(node: CollapsibleHierarchyPointNode<StructureGraphPayload>) {
         if (!node.children && !node._children) {
             // No children
@@ -202,13 +163,28 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
             node.children = node.children.concat(node._children);
             node._children = [];
         }
-        this.renderTree(node);
+        this.setState({nodes: this.layout(this.state.nodes), source: node});
     }
 
     render() {
+        if (this.state.nodes) {
+            this.state.nodes.x = (this.containerRef.current?.getBoundingClientRect().height - 2 * this.margin) / 2;
+            this.state.nodes.y = 0;
+        }
+        const nodes = this.state.nodes ? (this.state.nodes.descendants() as CollapsibleHierarchyPointNode<StructureGraphPayload>[])
+            .map(d => {
+                // Normalize for fixed-depth.
+                d.y = d.depth * 180;
+                return d
+            }) : [];
+
         return (
-            <svg className={'base-container'} style={{"minHeight": "640px"}} ref={this.containerRef}>
-                <g transform={`translate(${this.margin},${this.margin})`}/>
+            <svg className={'base-container'} ref={this.containerRef}>
+                {this.state.nodes && <g transform={`translate(${this.margin},${this.margin})`}>
+                    {nodes.map(d => <StructureGraphEdge key={d.data.id} source={this.state.nodes} node={d}/>)}
+                    {nodes.map(d => <StructureGraphNode key={d.data.id} source={this.state.nodes} node={d}
+                                                        onClickHandler={this.click}/>)}
+                </g>}
             </svg>
         )
     }

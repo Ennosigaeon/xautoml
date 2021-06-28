@@ -1,11 +1,11 @@
 .jp-ReactWidget {
-  color: var(--jp-ui-font-color1);
-  background: var(--jp-layout-color1);
-  font-size: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
+    color: var(--jp-ui-font-color1);
+    background: var(--jp-layout-color1);
+    font-size: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
 }
 
 .base-container {
@@ -14,22 +14,24 @@
     border: 2px solid gold;
     font: 10px sans-serif;
     user-select: none;
+    min-height: 640px;
 }
 
 .node circle {
-  fill: #fff;
-  stroke: steelblue;
-  stroke-width: 3px;
-  cursor: pointer;
+    fill: #fff;
+    stroke: steelblue;
+    stroke-width: 3px;
+    cursor: pointer;
 }
 
 .node text {
-  font: 12px sans-serif;
-  text-anchor: start;
+    font: 12px sans-serif;
+    text-anchor: start;
+    fill-opacity: 1;
 }
 
 .link {
-  fill: none;
-  stroke: #ccc;
-  stroke-width: 2px;
+    fill: none;
+    stroke: #ccc;
+    stroke-width: 2px;
 }
