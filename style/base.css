@@ -14,7 +14,6 @@
     border: 2px solid gold;
     font: 10px sans-serif;
     user-select: none;
-    min-height: 640px;
 }
 
 .node circle {

@@ -42,8 +42,7 @@ export class StructureGraphNode extends React.Component<StructureGraphElementPro
 
     render() {
         const node = this.props.node;
-        const source = this.props.source;
-        const parent = node.parent ? node.parent : source;
+        const parent = node.parent ? node.parent : this.props.source;
 
         return (
             <Animate
@@ -103,13 +102,16 @@ export class StructureGraphEdge extends React.Component<StructureGraphElementPro
 export class StructureGraphComponent extends React.Component<StructureGraphProps, StructureGraphState> {
 
     private readonly containerRef: React.RefObject<SVGSVGElement>;
-    private layout: TreeLayout<StructureGraphPayload>;
+    private readonly layout: TreeLayout<StructureGraphPayload>;
     private readonly margin: number;
+    private readonly nodeHeight: number;
 
     constructor(props: StructureGraphProps) {
         super(props);
         this.containerRef = React.createRef<SVGSVGElement>();
         this.margin = 20;
+        this.nodeHeight = 20;
+        this.layout = d3.tree<StructureGraphPayload>().size([1, 1]);
         this.state = {nodes: undefined, source: undefined};
 
         this.click = this.click.bind(this);
@@ -118,12 +120,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
     componentDidMount() {
         // Crude hack to actually wait for base container to be rendered in Jupyter
         window.setTimeout(() => {
-            const width = this.containerRef.current?.getBoundingClientRect().width - 2 * this.margin;
-            const height = this.containerRef.current?.getBoundingClientRect().height - 2 * this.margin;
-
-            this.layout = d3.tree<StructureGraphPayload>().size([height, width]);
             const nodes: CollapsibleHierarchyNode<StructureGraphPayload> = d3.hierarchy(this.props.data, d => d.children);
-
             StructureGraphComponent.collapseAll(nodes);
 
             const root = this.layout(nodes)
@@ -166,16 +163,34 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
         this.setState({nodes: this.layout(this.state.nodes), source: node});
     }
 
-    render() {
-        if (this.state.nodes) {
-            this.state.nodes.x = (this.containerRef.current?.getBoundingClientRect().height - 2 * this.margin) / 2;
-            this.state.nodes.y = 0;
+    private calculateHeight(root: CollapsibleHierarchyNode<StructureGraphPayload>): number {
+        if (!root) {
+            return 100;
         }
+
+        const nodeCount = new Array<number>(Math.max(...root.descendants().map(d => d.depth)) + 1).fill(0);
+        root.descendants().map(d => nodeCount[d.depth]++);
+        const maxNodes = Math.max(...nodeCount);
+        return this.nodeHeight * maxNodes + 2 * this.margin;
+    }
+
+    render() {
+        const newHeight = this.calculateHeight(this.state.nodes);
+        const currentHeight = this.containerRef.current ?
+            Number.parseFloat(this.containerRef.current.getAttribute('height')) : 100;
+        if (currentHeight > newHeight) {
+            window.setTimeout(() => {
+                this.containerRef.current.setAttribute('height', newHeight.toString());
+            }, 500);
+        } else {
+            this.containerRef.current?.setAttribute('height', newHeight.toString());
+        }
+
         const nodes = this.state.nodes ? (this.state.nodes.descendants() as CollapsibleHierarchyPointNode<StructureGraphPayload>[])
             .map(d => {
-                // Normalize for fixed-depth.
                 d.y = d.depth * 180;
-                return d
+                d.x = d.x * (newHeight - 2 * this.margin);
+                return d;
             }) : [];
 
         return (
