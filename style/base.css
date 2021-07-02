@@ -27,10 +27,11 @@
     border-radius: 5px;
     padding: 2px 5px;
     font-size: 8px;
+    border: 1px solid black;
 }
 
 .node-content.selected {
-    border: 2px solid black;
+    border: 3px solid black;
 }
 
 .node-content.node-duplicate {
@@ -59,4 +60,8 @@
     fill: none;
     stroke: #ccc;
     stroke-width: 2px;
+}
+
+.link.selected {
+    stroke-width: 5px;
 }

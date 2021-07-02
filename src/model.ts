@@ -36,11 +36,12 @@ export class StructureGraphNode {
             graphNode.children?.map(d => StructureGraphNode.fromJson(d)))
     }
 
-    getDetails(key ?: string): NodeDetails {
-        if (!key) {
-            key = Array.from(this.details.keys()).sort((a, b) => a.localeCompare(b)).slice(-1)[0]
-        }
+    getDetails(key: string): NodeDetails {
         return this.details.get(key)
+    }
+
+    shouldDisplay(key: string) {
+        return this.details.has(key);
     }
 }
 

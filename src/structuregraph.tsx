@@ -4,6 +4,8 @@ import {HierarchyNode, HierarchyPointNode, TreeLayout} from "d3";
 import {Animate} from "react-move";
 import {easeExpInOut} from "d3-ease";
 import {NodeDetails, StructureGraphNode} from "./model";
+import Slider from 'rc-slider';
+import 'rc-slider/assets/index.css';
 
 interface StructureGraphProps {
     data: StructureGraphNode;
@@ -12,6 +14,8 @@ interface StructureGraphProps {
 interface StructureGraphState {
     nodes: CollapsibleHierarchyPointNode<StructureGraphNode>;
     source: CollapsibleHierarchyPointNode<StructureGraphNode>;
+    sliderMarks: { [key: string]: string; };
+    timestamp: string;
 }
 
 interface CollapsibleHierarchyNode<Datum> extends HierarchyNode<Datum> {
@@ -25,10 +29,11 @@ interface CollapsibleHierarchyPointNode<Datum> extends HierarchyPointNode<Datum>
 interface StructureGraphElementProps {
     source: CollapsibleHierarchyPointNode<StructureGraphNode>;
     node: CollapsibleHierarchyPointNode<StructureGraphNode>;
+    timestamp: string;
     onClickHandler?: (d: CollapsibleHierarchyPointNode<StructureGraphNode>) => void;
 }
 
-const NODE_HEIGHT = 60;
+const NODE_HEIGHT = 64;
 const NODE_WIDTH = 175;
 
 class GraphNode extends React.Component<StructureGraphElementProps, any> {
@@ -64,7 +69,7 @@ class GraphNode extends React.Component<StructureGraphElementProps, any> {
         const node = this.props.node;
         const parent = node.parent ? node.parent : this.props.source;
         const data = node.data;
-        const details = data.getDetails();
+        const details = data.getDetails(this.props.timestamp);
 
         const className = GraphNode.determineState(details);
 
@@ -103,7 +108,7 @@ class GraphEdge extends React.Component<StructureGraphElementProps, any> {
     render() {
         const node = this.props.node;
         const parent = node.parent ? node.parent : this.props.source;
-        const details = node.data.getDetails();
+        const details = node.data.getDetails(this.props.timestamp);
 
         return (
             <Animate
@@ -122,7 +127,7 @@ class GraphEdge extends React.Component<StructureGraphElementProps, any> {
                     timing: {duration: 750, ease: easeExpInOut}
                 }}
             >{({source: source, target: target}) =>
-                <path className={'link'} strokeWidth={details.selected ? 3 : 1} d={
+                <path className={details.selected ? 'link selected' : 'link'} d={
                     d3.linkHorizontal().x(d => d[1]).y(d => d[0])({
                         source: [source.x, source.y],
                         target: [target.x, target.y]
@@ -144,34 +149,60 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
         this.containerRef = React.createRef<SVGSVGElement>();
         this.margin = 20;
         this.layout = d3.tree<StructureGraphNode>().size([1, 1]);
-        this.state = {nodes: undefined, source: undefined};
+        this.state = {nodes: undefined, source: undefined, sliderMarks: {}, timestamp: undefined};
 
-        this.click = this.click.bind(this);
+        this.clickNode = this.clickNode.bind(this);
+        this.changeTimestamp = this.changeTimestamp.bind(this);
     }
 
     componentDidMount() {
         // Crude hack to actually wait for base container to be rendered in Jupyter
         window.setTimeout(() => {
             const nodes: CollapsibleHierarchyNode<StructureGraphNode> = d3.hierarchy(this.props.data, d => d.children);
-            StructureGraphComponent.collapseAll(nodes);
+
+            const detailsKeysSet = new Set<string>()
+            nodes.descendants().map(d => Array.from(d.data.details.keys()).forEach(k => detailsKeysSet.add(k)));
+            const detailsKeysArray = Array.from(detailsKeysSet).sort()
+            const detailsKeys: { [key: string]: string; } = {}
+            detailsKeysArray.forEach((k, idx) => detailsKeys[idx] = k)
+            const timestamp = detailsKeysArray.slice(-1)[0]
+
+            StructureGraphComponent.collapseAll(nodes, timestamp);
 
             const root = this.layout(nodes)
-            this.setState({nodes: root, source: root});
+            this.setState({
+                nodes: root,
+                source: root,
+                sliderMarks: detailsKeys,
+                timestamp: timestamp
+            });
         }, 500)
     }
 
-    private static collapseAll(d: CollapsibleHierarchyNode<StructureGraphNode>) {
+    private static collapseAll(d: CollapsibleHierarchyNode<StructureGraphNode>, key: string) {
         if (d.children) {
-            d.children.forEach(d2 => this.collapseAll(d2))
-            StructureGraphComponent.collapseNode(d)
+            d.children.forEach(d2 => this.collapseAll(d2, key))
+            StructureGraphComponent.collapseNode(d, key)
         }
     }
 
-    private static collapseNode(d: CollapsibleHierarchyNode<StructureGraphNode>) {
-        const [unvisited, visited] = d.children.reduce(([unvisited, visited], child) => {
-            const details = child.data.getDetails()
-            return details.failure_message === 'Unvisited' ? [[...unvisited, child], visited] : [unvisited, [...visited, child]];
-        }, [[], []]);
+    private static collapseNode(d: CollapsibleHierarchyNode<StructureGraphNode>, key: string) {
+        const unvisited: CollapsibleHierarchyNode<StructureGraphNode>[] = [];
+        const visited: CollapsibleHierarchyNode<StructureGraphNode>[] = [];
+        // noinspection JSMismatchedCollectionQueryUpdate
+        const hidden: CollapsibleHierarchyNode<StructureGraphNode>[] = [];
+
+        d.children.forEach(child => {
+            const details = child.data.getDetails(key)
+            if (child.data.shouldDisplay(key)) {
+                if (details.failure_message === 'Unvisited' && !details.selected)
+                    unvisited.push(child);
+                else
+                    visited.push(child);
+            } else
+                hidden.push(child);
+        })
+
         d._children = unvisited
         if (visited.length > 0)
             d.children = visited
@@ -179,19 +210,33 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
             d.children = undefined
     }
 
-    private click(node: CollapsibleHierarchyPointNode<StructureGraphNode>) {
+    private clickNode(node: CollapsibleHierarchyPointNode<StructureGraphNode>) {
         if (!node.children && !node._children) {
             // No children
             return;
         } else if (node._children?.length === 0) {
             // Node is expanded
-            StructureGraphComponent.collapseNode(node);
+            StructureGraphComponent.collapseNode(node, this.state.timestamp);
         } else {
             // Node is collapsed
             node.children = node.children ? node.children.concat(node._children) : node._children;
             node._children = [];
         }
         this.setState({nodes: this.layout(this.state.nodes), source: node});
+    }
+
+    private changeTimestamp(v: number) {
+        const timestamp = this.state.sliderMarks[v];
+
+        const nodes: CollapsibleHierarchyNode<StructureGraphNode> = d3.hierarchy(this.props.data, d => d.children);
+        StructureGraphComponent.collapseAll(nodes, timestamp);
+
+        const root = this.layout(nodes)
+        this.setState({
+            nodes: root,
+            source: root,
+            timestamp: timestamp
+        });
     }
 
     private calculateHeight(root: CollapsibleHierarchyNode<StructureGraphNode>): number {
@@ -223,15 +268,24 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
                 d.x = d.x * (newHeight - 2 * this.margin);
                 return d;
             }) : [];
+        const nSteps = Object.keys(this.state.sliderMarks).length - 1;
+        console.log(nSteps)
 
-        return (
+        return <>
             <svg className={'base-container'} ref={this.containerRef}>
                 {this.state.nodes && <g transform={`translate(${this.margin},${this.margin})`}>
-                    {nodes.map(d => <GraphEdge key={d.data.id} source={this.state.nodes} node={d}/>)}
+                    {nodes.map(d => <GraphEdge key={d.data.id} source={this.state.nodes} node={d}
+                                               timestamp={this.state.timestamp}/>)}
                     {nodes.map(d => <GraphNode key={d.data.id} source={this.state.nodes} node={d}
-                                               onClickHandler={this.click}/>)}
+                                               timestamp={this.state.timestamp}
+                                               onClickHandler={this.clickNode}/>)}
                 </g>}
             </svg>
-        )
+            <div style={{margin: '20px'}}>
+                {/* Only display slider when actual data is already loaded*/}
+                {nSteps > 0 && <Slider min={0} max={nSteps} marks={this.state.sliderMarks} defaultValue={nSteps}
+                                       included={false} onAfterChange={this.changeTimestamp}/>}
+            </div>
+        </>
     }
 }
