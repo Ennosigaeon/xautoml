@@ -44,9 +44,29 @@ class GraphNode extends React.Component<StructureGraphElementProps, any> {
         }
     }
 
+    private static determineState(details: NodeDetails) {
+        const selected = details.selected ? 'selected' : ''
+
+        if (!details.failure_message)
+            return selected;
+        if (details.failure_message.startsWith('Duplicate'))
+            return `${selected} node-duplicate`;
+        if (details.failure_message === 'Ineffective')
+            return `${selected} node-duplicate`;
+        if (details.failure_message === 'Crashed')
+            return `${selected} node-crashed`;
+        if (details.failure_message === 'Unvisited')
+            return `${selected} node-unvisited`;
+        return ''
+    }
+
     render() {
         const node = this.props.node;
         const parent = node.parent ? node.parent : this.props.source;
+        const data = node.data;
+        const details = data.getDetails();
+
+        const className = GraphNode.determineState(details);
 
         return (
             <Animate
@@ -55,8 +75,18 @@ class GraphNode extends React.Component<StructureGraphElementProps, any> {
                 enter={{x: [node.x], y: [node.y], opacity: [1], r: [10], timing: {duration: 750, ease: easeExpInOut}}}
             >{({x: x, y: y, opacity: opacity, r: r}) =>
                 <g className={'node'} transform={`translate(${y},${x})`} onClick={this.handleClick}>
-                    <circle r={r} style={{fill: node._children ? "lightsteelblue" : "#fff"}}/>
-                    <text dy={"0.35em"} x={13} opacity={opacity}>{node.data.data.label}</text>
+                    <foreignObject x={0} y={-NODE_HEIGHT / 2} width={NODE_WIDTH} height={NODE_HEIGHT}>
+                        <div className={`node-content ${className}`}>
+                            <h3>{data.label} ({data.id})</h3>
+                            <div className={'node-details'}>
+                                <div>{details.failure_message ? details.failure_message : 'Reward: ' + (details.reward / details.visits).toFixed(3)}</div>
+                                <div>Visits: {details.visits}</div>
+                                {Array.from(details.policy.keys()).map(k =>
+                                    <div key={k}>{`${k}: ${details.policy.get(k).toFixed(3)}`}</div>)
+                                }
+                            </div>
+                        </div>
+                    </foreignObject>
                 </g>
             }
             </Animate>
@@ -73,25 +103,26 @@ class GraphEdge extends React.Component<StructureGraphElementProps, any> {
     render() {
         const node = this.props.node;
         const parent = node.parent ? node.parent : this.props.source;
+        const details = node.data.getDetails();
 
         return (
             <Animate
                 start={{
-                    source: {x: parent.x, y: parent.y},
+                    source: {x: parent.x, y: parent.y + NODE_WIDTH},
                     target: {x: parent.x, y: parent.y}
                 }}
                 update={{
-                    source: {x: [parent.x], y: [parent.y]},
+                    source: {x: [parent.x], y: [parent.y + NODE_WIDTH]},
                     target: {x: [node.x], y: [node.y]},
                     timing: {duration: 750, ease: easeExpInOut}
                 }}
                 enter={{
-                    source: {x: [parent.x], y: [parent.y]},
+                    source: {x: [parent.x], y: [parent.y + NODE_WIDTH]},
                     target: {x: [node.x], y: [node.y]},
                     timing: {duration: 750, ease: easeExpInOut}
                 }}
             >{({source: source, target: target}) =>
-                <path className={'link'} d={
+                <path className={'link'} strokeWidth={details.selected ? 3 : 1} d={
                     d3.linkHorizontal().x(d => d[1]).y(d => d[0])({
                         source: [source.x, source.y],
                         target: [target.x, target.y]

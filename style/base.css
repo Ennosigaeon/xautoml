@@ -16,17 +16,43 @@
     user-select: none;
 }
 
-.node circle {
-    fill: #fff;
-    stroke: steelblue;
-    stroke-width: 3px;
+.node {
     cursor: pointer;
 }
 
-.node text {
-    font: 12px sans-serif;
-    text-anchor: start;
-    fill-opacity: 1;
+.node-content {
+    background-color: green;
+    stroke: steelblue;
+    stroke-width: 3px;
+    border-radius: 5px;
+    padding: 2px 5px;
+    font-size: 8px;
+}
+
+.node-content.selected {
+    border: 2px solid black;
+}
+
+.node-content.node-duplicate {
+    background-color: yellow;
+}
+
+.node-content.node-crashed {
+    background-color: red;
+}
+
+.node-content.node-unvisited {
+    background-color: blue;
+}
+
+.node h3 {
+    margin: 0;
+    padding: 0;
+}
+
+.node-details {
+    display: grid;
+    grid-template-columns: 50% 50%;
 }
 
 .link {
