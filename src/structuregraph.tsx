@@ -3,14 +3,15 @@ import * as d3 from "d3";
 import {HierarchyNode, HierarchyPointNode, TreeLayout} from "d3";
 import {Animate} from "react-move";
 import {easeExpInOut} from "d3-ease";
+import {NodeDetails, StructureGraphNode} from "./model";
 
 interface StructureGraphProps {
-    data: StructureGraphPayload;
+    data: StructureGraphNode;
 }
 
 interface StructureGraphState {
-    nodes: CollapsibleHierarchyPointNode<StructureGraphPayload>;
-    source: CollapsibleHierarchyPointNode<StructureGraphPayload>;
+    nodes: CollapsibleHierarchyPointNode<StructureGraphNode>;
+    source: CollapsibleHierarchyPointNode<StructureGraphNode>;
 }
 
 interface CollapsibleHierarchyNode<Datum> extends HierarchyNode<Datum> {
@@ -22,12 +23,15 @@ interface CollapsibleHierarchyPointNode<Datum> extends HierarchyPointNode<Datum>
 }
 
 interface StructureGraphElementProps {
-    source: CollapsibleHierarchyPointNode<StructureGraphPayload>;
-    node: CollapsibleHierarchyPointNode<StructureGraphPayload>;
-    onClickHandler?: (d: CollapsibleHierarchyPointNode<StructureGraphPayload>) => void;
+    source: CollapsibleHierarchyPointNode<StructureGraphNode>;
+    node: CollapsibleHierarchyPointNode<StructureGraphNode>;
+    onClickHandler?: (d: CollapsibleHierarchyPointNode<StructureGraphNode>) => void;
 }
 
-export class StructureGraphNode extends React.Component<StructureGraphElementProps, any> {
+const NODE_HEIGHT = 60;
+const NODE_WIDTH = 175;
+
+class GraphNode extends React.Component<StructureGraphElementProps, any> {
 
     constructor(props: StructureGraphElementProps) {
         super(props);
@@ -58,10 +62,9 @@ export class StructureGraphNode extends React.Component<StructureGraphElementPro
             </Animate>
         )
     }
-
 }
 
-export class StructureGraphEdge extends React.Component<StructureGraphElementProps, any> {
+class GraphEdge extends React.Component<StructureGraphElementProps, any> {
 
     constructor(props: StructureGraphElementProps) {
         super(props);
@@ -102,16 +105,14 @@ export class StructureGraphEdge extends React.Component<StructureGraphElementPro
 export class StructureGraphComponent extends React.Component<StructureGraphProps, StructureGraphState> {
 
     private readonly containerRef: React.RefObject<SVGSVGElement>;
-    private readonly layout: TreeLayout<StructureGraphPayload>;
+    private readonly layout: TreeLayout<StructureGraphNode>;
     private readonly margin: number;
-    private readonly nodeHeight: number;
 
     constructor(props: StructureGraphProps) {
         super(props);
         this.containerRef = React.createRef<SVGSVGElement>();
         this.margin = 20;
-        this.nodeHeight = 20;
-        this.layout = d3.tree<StructureGraphPayload>().size([1, 1]);
+        this.layout = d3.tree<StructureGraphNode>().size([1, 1]);
         this.state = {nodes: undefined, source: undefined};
 
         this.click = this.click.bind(this);
@@ -120,7 +121,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
     componentDidMount() {
         // Crude hack to actually wait for base container to be rendered in Jupyter
         window.setTimeout(() => {
-            const nodes: CollapsibleHierarchyNode<StructureGraphPayload> = d3.hierarchy(this.props.data, d => d.children);
+            const nodes: CollapsibleHierarchyNode<StructureGraphNode> = d3.hierarchy(this.props.data, d => d.children);
             StructureGraphComponent.collapseAll(nodes);
 
             const root = this.layout(nodes)
@@ -128,27 +129,26 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
         }, 500)
     }
 
-    private static collapseAll(d: CollapsibleHierarchyNode<StructureGraphPayload>) {
+    private static collapseAll(d: CollapsibleHierarchyNode<StructureGraphNode>) {
         if (d.children) {
-            StructureGraphComponent.collapseNode(d)
             d.children.forEach(d2 => this.collapseAll(d2))
+            StructureGraphComponent.collapseNode(d)
         }
     }
 
-    private static collapseNode(d: CollapsibleHierarchyNode<StructureGraphPayload>) {
-        if (d.children) {
-            const [unvisited, visited] = d.children.reduce(([unvisited, visited], child) => {
-                return child.data.data.failure_message === 'Unvisited' ? [[...unvisited, child], visited] : [unvisited, [...visited, child]];
-            }, [[], []]);
-            d._children = unvisited
+    private static collapseNode(d: CollapsibleHierarchyNode<StructureGraphNode>) {
+        const [unvisited, visited] = d.children.reduce(([unvisited, visited], child) => {
+            const details = child.data.getDetails()
+            return details.failure_message === 'Unvisited' ? [[...unvisited, child], visited] : [unvisited, [...visited, child]];
+        }, [[], []]);
+        d._children = unvisited
+        if (visited.length > 0)
             d.children = visited
-        } else {
-            d._children = []
-            d.children = []
-        }
+        else
+            d.children = undefined
     }
 
-    private click(node: CollapsibleHierarchyPointNode<StructureGraphPayload>) {
+    private click(node: CollapsibleHierarchyPointNode<StructureGraphNode>) {
         if (!node.children && !node._children) {
             // No children
             return;
@@ -157,13 +157,13 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
             StructureGraphComponent.collapseNode(node);
         } else {
             // Node is collapsed
-            node.children = node.children.concat(node._children);
+            node.children = node.children ? node.children.concat(node._children) : node._children;
             node._children = [];
         }
         this.setState({nodes: this.layout(this.state.nodes), source: node});
     }
 
-    private calculateHeight(root: CollapsibleHierarchyNode<StructureGraphPayload>): number {
+    private calculateHeight(root: CollapsibleHierarchyNode<StructureGraphNode>): number {
         if (!root) {
             return 100;
         }
@@ -171,7 +171,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
         const nodeCount = new Array<number>(Math.max(...root.descendants().map(d => d.depth)) + 1).fill(0);
         root.descendants().map(d => nodeCount[d.depth]++);
         const maxNodes = Math.max(...nodeCount);
-        return this.nodeHeight * maxNodes + 2 * this.margin;
+        return maxNodes * (NODE_HEIGHT + this.margin) + 2 * this.margin;
     }
 
     render() {
@@ -186,9 +186,9 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
             this.containerRef.current?.setAttribute('height', newHeight.toString());
         }
 
-        const nodes = this.state.nodes ? (this.state.nodes.descendants() as CollapsibleHierarchyPointNode<StructureGraphPayload>[])
+        const nodes = this.state.nodes ? (this.state.nodes.descendants() as CollapsibleHierarchyPointNode<StructureGraphNode>[])
             .map(d => {
-                d.y = d.depth * 180;
+                d.y = d.depth * (NODE_WIDTH + 75);
                 d.x = d.x * (newHeight - 2 * this.margin);
                 return d;
             }) : [];
@@ -196,9 +196,9 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
         return (
             <svg className={'base-container'} ref={this.containerRef}>
                 {this.state.nodes && <g transform={`translate(${this.margin},${this.margin})`}>
-                    {nodes.map(d => <StructureGraphEdge key={d.data.id} source={this.state.nodes} node={d}/>)}
-                    {nodes.map(d => <StructureGraphNode key={d.data.id} source={this.state.nodes} node={d}
-                                                        onClickHandler={this.click}/>)}
+                    {nodes.map(d => <GraphEdge key={d.data.id} source={this.state.nodes} node={d}/>)}
+                    {nodes.map(d => <GraphNode key={d.data.id} source={this.state.nodes} node={d}
+                                               onClickHandler={this.click}/>)}
                 </g>}
             </svg>
         )

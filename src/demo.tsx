@@ -1,6 +1,7 @@
 import React from "react";
 import {ReactWidget} from "@jupyterlab/apputils";
 import {IRenderMime} from "@jupyterlab/rendermime-interfaces";
+import {Runhistory} from "./model";
 import {StructureGraphComponent} from "./structuregraph";
 
 
@@ -23,8 +24,11 @@ export class OutputWidget extends ReactWidget implements IRenderMime.IRenderer {
     }
 
     renderModel(model: IRenderMime.IMimeModel): Promise<void> {
-        // TODO model.data cast is not typesafe
-        this.data = model.data[this._mimeType] as unknown as Runhistory;
+        try {
+            this.data = Runhistory.fromJson(model.data[this._mimeType] as unknown as Runhistory);
+        } catch (e) {
+            console.error('Failed to parse runhistory', e)
+        }
 
         // Trigger call of render().
         this.onUpdateRequest(undefined);
@@ -33,7 +37,7 @@ export class OutputWidget extends ReactWidget implements IRenderMime.IRenderer {
 
     protected render() {
         return <>
-            <StructureGraphComponent data={this.data.xai.structures}/>
+            {this.data ? <StructureGraphComponent data={this.data.xai.structures}/> : <p>Error loading data</p>}
         </>
     }
 }
