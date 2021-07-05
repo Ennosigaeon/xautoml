@@ -34,7 +34,7 @@ interface StructureGraphElementProps {
 }
 
 const NODE_HEIGHT = 64;
-const NODE_WIDTH = 175;
+const NODE_WIDTH = 190;
 
 class GraphNode extends React.Component<StructureGraphElementProps, any> {
 
@@ -205,7 +205,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
 
         d._children = unvisited
         if (visited.length > 0)
-            d.children = visited
+            d.children = visited.sort((a, b) => a.data.label.localeCompare(b.data.label))
         else
             d.children = undefined
     }
@@ -219,7 +219,8 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
             StructureGraphComponent.collapseNode(node, this.state.timestamp);
         } else {
             // Node is collapsed
-            node.children = node.children ? node.children.concat(node._children) : node._children;
+            const children = node.children ? node.children.concat(node._children) : node._children;
+            node.children = children.sort((a, b) => a.data.label.localeCompare(b.data.label))
             node._children = [];
         }
         this.setState({nodes: this.layout(this.state.nodes), source: node});
