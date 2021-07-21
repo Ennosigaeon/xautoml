@@ -3,6 +3,8 @@ import {ReactWidget} from "@jupyterlab/apputils";
 import {IRenderMime} from "@jupyterlab/rendermime-interfaces";
 import {Runhistory} from "./model";
 import {StructureGraphComponent} from "./structuregraph";
+import PerformanceTimeline from "./performance_timeline";
+import MetaInformationTable from "./meta_information";
 
 
 /**
@@ -36,8 +38,15 @@ export class OutputWidget extends ReactWidget implements IRenderMime.IRenderer {
     }
 
     protected render() {
+        if (!this.data) {
+            return <p>Error loading data...</p>
+        }
         return <>
-            {this.data ? <StructureGraphComponent data={this.data.xai.structures}/> : <p>Error loading data</p>}
+            <MetaInformationTable meta={this.data.meta}/>
+            <div style={{'width': '800px', 'height': '400px'}}>
+                <PerformanceTimeline data={this.data.configs} meta={this.data.meta}/>
+            </div>
+            <StructureGraphComponent data={this.data.xai.structures}/>
         </>
     }
 }
