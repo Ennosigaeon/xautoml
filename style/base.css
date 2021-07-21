@@ -21,7 +21,7 @@
 }
 
 .node-content {
-    background-color: green;
+    background-color: #28a745;
     stroke: steelblue;
     stroke-width: 3px;
     border-radius: 5px;
@@ -35,15 +35,15 @@
 }
 
 .node-content.node-duplicate {
-    background-color: yellow;
+    background-color: #ffc107;
 }
 
 .node-content.node-crashed {
-    background-color: red;
+    background-color: #dc3545;
 }
 
 .node-content.node-unvisited {
-    background-color: blue;
+    background-color: #007bff;
 }
 
 .node h3 {

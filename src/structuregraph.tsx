@@ -33,7 +33,7 @@ interface StructureGraphElementProps {
     onClickHandler?: (d: CollapsibleHierarchyPointNode<StructureGraphNode>) => void;
 }
 
-const NODE_HEIGHT = 64;
+const NODE_HEIGHT = 70;
 const NODE_WIDTH = 190;
 
 class GraphNode extends React.Component<StructureGraphElementProps, any> {
@@ -54,15 +54,11 @@ class GraphNode extends React.Component<StructureGraphElementProps, any> {
 
         if (!details.failure_message)
             return selected;
-        if (details.failure_message.startsWith('Duplicate'))
+        if (details.failure_message.startsWith('Duplicate') || details.failure_message === 'Ineffective')
             return `${selected} node-duplicate`;
-        if (details.failure_message === 'Ineffective')
-            return `${selected} node-duplicate`;
-        if (details.failure_message === 'Crashed')
-            return `${selected} node-crashed`;
         if (details.failure_message === 'Unvisited')
             return `${selected} node-unvisited`;
-        return ''
+        return 'node-crashed';
     }
 
     render() {
@@ -270,7 +266,6 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
                 return d;
             }) : [];
         const nSteps = Object.keys(this.state.sliderMarks).length - 1;
-        console.log(nSteps)
 
         return <>
             <svg className={'base-container'} ref={this.containerRef}>
