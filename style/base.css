@@ -16,6 +16,11 @@
     user-select: none;
 }
 
+.selected-config {
+    background-color: #007bff !important;
+    fill: #007bff !important;
+}
+
 .node {
     cursor: pointer;
 }
@@ -38,12 +43,13 @@
     background-color: #ffc107;
 }
 
+.config-table-failure,
 .node-content.node-crashed {
     background-color: #dc3545;
 }
 
 .node-content.node-unvisited {
-    background-color: #007bff;
+    background-color: #f8f9fa;
 }
 
 .node h3 {

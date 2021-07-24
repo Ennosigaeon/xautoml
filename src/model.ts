@@ -1,4 +1,6 @@
 export type PolicyData = Map<string, number>
+export type CandidateId = string
+
 
 export class NodeDetails {
 
@@ -64,14 +66,18 @@ export class Runtime {
 }
 
 export class Config {
-    constructor(public readonly status: string,
+
+    public static readonly SUCCESS = 'SUCCESS'
+
+    constructor(public readonly id: CandidateId,
+                public readonly status: string,
                 public readonly loss: [number, number],
                 public readonly runtime: Runtime,
                 public readonly config: any) {
     }
 
     public static fromJson(config: Config): Config {
-        return new Config(config.status, config.loss, Runtime.fromJson(config.runtime), config.config)
+        return new Config(config.id, config.status, config.loss, Runtime.fromJson(config.runtime), config.config)
     }
 }
 
@@ -93,21 +99,48 @@ export class MetaInformation {
     }
 }
 
+export class Pipeline {
+
+    constructor(public readonly steps: [string, string][]) {
+    }
+
+    static fromJson(pipeline: Pipeline): Pipeline {
+        return new Pipeline(pipeline.steps)
+    }
+}
+
+export class Structure {
+
+    constructor(public readonly pipeline: Pipeline,
+                public readonly budget: number,
+                public readonly configspace: string) {
+    }
+
+    static fromJson(structure: Structure): Structure {
+        // raw pipeline data is list of tuple and not object
+        const pipeline = new Pipeline(structure.pipeline as unknown as [string, string][])
+        return new Structure(pipeline, structure.budget, structure.configspace)
+    }
+}
+
 export class Runhistory {
     constructor(public readonly meta: MetaInformation,
-                public readonly structures: any,
-                public readonly configs: Map<string, Config[]>,
+                public readonly structures: Map<CandidateId, Structure>,
+                public readonly configs: Map<CandidateId, Config[]>,
                 public readonly xai: XAI) {
     }
 
     static fromJson(runhistory: Runhistory): Runhistory {
-        const configs = new Map<string, Config[]>();
+        const configs = new Map<CandidateId, Config[]>();
         Object.entries<Config[]>(runhistory.configs as {})
-            .forEach(k => {
-                configs.set(k[0], k[1].map(c => Config.fromJson(c)))
-            });
+            .forEach(k => configs.set(k[0], k[1].map(c => Config.fromJson(c))));
+
+        const structures = new Map<CandidateId, Structure>();
+        Object.entries<Structure>(runhistory.structures as {})
+            .forEach(k => structures.set(k[0], Structure.fromJson(k[1])))
+
         return new Runhistory(MetaInformation.fromJson(runhistory.meta),
-            runhistory.structures,
+            structures,
             configs,
             XAI.fromJson(runhistory.xai))
     }
