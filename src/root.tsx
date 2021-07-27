@@ -7,6 +7,7 @@ import ConfigTable from "./config_table";
 import PerformanceTimeline from "./performance_timeline";
 import {StructureGraphComponent} from "./structuregraph";
 import {catchReactWarnings} from "./util";
+import {RocCurve} from "./roc_curve";
 
 
 /**
@@ -72,6 +73,7 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
 
     render() {
         const data = this.props.data
+        const selectedConfigs = this.state.selectedConfigs
         const pipelines = new Map<string, Pipeline>()
         this.props.data.structures.forEach((v, k) => pipelines.set(k, v.pipeline))
 
@@ -81,14 +83,20 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
         return <>
             <MetaInformationTable meta={data.meta}/>
             <ConfigTable configs={data.configs} structures={data.structures}
-                         selectedConfigs={this.state.selectedConfigs}
+                         selectedConfigs={selectedConfigs}
                          onConfigSelection={this.onConfigSelection}/>
-            <div style={{'width': '800px', 'height': '400px'}}>
-                <PerformanceTimeline data={data.configs} meta={data.meta} selectedConfigs={this.state.selectedConfigs}
-                                     onConfigSelection={this.onConfigSelection}/>
+            <div style={{'display': 'flex'}}>
+                <div style={{'height': '400px', 'flexBasis': 0, 'flexGrow': 1}}>
+                    <PerformanceTimeline data={data.configs} meta={data.meta} selectedConfigs={selectedConfigs}
+                                         onConfigSelection={this.onConfigSelection}/>
+                </div>
+                <div style={{'height': '400px', 'flexBasis': 0, 'flexGrow': 1}}>
+                    <RocCurve selectedConfigs={selectedConfigs} meta={data.meta}/>
+                </div>
             </div>
+
             <StructureGraphComponent data={data.xai.structures} pipelines={pipelines}
-                                     selectedConfigs={this.state.selectedConfigs} configs={data.configs}
+                                     selectedConfigs={selectedConfigs} configs={data.configs}
                                      onConfigSelection={this.onConfigSelection}/>
         </>
     }

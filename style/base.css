@@ -71,3 +71,8 @@
 .link.selected {
     stroke-width: 5px;
 }
+
+
+div.rv-discrete-color-legend-item {
+    padding: 2px 5px;
+}

@@ -1,6 +1,7 @@
 import {URLExt} from '@jupyterlab/coreutils';
 
 import {ServerConnection} from '@jupyterlab/services';
+import {CandidateId} from "./model";
 
 /**
  * Call the API extension
@@ -43,4 +44,15 @@ export async function requestAPI<T>(
     }
 
     return data;
+}
+
+
+export async function requestRocCurve(cids: CandidateId[], data_file: string, model_dir: string) {
+    return requestAPI<any>('roc_auc', {
+        method: 'POST', body: JSON.stringify({
+            'cids': cids.join(','),
+            'data_file': data_file,
+            'model_dir': model_dir
+        })
+    })
 }
