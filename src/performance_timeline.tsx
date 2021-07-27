@@ -1,17 +1,9 @@
 import React from 'react';
-import {
-    CartesianGrid,
-    Cell,
-    ComposedChart,
-    Label,
-    Line,
-    ResponsiveContainer,
-    Scatter,
-    Tooltip,
-    XAxis,
-    YAxis
-} from 'recharts';
 import {CandidateId, Config, MetaInformation} from "./model";
+import {fixedPrec} from "./util";
+import {Hint, HorizontalGridLines, LineSeries, MarkSeries, VerticalGridLines, XAxis, XYPlot, YAxis} from "react-vis";
+
+import * as d3 from 'd3'
 
 interface ConfigHistoryProps {
     data: Map<CandidateId, Config[]>
@@ -22,12 +14,13 @@ interface ConfigHistoryProps {
 
 interface ConfigHistoryState {
     data: ConfigRecord[];
+    hovered: ConfigRecord;
 }
 
 
 export interface ConfigRecord {
     x: number;
-    Performance: number;
+    y: number;
     Incumbent: number;
     cid: CandidateId;
 }
@@ -41,7 +34,7 @@ export default class PerformanceTimeline extends React.Component<ConfigHistoryPr
 
     constructor(props: ConfigHistoryProps) {
         super(props);
-        this.state = {data: []}
+        this.state = {data: [], hovered: undefined}
 
         this.onScatterClick = this.onScatterClick.bind(this)
     }
@@ -62,7 +55,7 @@ export default class PerformanceTimeline extends React.Component<ConfigHistoryPr
         ).sort((a, b) => a.x - b.x)
             .map(v => {
                 best = Math.max(best, v.y)
-                return {x: v.x, Performance: v.y, Incumbent: best, cid: v.cid}
+                return {x: fixedPrec(v.x), y: fixedPrec(v.y), Incumbent: fixedPrec(best), cid: v.cid}
             })
     }
 
@@ -82,40 +75,28 @@ export default class PerformanceTimeline extends React.Component<ConfigHistoryPr
     render() {
         if (this.state.data.length === 0)
             return <p>Loading...</p>
+        const dataWithColor = this.state.data.map(d => ({
+            ...d,
+            color: Number(!this.props.selectedConfigs.includes(d.cid))
+        }));
+        const incumbent = this.state.data.map(d => ({x: d.x, y: d.Incumbent}))
 
         return (
-            <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart
-                    width={400}
-                    height={400}
-                    margin={{
-                        top: 20,
-                        right: 20,
-                        bottom: 20,
-                        left: 20,
-                    }}
-                    data={this.state.data}
-                >
-                    <CartesianGrid/>
-                    <XAxis type="number" dataKey="x" name="Time" unit="s">
-                        <Label value="Time" position={'bottom'}/>
-                    </XAxis>
-                    <YAxis type="number" dataKey="Performance" name="Score">
-                        <Label angle={270} position={'left'} value={this.props.meta.metric}/>
-                    </YAxis>
-                    <Tooltip/>
+            <XYPlot width={400} height={400}>
+                <HorizontalGridLines/>
+                <VerticalGridLines/>
+                <XAxis title="Timestamp"/>
+                <YAxis title="Performance"/>
 
+                <LineSeries data={incumbent} curve={d3.curveStepAfter}/>
+                <MarkSeries data={dataWithColor} colorRange={['#007bff', '#c6c8e0']}
+                            onValueMouseOver={value => this.setState({hovered: value as ConfigRecord})}
+                            onValueMouseOut={() => this.setState({hovered: undefined})}
+                            onValueClick={this.onScatterClick}
+                />
 
-                    <Scatter dataKey="Performance" fill="#8884d8" onClick={this.onScatterClick}>
-                        {this.state.data.map((entry, index) => (
-                            <Cell key={`cell-${index}`}
-                                  className={this.props.selectedConfigs.includes(entry.cid) ? 'selected-config' : ''}
-                                  fill={'#c6c8e0'}/>
-                        ))}
-                    </Scatter>
-                    <Line type="stepAfter" dataKey="Incumbent" dot={false} activeDot={false} legendType="none"/>
-                </ComposedChart>
-            </ResponsiveContainer>
+                {this.state.hovered ? <Hint value={{'x': this.state.hovered.x, 'y': this.state.hovered.y}}/> : null}
+            </XYPlot>
         );
     }
 }

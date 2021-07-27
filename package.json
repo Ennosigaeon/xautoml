@@ -57,11 +57,12 @@
     "d3": "^6.7.0",
     "rc-slider": "^9.7.2",
     "react-move": "^6.5.0",
-    "recharts": "^2.0.9"
+    "react-vis": "^1.11.7"
   },
   "devDependencies": {
     "@jupyterlab/builder": "^3.0.0",
     "@types/d3": "^6.7.0",
+    "@types/react-vis": "^1.11.7",
     "@typescript-eslint/eslint-plugin": "^4.27.0",
     "@typescript-eslint/parser": "^4.27.0",
     "eslint": "^7.29.0",

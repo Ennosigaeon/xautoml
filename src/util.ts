@@ -12,3 +12,7 @@ export function catchReactWarnings() {
 }
 
 
+export function fixedPrec(number: number, prec: number = 3) {
+    return Math.round(number * Math.pow(10, prec)) / Math.pow(10, prec)
+}
+
