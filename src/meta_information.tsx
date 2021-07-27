@@ -1,6 +1,5 @@
 import React from "react";
 import {MetaInformation} from "./model";
-import 'purecss/build/tables.css'
 import {Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow} from "@material-ui/core";
 
 interface MetaInformationProps {

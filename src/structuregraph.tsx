@@ -39,7 +39,7 @@ interface StructureGraphElementProps {
     onDoubleClickHandler?: (d: CollapsibleHierarchyPointNode<StructureGraphNode>) => void;
 }
 
-const NODE_HEIGHT = 70;
+const NODE_HEIGHT = 65;
 const NODE_WIDTH = 190;
 
 class GraphNode extends React.Component<StructureGraphElementProps, any> {
@@ -303,7 +303,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
         const nodeCount = new Array<number>(Math.max(...root.descendants().map(d => d.depth)) + 1).fill(0);
         root.descendants().map(d => nodeCount[d.depth]++);
         const maxNodes = Math.max(...nodeCount);
-        const newHeight = maxNodes * (NODE_HEIGHT + this.margin) + 2 * this.margin;
+        const newHeight = maxNodes * (1.5 * NODE_HEIGHT + this.margin) + 2 * this.margin;
 
 
         const currentHeight = this.containerRef.current ?

@@ -1,19 +1,20 @@
 import React from "react";
 import {CandidateId, Config, Pipeline, Structure} from "./model";
-import 'purecss/build/tables.css'
 import {DataGrid, GridCellParams, GridColDef, GridRowId} from '@material-ui/data-grid';
 
 interface PipelineVisualizerProps {
     pipeline: Pipeline
+    config: Config
 }
 
 
 export class PipelineVisualizer extends React.Component<PipelineVisualizerProps, {}> {
 
     render() {
-        return (
+        return (<>
             <div>{this.props.pipeline.steps.map(step => step[1].split('.').pop()).join(' -> ')}</div>
-        )
+            <div>{JSON.stringify(this.props.config)}</div>
+        </>)
     }
 }
 
@@ -47,30 +48,31 @@ export default class ConfigTable extends React.Component<ConfigTableProps, {}> {
         const columns: GridColDef[] = [
             {field: 'id', headerName: 'Id'},
             {
-                field: 'pipeline', headerName: 'Pipeline', flex: 2, renderCell: (params: GridCellParams) => {
-                    const pipeline = params.getValue(params.id, 'pipeline') as Pipeline
-                    return <PipelineVisualizer pipeline={pipeline}/>
+                field: 'config', headerName: 'Configuration', flex: 2, renderCell: (params: GridCellParams) => {
+                    const [pipeline, config, _] = additionalData.get(params.id as CandidateId)
+                    return <PipelineVisualizer pipeline={pipeline} config={config}/>
                 }
             },
-            {field: 'config', headerName: 'Configuration', flex: 2},
             {field: 'timestamp', headerName: 'Timestamp', width: 150},
             {field: 'performance', headerName: 'Performance', width: 160}
         ];
 
 
         const rows: any[] = []
+        const additionalData: Map<CandidateId, [Pipeline, Config, string]> = new Map<CandidateId, [Pipeline, Config, string]>();
 
-        this.props.configs.forEach((configs: Config[], structure: string) => {
-            configs.map(c => rows.push(
-                {
-                    id: c.id,
-                    pipeline: this.props.structures.get(structure).pipeline,
-                    config: 'TODO: Missing',
-                    timestamp: c.runtime.timestamp.toFixed(3),
-                    performance: c.loss[0].toFixed(3),
-                    result: c.status
-                }
-            ))
+        this.props.configs.forEach((configs: Config[], structure: CandidateId) => {
+            configs.map(c => {
+                rows.push(
+                    {
+                        id: c.id,
+                        config: this.props.structures.get(structure).pipeline,
+                        timestamp: c.runtime.timestamp.toFixed(3),
+                        performance: c.loss[0].toFixed(3),
+                    }
+                )
+                additionalData.set(c.id, [this.props.structures.get(structure).pipeline, c.config, c.status])
+            })
         })
 
 
@@ -83,7 +85,7 @@ export default class ConfigTable extends React.Component<ConfigTableProps, {}> {
                     getRowClassName={(params) => {
                         if (this.props.selectedConfigs.includes(params.id as string))
                             return 'selected-config'
-                        else if (params.getValue(params.id, 'result') != Config.SUCCESS)
+                        else if (additionalData.get(params.id as CandidateId)[2] != Config.SUCCESS)
                             return 'config-table-failure'
                         else return ''
                     }}
