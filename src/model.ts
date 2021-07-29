@@ -1,5 +1,6 @@
 export type PolicyData = Map<string, number>
 export type CandidateId = string
+export type Config = Map<string, number | string | boolean>
 
 
 export class NodeDetails {
@@ -65,7 +66,7 @@ export class Runtime {
     }
 }
 
-export class Config {
+export class Candidate {
 
     public static readonly SUCCESS = 'SUCCESS'
 
@@ -73,11 +74,15 @@ export class Config {
                 public readonly status: string,
                 public readonly loss: [number, number],
                 public readonly runtime: Runtime,
-                public readonly config: any) {
+                public readonly config: Config) {
     }
 
-    public static fromJson(config: Config): Config {
-        return new Config(config.id, config.status, config.loss, Runtime.fromJson(config.runtime), config.config)
+    public static fromJson(candidate: Candidate): Candidate {
+        const config = new Map<string, number | string>();
+        Object.entries<string | number>(candidate.config as {})
+            .forEach(k => config.set(k[0], k[1]));
+
+        return new Candidate(candidate.id, candidate.status, candidate.loss, Runtime.fromJson(candidate.runtime), config)
     }
 }
 
@@ -129,14 +134,14 @@ export class Structure {
 export class Runhistory {
     constructor(public readonly meta: MetaInformation,
                 public readonly structures: Map<CandidateId, Structure>,
-                public readonly configs: Map<CandidateId, Config[]>,
+                public readonly configs: Map<CandidateId, Candidate[]>,
                 public readonly xai: XAI) {
     }
 
     static fromJson(runhistory: Runhistory): Runhistory {
-        const configs = new Map<CandidateId, Config[]>();
-        Object.entries<Config[]>(runhistory.configs as {})
-            .forEach(k => configs.set(k[0], k[1].map(c => Config.fromJson(c))));
+        const candidates = new Map<CandidateId, Candidate[]>();
+        Object.entries<Candidate[]>(runhistory.configs as {})
+            .forEach(k => candidates.set(k[0], k[1].map(c => Candidate.fromJson(c))));
 
         const structures = new Map<CandidateId, Structure>();
         Object.entries<Structure>(runhistory.structures as {})
@@ -144,7 +149,7 @@ export class Runhistory {
 
         return new Runhistory(MetaInformation.fromJson(runhistory.meta),
             structures,
-            configs,
+            candidates,
             XAI.fromJson(runhistory.xai))
     }
 }

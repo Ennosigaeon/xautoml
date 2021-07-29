@@ -12,7 +12,13 @@ export function catchReactWarnings() {
 }
 
 
-export function fixedPrec(number: number, prec: number = 3) {
+export function fixedPrec(number: number, prec: number = 3): number {
     return Math.round(number * Math.pow(10, prec)) / Math.pow(10, prec)
 }
 
+export function normalizeComponent(component: string): string {
+    return component.split('.').pop()
+        .replace('Classifier', '')
+        .replace('Classification', '')
+        .replace('Component', '')
+}

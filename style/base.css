@@ -76,3 +76,30 @@
 div.rv-discrete-color-legend-item {
     padding: 2px 5px;
 }
+
+
+/**
+Candidate Table
+ */
+
+.candidate-table_vertical-header {
+    writing-mode: vertical-lr;
+}
+
+.candidate-table_vertical-header .MuiDataGrid-menuIcon:hover {
+    display: none !important;
+}
+
+.candidate-table_vertical-header .MuiDataGrid-menuIcon,
+.candidate-table_vertical-header .MuiDataGrid-columnSeparator{
+    display: none !important;
+}
+
+.candidate-table_component {
+    width: 40px;
+    text-align: center;
+    background-color: red;
+    margin: 10px;
+    border-radius: 10px;
+    line-height: 40px;
+}

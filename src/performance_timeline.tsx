@@ -1,15 +1,15 @@
 import React from 'react';
-import {CandidateId, Config, MetaInformation} from "./model";
+import {CandidateId, Candidate, MetaInformation} from "./model";
 import {fixedPrec} from "./util";
 import {Hint, HorizontalGridLines, LineSeries, MarkSeries, VerticalGridLines, XAxis, XYPlot, YAxis} from "react-vis";
 
 import * as d3 from 'd3'
 
 interface ConfigHistoryProps {
-    data: Map<CandidateId, Config[]>
+    data: Map<CandidateId, Candidate[]>
     meta: MetaInformation
-    selectedConfigs: CandidateId[]
-    onConfigSelection?: (cid: CandidateId[]) => void
+    selectedCandidates: CandidateId[]
+    onCandidateSelection?: (cid: CandidateId[]) => void
 }
 
 interface ConfigHistoryState {
@@ -28,7 +28,7 @@ export interface ConfigRecord {
 export default class PerformanceTimeline extends React.Component<ConfigHistoryProps, ConfigHistoryState> {
 
     static defaultProps = {
-        onConfigSelection: (_: CandidateId[]) => {
+        onCandidateSelection: (_: CandidateId[]) => {
         }
     }
 
@@ -62,13 +62,13 @@ export default class PerformanceTimeline extends React.Component<ConfigHistoryPr
     private onScatterClick(x: any) {
         const cid: CandidateId = x.cid
 
-        const idx = this.props.selectedConfigs.indexOf(cid)
+        const idx = this.props.selectedCandidates.indexOf(cid)
         if (idx === -1)
-            this.props.onConfigSelection([...this.props.selectedConfigs, cid])
+            this.props.onCandidateSelection([...this.props.selectedCandidates, cid])
         else {
-            const newSelection = [...this.props.selectedConfigs]
+            const newSelection = [...this.props.selectedCandidates]
             newSelection.splice(idx, 1)
-            this.props.onConfigSelection(newSelection)
+            this.props.onCandidateSelection(newSelection)
         }
     }
 
@@ -77,7 +77,7 @@ export default class PerformanceTimeline extends React.Component<ConfigHistoryPr
             return <p>Loading...</p>
         const dataWithColor = this.state.data.map(d => ({
             ...d,
-            color: Number(!this.props.selectedConfigs.includes(d.cid))
+            color: Number(!this.props.selectedCandidates.includes(d.cid))
         }));
         const incumbent = this.state.data.map(d => ({x: d.x, y: d.Incumbent}))
 

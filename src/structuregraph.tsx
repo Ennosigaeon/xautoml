@@ -3,16 +3,17 @@ import * as d3 from "d3";
 import {HierarchyNode, HierarchyPointNode, TreeLayout} from "d3";
 import {Animate} from "react-move";
 import {easeExpInOut} from "d3-ease";
-import {CandidateId, Config, NodeDetails, Pipeline, StructureGraphNode} from "./model";
+import {CandidateId, Candidate, NodeDetails, Pipeline, StructureGraphNode} from "./model";
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
+import {normalizeComponent} from "./util";
 
 interface StructureGraphProps {
     data: StructureGraphNode;
     pipelines: Map<CandidateId, Pipeline>;
-    configs: Map<CandidateId, Config[]>;
-    selectedConfigs: CandidateId[];
-    onConfigSelection?: (cid: CandidateId[]) => void;
+    candidates: Map<CandidateId, Candidate[]>;
+    selectedCandidates: CandidateId[];
+    onCandidateSelection?: (cid: CandidateId[]) => void;
 }
 
 interface StructureGraphState {
@@ -96,7 +97,7 @@ class GraphNode extends React.Component<StructureGraphElementProps, any> {
                    onClick={this.handleClick}>
                     <foreignObject x={0} y={-NODE_HEIGHT / 2} width={NODE_WIDTH} height={NODE_HEIGHT}>
                         <div className={`node-content ${className}`}>
-                            <h3>{data.label} ({data.id})</h3>
+                            <h3>{normalizeComponent(data.label)} ({data.id})</h3>
                             <div className={'node-details'}>
                                 <div>{details.failure_message ? details.failure_message : 'Reward: ' + (details.reward / details.visits).toFixed(3)}</div>
                                 <div>Visits: {details.visits}</div>
@@ -160,7 +161,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
     private reversePipelines: Map<number, CandidateId[]>;
 
     static defaultProps = {
-        onConfigSelection: (_: CandidateId[]) => {
+        onCandidateSelection: (_: CandidateId[]) => {
         }
     }
 
@@ -247,18 +248,18 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
     }
 
     private selectNode(node: CollapsibleHierarchyPointNode<StructureGraphNode>) {
-        const configs = this.reversePipelines.get(node.data.id)
-            .map(id => this.props.configs.get(id))
+        const candidates = this.reversePipelines.get(node.data.id)
+            .map(id => this.props.candidates.get(id))
             .reduce((acc, val) => acc.concat(val), [])
             .map(c => c.id);
-        const intersection = configs.filter(c => this.props.selectedConfigs.includes(c));
+        const intersection = candidates.filter(c => this.props.selectedCandidates.includes(c));
 
-        if (intersection.length === configs.length) {
-            const tmp = this.props.selectedConfigs.filter(v => !configs.includes(v));
-            this.props.onConfigSelection(tmp);
+        if (intersection.length === candidates.length) {
+            const tmp = this.props.selectedCandidates.filter(v => !candidates.includes(v));
+            this.props.onCandidateSelection(tmp);
         } else {
-            const tmp = [...this.props.selectedConfigs, ...configs.filter(v => !intersection.includes(v))];
-            this.props.onConfigSelection(tmp);
+            const tmp = [...this.props.selectedCandidates, ...candidates.filter(v => !intersection.includes(v))];
+            this.props.onCandidateSelection(tmp);
         }
     }
 
@@ -303,7 +304,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
         const nodeCount = new Array<number>(Math.max(...root.descendants().map(d => d.depth)) + 1).fill(0);
         root.descendants().map(d => nodeCount[d.depth]++);
         const maxNodes = Math.max(...nodeCount);
-        const newHeight = maxNodes * (1.5 * NODE_HEIGHT + this.margin) + 2 * this.margin;
+        const newHeight = maxNodes * (1.1 * NODE_HEIGHT + this.margin) + 2 * this.margin;
 
 
         const currentHeight = this.containerRef.current ?
@@ -328,7 +329,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
         const nodes = this.state.nodes ? (this.state.nodes.descendants() as CollapsibleHierarchyPointNode<StructureGraphNode>[]) : [];
         const nSteps = Object.keys(this.state.sliderMarks).length - 1;
 
-        const highlightedNodes: number[] = this.props.selectedConfigs.map(cid => cid.substring(0, cid.indexOf(':', 4)))
+        const highlightedNodes: number[] = this.props.selectedCandidates.map(cid => cid.substring(0, cid.indexOf(':', 4)))
             .map(sid => this.props.pipelines.get(sid).steps.map(v => Number.parseInt(v[0])))
             .reduce((acc, val) => acc.concat(val), [])
 

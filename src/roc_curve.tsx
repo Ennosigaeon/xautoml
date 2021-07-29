@@ -6,7 +6,7 @@ import 'react-vis/dist/style.css'
 
 
 interface RocCurveProps {
-    selectedConfigs: CandidateId[]
+    selectedCandidates: CandidateId[]
     meta: MetaInformation
 }
 
@@ -24,12 +24,12 @@ export class RocCurve extends React.Component<RocCurveProps, RocCurveState> {
     }
 
     componentDidUpdate(prevProps: Readonly<RocCurveProps>, prevState: Readonly<RocCurveState>, snapshot?: any) {
-        if (prevProps.selectedConfigs !== this.props.selectedConfigs) {
+        if (prevProps.selectedCandidates !== this.props.selectedCandidates) {
             // TODO fetch only new curves
             // TODO remove odl curves without recalculation
-            if (this.props.selectedConfigs.length > 0) {
+            if (this.props.selectedCandidates.length > 0) {
                 this.setState({loading: true})
-                requestRocCurve(this.props.selectedConfigs, this.props.meta.data_file, this.props.meta.model_dir)
+                requestRocCurve(this.props.selectedCandidates, this.props.meta.data_file, this.props.meta.model_dir)
                     .then(data => {
                         this.setState({data: data})
                         console.log(data);

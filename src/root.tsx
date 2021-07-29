@@ -3,7 +3,7 @@ import {ReactWidget} from "@jupyterlab/apputils";
 import {IRenderMime} from "@jupyterlab/rendermime-interfaces";
 import {CandidateId, Pipeline, Runhistory} from "./model";
 import MetaInformationTable from "./meta_information";
-import ConfigTable from "./config_table";
+import CandidateTable from "./candidate_table";
 import PerformanceTimeline from "./performance_timeline";
 import {StructureGraphComponent} from "./structuregraph";
 import {catchReactWarnings} from "./util";
@@ -55,25 +55,25 @@ export interface ReactRootProps {
 }
 
 export interface ReactRootState {
-    selectedConfigs: CandidateId[]
+    selectedCandidates: CandidateId[]
 }
 
 export default class ReactRoot extends React.Component<ReactRootProps, ReactRootState> {
 
     constructor(props: ReactRootProps) {
         super(props);
-        this.state = {selectedConfigs: []}
+        this.state = {selectedCandidates: []}
 
-        this.onConfigSelection = this.onConfigSelection.bind(this)
+        this.onCandidateSelection = this.onCandidateSelection.bind(this)
     }
 
-    private onConfigSelection(cids: CandidateId[]) {
-        this.setState({selectedConfigs: cids})
+    private onCandidateSelection(cids: CandidateId[]) {
+        this.setState({selectedCandidates: cids})
     }
 
     render() {
         const data = this.props.data
-        const selectedConfigs = this.state.selectedConfigs
+        const selectedCandidates = this.state.selectedCandidates
         const pipelines = new Map<string, Pipeline>()
         this.props.data.structures.forEach((v, k) => pipelines.set(k, v.pipeline))
 
@@ -82,22 +82,22 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
         }
         return <>
             <MetaInformationTable meta={data.meta}/>
-            <ConfigTable configs={data.configs} structures={data.structures}
-                         selectedConfigs={selectedConfigs}
-                         onConfigSelection={this.onConfigSelection}/>
+            <CandidateTable candidates={data.configs} structures={data.structures} metric_sign={data.meta.metric_sign}
+                            selectedCandidates={selectedCandidates}
+                            onCandidateSelection={this.onCandidateSelection}/>
             <div style={{'display': 'flex'}}>
                 <div style={{'height': '400px', 'flexBasis': 0, 'flexGrow': 1}}>
-                    <PerformanceTimeline data={data.configs} meta={data.meta} selectedConfigs={selectedConfigs}
-                                         onConfigSelection={this.onConfigSelection}/>
+                    <PerformanceTimeline data={data.configs} meta={data.meta} selectedCandidates={selectedCandidates}
+                                         onCandidateSelection={this.onCandidateSelection}/>
                 </div>
                 <div style={{'height': '400px', 'flexBasis': 0, 'flexGrow': 1}}>
-                    <RocCurve selectedConfigs={selectedConfigs} meta={data.meta}/>
+                    <RocCurve selectedCandidates={selectedCandidates} meta={data.meta}/>
                 </div>
             </div>
 
             <StructureGraphComponent data={data.xai.structures} pipelines={pipelines}
-                                     selectedConfigs={selectedConfigs} configs={data.configs}
-                                     onConfigSelection={this.onConfigSelection}/>
+                                     selectedCandidates={selectedCandidates} candidates={data.configs}
+                                     onCandidateSelection={this.onCandidateSelection}/>
         </>
     }
 
