@@ -45,18 +45,24 @@ class RocCurveHandler(APIHandler):
 
             result = {}
             for model_file, cid in zip(models, cids):
-                with open(model_file, 'rb') as f:
-                    pipeline = joblib.load(f)
+                try:
+                    with open(model_file, 'rb') as f:
+                        pipeline = joblib.load(f)
 
-                    roc = RocCurve(micro=micro, macro=macro)
-                    roc.score(pipeline, X, y, json=True)
+                        roc = RocCurve(micro=micro, macro=macro)
+                        roc.score(pipeline, X, y, json=True)
 
-                    # Transform into format suited for recharts
-                    for fpr, tpr, label in roc.get_data(cid):
-                        ls = []
-                        for f, t in zip(fpr, tpr):
-                            ls.append({'x': f, 'y': t})
-                        result[label] = ls
+                        # Transform into format suited for recharts
+                        for fpr, tpr, label in roc.get_data(cid):
+                            ls = []
+                            for f, t in zip(fpr, tpr):
+                                ls.append({'x': f, 'y': t})
+                            result[label] = ls
+                except FileNotFoundError:
+                    # Failed configurations do not have a model file
+                    pass
+                except ValueError as ex:
+                    self.log.error(f'Failed to calculate ROC for {cid}', exc_info=ex)
 
             self.finish(json.dumps(result))
         else:
