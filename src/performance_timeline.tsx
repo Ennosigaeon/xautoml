@@ -1,12 +1,12 @@
 import React from 'react';
-import {CandidateId, Candidate, MetaInformation} from "./model";
+import {CandidateId, MetaInformation, Structure} from "./model";
 import {fixedPrec} from "./util";
 import {Hint, HorizontalGridLines, LineSeries, MarkSeries, VerticalGridLines, XAxis, XYPlot, YAxis} from "react-vis";
 
 import * as d3 from 'd3'
 
 interface ConfigHistoryProps {
-    data: Map<CandidateId, Candidate[]>
+    data: Structure[]
     meta: MetaInformation
     selectedCandidates: CandidateId[]
     onCandidateSelection?: (cid: CandidateId[]) => void
@@ -47,12 +47,9 @@ export default class PerformanceTimeline extends React.Component<ConfigHistoryPr
     private performanceTimeline(): ConfigRecord[] {
         const sign = this.props.meta.metric_sign
         let best = -Infinity
-        return [].concat(
-            ...Array.from(this.props.data.entries())
-                .map(value => value[1].map(c => {
-                    return {x: c.runtime.timestamp, y: sign * c.loss[0], cid: c.id}
-                }))
-        ).sort((a, b) => a.x - b.x)
+        return [].concat(...this.props.data.map(s => s.configs))
+            .map(c => ({x: c.runtime.timestamp, y: sign * c.loss[0], cid: c.id}))
+            .sort((a, b) => a.x - b.x)
             .map(v => {
                 best = Math.max(best, v.y)
                 return {x: fixedPrec(v.x), y: fixedPrec(v.y), Incumbent: fixedPrec(best), cid: v.cid}

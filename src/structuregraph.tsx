@@ -3,7 +3,7 @@ import * as d3 from "d3";
 import {HierarchyNode, HierarchyPointNode, TreeLayout} from "d3";
 import {Animate} from "react-move";
 import {easeExpInOut} from "d3-ease";
-import {CandidateId, Candidate, NodeDetails, Pipeline, StructureGraphNode} from "./model";
+import {CandidateId, NodeDetails, Pipeline, Structure, StructureGraphNode} from "./model";
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
 import {normalizeComponent} from "./util";
@@ -11,7 +11,7 @@ import {normalizeComponent} from "./util";
 interface StructureGraphProps {
     data: StructureGraphNode;
     pipelines: Map<CandidateId, Pipeline>;
-    candidates: Map<CandidateId, Candidate[]>;
+    structures: Structure[];
     selectedCandidates: CandidateId[];
     onCandidateSelection?: (cid: CandidateId[]) => void;
 }
@@ -205,12 +205,17 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
     componentDidUpdate(prevProps: Readonly<StructureGraphProps>, prevState: Readonly<StructureGraphState>, snapshot?: any) {
         if (prevProps.pipelines !== this.props.pipelines) {
             this.reversePipelines = new Map<number, CandidateId[]>();
+            this.reversePipelines.set(0, [])
+
             this.props.pipelines.forEach((v, k) => v.steps.map(v => Number.parseInt(v[0]))
                 .forEach(step => {
                     if (this.reversePipelines.has(step))
                         this.reversePipelines.get(step).push(k)
                     else
                         this.reversePipelines.set(step, [k])
+
+                    // Always add to root
+                    this.reversePipelines.get(0).push(k)
                 })
             );
         }
@@ -249,7 +254,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
 
     private selectNode(node: CollapsibleHierarchyPointNode<StructureGraphNode>) {
         const candidates = this.reversePipelines.get(node.data.id)
-            .map(id => this.props.candidates.get(id))
+            .map(id => this.props.structures.filter(s => s.cid === id).pop().configs)
             .reduce((acc, val) => acc.concat(val), [])
             .map(c => c.id);
         const intersection = candidates.filter(c => this.props.selectedCandidates.includes(c));

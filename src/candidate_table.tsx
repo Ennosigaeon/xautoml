@@ -80,9 +80,8 @@ export class ComponentVisualizer extends React.Component<ComponentVisualizerProp
 
 
 interface CandidateTableProps {
-    candidates: Map<CandidateId, Candidate[]>;
     metric_sign: number;
-    structures: Map<CandidateId, Structure>;
+    structures: Structure[];
     selectedCandidates: CandidateId[];
     onCandidateSelection?: (cid: CandidateId[]) => void;
 }
@@ -136,8 +135,8 @@ export default class CandidateTable extends React.Component<CandidateTableProps,
         const additionalData: Map<CandidateId, [Pipeline, Config, string]> = new Map<CandidateId, [Pipeline, Config, string]>();
 
         const sign = this.props.metric_sign
-        this.props.candidates.forEach((candidates: Candidate[], structure: CandidateId) => {
-            candidates.map(c => {
+        this.props.structures.forEach(structure => {
+            structure.configs.forEach(c => {
                 rows.push(
                     {
                         id: c.id,
@@ -145,7 +144,7 @@ export default class CandidateTable extends React.Component<CandidateTableProps,
                         performance: (sign * c.loss[0]).toFixed(3),
                     }
                 )
-                additionalData.set(c.id, [this.props.structures.get(structure).pipeline, c.config, c.status])
+                additionalData.set(c.id, [structure.pipeline, c.config, c.status])
             })
         })
 

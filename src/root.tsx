@@ -74,20 +74,19 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
     render() {
         const data = this.props.data
         const selectedCandidates = this.state.selectedCandidates
-        const pipelines = new Map<string, Pipeline>()
-        this.props.data.structures.forEach((v, k) => pipelines.set(k, v.pipeline))
+        const pipelines = new Map<CandidateId, Pipeline>(this.props.data.structures.map(s => [s.cid, s.pipeline]))
 
         if (!data) {
             return <p>Error loading data...</p>
         }
         return <>
             <MetaInformationTable meta={data.meta}/>
-            <CandidateTable candidates={data.configs} structures={data.structures} metric_sign={data.meta.metric_sign}
+            <CandidateTable structures={data.structures} metric_sign={data.meta.metric_sign}
                             selectedCandidates={selectedCandidates}
                             onCandidateSelection={this.onCandidateSelection}/>
             <div style={{'display': 'flex'}}>
                 <div style={{'height': '400px', 'flexBasis': 0, 'flexGrow': 1}}>
-                    <PerformanceTimeline data={data.configs} meta={data.meta} selectedCandidates={selectedCandidates}
+                    <PerformanceTimeline data={data.structures} meta={data.meta} selectedCandidates={selectedCandidates}
                                          onCandidateSelection={this.onCandidateSelection}/>
                 </div>
                 <div style={{'height': '400px', 'flexBasis': 0, 'flexGrow': 1}}>
@@ -96,7 +95,7 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
             </div>
 
             <StructureGraphComponent data={data.xai.structures} pipelines={pipelines}
-                                     selectedCandidates={selectedCandidates} candidates={data.configs}
+                                     selectedCandidates={selectedCandidates} structures={data.structures}
                                      onCandidateSelection={this.onCandidateSelection}/>
         </>
     }

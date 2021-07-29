@@ -119,37 +119,32 @@ export class Pipeline {
 
 export class Structure {
 
-    constructor(public readonly pipeline: Pipeline,
+    constructor(public readonly cid: CandidateId,
+                public readonly pipeline: Pipeline,
                 public readonly budget: number,
-                public readonly configspace: string) {
+                public readonly configspace: string,
+                public readonly configs: Candidate[]) {
     }
 
     static fromJson(structure: Structure): Structure {
         // raw pipeline data is list of tuple and not object
         const pipeline = new Pipeline(structure.pipeline as unknown as [string, string][])
-        return new Structure(pipeline, structure.budget, structure.configspace)
+        const configs = structure.configs.map(c => Candidate.fromJson(c))
+        return new Structure(structure.cid, pipeline, structure.budget, structure.configspace, configs)
     }
 }
 
 export class Runhistory {
     constructor(public readonly meta: MetaInformation,
-                public readonly structures: Map<CandidateId, Structure>,
-                public readonly configs: Map<CandidateId, Candidate[]>,
+                public readonly structures: Structure[],
                 public readonly xai: XAI) {
     }
 
     static fromJson(runhistory: Runhistory): Runhistory {
-        const candidates = new Map<CandidateId, Candidate[]>();
-        Object.entries<Candidate[]>(runhistory.configs as {})
-            .forEach(k => candidates.set(k[0], k[1].map(c => Candidate.fromJson(c))));
-
-        const structures = new Map<CandidateId, Structure>();
-        Object.entries<Structure>(runhistory.structures as {})
-            .forEach(k => structures.set(k[0], Structure.fromJson(k[1])))
+        const structures = runhistory.structures.map(s => Structure.fromJson(s))
 
         return new Runhistory(MetaInformation.fromJson(runhistory.meta),
             structures,
-            candidates,
             XAI.fromJson(runhistory.xai))
     }
 }
