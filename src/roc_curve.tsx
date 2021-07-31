@@ -1,7 +1,16 @@
 import React from "react";
 import {CandidateId, MetaInformation} from "./model";
 import {requestRocCurve} from "./handler";
-import {DiscreteColorLegend, HorizontalGridLines, LineSeries, VerticalGridLines, XAxis, XYPlot, YAxis} from "react-vis";
+import {
+    DiscreteColorLegend,
+    HorizontalGridLines,
+    LineSeries,
+    makeHeightFlexible, makeWidthFlexible,
+    VerticalGridLines,
+    XAxis,
+    XYPlot,
+    YAxis
+} from "react-vis";
 import 'react-vis/dist/style.css'
 
 
@@ -56,8 +65,9 @@ export class RocCurve extends React.Component<RocCurveProps, RocCurveState> {
             const legend = <DiscreteColorLegend style={{position: 'absolute', right: '10px', bottom: '55px'}}
                                                 items={labels}/>
 
+            const FlexibleXYPlot = makeHeightFlexible(makeWidthFlexible(XYPlot))
             return (
-                <XYPlot width={400} height={400}>
+                <FlexibleXYPlot>
                     <HorizontalGridLines/>
                     <VerticalGridLines/>
                     <XAxis title="False Positive Rate"/>
@@ -65,7 +75,7 @@ export class RocCurve extends React.Component<RocCurveProps, RocCurveState> {
 
                     {data.map((s, idx) => <LineSeries key={labels[idx]} data={s}/>)}
                     {labels.length < 15 && legend}
-                </XYPlot>
+                </FlexibleXYPlot>
             )
         } else if (this.state.loading) {
             return <div>Loading...</div>

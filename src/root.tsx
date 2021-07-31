@@ -81,15 +81,17 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
         }
         return <>
             <MetaInformationTable meta={data.meta}/>
-            <CandidateTable structures={data.structures} metric_sign={data.meta.metric_sign}
-                            selectedCandidates={selectedCandidates}
-                            onCandidateSelection={this.onCandidateSelection}/>
-            <div style={{'display': 'flex'}}>
-                <div style={{'height': '400px', 'flexBasis': 0, 'flexGrow': 1}}>
+            <div style={{height: 640, width: '100%'}}>
+                <CandidateTable structures={data.structures} metric_sign={data.meta.metric_sign}
+                                selectedCandidates={selectedCandidates}
+                                onCandidateSelection={this.onCandidateSelection}/>
+            </div>
+            <div style={{display: 'flex', height: '400px'}}>
+                <div style={{height: '100%', flexBasis: 0, flexGrow: 1}}>
                     <PerformanceTimeline data={data.structures} meta={data.meta} selectedCandidates={selectedCandidates}
                                          onCandidateSelection={this.onCandidateSelection}/>
                 </div>
-                <div style={{'height': '400px', 'flexBasis': 0, 'flexGrow': 1}}>
+                <div style={{height: '100%', flexBasis: 0, flexGrow: 1}}>
                     <RocCurve selectedCandidates={selectedCandidates} meta={data.meta}/>
                 </div>
             </div>

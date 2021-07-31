@@ -1,7 +1,17 @@
 import React from 'react';
 import {CandidateId, MetaInformation, Structure} from "./model";
 import {fixedPrec} from "./util";
-import {Hint, HorizontalGridLines, LineSeries, MarkSeries, VerticalGridLines, XAxis, XYPlot, YAxis} from "react-vis";
+import {
+    Hint,
+    HorizontalGridLines,
+    LineSeries, makeHeightFlexible,
+    makeWidthFlexible,
+    MarkSeries,
+    VerticalGridLines,
+    XAxis,
+    XYPlot,
+    YAxis
+} from "react-vis";
 
 import * as d3 from 'd3'
 
@@ -78,8 +88,9 @@ export default class PerformanceTimeline extends React.Component<ConfigHistoryPr
         }));
         const incumbent = this.state.data.map(d => ({x: d.x, y: d.Incumbent}))
 
+        const FlexibleXYPlot = makeHeightFlexible(makeWidthFlexible(XYPlot))
         return (
-            <XYPlot width={400} height={400}>
+            <FlexibleXYPlot>
                 <HorizontalGridLines/>
                 <VerticalGridLines/>
                 <XAxis title="Timestamp"/>
@@ -93,7 +104,7 @@ export default class PerformanceTimeline extends React.Component<ConfigHistoryPr
                 />
 
                 {this.state.hovered ? <Hint value={{'x': this.state.hovered.x, 'y': this.state.hovered.y}}/> : null}
-            </XYPlot>
+            </FlexibleXYPlot>
         );
     }
 }

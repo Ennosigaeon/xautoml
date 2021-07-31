@@ -60,27 +60,25 @@ export default class CandidateTable extends React.Component<CandidateTableProps,
         ];
 
         return (
-            <div style={{height: 640, width: '100%'}}>
-                <DataGrid
-                    rows={rows}
-                    columns={columns}
-                    pageSize={10}
-                    sortModel={[{
-                        field: 'performance',
-                        sort: 'desc',
-                    }]}
-                    getRowClassName={(params) => {
-                        if (this.props.selectedCandidates.includes(params.id as string))
-                            return 'selected-config'
-                        else if (additionalData.get(params.id as CandidateId)[1].status != Candidate.SUCCESS)
-                            return 'failed-config'
-                        else return ''
-                    }}
-                    checkboxSelection
-                    selectionModel={this.props.selectedCandidates}
-                    onSelectionModelChange={this.processSelection}
-                />
-            </div>
+            <DataGrid
+                rows={rows}
+                columns={columns}
+                pageSize={10}
+                sortModel={[{
+                    field: 'performance',
+                    sort: 'desc',
+                }]}
+                getRowClassName={(params) => {
+                    if (this.props.selectedCandidates.includes(params.id as string))
+                        return 'selected-config'
+                    else if (additionalData.get(params.id as CandidateId)[1].status != Candidate.SUCCESS)
+                        return 'failed-config'
+                    else return ''
+                }}
+                checkboxSelection
+                selectionModel={this.props.selectedCandidates}
+                onSelectionModelChange={this.processSelection}
+            />
         )
     }
 }
