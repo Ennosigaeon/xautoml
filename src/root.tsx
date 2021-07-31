@@ -5,9 +5,9 @@ import {CandidateId, Pipeline, Runhistory} from "./model";
 import MetaInformationTable from "./meta_information";
 import CandidateTable from "./candidate_table";
 import PerformanceTimeline from "./performance_timeline";
-import {StructureGraphComponent} from "./structuregraph";
 import {catchReactWarnings} from "./util";
 import {RocCurve} from "./roc_curve";
+import {BanditExplanationsComponent} from "./bandit_explanation";
 
 
 /**
@@ -94,9 +94,9 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
                 </div>
             </div>
 
-            <StructureGraphComponent data={data.xai.structures} pipelines={pipelines}
-                                     selectedCandidates={selectedCandidates} structures={data.structures}
-                                     onCandidateSelection={this.onCandidateSelection}/>
+            <BanditExplanationsComponent data={data.explanations.structures} pipelines={pipelines}
+                                         selectedCandidates={selectedCandidates} structures={data.structures}
+                                         onCandidateSelection={this.onCandidateSelection}/>
         </>
     }
 

@@ -3,7 +3,7 @@ export type CandidateId = string
 export type Config = Map<string, number | string | boolean>
 
 
-export class NodeDetails {
+export class BanditDetails {
 
     constructor(public readonly failure_message: string,
                 public readonly visits: number,
@@ -12,8 +12,8 @@ export class NodeDetails {
                 public readonly policy: PolicyData) {
     }
 
-    static fromJson(nodeDetails: NodeDetails): NodeDetails {
-        return new NodeDetails(nodeDetails.failure_message,
+    static fromJson(nodeDetails: BanditDetails): BanditDetails {
+        return new BanditDetails(nodeDetails.failure_message,
             nodeDetails.visits,
             nodeDetails.reward,
             nodeDetails.selected,
@@ -21,25 +21,25 @@ export class NodeDetails {
     }
 }
 
-export class StructureGraphNode {
+export class HierarchicalBandit {
     constructor(public readonly id: number,
                 public readonly label: string,
-                public readonly details: Map<string, NodeDetails>,
-                public readonly children?: StructureGraphNode[]) {
+                public readonly details: Map<string, BanditDetails>,
+                public readonly children?: HierarchicalBandit[]) {
     }
 
-    static fromJson(graphNode: StructureGraphNode): StructureGraphNode {
-        const details: Map<string, NodeDetails> = new Map<string, NodeDetails>();
-        Object.entries<NodeDetails>(graphNode.details as {})
-            .forEach(k => details.set(k[0], NodeDetails.fromJson(k[1])));
+    static fromJson(graphNode: HierarchicalBandit): HierarchicalBandit {
+        const details: Map<string, BanditDetails> = new Map<string, BanditDetails>();
+        Object.entries<BanditDetails>(graphNode.details as {})
+            .forEach(k => details.set(k[0], BanditDetails.fromJson(k[1])));
 
-        return new StructureGraphNode(graphNode.id,
+        return new HierarchicalBandit(graphNode.id,
             graphNode.label,
             details,
-            graphNode.children?.map(d => StructureGraphNode.fromJson(d)))
+            graphNode.children?.map(d => HierarchicalBandit.fromJson(d)))
     }
 
-    getDetails(key: string): NodeDetails {
+    getDetails(key: string): BanditDetails {
         return this.details.get(key)
     }
 
@@ -48,12 +48,12 @@ export class StructureGraphNode {
     }
 }
 
-export class XAI {
-    constructor(public readonly structures: StructureGraphNode) {
+export class Explanations {
+    constructor(public readonly structures: HierarchicalBandit) {
     }
 
-    static fromJson(xai: XAI) {
-        return new XAI(StructureGraphNode.fromJson(xai.structures))
+    static fromJson(xai: Explanations) {
+        return new Explanations(HierarchicalBandit.fromJson(xai.structures))
     }
 }
 
@@ -137,7 +137,7 @@ export class Structure {
 export class Runhistory {
     constructor(public readonly meta: MetaInformation,
                 public readonly structures: Structure[],
-                public readonly xai: XAI) {
+                public readonly explanations: Explanations) {
     }
 
     static fromJson(runhistory: Runhistory): Runhistory {
@@ -145,6 +145,6 @@ export class Runhistory {
 
         return new Runhistory(MetaInformation.fromJson(runhistory.meta),
             structures,
-            XAI.fromJson(runhistory.xai))
+            Explanations.fromJson(runhistory.explanations))
     }
 }

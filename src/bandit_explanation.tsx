@@ -3,49 +3,35 @@ import * as d3 from "d3";
 import {HierarchyNode, HierarchyPointNode, TreeLayout} from "d3";
 import {Animate} from "react-move";
 import {easeExpInOut} from "d3-ease";
-import {CandidateId, NodeDetails, Pipeline, Structure, StructureGraphNode} from "./model";
+import {BanditDetails, CandidateId, HierarchicalBandit, Pipeline, Structure} from "./model";
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
 import {normalizeComponent} from "./util";
 
-interface StructureGraphProps {
-    data: StructureGraphNode;
-    pipelines: Map<CandidateId, Pipeline>;
-    structures: Structure[];
-    selectedCandidates: CandidateId[];
-    onCandidateSelection?: (cid: CandidateId[]) => void;
-}
-
-interface StructureGraphState {
-    nodes: CollapsibleHierarchyPointNode<StructureGraphNode>;
-    source: CollapsibleHierarchyPointNode<StructureGraphNode>;
-    sliderMarks: { [key: string]: string; };
-    timestamp: string;
-}
-
-interface CollapsibleHierarchyNode<Datum> extends HierarchyNode<Datum> {
+interface CollapsibleNode<Datum> extends HierarchyNode<Datum> {
     _children?: this[];
 }
 
-interface CollapsibleHierarchyPointNode<Datum> extends HierarchyPointNode<Datum> {
+interface CollapsiblePointNode<Datum> extends HierarchyPointNode<Datum> {
     _children?: this[];
-}
-
-interface StructureGraphElementProps {
-    source: CollapsibleHierarchyPointNode<StructureGraphNode>;
-    node: CollapsibleHierarchyPointNode<StructureGraphNode>;
-    timestamp: string;
-    highlight: boolean;
-    onClickHandler?: (d: CollapsibleHierarchyPointNode<StructureGraphNode>) => void;
-    onDoubleClickHandler?: (d: CollapsibleHierarchyPointNode<StructureGraphNode>) => void;
 }
 
 const NODE_HEIGHT = 65;
 const NODE_WIDTH = 190;
 
-class GraphNode extends React.Component<StructureGraphElementProps, any> {
 
-    constructor(props: StructureGraphElementProps) {
+interface GraphElementProps {
+    source: CollapsiblePointNode<HierarchicalBandit>;
+    node: CollapsiblePointNode<HierarchicalBandit>;
+    timestamp: string;
+    highlight: boolean;
+    onClickHandler?: (d: CollapsiblePointNode<HierarchicalBandit>) => void;
+    onDoubleClickHandler?: (d: CollapsiblePointNode<HierarchicalBandit>) => void;
+}
+
+class GraphNode extends React.Component<GraphElementProps, any> {
+
+    constructor(props: GraphElementProps) {
         super(props);
         this.handleClick = this.handleClick.bind(this);
         this.handleDoubleClick = this.handleDoubleClick.bind(this);
@@ -63,7 +49,7 @@ class GraphNode extends React.Component<StructureGraphElementProps, any> {
         }
     }
 
-    private determineState(details: NodeDetails) {
+    private determineState(details: BanditDetails) {
         if (this.props.highlight) {
             return 'selected selected-config'
         }
@@ -114,11 +100,7 @@ class GraphNode extends React.Component<StructureGraphElementProps, any> {
     }
 }
 
-class GraphEdge extends React.Component<StructureGraphElementProps, any> {
-
-    constructor(props: StructureGraphElementProps) {
-        super(props);
-    }
+class GraphEdge extends React.Component<GraphElementProps, any> {
 
     render() {
         const node = this.props.node;
@@ -153,11 +135,27 @@ class GraphEdge extends React.Component<StructureGraphElementProps, any> {
     }
 }
 
-export class StructureGraphComponent extends React.Component<StructureGraphProps, StructureGraphState> {
 
-    private readonly containerRef: React.RefObject<SVGSVGElement>;
-    private readonly layout: TreeLayout<StructureGraphNode>;
-    private readonly margin: number;
+interface BanditExplanationsProps {
+    data: HierarchicalBandit;
+    pipelines: Map<CandidateId, Pipeline>;
+    structures: Structure[];
+    selectedCandidates: CandidateId[];
+    onCandidateSelection?: (cid: CandidateId[]) => void;
+}
+
+interface BanditExplanationsState {
+    nodes: CollapsiblePointNode<HierarchicalBandit>;
+    source: CollapsiblePointNode<HierarchicalBandit>;
+    sliderMarks: { [key: string]: string; };
+    timestamp: string;
+}
+
+export class BanditExplanationsComponent extends React.Component<BanditExplanationsProps, BanditExplanationsState> {
+
+    private readonly containerRef: React.RefObject<SVGSVGElement> = React.createRef<SVGSVGElement>();
+    private readonly layout: TreeLayout<HierarchicalBandit> = d3.tree<HierarchicalBandit>().size([1, 1]);
+    private readonly margin: number = 20;
     private reversePipelines: Map<number, CandidateId[]>;
 
     static defaultProps = {
@@ -165,11 +163,8 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
         }
     }
 
-    constructor(props: StructureGraphProps) {
+    constructor(props: BanditExplanationsProps) {
         super(props);
-        this.containerRef = React.createRef<SVGSVGElement>();
-        this.margin = 20;
-        this.layout = d3.tree<StructureGraphNode>().size([1, 1]);
         this.state = {nodes: undefined, source: undefined, sliderMarks: {}, timestamp: undefined};
 
         this.selectNode = this.selectNode.bind(this);
@@ -180,7 +175,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
     componentDidMount() {
         // Crude hack to actually wait for base container to be rendered in Jupyter
         window.setTimeout(() => {
-            const nodes: CollapsibleHierarchyNode<StructureGraphNode> = d3.hierarchy(this.props.data, d => d.children);
+            const nodes: CollapsibleNode<HierarchicalBandit> = d3.hierarchy(this.props.data, d => d.children);
 
             const detailsKeysSet = new Set<string>()
             nodes.descendants().map(d => Array.from(d.data.details.keys()).forEach(k => detailsKeysSet.add(k)));
@@ -189,7 +184,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
             detailsKeysArray.forEach((k, idx) => detailsKeys[idx] = k)
             const timestamp = detailsKeysArray.slice(-1)[0]
 
-            StructureGraphComponent.collapseAll(nodes, timestamp);
+            BanditExplanationsComponent.collapseAll(nodes, timestamp);
 
             const root = this.layout(nodes)
             this.adaptHeight(root)
@@ -202,7 +197,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
         }, 500)
     }
 
-    componentDidUpdate(prevProps: Readonly<StructureGraphProps>, prevState: Readonly<StructureGraphState>, snapshot?: any) {
+    componentDidUpdate(prevProps: Readonly<BanditExplanationsProps>, prevState: Readonly<BanditExplanationsState>, snapshot?: any) {
         if (prevProps.pipelines !== this.props.pipelines) {
             this.reversePipelines = new Map<number, CandidateId[]>();
             this.reversePipelines.set(0, [])
@@ -221,18 +216,18 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
         }
     }
 
-    private static collapseAll(d: CollapsibleHierarchyNode<StructureGraphNode>, key: string) {
+    private static collapseAll(d: CollapsibleNode<HierarchicalBandit>, key: string) {
         if (d.children) {
             d.children.forEach(d2 => this.collapseAll(d2, key))
-            StructureGraphComponent.collapseNode(d, key)
+            BanditExplanationsComponent.collapseNode(d, key)
         }
     }
 
-    private static collapseNode(d: CollapsibleHierarchyNode<StructureGraphNode>, key: string) {
-        const unvisited: CollapsibleHierarchyNode<StructureGraphNode>[] = [];
-        const visited: CollapsibleHierarchyNode<StructureGraphNode>[] = [];
+    private static collapseNode(d: CollapsibleNode<HierarchicalBandit>, key: string) {
+        const unvisited: CollapsibleNode<HierarchicalBandit>[] = [];
+        const visited: CollapsibleNode<HierarchicalBandit>[] = [];
         // noinspection JSMismatchedCollectionQueryUpdate
-        const hidden: CollapsibleHierarchyNode<StructureGraphNode>[] = [];
+        const hidden: CollapsibleNode<HierarchicalBandit>[] = [];
 
         d.children.forEach(child => {
             const details = child.data.getDetails(key)
@@ -252,7 +247,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
             d.children = undefined
     }
 
-    private selectNode(node: CollapsibleHierarchyPointNode<StructureGraphNode>) {
+    private selectNode(node: CollapsiblePointNode<HierarchicalBandit>) {
         const candidates = this.reversePipelines.get(node.data.id)
             .map(id => this.props.structures.filter(s => s.cid === id).pop().configs)
             .reduce((acc, val) => acc.concat(val), [])
@@ -268,13 +263,13 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
         }
     }
 
-    private toggleNode(node: CollapsibleHierarchyPointNode<StructureGraphNode>) {
+    private toggleNode(node: CollapsiblePointNode<HierarchicalBandit>) {
         if (!node.children && !node._children) {
             // No children
             return;
         } else if (node._children?.length === 0) {
             // Node is expanded
-            StructureGraphComponent.collapseNode(node, this.state.timestamp);
+            BanditExplanationsComponent.collapseNode(node, this.state.timestamp);
         } else {
             // Node is collapsed
             const children = node.children ? node.children.concat(node._children) : node._children;
@@ -289,8 +284,8 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
     private changeTimestamp(v: number) {
         const timestamp = this.state.sliderMarks[v];
 
-        const nodes: CollapsibleHierarchyNode<StructureGraphNode> = d3.hierarchy(this.props.data, d => d.children);
-        StructureGraphComponent.collapseAll(nodes, timestamp);
+        const nodes: CollapsibleNode<HierarchicalBandit> = d3.hierarchy(this.props.data, d => d.children);
+        BanditExplanationsComponent.collapseAll(nodes, timestamp);
 
         const root = this.layout(nodes)
         this.adaptHeight(root)
@@ -301,7 +296,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
         });
     }
 
-    private adaptHeight(root: CollapsibleHierarchyNode<StructureGraphNode>) {
+    private adaptHeight(root: CollapsibleNode<HierarchicalBandit>) {
         if (!root) {
             return 100;
         }
@@ -322,7 +317,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
             this.containerRef.current?.setAttribute('height', newHeight.toString());
         }
 
-        (root.descendants() as CollapsibleHierarchyPointNode<StructureGraphNode>[])
+        (root.descendants() as CollapsiblePointNode<HierarchicalBandit>[])
             .map(d => {
                 d.y = d.depth * (NODE_WIDTH + 75);
                 d.x = d.x * (newHeight - 2 * this.margin);
@@ -331,7 +326,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
     }
 
     render() {
-        const nodes = this.state.nodes ? (this.state.nodes.descendants() as CollapsibleHierarchyPointNode<StructureGraphNode>[]) : [];
+        const nodes = this.state.nodes ? (this.state.nodes.descendants() as CollapsiblePointNode<HierarchicalBandit>[]) : [];
         const nSteps = Object.keys(this.state.sliderMarks).length - 1;
 
         const highlightedNodes: number[] = this.props.selectedCandidates.map(cid => cid.substring(0, cid.indexOf(':', 4)))
