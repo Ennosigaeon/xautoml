@@ -1,6 +1,6 @@
 import React from "react";
-import {CandidateId, MetaInformation} from "./model";
-import {requestRocCurve} from "./handler";
+import {CandidateId, MetaInformation} from "../model";
+import {requestRocCurve} from "../handler";
 import {
     DiscreteColorLegend,
     HorizontalGridLines,

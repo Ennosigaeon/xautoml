@@ -1,5 +1,5 @@
 import React from "react";
-import {Candidate, CandidateId, Structure} from "./model";
+import {Candidate, CandidateId, Structure} from "../model";
 import {DataGrid, GridColDef, GridRowId} from '@material-ui/data-grid';
 import {StructureGraphComponent} from "./structure_graph";
 

@@ -1,6 +1,6 @@
 import React from 'react';
-import {CandidateId, MetaInformation, Structure} from "./model";
-import {fixedPrec} from "./util";
+import {CandidateId, MetaInformation, Structure} from "../model";
+import {fixedPrec} from "../util";
 import {
     Hint,
     HorizontalGridLines,

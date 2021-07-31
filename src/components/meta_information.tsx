@@ -1,5 +1,5 @@
 import React from "react";
-import {MetaInformation} from "./model";
+import {MetaInformation} from "../model";
 import {Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow} from "@material-ui/core";
 
 interface MetaInformationProps {

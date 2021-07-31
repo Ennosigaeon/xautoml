@@ -3,10 +3,10 @@ import * as d3 from "d3";
 import {HierarchyNode, HierarchyPointNode, TreeLayout} from "d3";
 import {Animate} from "react-move";
 import {easeExpInOut} from "d3-ease";
-import {BanditDetails, CandidateId, HierarchicalBandit, Pipeline, Structure} from "./model";
+import {BanditDetails, CandidateId, HierarchicalBandit, Pipeline, Structure} from "../model";
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
-import {normalizeComponent} from "./util";
+import {normalizeComponent} from "../util";
 
 interface CollapsibleNode<Datum> extends HierarchyNode<Datum> {
     _children?: this[];

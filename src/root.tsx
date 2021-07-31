@@ -2,12 +2,12 @@ import React from "react";
 import {ReactWidget} from "@jupyterlab/apputils";
 import {IRenderMime} from "@jupyterlab/rendermime-interfaces";
 import {CandidateId, Pipeline, Runhistory} from "./model";
-import MetaInformationTable from "./meta_information";
-import CandidateTable from "./candidate_table";
-import PerformanceTimeline from "./performance_timeline";
+import MetaInformationTable from "./components/meta_information";
+import CandidateTable from "./components/candidate_table";
+import PerformanceTimeline from "./components/performance_timeline";
 import {catchReactWarnings} from "./util";
-import {RocCurve} from "./roc_curve";
-import {BanditExplanationsComponent} from "./bandit_explanation";
+import {RocCurve} from "./components/roc_curve";
+import {BanditExplanationsComponent} from "./components/bandit_explanation";
 
 
 /**

@@ -1,8 +1,8 @@
 import React from "react";
-import {Candidate, Config, ConfigValue, Structure} from "./model";
+import {Candidate, Config, ConfigValue, Structure} from "../model";
 import * as dagre from "dagre";
 import {graphlib} from "dagre";
-import {fixedPrec, normalizeComponent} from "./util";
+import {fixedPrec, normalizeComponent} from "../util";
 import {Paper, Table, TableBody, TableCell, TableContainer, TableRow, Tooltip, Typography} from "@material-ui/core";
 
 
