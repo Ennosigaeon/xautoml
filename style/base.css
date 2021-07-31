@@ -8,7 +8,18 @@
     text-align: center;
 }
 
-.base-container {
+.selected-config {
+    background-color: #007bff !important;
+    fill: #007bff !important;
+}
+
+.failed-config {
+    background-color: #dc3545;
+}
+
+
+/** Bandit Explanation */
+svg.bandit-explanation {
     display: block;
     width: 99%;
     border: 2px solid gold;
@@ -16,16 +27,7 @@
     user-select: none;
 }
 
-.selected-config {
-    background-color: #007bff !important;
-    fill: #007bff !important;
-}
-
-.node {
-    cursor: pointer;
-}
-
-.node-content {
+.bandit-explanation_node-content {
     background-color: #28a745;
     stroke: steelblue;
     stroke-width: 3px;
@@ -35,53 +37,44 @@
     border: 1px solid black;
 }
 
-.node-content.selected {
+.bandit-explanation_node-content.selected {
     border: 3px solid black;
 }
 
-.node-content.node-duplicate {
+.bandit-explanation_node-content.node-duplicate {
     background-color: #ffc107;
 }
 
-.config-table-failure,
-.node-content.node-crashed {
-    background-color: #dc3545;
-}
-
-.node-content.node-unvisited {
+.bandit-explanation_node-content.node-unvisited {
     background-color: #f8f9fa;
 }
 
-.node h3 {
+.bandit-explanation_node {
+    cursor: pointer;
+}
+
+.bandit-explanation_node h3 {
     margin: 0;
     padding: 0;
 }
 
-.node-details {
+.bandit-explanation_node-details {
     display: grid;
     grid-template-columns: 50% 50%;
 }
 
-.link {
+.bandit-explanation_link {
     fill: none;
     stroke: #ccc;
     stroke-width: 2px;
 }
 
-.link.selected {
+.bandit-explanation_link.selected {
     stroke-width: 5px;
 }
 
 
-div.rv-discrete-color-legend-item {
-    padding: 2px 5px;
-}
-
-
-/**
-Candidate Table
- */
-
+/** Candidate Table */
 .candidate-table_vertical-header {
     writing-mode: vertical-lr;
 }
@@ -91,7 +84,7 @@ Candidate Table
 }
 
 .candidate-table_vertical-header .MuiDataGrid-menuIcon,
-.candidate-table_vertical-header .MuiDataGrid-columnSeparator{
+.candidate-table_vertical-header .MuiDataGrid-columnSeparator {
     display: none !important;
 }
 

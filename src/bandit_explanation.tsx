@@ -62,7 +62,7 @@ class GraphNode extends React.Component<GraphElementProps, any> {
             return `${selected} node-duplicate`;
         if (details.failure_message === 'Unvisited')
             return `${selected} node-unvisited`;
-        return 'node-crashed';
+        return 'failed-config';
     }
 
     render() {
@@ -79,12 +79,12 @@ class GraphNode extends React.Component<GraphElementProps, any> {
                 update={{x: [node.x], y: [node.y], opacity: [1], r: [10], timing: {duration: 750, ease: easeExpInOut}}}
                 enter={{x: [node.x], y: [node.y], opacity: [1], r: [10], timing: {duration: 750, ease: easeExpInOut}}}
             >{({x: x, y: y, opacity: opacity, r: r}) =>
-                <g className={'node'} transform={`translate(${y},${x})`} onDoubleClick={this.handleDoubleClick}
+                <g className={'bandit-explanation_node'} transform={`translate(${y},${x})`} onDoubleClick={this.handleDoubleClick}
                    onClick={this.handleClick}>
                     <foreignObject x={0} y={-NODE_HEIGHT / 2} width={NODE_WIDTH} height={NODE_HEIGHT}>
-                        <div className={`node-content ${className}`}>
+                        <div className={`bandit-explanation_node-content ${className}`}>
                             <h3>{normalizeComponent(data.label)} ({data.id})</h3>
-                            <div className={'node-details'}>
+                            <div className={'bandit-explanation_node-details'}>
                                 <div>{details.failure_message ? details.failure_message : 'Reward: ' + (details.reward / details.visits).toFixed(3)}</div>
                                 <div>Visits: {details.visits}</div>
                                 {Array.from(details.policy.keys()).map(k =>
@@ -124,7 +124,7 @@ class GraphEdge extends React.Component<GraphElementProps, any> {
                     timing: {duration: 750, ease: easeExpInOut}
                 }}
             >{({source: source, target: target}) =>
-                <path className={details.selected || this.props.highlight ? 'link selected' : 'link'} d={
+                <path className={details.selected || this.props.highlight ? 'bandit-explanation_link bandit-explanation_selected' : 'bandit-explanation_link'} d={
                     d3.linkHorizontal().x(d => d[1]).y(d => d[0])({
                         source: [source.x, source.y],
                         target: [target.x, target.y]
@@ -334,7 +334,7 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
             .reduce((acc, val) => acc.concat(val), [])
 
         return <>
-            <svg className={'base-container'} ref={this.containerRef}>
+            <svg className={'bandit-explanation'} ref={this.containerRef}>
                 {this.state.nodes && <g transform={`translate(${this.margin},${this.margin})`}>
                     {nodes.map(d => <GraphEdge key={d.data.id} source={this.state.nodes} node={d}
                                                highlight={highlightedNodes.includes(d.data.id)}

@@ -163,7 +163,7 @@ export default class CandidateTable extends React.Component<CandidateTableProps,
                         if (this.props.selectedCandidates.includes(params.id as string))
                             return 'selected-config'
                         else if (additionalData.get(params.id as CandidateId)[2] != Candidate.SUCCESS)
-                            return 'config-table-failure'
+                            return 'failed-config'
                         else return ''
                     }}
                     checkboxSelection
