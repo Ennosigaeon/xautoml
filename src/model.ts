@@ -72,6 +72,7 @@ export class Candidate {
 
     constructor(public readonly id: CandidateId,
                 public readonly status: string,
+                public readonly budget: number,
                 public readonly loss: [number, number],
                 public readonly runtime: Runtime,
                 public readonly config: Config) {
@@ -82,7 +83,7 @@ export class Candidate {
         Object.entries<string | number>(candidate.config as {})
             .forEach(k => config.set(k[0], k[1]));
 
-        return new Candidate(candidate.id, candidate.status, candidate.loss, Runtime.fromJson(candidate.runtime), config)
+        return new Candidate(candidate.id, candidate.status, candidate.budget, candidate.loss, Runtime.fromJson(candidate.runtime), config)
     }
 }
 
@@ -121,7 +122,6 @@ export class Structure {
 
     constructor(public readonly cid: CandidateId,
                 public readonly pipeline: Pipeline,
-                public readonly budget: number,
                 public readonly configspace: string,
                 public readonly configs: Candidate[]) {
     }
@@ -130,7 +130,7 @@ export class Structure {
         // raw pipeline data is list of tuple and not object
         const pipeline = new Pipeline(structure.pipeline as unknown as [string, string][])
         const configs = structure.configs.map(c => Candidate.fromJson(c))
-        return new Structure(structure.cid, pipeline, structure.budget, structure.configspace, configs)
+        return new Structure(structure.cid, pipeline, structure.configspace, configs)
     }
 }
 
