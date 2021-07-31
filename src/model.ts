@@ -1,6 +1,7 @@
 export type PolicyData = Map<string, number>
 export type CandidateId = string
-export type Config = Map<string, number | string | boolean>
+export type ConfigValue = number | string | boolean
+export type Config = Map<string, ConfigValue>
 
 
 export class BanditDetails {

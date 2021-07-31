@@ -96,3 +96,25 @@ svg.bandit-explanation {
     border-radius: 10px;
     line-height: 40px;
 }
+
+/** Structure Graph */
+.structure-graph_node {
+    border: 1px solid black;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    display: block;
+    text-align: center;
+    line-height: 40px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 2px ;
+}
+
+.structure-graph_end-node {
+    border-radius: 50%;
+    box-sizing: border-box;
+    border: 2px solid black;
+    height: 50%;
+    display: block;
+}

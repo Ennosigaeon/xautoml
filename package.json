@@ -55,6 +55,7 @@
     "@material-ui/core": "^4.12.2",
     "@material-ui/data-grid": "^4.0.0-alpha.34",
     "d3": "^6.7.0",
+    "dagre": "^0.8.5",
     "rc-slider": "^9.7.2",
     "react-move": "^6.5.0",
     "react-vis": "^1.11.7"
@@ -62,6 +63,7 @@
   "devDependencies": {
     "@jupyterlab/builder": "^3.0.0",
     "@types/d3": "^6.7.0",
+    "@types/dagre": "^0.7.46",
     "@types/react-vis": "^1.11.7",
     "@typescript-eslint/eslint-plugin": "^4.27.0",
     "@typescript-eslint/parser": "^4.27.0",
