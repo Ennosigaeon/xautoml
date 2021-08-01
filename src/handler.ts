@@ -2,6 +2,7 @@ import {URLExt} from '@jupyterlab/coreutils';
 
 import {ServerConnection} from '@jupyterlab/services';
 import {CandidateId} from "./model";
+import {LineSeriesPoint} from "react-vis";
 
 /**
  * Call the API extension
@@ -47,22 +48,27 @@ export async function requestAPI<T>(
 }
 
 
-export async function requestRocCurve(cids: CandidateId[], data_file: string, model_dir: string) {
-    return requestAPI<any>('roc_auc', {
+export async function requestRocCurve(cids: CandidateId[], data_file: string, model_dir: string): Promise<Map<string, LineSeriesPoint[]>> {
+    return requestAPI<Map<string, LineSeriesPoint[]>>('roc_auc', {
         method: 'POST', body: JSON.stringify({
             'cids': cids.join(','),
             'data_file': data_file,
             'model_dir': model_dir
         })
-    })
+    }).then(data => new Map<string, LineSeriesPoint[]>(Object.entries(data)))
 }
 
-export async function requestOutputDescription(cids: CandidateId[], data_file: string, model_dir: string): Promise<any> {
-    return requestAPI<any>('output/description', {
+export async function requestOutputDescription(cids: CandidateId[], data_file: string, model_dir: string): Promise<Map<string, Map<string, string>>> {
+    return requestAPI<Map<string, Map<string, string>>>('output/description', {
         method: 'POST', body: JSON.stringify({
             'cids': cids.join(','),
             'data_file': data_file,
             'model_dir': model_dir
         })
+    }).then(data => {
+        return new Map<string, Map<string, string>>(
+            Object.entries(data)
+                .map(([key, value]) => [key, new Map<string, string>(Object.entries(value))])
+        )
     })
 }

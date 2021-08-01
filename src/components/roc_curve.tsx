@@ -5,7 +5,9 @@ import {
     DiscreteColorLegend,
     HorizontalGridLines,
     LineSeries,
-    makeHeightFlexible, makeWidthFlexible,
+    LineSeriesPoint,
+    makeHeightFlexible,
+    makeWidthFlexible,
     VerticalGridLines,
     XAxis,
     XYPlot,
@@ -22,7 +24,7 @@ interface RocCurveProps {
 
 interface RocCurveState {
     loading: boolean
-    data: any
+    data: Map<string, LineSeriesPoint[]>
 }
 
 export class RocCurve extends React.Component<RocCurveProps, RocCurveState> {
@@ -30,36 +32,46 @@ export class RocCurve extends React.Component<RocCurveProps, RocCurveState> {
     constructor(props: RocCurveProps) {
         super(props)
 
-        this.state = {loading: false, data: undefined}
+        this.state = {loading: false, data: new Map<string, LineSeriesPoint[]>()}
     }
 
     componentDidUpdate(prevProps: Readonly<RocCurveProps>, prevState: Readonly<RocCurveState>, snapshot?: any) {
         if (prevProps.selectedCandidates !== this.props.selectedCandidates) {
-            // TODO fetch only new curves
-            // TODO remove odl curves without recalculation
-            if (this.props.selectedCandidates.length > 0) {
+            // Remove previously selected candidates
+            const superfluousCandidates = prevProps.selectedCandidates.filter(c => this.props.selectedCandidates.indexOf(c) === -1)
+            const currentCandidates = this.state.data
+            const currentKeys = Array.from(currentCandidates.keys())
+            superfluousCandidates.forEach(c => {
+                currentKeys.filter(k => k.startsWith(c)).forEach(k => currentCandidates.delete(k))
+            })
+            this.setState({data: currentCandidates})
+
+            // Fetch new selected candidates
+            const newCandidates = this.props.selectedCandidates.filter(c => prevProps.selectedCandidates.indexOf(c) === -1)
+            if (newCandidates.length > 0) {
                 this.setState({loading: true})
-                requestRocCurve(this.props.selectedCandidates, this.props.meta.data_file, this.props.meta.model_dir)
+                requestRocCurve(newCandidates, this.props.meta.data_file, this.props.meta.model_dir)
                     .then(data => {
-                        this.setState({data: data})
-                        console.log(data);
+                        const currentCandidates = this.state.data
+                        data.forEach((v, k) => currentCandidates.set(k, v))
+                        this.setState({data: currentCandidates, loading: false})
                     })
                     .catch(reason => {
+                        // TODO handle error
                         console.error(`Failed to fetch Roc Curve data.\n${reason}`);
+                        this.setState({loading: false})
                     });
-            } else {
-                this.setState({data: undefined})
             }
         }
     }
 
     render() {
-        if (!!this.state.data) {
+        if (this.state.data.size > 0) {
             const labels: string[] = []
             const data: any[] = []
-            Object.entries<any>(this.state.data).map(s => {
-                labels.push(s[0])
-                data.push(s[1])
+            this.state.data.forEach((v, k) => {
+                labels.push(k)
+                data.push(v)
             })
 
             // @ts-ignore

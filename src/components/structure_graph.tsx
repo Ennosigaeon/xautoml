@@ -27,7 +27,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
     constructor(props: StructureGraphProps) {
         super(props);
 
-        this.state = {loading: false, outputs: undefined}
+        this.state = {loading: false, outputs: new Map<string, string>()}
         this.fetchOutputs = this.fetchOutputs.bind(this)
     }
 
@@ -36,7 +36,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
             // Loading already in progress
             return
         }
-        if (this.state.outputs !== undefined) {
+        if (this.state.outputs.size > 0) {
             // Outputs already cached
             return
         }
@@ -44,19 +44,19 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
         this.setState({loading: true})
         requestOutputDescription([this.props.candidate.id], this.props.meta.data_file, this.props.meta.model_dir)
             .then(data => {
-                if (this.props.candidate.id in data) {
-                    const map = new Map<string, string>(Object.entries(data[this.props.candidate.id]))
-                    this.setState({outputs: map, loading: false})
+                const id = this.props.candidate.id
+                if (data.has(id)) {
+                    this.setState({outputs: data.get(id), loading: false})
                 } else {
                     // TODO handle error
-                    console.error(`Expected ${this.props.candidate.id} in ${JSON.stringify(data)}`)
-                    this.setState({outputs: new Map<string, string>(), loading: false})
+                    console.error(`Expected ${id} in ${JSON.stringify(data)}`)
+                    this.setState({loading: false})
                 }
             })
             .catch(reason => {
                 // TODO handle error
                 console.error(`Failed to fetch output data.\n${reason}`);
-                this.setState({outputs: new Map<string, string>(), loading: false})
+                this.setState({loading: false})
             });
     }
 
@@ -147,15 +147,8 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
                             </Table>
                         </> : <Typography color="inherit" component={'h4'}>No Configuration</Typography>
 
-                        let output: JSX.Element
-                        if (this.state.outputs === undefined) {
-                            output = <div>Loading...</div>
-                        } else if (!this.state.outputs.has(id)) {
-                            output = <div>Missing</div>
-                        } else {
-                            output = <div dangerouslySetInnerHTML={{__html: this.state.outputs.get(id)}}/>
-                        }
-
+                        let output = this.state.outputs.has(id) ?
+                            <div dangerouslySetInnerHTML={{__html: this.state.outputs.get(id)}}/> : <div>Missing</div>
                         return <g key={id}
                                   transform={`translate(${node.x - node.width / 2 + offset[0]}, ${node.y - node.height / 2 + offset[1]})`}>
                             <foreignObject
