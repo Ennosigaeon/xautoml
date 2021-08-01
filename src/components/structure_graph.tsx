@@ -1,20 +1,63 @@
 import React from "react";
-import {Candidate, Config, ConfigValue, Structure} from "../model";
+import {Candidate, Config, ConfigValue, MetaInformation, Structure} from "../model";
 import * as dagre from "dagre";
 import {graphlib} from "dagre";
 import {fixedPrec, normalizeComponent} from "../util";
-import {Paper, Table, TableBody, TableCell, TableContainer, TableRow, Tooltip, Typography} from "@material-ui/core";
+import {Table, TableBody, TableCell, TableRow, Tooltip, Typography} from "@material-ui/core";
+import {requestOutputDescription} from "../handler";
 
 
 interface StructureGraphProps {
     structure: Structure
     candidate: Candidate
+    meta: MetaInformation
 }
 
-export class StructureGraphComponent extends React.Component<StructureGraphProps, {}> {
+interface StructureGraphState {
+    loading: boolean
+    outputs: Map<string, string>
+}
 
-    static readonly SOURCE = '-1'
-    static readonly SINK = '-2'
+export class StructureGraphComponent extends React.Component<StructureGraphProps, StructureGraphState> {
+
+    static readonly SOURCE = 'SOURCE'
+    static readonly SINK = 'SINK'
+
+    constructor(props: StructureGraphProps) {
+        super(props);
+
+        this.state = {loading: false, outputs: undefined}
+        this.fetchOutputs = this.fetchOutputs.bind(this)
+    }
+
+    fetchOutputs() {
+        if (this.state.loading) {
+            // Loading already in progress
+            return
+        }
+        if (this.state.outputs !== undefined) {
+            // Outputs already cached
+            return
+        }
+
+        this.setState({loading: true})
+        requestOutputDescription([this.props.candidate.id], this.props.meta.data_file, this.props.meta.model_dir)
+            .then(data => {
+                if (this.props.candidate.id in data) {
+                    const map = new Map<string, string>(Object.entries(data[this.props.candidate.id]))
+                    this.setState({outputs: map, loading: false})
+                } else {
+                    // TODO handle error
+                    console.error(`Expected ${this.props.candidate.id} in ${JSON.stringify(data)}`)
+                    this.setState({outputs: new Map<string, string>(), loading: false})
+                }
+            })
+            .catch(reason => {
+                // TODO handle error
+                console.error(`Failed to fetch output data.\n${reason}`);
+                this.setState({outputs: new Map<string, string>(), loading: false})
+            });
+    }
 
     render() {
         const {structure, candidate} = this.props
@@ -85,25 +128,32 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
                         }
 
 
-                        const configuration = subConfigs.has(id) ? <>
+                        const configuration = subConfigs.has(id) && subConfigs.get(id).size > 0 ? <>
                             <Typography color="inherit" component={'h4'}>Configuration</Typography>
-                            <TableContainer component={Paper}>
-                                <Table size="small">
-                                    <TableBody>
-                                        {Array.from(subConfigs.get(id).entries())
-                                            .map(([name, value]) => (
-                                                <TableRow key={name}>
-                                                    <TableCell component="th"
-                                                               scope="row">{name}</TableCell>
-                                                    <TableCell align="right">{
-                                                        typeof value === 'number' ? fixedPrec(value, 5) : String(value)
-                                                    }</TableCell>
-                                                </TableRow>
-                                            ))}
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
+                            <Table>
+                                <TableBody>
+                                    {Array.from(subConfigs.get(id).entries())
+                                        .map(([name, value]) => (
+                                            <TableRow key={name}>
+                                                <TableCell component="th"
+                                                           scope="row">{name}</TableCell>
+                                                <TableCell align="right">{
+                                                    typeof value === 'number' ? fixedPrec(value, 5) : String(value)
+                                                }</TableCell>
+                                            </TableRow>
+                                        ))}
+                                </TableBody>
+                            </Table>
                         </> : <Typography color="inherit" component={'h4'}>No Configuration</Typography>
+
+                        let output: JSX.Element
+                        if (this.state.outputs === undefined) {
+                            output = <div>Loading...</div>
+                        } else if (!this.state.outputs.has(id)) {
+                            output = <div>Missing</div>
+                        } else {
+                            output = <div dangerouslySetInnerHTML={{__html: this.state.outputs.get(id)}}/>
+                        }
 
                         return <g key={id}
                                   transform={`translate(${node.x - node.width / 2 + offset[0]}, ${node.y - node.height / 2 + offset[1]})`}>
@@ -111,7 +161,15 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
                                 width={`${node.width}px`}
                                 height={`${node.height}px`}
                                 requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
-                                <Tooltip title={configuration} placement={'left'}>
+                                <Tooltip placement={'bottom'}
+                                         classes={{tooltip: 'structure-graph_tooltip jp-RenderedHTMLCommon'}} title={
+                                    <>
+                                        {configuration}
+                                        <hr/>
+                                        <Typography color="inherit" component={'h4'}>Output</Typography>
+                                        {output}
+                                    </>
+                                } onOpen={this.fetchOutputs}>
                                     {content}
                                 </Tooltip>
                             </foreignObject>

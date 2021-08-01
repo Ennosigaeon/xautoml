@@ -1,12 +1,12 @@
 import React from "react";
-import {Candidate, CandidateId, Structure} from "../model";
+import {Candidate, CandidateId, MetaInformation, Structure} from "../model";
 import {DataGrid, GridColDef, GridRowId} from '@material-ui/data-grid';
 import {StructureGraphComponent} from "./structure_graph";
 
 interface CandidateTableProps {
-    metric_sign: number;
     structures: Structure[];
     selectedCandidates: CandidateId[];
+    meta: MetaInformation;
     onCandidateSelection?: (cid: CandidateId[]) => void;
 }
 
@@ -33,7 +33,7 @@ export default class CandidateTable extends React.Component<CandidateTableProps,
         const rows: any[] = []
         const additionalData = new Map<CandidateId, [Structure, Candidate]>();
 
-        const sign = this.props.metric_sign
+        const sign = this.props.meta.metric_sign
         this.props.structures.forEach(structure => {
             structure.configs.forEach(c => {
                 rows.push(
@@ -54,7 +54,7 @@ export default class CandidateTable extends React.Component<CandidateTableProps,
             {
                 field: 'candidate', headerName: 'Configuration', sortable: false, flex: 2, renderCell: params => {
                     const [structure, candidate] = additionalData.get(params.id as CandidateId)
-                    return <StructureGraphComponent structure={structure} candidate={candidate}/>
+                    return <StructureGraphComponent structure={structure} candidate={candidate} meta={this.props.meta}/>
                 }
             }
         ];

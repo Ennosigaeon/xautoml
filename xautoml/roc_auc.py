@@ -41,7 +41,7 @@ class RocCurve:
         elif ttype.startswith(BINARY):
             self.target_type_ = BINARY
         else:
-            raise ValueError(f'Unknown target type {ttype}')
+            raise ValueError('Unknown target type {}'.format(ttype))
 
         self.classes = np.unique(y)
         self.n_classes = len(self.classes)
@@ -113,16 +113,18 @@ class RocCurve:
         # If it's a binary decision, plot the single ROC curve
         if self.target_type_ == BINARY:
             data.append(
-                (self.fpr[BINARY], self.tpr[BINARY], f'{cid} (AUC = {self.roc_auc[BINARY]:0.2f})')
+                (self.fpr[BINARY], self.tpr[BINARY], '{} (AUC = {:0.2f})'.format(cid, self.roc_auc[BINARY]))
             )
         else:
             if self.micro:
                 data.append(
-                    (self.fpr[MICRO], self.tpr[MICRO], f'{cid} micro-average (AUC = {self.roc_auc[MICRO]:0.2f})')
+                    (self.fpr[MICRO], self.tpr[MICRO],
+                     '{} micro-average (AUC = {:0.2f})'.format(cid, self.roc_auc[MICRO]))
                 )
             if self.macro:
                 data.append(
-                    (self.fpr[MACRO], self.tpr[MACRO], f'{cid} macro-average (AUC = {self.roc_auc[MACRO]:0.2f})')
+                    (self.fpr[MACRO], self.tpr[MACRO],
+                     '{} macro-average (AUC = {:0.2f})'.format(cid, self.roc_auc[MACRO]))
                 )
 
         return data

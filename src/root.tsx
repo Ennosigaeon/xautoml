@@ -82,8 +82,9 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
         return <>
             <MetaInformationTable meta={data.meta}/>
             <div style={{height: 640, width: '100%'}}>
-                <CandidateTable structures={data.structures} metric_sign={data.meta.metric_sign}
+                <CandidateTable structures={data.structures}
                                 selectedCandidates={selectedCandidates}
+                                meta={data.meta}
                                 onCandidateSelection={this.onCandidateSelection}/>
             </div>
             <div style={{display: 'flex', height: '400px'}}>

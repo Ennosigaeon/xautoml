@@ -108,7 +108,7 @@ svg.bandit-explanation {
     line-height: 40px;
     overflow: hidden;
     text-overflow: ellipsis;
-    padding: 0 2px ;
+    padding: 0 2px;
 }
 
 .structure-graph_end-node {
@@ -117,4 +117,12 @@ svg.bandit-explanation {
     border: 2px solid black;
     height: 50%;
     display: block;
+}
+
+div.structure-graph_tooltip {
+    max-width: 1500px;
+}
+
+.structure-graph_tooltip .MuiTable-root {
+    width: initial;
 }
