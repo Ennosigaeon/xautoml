@@ -12,6 +12,7 @@ import {
     YAxis
 } from "react-vis";
 import 'react-vis/dist/style.css'
+import {LoadingIndicator} from "./loading";
 
 
 interface RocCurveProps {
@@ -77,10 +78,9 @@ export class RocCurve extends React.Component<RocCurveProps, RocCurveState> {
                     {labels.length < 15 && legend}
                 </FlexibleXYPlot>
             )
-        } else if (this.state.loading) {
-            return <div>Loading...</div>
-        } else {
-            return <div>No Configuration selected</div>
-        }
+        } else if (this.state.loading)
+            return <LoadingIndicator loading={this.state.loading}/>
+        else
+            return <p>No Configuration selected</p>
     }
 }

@@ -5,6 +5,7 @@ import {graphlib} from "dagre";
 import {fixedPrec, normalizeComponent} from "../util";
 import {Table, TableBody, TableCell, TableRow, Tooltip, Typography} from "@material-ui/core";
 import {requestOutputDescription} from "../handler";
+import {LoadingIndicator} from "./loading";
 
 
 interface StructureGraphProps {
@@ -167,7 +168,8 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
                                         {configuration}
                                         <hr/>
                                         <Typography color="inherit" component={'h4'}>Output</Typography>
-                                        {output}
+                                        <LoadingIndicator loading={this.state.loading}/>
+                                        {!this.state.loading && output}
                                     </>
                                 } onOpen={this.fetchOutputs}>
                                     {content}
