@@ -68,7 +68,7 @@ class BaseHandler(APIHandler):
         model_dir = model.get('model_dir')
 
         with open(data_file, 'rb') as f:
-            X, y = joblib.load(f)
+            X, y, feature_labels = joblib.load(f)
 
             model_names = map(lambda cid: os.path.join(model_dir,
                                                        'models_{}.pkl'.format(
@@ -83,7 +83,7 @@ class BaseHandler(APIHandler):
                 # Failed configurations do not have a model file
                 pass
 
-        return X, y, models
+        return X, y, feature_labels, models
 
 
 class DummyHandler(APIHandler):
@@ -100,13 +100,13 @@ class DummyHandler(APIHandler):
 class OutputHandler(BaseHandler):
 
     def _calculate_output(self, model, method):
-        X, y, models = self.load_models(model)
+        X, y, feature_labels, models = self.load_models(model)
         df_handler = OutputCalculator()
 
         result = {}
         for cid, pipeline in models.items():
             try:
-                steps = df_handler.calculate_outputs(pipeline, X, method=method)
+                steps = df_handler.calculate_outputs(pipeline, X, feature_labels, method=method)
                 result[cid] = steps
             except ValueError as ex:
                 self.log.error('Failed to calculate intermediate dataframes for {}'.format(cid), exc_info=ex)
@@ -134,7 +134,7 @@ class RocCurveHandler(BaseHandler):
     def _process_post(self, model):
         micro = model.get('micro', False)
         macro = model.get('macro', True)
-        X, y, models = self.load_models(model)
+        X, y, _, models = self.load_models(model)
 
         result = {}
         for cid, pipeline in models.items():

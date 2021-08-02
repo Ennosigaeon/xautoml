@@ -11,10 +11,16 @@ DESCRIPTION = 1
 class OutputCalculator:
 
     @staticmethod
-    def load_data(d: dict, method: int) -> pd.DataFrame:
+    def load_data(d: dict, method: int, feature_labels: list[str]) -> pd.DataFrame:
         assert len(d) == 1
         data = next(iter(d.values()))
-        df = pd.DataFrame(data)
+
+        if len(data.shape) == 2 and data.shape[1] == len(feature_labels):
+            columns = feature_labels
+        else:
+            columns = None
+
+        df = pd.DataFrame(data, columns=columns)
         if method == COMPLETE:
             return df
         elif method == DESCRIPTION:
@@ -23,7 +29,7 @@ class OutputCalculator:
             raise ValueError('Unknown method {}'.format(method))
 
     @staticmethod
-    def calculate_outputs(pipeline, X, method: int = DESCRIPTION) -> dict[str, str]:
+    def calculate_outputs(pipeline, X, feature_labels, method: int = DESCRIPTION) -> dict[str, str]:
         alter_pipeline_for_debugging(pipeline)
         _ = pipeline.predict(X)
 
@@ -31,11 +37,11 @@ class OutputCalculator:
         result = {}
         for step, data in zip(step_names, enumerate_pipeline_models(pipeline)):
             _, model, _ = data
-            output = OutputCalculator.load_data(model._debug.outputs, method)
+            output = OutputCalculator.load_data(model._debug.outputs, method, feature_labels=feature_labels)
 
             if step == 'Pipeline':
                 # Populate SINK and SOURCE instead of single step
-                input = OutputCalculator.load_data(model._debug.inputs, method)
+                input = OutputCalculator.load_data(model._debug.inputs, method, feature_labels=feature_labels)
 
                 result[SOURCE] = input._repr_html_()
                 result[SINK] = output._repr_html_()
