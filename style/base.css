@@ -75,27 +75,10 @@ svg.bandit-explanation {
 
 
 /** Candidate Table */
-.candidate-table_vertical-header {
-    writing-mode: vertical-lr;
+.MuiDataGrid-cell:focus {
+    outline: none !important;
 }
 
-.candidate-table_vertical-header .MuiDataGrid-menuIcon:hover {
-    display: none !important;
-}
-
-.candidate-table_vertical-header .MuiDataGrid-menuIcon,
-.candidate-table_vertical-header .MuiDataGrid-columnSeparator {
-    display: none !important;
-}
-
-.candidate-table_component {
-    width: 40px;
-    text-align: center;
-    background-color: red;
-    margin: 10px;
-    border-radius: 10px;
-    line-height: 40px;
-}
 
 /** Structure Graph */
 .structure-graph_node {

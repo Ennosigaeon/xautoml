@@ -34,7 +34,7 @@ export default class MetaInformationTable extends React.Component<MetaInformatio
                         <TableRow>
                             <TableCell>{start.toString()}</TableCell>
                             <TableCell>{end.toString()}</TableCell>
-                            <TableCell>{meta.metric} ({meta.metric_sign})</TableCell>
+                            <TableCell>{meta.metric}</TableCell>
                             <TableCell>{meta.wallclock_limit}</TableCell>
                             <TableCell>{meta.cutoff}</TableCell>
                             <TableCell>{meta.n_configs}</TableCell>
