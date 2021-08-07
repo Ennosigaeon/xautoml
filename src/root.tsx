@@ -55,19 +55,19 @@ export interface ReactRootProps {
 }
 
 export interface ReactRootState {
-    selectedCandidates: CandidateId[]
+    selectedCandidates: Set<CandidateId>
 }
 
 export default class ReactRoot extends React.Component<ReactRootProps, ReactRootState> {
 
     constructor(props: ReactRootProps) {
         super(props);
-        this.state = {selectedCandidates: []}
+        this.state = {selectedCandidates: new Set<CandidateId>()}
 
         this.onCandidateSelection = this.onCandidateSelection.bind(this)
     }
 
-    private onCandidateSelection(cids: CandidateId[]) {
+    private onCandidateSelection(cids: Set<CandidateId>) {
         this.setState({selectedCandidates: cids})
     }
 

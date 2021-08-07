@@ -2,9 +2,9 @@ import React from 'react';
 import {CandidateId, MetaInformation, Structure} from "../model";
 import {fixedPrec} from "../util";
 import {
-    Hint,
     HorizontalGridLines,
-    LineSeries, makeHeightFlexible,
+    LineSeries,
+    makeHeightFlexible,
     makeWidthFlexible,
     MarkSeries,
     VerticalGridLines,
@@ -12,14 +12,15 @@ import {
     XYPlot,
     YAxis
 } from "react-vis";
+import 'react-vis/dist/style.css'
 
 import * as d3 from 'd3'
 
 interface ConfigHistoryProps {
     data: Structure[]
     meta: MetaInformation
-    selectedCandidates: CandidateId[]
-    onCandidateSelection?: (cid: CandidateId[]) => void
+    selectedCandidates: Set<CandidateId>
+    onCandidateSelection?: (cid: Set<CandidateId>) => void
 }
 
 interface ConfigHistoryState {
@@ -68,15 +69,12 @@ export default class PerformanceTimeline extends React.Component<ConfigHistoryPr
 
     private onScatterClick(x: any) {
         const cid: CandidateId = x.cid
-
-        const idx = this.props.selectedCandidates.indexOf(cid)
-        if (idx === -1)
-            this.props.onCandidateSelection([...this.props.selectedCandidates, cid])
-        else {
-            const newSelection = [...this.props.selectedCandidates]
-            newSelection.splice(idx, 1)
-            this.props.onCandidateSelection(newSelection)
-        }
+        const selected = new Set(this.props.selectedCandidates)
+        if (this.props.selectedCandidates.has(cid))
+            selected.delete(cid)
+        else
+            selected.add(cid)
+        this.props.onCandidateSelection(selected)
     }
 
     render() {
@@ -84,7 +82,7 @@ export default class PerformanceTimeline extends React.Component<ConfigHistoryPr
             return <p>Loading...</p>
         const dataWithColor = this.state.data.map(d => ({
             ...d,
-            color: Number(!this.props.selectedCandidates.includes(d.cid))
+            color: Number(!this.props.selectedCandidates.has(d.cid))
         }));
         const incumbent = this.state.data.map(d => ({x: d.x, y: d.Incumbent}))
 
@@ -103,7 +101,8 @@ export default class PerformanceTimeline extends React.Component<ConfigHistoryPr
                             onValueClick={this.onScatterClick}
                 />
 
-                {this.state.hovered ? <Hint value={{'x': this.state.hovered.x, 'y': this.state.hovered.y}}/> : null}
+                {/*TODO hint is currently broken. Does not disappear on onValueMouseOut and shows information for wrong item*/}
+                {/*{this.state.hovered ? <Hint value={{'x': (this.state.hovered.x + 10), 'y': this.state.hovered.y}}/> : null}*/}
             </FlexibleXYPlot>
         );
     }

@@ -18,7 +18,7 @@ import {LoadingIndicator} from "./loading";
 
 
 interface RocCurveProps {
-    selectedCandidates: CandidateId[]
+    selectedCandidates: Set<CandidateId>
     meta: MetaInformation
 }
 
@@ -36,24 +36,24 @@ export class RocCurve extends React.Component<RocCurveProps, RocCurveState> {
     }
 
     componentDidUpdate(prevProps: Readonly<RocCurveProps>, prevState: Readonly<RocCurveState>, snapshot?: any) {
-        if (prevProps.selectedCandidates !== this.props.selectedCandidates) {
+        if (prevProps.selectedCandidates.size !== this.props.selectedCandidates.size) {
             let newCandidates: CandidateId[]
             if (this.state.pendingRequest === undefined) {
                 // Remove previously selected candidates
-                const superfluousCandidates = prevProps.selectedCandidates.filter(c => this.props.selectedCandidates.indexOf(c) === -1)
+                const superfluousCandidates = Array.from(prevProps.selectedCandidates).filter(c => !this.props.selectedCandidates.has(c))
                 const currentCandidates = this.state.data
                 const currentKeys = Array.from(currentCandidates.keys())
                 superfluousCandidates.forEach(c => {
                     currentKeys.filter(k => k.startsWith(c)).forEach(k => currentCandidates.delete(k))
                 })
                 this.setState({data: currentCandidates})
-                newCandidates = this.props.selectedCandidates.filter(c => prevProps.selectedCandidates.indexOf(c) === -1)
+                newCandidates = Array.from(this.props.selectedCandidates).filter(c => !prevProps.selectedCandidates.has(c))
             } else {
                 // Request for data is currently still pending. Erase complete state and load everything from scratch to
                 // prevent incoherent states
                 this.state.pendingRequest.cancel()
                 this.setState({data: new Map<string, LineSeriesPoint[]>(), pendingRequest: undefined})
-                newCandidates = this.props.selectedCandidates
+                newCandidates = Array.from(this.props.selectedCandidates)
             }
 
             // Fetch new selected candidates

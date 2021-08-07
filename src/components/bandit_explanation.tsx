@@ -137,8 +137,8 @@ interface BanditExplanationsProps {
     data: HierarchicalBandit;
     pipelines: Map<CandidateId, Pipeline>;
     structures: Structure[];
-    selectedCandidates: CandidateId[];
-    onCandidateSelection?: (cid: CandidateId[]) => void;
+    selectedCandidates: Set<CandidateId>;
+    onCandidateSelection?: (cid: Set<CandidateId>) => void;
 }
 
 interface BanditExplanationsState {
@@ -195,7 +195,7 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
     }
 
     componentDidUpdate(prevProps: Readonly<BanditExplanationsProps>, prevState: Readonly<BanditExplanationsState>, snapshot?: any) {
-        if (prevProps.pipelines !== this.props.pipelines) {
+        if (this.reversePipelines === undefined || prevProps.pipelines.size !== this.props.pipelines.size) {
             this.reversePipelines = new Map<number, CandidateId[]>();
             this.reversePipelines.set(0, [])
 
@@ -249,14 +249,14 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
             .map(id => this.props.structures.filter(s => s.cid === id).pop().configs)
             .reduce((acc, val) => acc.concat(val), [])
             .map(c => c.id);
-        const intersection = candidates.filter(c => this.props.selectedCandidates.includes(c));
+        const intersection = candidates.filter(c => this.props.selectedCandidates.has(c));
 
         if (intersection.length === candidates.length) {
-            const tmp = this.props.selectedCandidates.filter(v => !candidates.includes(v));
-            this.props.onCandidateSelection(tmp);
+            const tmp = Array.from(this.props.selectedCandidates.values()).filter(v => !candidates.includes(v));
+            this.props.onCandidateSelection(new Set(tmp));
         } else {
             const tmp = [...this.props.selectedCandidates, ...candidates.filter(v => !intersection.includes(v))];
-            this.props.onCandidateSelection(tmp);
+            this.props.onCandidateSelection(new Set(tmp));
         }
     }
 
@@ -326,19 +326,22 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
         const nodes = this.state.nodes ? (this.state.nodes.descendants() as CollapsiblePointNode<HierarchicalBandit>[]) : [];
         const nSteps = Object.keys(this.state.sliderMarks).length - 1;
 
-        const highlightedNodes: number[] = this.props.selectedCandidates.map(cid => cid.substring(0, cid.indexOf(':', 4)))
-            .map(sid => this.props.pipelines.get(sid).steps.map(v => Number.parseInt(v[0])))
-            .reduce((acc, val) => acc.concat(val), [])
+        const highlightedNodes = new Set()
+        this.props.selectedCandidates.forEach(cid => {
+            const sid = cid.substring(0, cid.indexOf(':', 4))
+            this.props.pipelines.get(sid).steps.map(v => Number.parseInt(v[0]))
+                .forEach(n => highlightedNodes.add(n))
+        })
 
         return <>
             <svg className={'bandit-explanation'} ref={this.containerRef}>
                 {this.state.nodes && <g transform={`translate(${this.margin},${this.margin})`}>
                     {nodes.map(d => <GraphEdge key={d.data.id} source={this.state.nodes} node={d}
-                                               highlight={highlightedNodes.includes(d.data.id)}
+                                               highlight={highlightedNodes.has(d.data.id)}
                                                timestamp={this.state.timestamp}/>)}
                     {nodes.map(d => <GraphNode key={d.data.id} source={this.state.nodes} node={d}
                                                timestamp={this.state.timestamp}
-                                               highlight={highlightedNodes.includes(d.data.id)}
+                                               highlight={highlightedNodes.has(d.data.id)}
                                                onClickHandler={this.selectNode}
                                                onAlternativeClickHandler={this.toggleNode}/>)}
                 </g>}

@@ -5,16 +5,15 @@ import {StructureGraphComponent} from "./structure_graph";
 
 interface CandidateTableProps {
     structures: Structure[];
-    selectedCandidates: CandidateId[];
+    selectedCandidates: Set<CandidateId>;
     meta: MetaInformation;
-    onCandidateSelection?: (cid: CandidateId[]) => void;
+    onCandidateSelection?: (cid: Set<CandidateId>) => void;
 }
 
 export default class CandidateTable extends React.Component<CandidateTableProps, {}> {
 
-    static
-    defaultProps = {
-        onCandidateSelection: (_: CandidateId[]) => {
+    static defaultProps = {
+        onCandidateSelection: (_: Set<CandidateId>) => {
         }
     }
 
@@ -26,7 +25,7 @@ export default class CandidateTable extends React.Component<CandidateTableProps,
     }
 
     private processSelection(selection: GridRowId[]) {
-        this.props.onCandidateSelection(selection as string[])
+        this.props.onCandidateSelection(new Set(selection as CandidateId[]))
     }
 
     render() {
@@ -69,14 +68,14 @@ export default class CandidateTable extends React.Component<CandidateTableProps,
                     sort: 'desc',
                 }]}
                 getRowClassName={(params) => {
-                    if (this.props.selectedCandidates.includes(params.id as string))
+                    if (this.props.selectedCandidates.has(params.id as CandidateId))
                         return 'selected-config'
                     else if (additionalData.get(params.id as CandidateId)[1].status != Candidate.SUCCESS)
                         return 'failed-config'
                     else return ''
                 }}
                 checkboxSelection
-                selectionModel={this.props.selectedCandidates}
+                selectionModel={Array.from(this.props.selectedCandidates)}
                 onSelectionModelChange={this.processSelection}
             />
         )
