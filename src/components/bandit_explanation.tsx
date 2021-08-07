@@ -26,7 +26,7 @@ interface GraphElementProps {
     timestamp: string;
     highlight: boolean;
     onClickHandler?: (d: CollapsiblePointNode<HierarchicalBandit>) => void;
-    onDoubleClickHandler?: (d: CollapsiblePointNode<HierarchicalBandit>) => void;
+    onAlternativeClickHandler?: (d: CollapsiblePointNode<HierarchicalBandit>) => void;
 }
 
 class GraphNode extends React.Component<GraphElementProps, any> {
@@ -34,18 +34,13 @@ class GraphNode extends React.Component<GraphElementProps, any> {
     constructor(props: GraphElementProps) {
         super(props);
         this.handleClick = this.handleClick.bind(this);
-        this.handleDoubleClick = this.handleDoubleClick.bind(this);
     }
 
-    private handleClick() {
-        if (this.props.onClickHandler) {
+    private handleClick(e: React.MouseEvent) {
+        if (e.ctrlKey && this.props.onAlternativeClickHandler) {
+            this.props.onAlternativeClickHandler(this.props.node);
+        } else if (this.props.onClickHandler) {
             this.props.onClickHandler(this.props.node);
-        }
-    }
-
-    private handleDoubleClick() {
-        if (this.props.onDoubleClickHandler) {
-            this.props.onDoubleClickHandler(this.props.node);
         }
     }
 
@@ -79,7 +74,7 @@ class GraphNode extends React.Component<GraphElementProps, any> {
                 update={{x: [node.x], y: [node.y], opacity: [1], r: [10], timing: {duration: 750, ease: easeExpInOut}}}
                 enter={{x: [node.x], y: [node.y], opacity: [1], r: [10], timing: {duration: 750, ease: easeExpInOut}}}
             >{({x: x, y: y, opacity: opacity, r: r}) =>
-                <g className={'bandit-explanation_node'} transform={`translate(${y},${x})`} onDoubleClick={this.handleDoubleClick}
+                <g className={'bandit-explanation_node'} transform={`translate(${y},${x})`}
                    onClick={this.handleClick}>
                     <foreignObject x={0} y={-NODE_HEIGHT / 2} width={NODE_WIDTH} height={NODE_HEIGHT}>
                         <div className={`bandit-explanation_node-content ${className}`}>
@@ -124,11 +119,13 @@ class GraphEdge extends React.Component<GraphElementProps, any> {
                     timing: {duration: 750, ease: easeExpInOut}
                 }}
             >{({source: source, target: target}) =>
-                <path className={details.selected || this.props.highlight ? 'bandit-explanation_link bandit-explanation_selected' : 'bandit-explanation_link'} d={
-                    d3.linkHorizontal().x(d => d[1]).y(d => d[0])({
-                        source: [source.x, source.y],
-                        target: [target.x, target.y]
-                    })}/>
+                <path
+                    className={details.selected || this.props.highlight ? 'bandit-explanation_link bandit-explanation_selected' : 'bandit-explanation_link'}
+                    d={
+                        d3.linkHorizontal().x(d => d[1]).y(d => d[0])({
+                            source: [source.x, source.y],
+                            target: [target.x, target.y]
+                        })}/>
             }
             </Animate>
         )
@@ -343,7 +340,7 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
                                                timestamp={this.state.timestamp}
                                                highlight={highlightedNodes.includes(d.data.id)}
                                                onClickHandler={this.selectNode}
-                                               onDoubleClickHandler={this.toggleNode}/>)}
+                                               onAlternativeClickHandler={this.toggleNode}/>)}
                 </g>}
             </svg>
             <div style={{margin: '20px'}}>
