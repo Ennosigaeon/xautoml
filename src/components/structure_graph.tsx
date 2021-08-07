@@ -60,6 +60,10 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
             });
     }
 
+    private static isPipEnd(id: string): boolean {
+        return id === StructureGraphComponent.SOURCE || id === StructureGraphComponent.SINK
+    }
+
     render() {
         const {structure, candidate} = this.props
         const nodeDimensions = {width: 100, height: 40}
@@ -82,8 +86,8 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
         edges.push([source, StructureGraphComponent.SINK])
         nodeMap.forEach((label, id) => graph.setNode(id, {
             label: normalizeComponent(label),
-            width: nodeDimensions.width,
-            height: nodeDimensions.height
+            width: StructureGraphComponent.isPipEnd(id) ? nodeDimensions.width / 4 : nodeDimensions.width,
+            height: StructureGraphComponent.isPipEnd(id) ? nodeDimensions.width / 4 : nodeDimensions.height
         }))
         edges.forEach(([source, target]) => graph.setEdge(source, target))
         dagre.layout(graph);
@@ -111,23 +115,9 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
                 <g id={"transformGroup"} transform={`translate(${margin.left},${margin.top})`}>
                     {graph.nodes().map(id => {
                         const node = graph.node(id)
-                        let offset: [number, number]
-                        let content: JSX.Element
-                        switch (id) {
-                            case StructureGraphComponent.SOURCE:
-                                offset = [node.width - nodeDimensions.height / 2, nodeDimensions.height / 4]
-                                content = <div className={'structure-graph_end-node'} style={{width: node.height / 2}}/>
-                                break
-                            case StructureGraphComponent.SINK:
-                                offset = [0, nodeDimensions.height / 4]
-                                // noinspection JSSuspiciousNameCombination
-                                content = <div className={'structure-graph_end-node'} style={{width: node.height / 2}}/>
-                                break
-                            default:
-                                offset = [0, 0]
-                                content = <div className={'structure-graph_node'}>{node.label}</div>
-                        }
-
+                        const content = StructureGraphComponent.isPipEnd(id) ?
+                            <div className={'structure-graph_node structure-graph_end-node'}/> :
+                            <div className={'structure-graph_node'}>{node.label}</div>
 
                         const configuration = subConfigs.has(id) && subConfigs.get(id).size > 0 ? <>
                             <Typography color="inherit" component={'h4'}>Configuration</Typography>
@@ -150,7 +140,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
                         let output = this.state.outputs.has(id) ?
                             <div dangerouslySetInnerHTML={{__html: this.state.outputs.get(id)}}/> : <div>Missing</div>
                         return <g key={id}
-                                  transform={`translate(${node.x - node.width / 2 + offset[0]}, ${node.y - node.height / 2 + offset[1]})`}>
+                                  transform={`translate(${node.x - node.width / 2}, ${node.y - node.height / 2})`}>
                             <foreignObject
                                 width={`${node.width}px`}
                                 height={`${node.height}px`}
