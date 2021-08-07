@@ -4,6 +4,34 @@ import {ServerConnection} from '@jupyterlab/services';
 import {CandidateId} from "./model";
 import {LineSeriesPoint} from "react-vis";
 
+
+export class CanceledPromiseError extends Error {
+    constructor() {
+        super("Promise canceled");
+    }
+}
+
+export interface CancelablePromise<T> extends Promise<T> {
+
+    cancel(): void
+}
+
+function cancelablePromise<T>(promise: Promise<T>): CancelablePromise<T> {
+    let isCanceled = false;
+
+    const wrappedPromise = new Promise<T>((resolve, reject) => {
+        Promise.resolve(promise).then(
+            value => (isCanceled ? reject(new CanceledPromiseError()) : resolve(value)),
+            error => reject(error),
+        );
+    });
+
+    // @ts-ignore
+    wrappedPromise.cancel = () => (isCanceled = true);
+    return wrappedPromise as CancelablePromise<T>;
+}
+
+
 /**
  * Call the API extension
  *
@@ -48,17 +76,22 @@ export async function requestAPI<T>(
 }
 
 
-export async function requestRocCurve(cids: CandidateId[], data_file: string, model_dir: string): Promise<Map<string, LineSeriesPoint[]>> {
-    return requestAPI<Map<string, LineSeriesPoint[]>>('roc_auc', {
+export type RocCurveData = Map<string, LineSeriesPoint[]>
+
+export function requestRocCurve(cids: CandidateId[], data_file: string, model_dir: string): CancelablePromise<RocCurveData> {
+    const promise = requestAPI<Map<string, LineSeriesPoint[]>>('roc_auc', {
         method: 'POST', body: JSON.stringify({
             'cids': cids.join(','),
             'data_file': data_file,
             'model_dir': model_dir
         })
     }).then(data => new Map<string, LineSeriesPoint[]>(Object.entries(data)))
+    return cancelablePromise(promise)
 }
 
-export async function requestOutputDescription(cids: CandidateId[], data_file: string, model_dir: string): Promise<Map<string, Map<string, string>>> {
+export type OutputDescriptionData = Map<string, Map<string, string>>
+
+export async function requestOutputDescription(cids: CandidateId[], data_file: string, model_dir: string): Promise<OutputDescriptionData> {
     return requestAPI<Map<string, Map<string, string>>>('output/description', {
         method: 'POST', body: JSON.stringify({
             'cids': cids.join(','),
