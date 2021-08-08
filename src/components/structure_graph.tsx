@@ -4,7 +4,7 @@ import * as dagre from "dagre";
 import {graphlib} from "dagre";
 import {fixedPrec, normalizeComponent} from "../util";
 import {Table, TableBody, TableCell, TableRow, Tooltip, Typography} from "@material-ui/core";
-import {requestOutputDescription} from "../handler";
+import {OutputDescriptionData, requestOutputDescription} from "../handler";
 import {LoadingIndicator} from "./loading";
 
 
@@ -17,7 +17,7 @@ interface StructureGraphProps {
 
 interface StructureGraphState {
     loading: boolean
-    outputs: Map<string, string>
+    outputs: OutputDescriptionData
 }
 
 export class StructureGraphComponent extends React.Component<StructureGraphProps, StructureGraphState> {
@@ -43,17 +43,8 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
         }
 
         this.setState({loading: true})
-        requestOutputDescription([this.props.candidate.id], this.props.meta.data_file, this.props.meta.model_dir)
-            .then(data => {
-                const id = this.props.candidate.id
-                if (data.has(id)) {
-                    this.setState({outputs: data.get(id), loading: false})
-                } else {
-                    // TODO handle error
-                    console.error(`Expected ${id} in ${JSON.stringify(data)}`)
-                    this.setState({loading: false})
-                }
-            })
+        requestOutputDescription(this.props.candidate.id, this.props.meta.data_file, this.props.meta.model_dir)
+            .then(data => this.setState({outputs: data, loading: false}))
             .catch(reason => {
                 // TODO handle error
                 console.error(`Failed to fetch output data.\n${reason}`);
@@ -137,7 +128,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
                             </Table>
                         </> : <Typography color="inherit" component={'h4'}>No Configuration</Typography>
 
-                        let output = this.state.outputs.has(id) ?
+                        const output = this.state.outputs.has(id) ?
                             <div dangerouslySetInnerHTML={{__html: this.state.outputs.get(id)}}/> : <div>Missing</div>
 
                         const tooltipContent = <>
@@ -160,9 +151,10 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
                                         e.stopPropagation()
                                     }
                                 }}>
-                                <Tooltip placement={'bottom'}
+                                <Tooltip placement={'top'}
                                          classes={{tooltip: 'structure-graph_tooltip jp-RenderedHTMLCommon'}}
                                          title={tooltipContent}
+                                         enterDelay={750}
                                          onOpen={this.fetchOutputs}>
                                     {content}
                                 </Tooltip>

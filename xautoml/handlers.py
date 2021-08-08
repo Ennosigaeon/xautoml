@@ -37,24 +37,16 @@ class BaseHandler(APIHandler):
     @staticmethod
     def fixed_precision(func, precision: int = 3):
         def wrapper(*args, **kwargs):
-            old_precision = pd.get_option("display.precision")
-            pd.set_option("display.precision", precision)
-            try:
+            with pd.option_context('display.precision', precision):
                 return func(*args, **kwargs)
-            finally:
-                pd.set_option("display.precision", old_precision)
 
         return wrapper
 
     @staticmethod
-    def limited_columns(func, columns: int = 30):
+    def limited_entries(func, max_columns: int = 30, max_rows: int = 10):
         def wrapper(*args, **kwargs):
-            old_precision = pd.get_option("display.max_columns")
-            pd.set_option("display.max_columns", columns)
-            try:
+            with pd.option_context('display.max_columns', max_columns, 'display.max_rows', max_rows):
                 return func(*args, **kwargs)
-            finally:
-                pd.set_option("display.max_columns", old_precision)
 
         return wrapper
 
@@ -62,7 +54,7 @@ class BaseHandler(APIHandler):
     def _internal_name(cid: str) -> str:
         return re.sub(r'0(\d)', r'\1', cid)
 
-    def load_models(self, model) -> tuple[np.ndarray, np.ndarray, dict[str, any]]:
+    def load_models(self, model) -> tuple[np.ndarray, np.ndarray, list[str], dict[str, any]]:
         cids: list[str] = model.get('cids').split(',')
         data_file = model.get('data_file')
         model_dir = model.get('model_dir')
@@ -101,32 +93,31 @@ class OutputHandler(BaseHandler):
 
     def _calculate_output(self, model, method):
         X, y, feature_labels, models = self.load_models(model)
-        df_handler = OutputCalculator()
+        assert len(models) == 1
 
-        result = {}
+        df_handler = OutputCalculator()
         for cid, pipeline in models.items():
             try:
                 steps = df_handler.calculate_outputs(pipeline, X, feature_labels, method=method)
-                result[cid] = steps
+                self.finish(json.dumps(steps))
             except ValueError as ex:
                 self.log.error('Failed to calculate intermediate dataframes for {}'.format(cid), exc_info=ex)
-
-        self.finish(json.dumps(result))
 
 
 class OutputDescriptionHandler(OutputHandler):
 
     @BaseHandler.fixed_precision
-    @BaseHandler.limited_columns
     def _process_post(self, model):
-        self._calculate_output(model, DESCRIPTION)
+        with pd.option_context('display.max_columns', 30, 'display.max_rows', 10):
+            self._calculate_output(model, DESCRIPTION)
 
 
 class OutputCompleteHandler(OutputHandler):
 
     @BaseHandler.fixed_precision
     def _process_post(self, model):
-        self._calculate_output(model, COMPLETE)
+        with pd.option_context('display.max_columns', 1024, 'display.max_rows', 50, 'display.min_rows', 30):
+            self._calculate_output(model, COMPLETE)
 
 
 class RocCurveHandler(BaseHandler):

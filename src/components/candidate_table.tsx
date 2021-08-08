@@ -169,6 +169,7 @@ class CandidateTableRow extends React.Component<CandidateTableRowProps, Candidat
                                 <DataSetDetailsComponent
                                     candidate={data.candidate[1]}
                                     component={this.state.selectedComponent}
+                                    meta={this.props.meta}
                                 />
                             </Box>
                         </Collapse>

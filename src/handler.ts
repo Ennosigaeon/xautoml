@@ -89,19 +89,24 @@ export function requestRocCurve(cids: CandidateId[], data_file: string, model_di
     return cancelablePromise(promise)
 }
 
-export type OutputDescriptionData = Map<string, Map<string, string>>
+export type OutputDescriptionData = Map<string, string>
 
-export async function requestOutputDescription(cids: CandidateId[], data_file: string, model_dir: string): Promise<OutputDescriptionData> {
-    return requestAPI<Map<string, Map<string, string>>>('output/description', {
+export async function requestOutputComplete(cid: CandidateId, data_file: string, model_dir: string): Promise<OutputDescriptionData> {
+    return requestOutput(cid, data_file, model_dir, 'complete')
+}
+
+export async function requestOutputDescription(cid: CandidateId, data_file: string, model_dir: string): Promise<OutputDescriptionData> {
+    return requestOutput(cid, data_file, model_dir, 'description')
+}
+
+async function requestOutput(cid: CandidateId, data_file: string, model_dir: string, method: string): Promise<OutputDescriptionData> {
+    return requestAPI<Map<string, Map<string, string>>>(`output/${method}`, {
         method: 'POST', body: JSON.stringify({
-            'cids': cids.join(','),
+            'cids': cid,
             'data_file': data_file,
             'model_dir': model_dir
         })
     }).then(data => {
-        return new Map<string, Map<string, string>>(
-            Object.entries(data)
-                .map(([key, value]) => [key, new Map<string, string>(Object.entries(value))])
-        )
+        return new Map<string, string>(Object.entries(data))
     })
 }
