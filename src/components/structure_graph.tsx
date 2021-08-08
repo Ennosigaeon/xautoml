@@ -12,6 +12,7 @@ interface StructureGraphProps {
     structure: Structure
     candidate: Candidate
     meta: MetaInformation
+    onComponentSelection?: (component: string) => void
 }
 
 interface StructureGraphState {
@@ -109,7 +110,6 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
                 )
         )
 
-
         return (
             <svg style={{width: '100%', height: '100%'}}>
                 <g id={"transformGroup"} transform={`translate(${margin.left},${margin.top})`}>
@@ -123,7 +123,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
                             <Typography color="inherit" component={'h4'}>Configuration</Typography>
                             <Table>
                                 <TableBody>
-                                    {Array.from(subConfigs.get(id).entries())
+                                    {Array.from(subConfigs.get(id)?.entries())
                                         .map(([name, value]) => (
                                             <TableRow key={name}>
                                                 <TableCell component="th"
@@ -139,22 +139,31 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
 
                         let output = this.state.outputs.has(id) ?
                             <div dangerouslySetInnerHTML={{__html: this.state.outputs.get(id)}}/> : <div>Missing</div>
+
+                        const tooltipContent = <>
+                            {configuration}
+                            <hr/>
+                            <Typography color="inherit" component={'h4'}>Output</Typography>
+                            <LoadingIndicator loading={this.state.loading}/>
+                            {!this.state.loading && output}
+                        </>
+
                         return <g key={id}
                                   transform={`translate(${node.x - node.width / 2}, ${node.y - node.height / 2})`}>
                             <foreignObject
                                 width={`${node.width}px`}
                                 height={`${node.height}px`}
-                                requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+                                requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+                                onClick={(e) => {
+                                    if (!!this.props.onComponentSelection) {
+                                        this.props.onComponentSelection(id)
+                                        e.stopPropagation()
+                                    }
+                                }}>
                                 <Tooltip placement={'bottom'}
-                                         classes={{tooltip: 'structure-graph_tooltip jp-RenderedHTMLCommon'}} title={
-                                    <>
-                                        {configuration}
-                                        <hr/>
-                                        <Typography color="inherit" component={'h4'}>Output</Typography>
-                                        <LoadingIndicator loading={this.state.loading}/>
-                                        {!this.state.loading && output}
-                                    </>
-                                } onOpen={this.fetchOutputs}>
+                                         classes={{tooltip: 'structure-graph_tooltip jp-RenderedHTMLCommon'}}
+                                         title={tooltipContent}
+                                         onOpen={this.fetchOutputs}>
                                     {content}
                                 </Tooltip>
                             </foreignObject>

@@ -8,7 +8,8 @@
     text-align: center;
 }
 
-.selected-config {
+.selected-config,
+.Mui-selected {
     background-color: #007bff !important;
     fill: #007bff !important;
 }
@@ -80,6 +81,18 @@ svg.bandit-explanation {
     outline: none !important;
 }
 
+.candidate-table_visually-hidden {
+    border: 0;
+    clip: rect(0 0 0 0);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    top: 20px;
+    width: 1px;
+}
+
 
 /** Structure Graph */
 .structure-graph_node {
@@ -99,8 +112,6 @@ svg.bandit-explanation {
     border-radius: 50%;
     box-sizing: border-box;
     border: 2px solid black;
-    height: 50%;
-    display: block;
 }
 
 div.structure-graph_tooltip {

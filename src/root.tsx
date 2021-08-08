@@ -3,11 +3,11 @@ import {ReactWidget} from "@jupyterlab/apputils";
 import {IRenderMime} from "@jupyterlab/rendermime-interfaces";
 import {CandidateId, Pipeline, Runhistory} from "./model";
 import MetaInformationTable from "./components/meta_information";
-import CandidateTable from "./components/candidate_table";
 import PerformanceTimeline from "./components/performance_timeline";
 import {catchReactWarnings} from "./util";
 import {RocCurve} from "./components/roc_curve";
 import {BanditExplanationsComponent} from "./components/bandit_explanation";
+import {CandidateTable} from "./components/candidate_table";
 
 
 /**
@@ -81,12 +81,10 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
         }
         return <>
             <MetaInformationTable meta={data.meta}/>
-            <div style={{height: 640, width: '100%'}}>
-                <CandidateTable structures={data.structures}
-                                selectedCandidates={selectedCandidates}
-                                meta={data.meta}
-                                onCandidateSelection={this.onCandidateSelection}/>
-            </div>
+            <CandidateTable structures={data.structures}
+                            selectedCandidates={selectedCandidates}
+                            meta={data.meta}
+                            onCandidateSelection={this.onCandidateSelection}/>
             <div style={{display: 'flex', height: '400px'}}>
                 <div style={{height: '100%', flexBasis: 0, flexGrow: 1}}>
                     <PerformanceTimeline data={data.structures} meta={data.meta} selectedCandidates={selectedCandidates}
