@@ -1,3 +1,9 @@
+import React from "react";
+import {JupyterTokens} from "./jupyter";
+
+// For reasons, JupyterContext can not be declared in root.tsx and imported in dataset_details.tsx...
+export const JupyterContext = React.createContext<JupyterTokens>(undefined)
+
 export function catchReactWarnings() {
     // @ts-ignore
     console.oldError = console.error;
