@@ -3,6 +3,8 @@ import {IRenderMimeRegistry} from '@jupyterlab/rendermime';
 import {INotebookTracker} from '@jupyterlab/notebook';
 import {IRenderMime} from '@jupyterlab/rendermime-interfaces';
 import {JupyterWidget} from "./root";
+import {TagTool} from "@jupyterlab/celltags";
+import {Jupyter} from "./jupyter";
 
 const MIME_TYPE = 'application/xautoml+json';
 
@@ -16,7 +18,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         const rendererFactory: IRenderMime.IRendererFactory = {
             safe: true,
             mimeTypes: [MIME_TYPE],
-            createRenderer: (options) => new JupyterWidget(options, {notebooks: notebooks}),
+            createRenderer: (options) => new JupyterWidget(options, new Jupyter(notebooks, new TagTool(notebooks, app))),
         };
 
         // Add a renderer factory to application rendermime registry.

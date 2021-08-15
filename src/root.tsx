@@ -8,7 +8,7 @@ import {catchReactWarnings, JupyterContext} from "./util";
 import {RocCurve} from "./components/roc_curve";
 import {BanditExplanationsComponent} from "./components/bandit_explanation";
 import {CandidateTable} from "./components/candidate_table";
-import {JupyterTokens} from "./jupyter";
+import {Jupyter} from "./jupyter";
 
 
 /**
@@ -21,10 +21,10 @@ const CLASS_NAME = 'mimerenderer-xautoml';
  */
 export class JupyterWidget extends ReactWidget implements IRenderMime.IRenderer {
     private readonly _mimeType: string;
-    private readonly jupyter: JupyterTokens;
+    private readonly jupyter: Jupyter;
     private data: Runhistory = undefined;
 
-    constructor(options: IRenderMime.IRendererOptions, jupyter: JupyterTokens) {
+    constructor(options: IRenderMime.IRendererOptions, jupyter: Jupyter) {
         super();
         this._mimeType = options.mimeType;
         this.jupyter = jupyter
@@ -54,7 +54,7 @@ export class JupyterWidget extends ReactWidget implements IRenderMime.IRenderer 
 
 export interface ReactRootProps {
     data: Runhistory;
-    jupyter: JupyterTokens;
+    jupyter: Jupyter;
 }
 
 export interface ReactRootState {

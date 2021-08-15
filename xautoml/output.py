@@ -1,8 +1,7 @@
 import pandas as pd
 from mlinsights.helpers.pipeline import alter_pipeline_for_debugging, enumerate_pipeline_models
 
-SINK = 'SINK'
-SOURCE = 'SOURCE'
+from xautoml.util.constants import SOURCE, SINK
 
 COMPLETE = 0
 DESCRIPTION = 1
@@ -31,7 +30,7 @@ class OutputCalculator:
     @staticmethod
     def calculate_outputs(pipeline, X, feature_labels, method: int = DESCRIPTION) -> dict[str, str]:
         alter_pipeline_for_debugging(pipeline)
-        _ = pipeline.predict(X)
+        pipeline.predict(X)
 
         step_names = ['Pipeline'] + list(pipeline.steps_.keys())
         result = {}
