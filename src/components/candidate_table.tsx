@@ -29,6 +29,7 @@ interface HeadCell {
     label: string;
     numeric: boolean;
     sortable: boolean;
+    width: string;
 }
 
 interface CandidateTableHeadProps {
@@ -66,6 +67,7 @@ class CandidateTableHead extends React.Component<CandidateTableHeadProps, {}> {
                             key={headCell.id}
                             align={headCell.numeric ? 'right' : 'left'}
                             sortDirection={orderBy === headCell.id ? order : false}
+                            style={{width: headCell.width}}
                         >
                             {headCell.sortable ?
                                 <TableSortLabel
@@ -83,7 +85,7 @@ class CandidateTableHead extends React.Component<CandidateTableHeadProps, {}> {
                                 : headCell.label}
                         </TableCell>
                     ))}
-                    <TableCell/>
+                    <TableCell style={{width: '30px'}}/>
                 </TableRow>
             </TableHead>
         )
@@ -292,10 +294,10 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
         }
 
         const headCells: HeadCell[] = [
-            {id: 'id', numeric: false, sortable: true, label: 'Id'},
-            {id: 'timestamp', numeric: true, sortable: true, label: 'Timestamp'},
-            {id: 'performance', numeric: true, sortable: true, label: 'Performance'},
-            {id: 'candidate', numeric: false, sortable: false, label: 'Configuration'}
+            {id: 'id', numeric: false, sortable: true, label: 'Id', width: '50px'},
+            {id: 'timestamp', numeric: true, sortable: true, label: 'Timestamp', width: '100px'},
+            {id: 'performance', numeric: true, sortable: true, label: 'Performance', width: '110px'},
+            {id: 'candidate', numeric: false, sortable: false, label: 'Configuration', width: 'auto'}
         ];
 
         return (
@@ -304,6 +306,9 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
                     <Table
                         aria-labelledby='tableTitle'
                         aria-label='enhanced table'
+                        //TODO: To prevent the table from getting wider than parent, a fixed table-layout is necessary. Yet, this requires hardcoded columns width which is quite ugly (see HeadCell above).
+                        //Replace everything with DataGrid once https://github.com/mui-org/material-ui-x/issues/192 is resolved.
+                        style={{tableLayout: 'fixed'}}
                     >
                         <CandidateTableHead
                             headCells={headCells}

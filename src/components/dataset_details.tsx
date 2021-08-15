@@ -78,13 +78,12 @@ xautoml_df
             <>
                 <h4>{candidate.id} ({component})</h4>
                 <Button onClick={this.handleLoadDataframe}>Show In Jupyter</Button>
-
                 <div style={{display: 'flex'}}>
-                    <div style={{height: '100%', flex: '50%', flexGrow: 0}}>
+                    <div style={{flex: "1 1 auto", overflowX: 'auto'}}>
                         <LoadingIndicator loading={loading}/>
                         {!loading && output}
                     </div>
-                    <div style={{height: '100%', flex: '50%', flexGrow: 0}}>
+                    <div>
                         <LoadingIndicator loading={true}/>
                     </div>
                 </div>
