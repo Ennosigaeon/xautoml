@@ -1,6 +1,5 @@
 import json
 import os
-import re
 from typing import Optional, Awaitable
 
 import joblib
@@ -11,8 +10,10 @@ from jupyter_server.base.handlers import APIHandler
 from jupyter_server.utils import url_path_join
 from tornado import gen
 
+from xautoml.model_details import ModelDetails
 from xautoml.output import OutputCalculator, DESCRIPTION, COMPLETE
 from xautoml.roc_auc import RocCurve
+from xautoml.util import internal_cid_name
 
 
 class BaseHandler(APIHandler):
@@ -50,10 +51,6 @@ class BaseHandler(APIHandler):
 
         return wrapper
 
-    @staticmethod
-    def _internal_name(cid: str) -> str:
-        return re.sub(r'0(\d)', r'\1', cid)
-
     def load_models(self, model) -> tuple[np.ndarray, np.ndarray, list[str], dict[str, any]]:
         cids: list[str] = model.get('cids').split(',')
         data_file = model.get('data_file')
@@ -62,9 +59,8 @@ class BaseHandler(APIHandler):
         with open(data_file, 'rb') as f:
             X, y, feature_labels = joblib.load(f)
 
-            model_names = map(lambda cid: os.path.join(model_dir,
-                                                       'models_{}.pkl'.format(
-                                                           BaseHandler._internal_name(cid).replace(":", "-"))), cids)
+            model_names = map(lambda cid: os.path.join(model_dir, 'models_{}.pkl'.format(
+                internal_cid_name(cid).replace(":", "-"))), cids)
 
         models = {}
         for model_file, cid in zip(model_names, cids):
@@ -144,6 +140,17 @@ class RocCurveHandler(BaseHandler):
         self.finish(json.dumps(result))
 
 
+class LimeHandler(BaseHandler):
+
+    def _process_post(self, model):
+        X, y, feature_labels, models = self.load_models(model)
+        idx = model.get('idx', None)
+
+        details = ModelDetails()
+        res = details.calculate_lime(X, y, models.popitem()[1], feature_labels, idx)
+        self.finish(json.dumps(res.as_dict()))
+
+
 def setup_handlers(web_app):
     host_pattern = ".*$"
 
@@ -153,5 +160,6 @@ def setup_handlers(web_app):
         (url_path_join(base_url, 'xautoml', 'output/complete'), OutputCompleteHandler),
         (url_path_join(base_url, 'xautoml', 'output/description'), OutputDescriptionHandler),
         (url_path_join(base_url, 'xautoml', 'roc_auc'), RocCurveHandler),
+        (url_path_join(base_url, 'xautoml', 'explanations/lime'), LimeHandler),
     ]
     web_app.add_handlers(host_pattern, handlers)

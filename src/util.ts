@@ -28,3 +28,9 @@ export function normalizeComponent(component: string): string {
         .replace('Classification', '')
         .replace('Component', '')
 }
+
+
+export namespace Colors {
+    export const DEFAULT: string = '#12939a'
+    export const HIGHLIGHT: string = '#007bff'
+}

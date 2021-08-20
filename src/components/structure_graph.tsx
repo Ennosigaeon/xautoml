@@ -12,7 +12,7 @@ interface StructureGraphProps {
     structure: Structure
     candidate: Candidate
     meta: MetaInformation
-    onComponentSelection?: (component: string) => void
+    onComponentSelection?: (component: [string, string]) => void
 }
 
 interface StructureGraphState {
@@ -147,7 +147,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
                                 requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
                                 onClick={(e) => {
                                     if (!!this.props.onComponentSelection) {
-                                        this.props.onComponentSelection(id)
+                                        this.props.onComponentSelection([id, node.label])
                                         e.stopPropagation()
                                     }
                                 }}>

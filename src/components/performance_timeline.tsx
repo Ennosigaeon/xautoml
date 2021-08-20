@@ -1,17 +1,7 @@
 import React from 'react';
 import {CandidateId, MetaInformation, Structure} from "../model";
 import {fixedPrec} from "../util";
-import {
-    HorizontalGridLines,
-    LineSeries,
-    makeHeightFlexible,
-    makeWidthFlexible,
-    MarkSeries,
-    VerticalGridLines,
-    XAxis,
-    XYPlot,
-    YAxis
-} from "react-vis";
+import {FlexibleXYPlot, HorizontalGridLines, LineSeries, MarkSeries, VerticalGridLines, XAxis, YAxis} from "react-vis";
 import 'react-vis/dist/style.css'
 
 import * as d3 from 'd3'
@@ -86,7 +76,6 @@ export default class PerformanceTimeline extends React.Component<ConfigHistoryPr
         }));
         const incumbent = this.state.data.map(d => ({x: d.x, y: d.Incumbent}))
 
-        const FlexibleXYPlot = makeHeightFlexible(makeWidthFlexible(XYPlot))
         return (
             <FlexibleXYPlot>
                 <HorizontalGridLines/>

@@ -3,14 +3,12 @@ import {CandidateId, MetaInformation} from "../model";
 import {CancelablePromise, CanceledPromiseError, requestRocCurve, RocCurveData} from "../handler";
 import {
     DiscreteColorLegend,
+    FlexibleXYPlot,
     HorizontalGridLines,
     LineSeries,
     LineSeriesPoint,
-    makeHeightFlexible,
-    makeWidthFlexible,
     VerticalGridLines,
     XAxis,
-    XYPlot,
     YAxis
 } from "react-vis";
 import 'react-vis/dist/style.css'
@@ -93,7 +91,6 @@ export class RocCurve extends React.Component<RocCurveProps, RocCurveState> {
             const legend = <DiscreteColorLegend style={{position: 'absolute', right: '10px', bottom: '55px'}}
                                                 items={labels}/>
 
-            const FlexibleXYPlot = makeHeightFlexible(makeWidthFlexible(XYPlot))
             return (
                 <FlexibleXYPlot>
                     <HorizontalGridLines/>

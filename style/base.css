@@ -121,3 +121,16 @@ div.structure-graph_tooltip {
 .structure-graph_tooltip .MuiTable-root {
     width: initial;
 }
+
+
+/** JupyterButton */
+.jupyter-button svg {
+    height: 1.75em;
+    vertical-align: bottom;
+}
+
+/** LIME */
+.lime .rv-xy-plot__axis__title text {
+    font-size: large;
+    font-weight: bold;
+}

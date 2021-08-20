@@ -102,28 +102,28 @@ interface CandidateTableRowProps {
 
 interface CandidateTableRowState {
     open: boolean
-    selectedComponent: string
+    selectedComponent: [string, string]
 }
 
 class CandidateTableRow extends React.Component<CandidateTableRowProps, CandidateTableRowState> {
 
     constructor(props: CandidateTableRowProps) {
         super(props);
-        this.state = {open: false, selectedComponent: undefined}
+        this.state = {open: false, selectedComponent: [undefined, undefined]}
 
         this.toggleOpen = this.toggleOpen.bind(this)
         this.openComponent = this.openComponent.bind(this)
     }
 
     private toggleOpen(e: React.MouseEvent) {
-        this.setState({open: !this.state.open, selectedComponent: StructureGraphComponent.SINK})
+        this.setState({open: !this.state.open, selectedComponent: [StructureGraphComponent.SINK, StructureGraphComponent.SINK]})
         e.stopPropagation()
     }
 
-    private openComponent(component: string) {
+    private openComponent(component: [string, string]) {
         if (this.state.open && this.state.selectedComponent === component) {
             // Close details when selecting the same component again
-            this.setState({open: false, selectedComponent: undefined})
+            this.setState({open: false, selectedComponent: [undefined, undefined]})
         } else {
             this.setState({open: true, selectedComponent: component})
         }

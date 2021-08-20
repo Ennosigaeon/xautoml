@@ -1,54 +1,118 @@
 import React from "react";
 import {Candidate, MetaInformation} from "../model";
-import {OutputDescriptionData, requestOutputComplete} from "../handler";
+import {
+    CancelablePromise,
+    CanceledPromiseError,
+    LimeResult,
+    OutputDescriptionData,
+    requestLimeApproximation,
+    requestOutputComplete
+} from "../handler";
 import {JupyterContext} from "../util";
-import {Button} from "@material-ui/core";
 import {LoadingIndicator} from "./loading";
+import {JupyterButton} from "../util/jupyter-button";
+import {TwoColumnLayout} from "../util/layout";
+import {LimeComponent} from "./lime";
 
 interface DataSetDetailsProps {
     candidate: Candidate
-    component: string
+    component: [string, string]
     meta: MetaInformation
 }
 
 interface DataSetDetailsState {
-    loading: boolean
+    loadingDf: boolean
     outputs: OutputDescriptionData
+    pendingLimeRequest: CancelablePromise<LimeResult>
+    lime: LimeResult
+    selectedSample: number
 }
 
 
 export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps, DataSetDetailsState> {
 
+    static selectedClassName = 'selected-config'
     static contextType = JupyterContext;
     context: React.ContextType<typeof JupyterContext>;
+    dfTableRef = React.createRef<HTMLDivElement>()
 
     constructor(props: DataSetDetailsProps) {
         super(props);
-        this.state = {loading: false, outputs: new Map<string, string>()}
+        this.state = {
+            loadingDf: false,
+            outputs: new Map<string, string>(),
+            pendingLimeRequest: undefined,
+            lime: undefined,
+            selectedSample: undefined
+        }
 
         this.handleLoadDataframe = this.handleLoadDataframe.bind(this)
+        this.handleSampleClick = this.handleSampleClick.bind(this)
     }
 
     componentDidUpdate(prevProps: Readonly<DataSetDetailsProps>, prevState: Readonly<DataSetDetailsState>, snapshot?: any) {
         if (prevProps.component !== this.props.component) {
-            if (this.state.loading) {
+            if (this.state.loadingDf) {
                 // Loading already in progress
                 return
             }
-            if (this.state.outputs.size > 0) {
-                // Outputs already cached
-                return
+            if (this.state.outputs.size == 0) {
+                // Outputs not cached yet already cached
+                this.setState({loadingDf: true})
+                requestOutputComplete(this.props.candidate.id, this.props.meta.data_file, this.props.meta.model_dir)
+                    .then(data => this.setState({outputs: data, loadingDf: false}))
+                    .catch(reason => {
+                        // TODO handle error
+                        console.error(`Failed to fetch output data.\n${reason}`);
+                        this.setState({loadingDf: false})
+                    });
             }
-
-            this.setState({loading: true})
-            requestOutputComplete(this.props.candidate.id, this.props.meta.data_file, this.props.meta.model_dir)
-                .then(data => this.setState({outputs: data, loading: false}))
-                .catch(reason => {
-                    // TODO handle error
-                    console.error(`Failed to fetch output data.\n${reason}`);
-                    this.setState({loading: false})
-                });
         }
+
+        if (!!this.dfTableRef.current) {
+            [...this.dfTableRef.current.getElementsByTagName('tr')].forEach(tr => {
+                tr.onclick = this.handleSampleClick
+
+                // Highlight previously selected row
+                if (this.state.selectedSample !== undefined && this.state.selectedSample === Number.parseInt(tr.firstElementChild.textContent)) {
+                    tr.classList.add(DataSetDetailsComponent.selectedClassName)
+                }
+            })
+        }
+    }
+
+    private handleSampleClick(event: MouseEvent) {
+        const row = event.target instanceof HTMLTableRowElement ? event.target : (event.target as HTMLTableCellElement).parentElement
+        const idx = Number.parseInt(row.firstElementChild.textContent)
+
+        if (isNaN(idx))
+            // Abort processing as no valid row selected
+            return
+
+        // Highlight selected row
+        row.parentElement.querySelectorAll(`.${DataSetDetailsComponent.selectedClassName}`)
+            .forEach(el => el.classList.remove(DataSetDetailsComponent.selectedClassName))
+        row.classList.add(DataSetDetailsComponent.selectedClassName)
+
+        if (this.state.pendingLimeRequest !== undefined) {
+            // Request for data is currently still pending. Cancel previous request.
+            this.state.pendingLimeRequest.cancel()
+        }
+
+        const promise = requestLimeApproximation(this.props.candidate.id, idx, this.props.meta.data_file, this.props.meta.model_dir)
+        this.setState({pendingLimeRequest: promise, selectedSample: idx})
+
+        promise
+            .then(data => this.setState({lime: data, pendingLimeRequest: undefined}))
+            .catch(reason => {
+                if (!(reason instanceof CanceledPromiseError)) {
+                    // TODO handle error
+                    console.error(`Failed to fetch LimeResult data.\n${reason}`)
+                    this.setState({pendingLimeRequest: undefined})
+                } else {
+                    console.log('Cancelled promise due to user request')
+                }
+            });
     }
 
     private handleLoadDataframe() {
@@ -66,27 +130,35 @@ xautoml_df
     }
 
     render() {
-        const {component, candidate} = this.props
-        const {loading, outputs} = this.state
+        const {component} = this.props
+        const {loadingDf, outputs, pendingLimeRequest, lime} = this.state
 
-        const output = outputs.has(component) ?
-            <div className={'jp-RenderedHTMLCommon'}
-                 dangerouslySetInnerHTML={{__html: outputs.get(component)}}/> :
+        const outputRender = outputs.has(component[0]) ?
+            <div className={'jp-RenderedHTMLCommon'} ref={this.dfTableRef}
+                 dangerouslySetInnerHTML={{__html: outputs.get(component[0])}}/> :
             <div>Missing</div>
+
+        const limeRender = !!lime ? <LimeComponent result={lime}/> :
+            <p>Select a sample on the left side to calculate a local model approximation (LIME).</p>
 
         return (
             <>
-                <h4>{candidate.id} ({component})</h4>
-                <Button onClick={this.handleLoadDataframe}>Show In Jupyter</Button>
-                <div style={{display: 'flex'}}>
-                    <div style={{flex: "1 1 auto", overflowX: 'auto'}}>
-                        <LoadingIndicator loading={loading}/>
-                        {!loading && output}
-                    </div>
-                    <div>
-                        <LoadingIndicator loading={true}/>
-                    </div>
-                </div>
+                <TwoColumnLayout>
+                    <>
+                        <TwoColumnLayout>
+                            <h4>Output of <i>{component[1]} ({component[0]})</i></h4>
+                            {(!loadingDf && outputs.has(component[0])) && <JupyterButton onClickHandler={this.handleLoadDataframe}/>}
+                        </TwoColumnLayout>
+
+                        <LoadingIndicator loading={loadingDf}/>
+                        {!loadingDf && outputRender}
+                    </>
+                    <>
+                        <h4>Local Approximation</h4>
+                        <LoadingIndicator loading={!!pendingLimeRequest}/>
+                        {!pendingLimeRequest && limeRender}
+                    </>
+                </TwoColumnLayout>
             </>
         )
     }
