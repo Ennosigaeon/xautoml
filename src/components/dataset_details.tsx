@@ -146,11 +146,14 @@ xautoml_df
                         <TwoColumnLayout>
                             <h4>Output of <i>{component[1]} ({component[0]})</i></h4>
                             {(!loadingDf && outputs.has(component[0])) &&
-                            <JupyterButton style={{marginTop: '14px'}} onClickHandler={this.handleLoadDataframe}/>}
+                            <JupyterButton style={{marginTop: '14px', float: 'right'}} onClickHandler={this.handleLoadDataframe}/>}
                         </TwoColumnLayout>
 
-                        <LoadingIndicator loading={loadingDf}/>
-                        {!loadingDf && outputRender}
+                        <div style={{overflowX: 'auto'}}>
+                            <LoadingIndicator loading={loadingDf}/>
+                            {!loadingDf && outputRender}
+                        </div>
+
                     </>
                     <>
                         <h4>Local Approximation</h4>

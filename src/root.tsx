@@ -83,26 +83,29 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
         if (!data) {
             return <p>Error loading data...</p>
         }
-        return <JupyterContext.Provider value={jupyter}>
-            <MetaInformationTable meta={data.meta}/>
-            <CandidateTable structures={data.structures}
-                            selectedCandidates={selectedCandidates}
-                            meta={data.meta}
-                            onCandidateSelection={this.onCandidateSelection}/>
-            <div style={{display: 'flex', height: '400px'}}>
-                <div style={{height: '100%', flexBasis: 0, flexGrow: 1}}>
-                    <PerformanceTimeline data={data.structures} meta={data.meta} selectedCandidates={selectedCandidates}
-                                         onCandidateSelection={this.onCandidateSelection}/>
+        return (
+            <JupyterContext.Provider value={jupyter}>
+                <MetaInformationTable meta={data.meta}/>
+                <CandidateTable structures={data.structures}
+                                selectedCandidates={selectedCandidates}
+                                meta={data.meta}
+                                onCandidateSelection={this.onCandidateSelection}/>
+                <div style={{display: 'flex', height: '400px'}}>
+                    <div style={{height: '100%', flexBasis: 0, flexGrow: 1}}>
+                        <PerformanceTimeline data={data.structures} meta={data.meta}
+                                             selectedCandidates={selectedCandidates}
+                                             onCandidateSelection={this.onCandidateSelection}/>
+                    </div>
+                    <div style={{height: '100%', flexBasis: 0, flexGrow: 1}}>
+                        <RocCurve selectedCandidates={selectedCandidates} meta={data.meta}/>
+                    </div>
                 </div>
-                <div style={{height: '100%', flexBasis: 0, flexGrow: 1}}>
-                    <RocCurve selectedCandidates={selectedCandidates} meta={data.meta}/>
-                </div>
-            </div>
 
-            <BanditExplanationsComponent data={data.explanations.structures} pipelines={pipelines}
-                                         selectedCandidates={selectedCandidates} structures={data.structures}
-                                         onCandidateSelection={this.onCandidateSelection}/>
-        </JupyterContext.Provider>
+                <BanditExplanationsComponent data={data.explanations.structures} pipelines={pipelines}
+                                             selectedCandidates={selectedCandidates} structures={data.structures}
+                                             onCandidateSelection={this.onCandidateSelection}/>
+            </JupyterContext.Provider>
+        )
     }
 
 }
