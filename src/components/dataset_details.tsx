@@ -116,13 +116,11 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
     }
 
     private handleLoadDataframe() {
-        const framework = 'dswizard'
-
         this.context.createCell(`
 from xautoml.util import io_utils
 
-xautoml_X, _, xautoml_feature_labels = io_utils.load_input_data('${this.props.meta.data_file}', framework='${framework}')
-xautoml_pipeline = io_utils.load_pipeline('${this.props.meta.model_dir}', '${this.props.candidate.id}', framework='${framework}')
+xautoml_X, _, xautoml_feature_labels = io_utils.load_input_data('${this.props.meta.data_file}', framework='${this.props.meta.framework}')
+xautoml_pipeline = io_utils.load_pipeline('${this.props.meta.model_dir}', '${this.props.candidate.id}', framework='${this.props.meta.framework}')
 
 xautoml_df = io_utils.load_output_dataframe(xautoml_pipeline, '${this.props.component}', xautoml_X, xautoml_feature_labels)
 xautoml_df
@@ -147,7 +145,8 @@ xautoml_df
                     <>
                         <TwoColumnLayout>
                             <h4>Output of <i>{component[1]} ({component[0]})</i></h4>
-                            {(!loadingDf && outputs.has(component[0])) && <JupyterButton onClickHandler={this.handleLoadDataframe}/>}
+                            {(!loadingDf && outputs.has(component[0])) &&
+                            <JupyterButton style={{marginTop: '14px'}} onClickHandler={this.handleLoadDataframe}/>}
                         </TwoColumnLayout>
 
                         <LoadingIndicator loading={loadingDf}/>

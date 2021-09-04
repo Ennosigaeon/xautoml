@@ -89,7 +89,8 @@ export class Candidate {
 }
 
 export class MetaInformation {
-    constructor(public readonly start_time: number,
+    constructor(public readonly framework: string,
+                public readonly start_time: number,
                 public readonly end_time: number,
                 public readonly metric: string,
                 public readonly metric_sign: number,
@@ -105,7 +106,7 @@ export class MetaInformation {
     }
 
     static fromJson(meta: MetaInformation): MetaInformation {
-        return new MetaInformation(meta.start_time, meta.end_time, meta.metric, meta.metric_sign, meta.cutoff, meta.openml_task, meta.openml_fold, meta.wallclock_limit, meta.n_structures, meta.n_configs, meta.iterations, meta.model_dir, meta.data_file)
+        return new MetaInformation('dswizard', meta.start_time, meta.end_time, meta.metric, meta.metric_sign, meta.cutoff, meta.openml_task, meta.openml_fold, meta.wallclock_limit, meta.n_structures, meta.n_configs, meta.iterations, meta.model_dir, meta.data_file)
     }
 }
 

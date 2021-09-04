@@ -8,12 +8,13 @@ import TableSortLabel from '@material-ui/core/TableSortLabel';
 import Checkbox from '@material-ui/core/Checkbox';
 import {Box, IconButton, Table, TableContainer} from '@material-ui/core';
 import {Candidate, CandidateId, MetaInformation, Structure} from '../model';
-import {fixedPrec} from '../util';
+import {fixedPrec, JupyterContext} from '../util';
 import {StructureGraphComponent} from './structure_graph';
 import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@material-ui/icons/KeyboardArrowUp';
 import Collapse from '@material-ui/core/Collapse';
 import {DataSetDetailsComponent} from './dataset_details';
+import {JupyterButton} from "../util/jupyter-button";
 
 interface Data {
     id: CandidateId;
@@ -85,7 +86,7 @@ class CandidateTableHead extends React.Component<CandidateTableHeadProps, {}> {
                                 : headCell.label}
                         </TableCell>
                     ))}
-                    <TableCell style={{width: '30px'}}/>
+                    <TableCell style={{width: '175px'}}/>
                 </TableRow>
             </TableHead>
         )
@@ -107,16 +108,23 @@ interface CandidateTableRowState {
 
 class CandidateTableRow extends React.Component<CandidateTableRowProps, CandidateTableRowState> {
 
+    static contextType = JupyterContext;
+    context: React.ContextType<typeof JupyterContext>;
+
     constructor(props: CandidateTableRowProps) {
         super(props);
         this.state = {open: false, selectedComponent: [undefined, undefined]}
 
         this.toggleOpen = this.toggleOpen.bind(this)
         this.openComponent = this.openComponent.bind(this)
+        this.openCandidateInJupyter = this.openCandidateInJupyter.bind(this)
     }
 
     private toggleOpen(e: React.MouseEvent) {
-        this.setState({open: !this.state.open, selectedComponent: [StructureGraphComponent.SINK, StructureGraphComponent.SINK]})
+        this.setState({
+            open: !this.state.open,
+            selectedComponent: [StructureGraphComponent.SINK, StructureGraphComponent.SINK]
+        })
         e.stopPropagation()
     }
 
@@ -127,6 +135,17 @@ class CandidateTableRow extends React.Component<CandidateTableRowProps, Candidat
         } else {
             this.setState({open: true, selectedComponent: component})
         }
+    }
+
+    private openCandidateInJupyter(e: React.MouseEvent) {
+        this.context.createCell(`
+from xautoml.util import io_utils
+
+xautoml_X, xautoml_y, _ = io_utils.load_input_data('${this.props.meta.data_file}', framework='${this.props.meta.framework}')
+xautoml_pipeline = io_utils.load_pipeline('${this.props.meta.model_dir}', '${this.props.data.id}', framework='${this.props.meta.framework}')
+xautoml_pipeline
+        `.trim())
+        e.stopPropagation()
     }
 
     render() {
@@ -159,6 +178,7 @@ class CandidateTableRow extends React.Component<CandidateTableRowProps, Candidat
                                                  onComponentSelection={this.openComponent}/>
                     </TableCell>
                     <TableCell>
+                        <JupyterButton onClickHandler={this.openCandidateInJupyter}/>
                         <IconButton aria-label='expand row' size='small' onClick={this.toggleOpen}>
                             {this.state.open ? <KeyboardArrowUpIcon/> : <KeyboardArrowDownIcon/>}
                         </IconButton>
@@ -294,7 +314,7 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
         }
 
         const headCells: HeadCell[] = [
-            {id: 'id', numeric: false, sortable: true, label: 'Id', width: '50px'},
+            {id: 'id', numeric: false, sortable: true, label: 'Id', width: '40px'},
             {id: 'timestamp', numeric: true, sortable: true, label: 'Timestamp', width: '100px'},
             {id: 'performance', numeric: true, sortable: true, label: 'Performance', width: '110px'},
             {id: 'candidate', numeric: false, sortable: false, label: 'Configuration', width: 'auto'}
@@ -324,10 +344,10 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
                                 .map(row => {
                                     return (
                                         <CandidateTableRow key={row.id}
-                                                          data={row}
-                                                          meta={this.props.meta}
-                                                          selected={this.props.selectedCandidates.has(row.id)}
-                                                          onSelectionToggle={this.handleSelectionToggle}/>
+                                                           data={row}
+                                                           meta={this.props.meta}
+                                                           selected={this.props.selectedCandidates.has(row.id)}
+                                                           onSelectionToggle={this.handleSelectionToggle}/>
                                     );
                                 })}
                         </TableBody>
