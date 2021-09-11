@@ -60,15 +60,6 @@ export class Axis {
         }
     }
 
-    getChildAxes(): string[] {
-        if (this.isNumerical()) {
-            return [this.id]
-        }
-        else {
-            // TODO this.id is not centered
-            return [this.id].concat(...this.choices.map(c => c.getChildAxes()))
-        }
-    }
 }
 
 export class Choice {
@@ -80,23 +71,25 @@ export class Choice {
         public readonly label: string,
         public readonly axes: Array<Axis> = new Array<Axis>(),
         public readonly collapsible: boolean = true) {
-        this.collapsed = false
+        this.collapsed = collapsible
     }
 
     setCollapsed(collapsed: boolean) {
-        this.collapsed = collapsed
-    }
-
-    toggleCollapsed() {
-        this.collapsed = !this.collapsed
+        if (this.collapsible) {
+            this.collapsed = collapsed
+        }
     }
 
     isCollapsed() {
-        return this.collapsed || this.axes.length === 0
+        return this.collapsed
+    }
+
+    isExpandable() {
+        return this.collapsed && this.axes.length > 0
     }
 
     getWidthWeight(): number {
-        if (this.isCollapsed()) {
+        if (this.collapsed || this.axes.length === 0) {
             return 1
         } else {
             return this.axes.map(a => a.getWidthWeight()).reduce((a, b) => a + b)
@@ -104,18 +97,10 @@ export class Choice {
     }
 
     getHeightWeight(): number {
-        if (this.isCollapsed()) {
+        if (this.collapsed || this.axes.length === 0) {
             return 1
         } else {
             return Math.max(1, ...this.axes.map(a => a.getHeightWeight()))
-        }
-    }
-
-    getChildAxes(): string[] {
-        if (this.isCollapsed()) {
-            return []
-        } else {
-            return [].concat(...this.axes.map(a => a.getChildAxes()))
         }
     }
 }

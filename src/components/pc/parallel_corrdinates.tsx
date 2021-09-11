@@ -19,7 +19,19 @@ export class ParallelCoordinates extends React.Component<{}, CPCState> {
 
         // init root node
         this.root = new cpc.Choice(this.state.model.id, this.state.model.label, this.state.model.axes, false);
-        // this.root.toggleCollapsed()
+
+        this.onCollapse = this.onCollapse.bind(this)
+        this.onExpand = this.onExpand.bind(this)
+    }
+
+    private onCollapse(choice: cpc.Choice) {
+        choice.setCollapsed(true)
+        this.setState({model: this.state.model})
+    }
+
+    private onExpand(choice: cpc.Choice) {
+        choice.setCollapsed(false)
+        this.setState({model: this.state.model})
     }
 
     public render() {
@@ -30,7 +42,10 @@ export class ParallelCoordinates extends React.Component<{}, CPCState> {
 
         return (
             <svg className={'_cpc'} width={`${width}px`} height={`${height}px`}>
-                <PCChoice choice={this.root} parent={undefined} xRange={[0, width]} yScale={yScale}/>
+                <PCChoice choice={this.root} parent={undefined}
+                          onCollapse={this.onCollapse}
+                          onExpand={this.onExpand}
+                          xRange={[0, width]} yScale={yScale}/>
             </svg>
         )
     }

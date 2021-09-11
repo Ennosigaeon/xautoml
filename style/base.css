@@ -134,3 +134,22 @@ div.structure-graph_tooltip {
     font-size: large;
     font-weight: bold;
 }
+
+
+/** Parallel Coordinates */
+.pc-axis > rect {
+    fill: none;
+    stroke: black;
+    stroke-width: 1px;
+    pointer-events: all;
+}
+
+.pc-axis > rect:hover {
+    stroke: blue;
+    stroke-width: 2px;
+}
+
+.pc-axis > path {
+    stroke: red;
+    stroke-width: 1px;
+}
