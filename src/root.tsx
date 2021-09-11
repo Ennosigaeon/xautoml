@@ -9,6 +9,7 @@ import {RocCurve} from "./components/roc_curve";
 import {BanditExplanationsComponent} from "./components/bandit_explanation";
 import {CandidateTable} from "./components/candidate_table";
 import {Jupyter} from "./jupyter";
+import {ParallelCoordinates} from "./components/pc/parallel_corrdinates";
 
 
 /**
@@ -85,6 +86,7 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
         }
         return (
             <JupyterContext.Provider value={jupyter}>
+                <ParallelCoordinates/>
                 <MetaInformationTable meta={data.meta}/>
                 <CandidateTable structures={data.structures}
                                 selectedCandidates={selectedCandidates}
