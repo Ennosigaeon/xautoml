@@ -125,7 +125,7 @@ export class Domain {
     }
 
     toD3(): [number, number] {
-        return [this.min, this.max]
+        return [this.max, this.min]
     }
 
 }
