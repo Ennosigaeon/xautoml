@@ -40,12 +40,13 @@ export class ParallelCoordinates extends React.Component<{}, CPCState> {
         const height = 500
         const yScale = d3.scaleBand([this.root.id], [0, height / this.root.getHeightWeight()])
 
+        this.root.layout([0, width], yScale)
+
         return (
             <svg className={'_cpc'} width={`${width}px`} height={`${height}px`}>
                 <PCChoice choice={this.root} parent={undefined}
                           onCollapse={this.onCollapse}
-                          onExpand={this.onExpand}
-                          xRange={[0, width]} yScale={yScale}/>
+                          onExpand={this.onExpand}/>
             </svg>
         )
     }

@@ -1,6 +1,8 @@
 import {ConfigValue} from "../../model";
 import {fixedPrec} from "../../util";
 import {ParCord} from "./util";
+import * as d3 from "d3";
+import {Constants} from "./constants";
 
 export class Model {
     constructor(
@@ -16,6 +18,8 @@ export class Axis {
 
     public readonly domain: Domain
     public readonly choices: Array<Choice>
+
+    private layout_: Layout
 
     constructor(
         public readonly id: string,
@@ -60,10 +64,33 @@ export class Axis {
         }
     }
 
+    layout(xScale: d3.ScaleBand<string>, yRange: [number, number]) {
+        const adjustedYRange: [number, number] = [
+            yRange[0] + 1.5 * Constants.TEXT_HEIGHT,
+            yRange[1] - 0.5 * Constants.TEXT_HEIGHT
+        ]
+        const yScale = this.isNumerical() ?
+            d3.scaleLinear(this.domain.toD3(), adjustedYRange) :
+            ParCord.yScale(this.choices, adjustedYRange)
+
+        const x = xScale(this.id)
+        const y = yScale.range()[0]
+        const width = this.getWidthWeight() * xScale.bandwidth()
+        const height = yScale.range()[1] - yScale.range()[0]
+
+        this.layout_ = new Layout(x, y, width, height, xScale, yScale)
+        this.choices.forEach(c => c.layout([x, x + width], yScale as d3.ScaleBand<string>))
+    }
+
+    getLayout(): Layout {
+        return this.layout_
+    }
+
 }
 
 export class Choice {
 
+    public layout_: Layout
     private collapsed: boolean
 
     constructor(
@@ -103,6 +130,25 @@ export class Choice {
             return Math.max(1, ...this.axes.map(a => a.getHeightWeight()))
         }
     }
+
+    public layout(xRange: [number, number], yScale: d3.ScaleBand<string>) {
+        const xScale = ParCord.xScale(this.axes, xRange)
+
+        const x = xRange[0]
+        const width = xRange[1] - xRange[0]
+
+        const y = yScale(this.id)
+        const height = this.getHeightWeight() * yScale.bandwidth()
+        this.layout_ = new Layout(x, y, width, height, xScale, yScale)
+
+        if (!this.isCollapsed()) {
+            this.axes.forEach(a => a.layout(xScale, [y, y + height]))
+        }
+    }
+
+    getLayout(): Layout {
+        return this.layout_
+    }
 }
 
 export class Domain {
@@ -119,15 +165,28 @@ export class Domain {
         this.max = fixedPrec(max)
     }
 
-    normalize(value: number): number {
-        const norm = (this.max - value) / (this.max - this.min)
-        return Math.max(this.min, Math.min(this.max, norm))
-    }
-
     toD3(): [number, number] {
         return [this.max, this.min]
     }
 
+}
+
+export class Layout {
+    constructor(public readonly x: number,
+                public readonly y: number,
+                public readonly width: number,
+                public readonly height: number,
+                public readonly xScale: d3.ScaleBand<string>,
+                public readonly yScale: Scale) {
+    }
+
+    centeredX() {
+        return this.x + this.width / 2
+    }
+
+    centeredY() {
+        return this.y + this.height / 2
+    }
 }
 
 export class Line {
@@ -148,3 +207,5 @@ export enum Type {
     CATEGORICAL,
     NUMERICAL
 }
+
+export type Scale = d3.ScaleLinear<number, number> | d3.ScaleBand<string>

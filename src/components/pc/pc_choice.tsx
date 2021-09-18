@@ -1,8 +1,7 @@
 import * as cpc from "./model";
 import React from "react";
-import * as d3 from "d3";
 import {PCAxis} from "./pc_axis";
-import {ParCord} from "./util";
+import {Constants} from "./constants";
 
 interface CPCPChoiceProps {
     choice: cpc.Choice
@@ -10,9 +9,6 @@ interface CPCPChoiceProps {
 
     onExpand: (choice: cpc.Choice) => void
     onCollapse: (choice: cpc.Choice) => void
-
-    xRange: [number, number]
-    yScale: d3.ScaleBand<string>
 }
 
 interface CPCChoiceState {
@@ -49,25 +45,21 @@ export class PCChoice extends React.Component<CPCPChoiceProps, CPCChoiceState> {
     }
 
     render() {
-        const {choice, xRange, yScale, onCollapse, onExpand} = this.props
-        const xScale = ParCord.xScale(choice.axes, xRange)
-
-        const x = xRange[0]
-        const width = xRange[1] - xRange[0]
-
-        const y = yScale(choice.id)
-        const height = choice.getHeightWeight() * yScale.bandwidth()
+        const {choice, onCollapse, onExpand} = this.props
+        const {x, y, width, height} = choice.getLayout()
+        const centeredX = choice.getLayout().centeredX()
+        const centeredY = choice.getLayout().centeredY()
 
         return (
             <g id={`choice-${choice.id}`}
                className={`pc-choice ${choice.isExpandable() ? 'pc-choice-expandable' : ''}`}
                onClick={this.expand}>
-                {choice.isCollapsed() && <circle cx={x + width / 2}
-                                                 cy={y + height / 2}
-                                                 r={12}/>}
-                <text x={x + width / 2}
-                      y={y + height / 2}
-                      transform={`rotate(-25, ${x + width / 2}, ${y + height / 2})`}>{choice.label}</text>
+                {choice.isCollapsed() && <circle cx={centeredX}
+                                                 cy={centeredY}
+                                                 r={Constants.CIRCLE_SIZE}/>}
+                <text x={centeredX}
+                      y={centeredY}
+                      transform={`rotate(${Constants.TEXT_ROTATION}, ${centeredX}, ${centeredY})`}>{choice.label}</text>
 
                 {!choice.isCollapsed() && <>
                     <rect x={x} y={y} width={width} height={height} onClick={this.collapse}/>
@@ -75,9 +67,7 @@ export class PCChoice extends React.Component<CPCPChoiceProps, CPCChoiceState> {
                                                   axis={a}
                                                   parent={choice}
                                                   onCollapse={onCollapse}
-                                                  onExpand={onExpand}
-                                                  xScale={xScale}
-                                                  yRange={[y, y + height]}/>)}
+                                                  onExpand={onExpand}/>)}
                 </>}
             </g>
         )
