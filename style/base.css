@@ -137,19 +137,45 @@ div.structure-graph_tooltip {
 
 
 /** Parallel Coordinates */
-.pc-axis > rect {
-    fill: none;
-    stroke: black;
+.pc-choice > rect {
+    fill: rgba(255, 255, 255, 0.85);
+    stroke: #DFE3E6;
     stroke-width: 1px;
     pointer-events: all;
 }
 
-.pc-axis > rect:hover {
-    stroke: blue;
+.pc-choice > rect:hover {
+    stroke: #007bff !important;
+    fill: rgba(255, 255, 255, 0.4);
+    stroke-width: 2px;
+}
+
+.pc-choice > circle {
+    fill: none;
+    stroke: rgb(108, 117, 125);
+    stroke-width: 1px;
+    pointer-events: none;
+}
+
+.pc-choice > text {
+    font-size: 11px;
+    dominant-baseline: middle;
+    text-anchor: middle;
+}
+
+.pc-choice-expandable {
+    cursor: pointer;
+    pointer-events: all;
+}
+
+.pc-choice-expandable:hover > circle {
+    fill: rgb(198, 200, 224);
+    stroke: #007bff !important;
     stroke-width: 2px;
 }
 
 .pc-axis > path {
-    stroke: red;
+    stroke: #b8b8b8;
     stroke-width: 1px;
+    pointer-events: none;
 }

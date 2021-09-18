@@ -24,12 +24,24 @@ export class PCChoice extends React.Component<CPCPChoiceProps, CPCChoiceState> {
         super(props);
 
         this.expand = this.expand.bind(this)
+        this.collapse = this.collapse.bind(this)
     }
 
     private expand(e: React.MouseEvent) {
         const {choice, onExpand} = this.props
         if (choice.isExpandable()) {
             onExpand(choice)
+        }
+
+        e.preventDefault()
+        e.stopPropagation()
+    }
+
+    private collapse(e: React.MouseEvent) {
+        const {choice, onCollapse} = this.props
+
+        if (!choice.isCollapsed()) {
+            onCollapse(choice)
         }
 
         e.preventDefault()
@@ -47,21 +59,26 @@ export class PCChoice extends React.Component<CPCPChoiceProps, CPCChoiceState> {
         const height = choice.getHeightWeight() * yScale.bandwidth()
 
         return (
-            <g id={`choice-${choice.id}`} onClick={this.expand}>
-                {choice.isCollapsed() &&
-                <circle className={'choice'} fill={'none'} stroke={'black'} strokeWidth={'1px'}
-                        cx={x + width / 2} cy={y + height / 2} r={12}/>}
-                <text x={x + width / 2} y={y + height / 2} textAnchor={'middle'} dominantBaseline={'middle'}
-                      fontSize={'11px'}>
-                    {choice.label}
-                </text>
-                {!choice.isCollapsed() && choice.axes.map(a => <PCAxis key={a.id}
-                                                                       axis={a}
-                                                                       parent={choice}
-                                                                       onCollapse={onCollapse}
-                                                                       onExpand={onExpand}
-                                                                       xScale={xScale}
-                                                                       yRange={[y, y + height]}/>)}
+            <g id={`choice-${choice.id}`}
+               className={`pc-choice ${choice.isExpandable() ? 'pc-choice-expandable' : ''}`}
+               onClick={this.expand}>
+                {choice.isCollapsed() && <circle cx={x + width / 2}
+                                                 cy={y + height / 2}
+                                                 r={12}/>}
+                <text x={x + width / 2}
+                      y={y + height / 2}
+                      transform={`rotate(-25, ${x + width / 2}, ${y + height / 2})`}>{choice.label}</text>
+
+                {!choice.isCollapsed() && <>
+                    <rect x={x} y={y} width={width} height={height} onClick={this.collapse}/>
+                    {choice.axes.map(a => <PCAxis key={a.id}
+                                                  axis={a}
+                                                  parent={choice}
+                                                  onCollapse={onCollapse}
+                                                  onExpand={onExpand}
+                                                  xScale={xScale}
+                                                  yRange={[y, y + height]}/>)}
+                </>}
             </g>
         )
     }

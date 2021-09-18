@@ -21,7 +21,7 @@ interface CPCAxisState {
 
 export class PCAxis extends React.Component<CPCAxisProps, CPCAxisState> {
 
-    static readonly PADDING = 10
+    static readonly TEXT_HEIGHT = 17
 
     constructor(props: CPCAxisProps) {
         super(props);
@@ -30,12 +30,8 @@ export class PCAxis extends React.Component<CPCAxisProps, CPCAxisState> {
         this.collapse = this.collapse.bind(this)
     }
 
-    isNumerical(): boolean {
+    private isNumerical(): boolean {
         return this.props.axis.type == cpc.Type.NUMERICAL;
-    }
-
-    isCategorical(): boolean {
-        return this.props.axis.type == cpc.Type.CATEGORICAL;
     }
 
     private collapse(e: React.MouseEvent) {
@@ -52,7 +48,7 @@ export class PCAxis extends React.Component<CPCAxisProps, CPCAxisState> {
     render() {
         const {axis, xScale, yRange, onExpand, onCollapse} = this.props
 
-        const adjustedYRange: [number, number] = [yRange[0], yRange[1] - 2 * PCAxis.PADDING]
+        const adjustedYRange: [number, number] = [yRange[0] + 1.5 * PCAxis.TEXT_HEIGHT, yRange[1] - 5]
         const yScale = axis.isNumerical() ? d3.scaleLinear(axis.domain.toD3(), adjustedYRange) : ParCord.yScale(axis.choices, adjustedYRange)
 
         const x = xScale(axis.id)
@@ -61,7 +57,7 @@ export class PCAxis extends React.Component<CPCAxisProps, CPCAxisState> {
         const height = yScale.range()[1] - yScale.range()[0]
 
         const path = d3.path();
-        path.moveTo(x + width / 2, y + 20);
+        path.moveTo(x + width / 2, y);
         path.lineTo(x + width / 2, y + height);
         path.closePath();
 
@@ -73,12 +69,11 @@ export class PCAxis extends React.Component<CPCAxisProps, CPCAxisState> {
 
         return (
             <>
-                <g id={`axis-${axis.id}`} className={`pc-axis ${this.state.hover ? 'pc-hover' : ''}`}
-                   transform={`translate(0, ${PCAxis.PADDING})`} onClick={this.collapse}>
-                    <rect className={'axis_container'} x={x} y={y} width={width} height={height}/>
+                <g id={`axis-${axis.id}`} className={'pc-axis'} onClick={this.collapse}>
                     <path d={path.toString()}/>
-                    <text className={'axis_label'} x={x + width / 2} y={y + 15}
-                          textAnchor={'middle'}>{this.props.axis.label}</text>
+                    <text x={x + width / 2} y={yRange[0] + PCAxis.TEXT_HEIGHT} textAnchor={'middle'}>
+                        {this.props.axis.label}
+                    </text>
                     {choices}
                 </g>
             </>

@@ -38,7 +38,7 @@ export namespace ParCord {
         const weights = axes.map(a => a.getWidthWeight() - 1)
         const ids = [].concat(...axes.map((a, i) => [a.id, ...Array(...Array(weights[i])).map((_, j) => `_${a.id}_${j}_`)]))
 
-        return d3.scaleBand(ids, range).padding(0.01)
+        return d3.scaleBand(ids, range).padding(0.1)
     }
 
     export function yScale(choices: Array<cpc.Choice>, range: [number, number]): d3.ScaleBand<string> {
