@@ -4,7 +4,7 @@ import * as cpc from "./model";
 export namespace SampleData {
 
     function createNumericalAxis() {
-        return new cpc.Axis('3', 'Accuracy', cpc.Type.NUMERICAL, new cpc.Domain(0.15, 1))
+        return new cpc.Axis('3', 'Accuracy', cpc.Type.NUMERICAL, new cpc.Domain(0, 1))
     }
 
     function createConditionalAxis() {
@@ -25,10 +25,32 @@ export namespace SampleData {
         ])
     }
 
+    function createLines() {
+        const line1 = new cpc.Line('1', [new cpc.LinePoint('1', '1_2'), new cpc.LinePoint('3', 0.667)])
+        const line2 = new cpc.Line('2', [
+            new cpc.LinePoint('1', '1_1'),
+            new cpc.LinePoint('1_1_1', '1_1_1_1'),
+            new cpc.LinePoint('1_1_2', 0.334),
+            new cpc.LinePoint('1_1_3', 4),
+            new cpc.LinePoint('3', 1)
+        ])
+        const line3 = new cpc.Line('3', [
+            new cpc.LinePoint('1', '1_1'),
+            new cpc.LinePoint('1_1_1', '1_1_1_3'),
+            new cpc.LinePoint('1_1_1_3_1', 0.333),
+            new cpc.LinePoint('1_1_1_3_2', 0),
+            new cpc.LinePoint('1_1_2', 0.666),
+            new cpc.LinePoint('1_1_3', 2),
+            new cpc.LinePoint('3', 0.5)
+        ])
+
+        return [line1, line2, line3]
+    }
+
     export function createModel(): cpc.Model {
         return new cpc.Model('dataset',
             '',
             [createConditionalAxis(), createNumericalAxis()],
-            new Array<cpc.Line>());
+            createLines());
     }
 }

@@ -147,14 +147,14 @@ div.structure-graph_tooltip {
 .pc-choice > rect:hover {
     stroke: #007bff !important;
     fill: rgba(255, 255, 255, 0.4);
-    stroke-width: 2px;
+    stroke-width: 1px;
 }
 
 .pc-choice > circle {
     fill: none;
     stroke: rgb(108, 117, 125);
     stroke-width: 1px;
-    pointer-events: none;
+    pointer-events: all;
 }
 
 .pc-choice > text {
@@ -165,7 +165,6 @@ div.structure-graph_tooltip {
 
 .pc-choice-expandable {
     cursor: pointer;
-    pointer-events: all;
 }
 
 .pc-choice-expandable:hover > circle {
@@ -186,4 +185,32 @@ text.pc-axis-tick {
     text-anchor: end;
     fill: #b8b8b8;
     pointer-events: none;
+}
+
+.pc-line {
+    stroke: black;
+    stroke-width: 1px;
+    stroke-opacity: 0.3;
+    fill: none;
+}
+
+.pc-highlighted path {
+    stroke-opacity: 1;
+    stroke-width: 2px;
+    cursor: pointer;
+    stroke: #007bff;
+}
+
+.pc-tooltip {
+    display: none;
+    background-color: black;
+    color: white;
+    padding: 1px 2px;
+    margin: auto;
+    border-radius: 2px;
+    font-size: 11px;
+}
+
+.pc-highlighted:hover .pc-tooltip {
+    display: initial;
 }

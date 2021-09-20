@@ -5,11 +5,27 @@ import * as d3 from "d3";
 import {Constants} from "./constants";
 
 export class Model {
+
+    private axesMap: Map<string, Axis>
+
     constructor(
         public readonly id: string,
         public readonly label: string,
         public readonly axes: Array<Axis>,
         public readonly lines: Array<Line>) {
+        this.axesMap = new Map<string, Axis>()
+        this.cacheAxes(axes)
+    }
+
+    getAxis(id: string): Axis {
+        return this.axesMap.get(id)
+    }
+
+    private cacheAxes(axes: Array<Axis>) {
+        axes.forEach(a => {
+            this.axesMap.set(a.id, a)
+            a.choices.forEach(c => this.cacheAxes(c.axes))
+        })
     }
 }
 
@@ -82,6 +98,11 @@ export class Axis {
         this.choices.forEach(c => c.layout([x, x + width], yScale as d3.ScaleBand<string>))
     }
 
+    clearLayout() {
+        this.layout_ = undefined
+        this.choices.forEach(c => c.axes.forEach(a => a.clearLayout()))
+    }
+
     getLayout(): Layout {
         return this.layout_
     }
@@ -143,6 +164,8 @@ export class Choice {
 
         if (!this.isCollapsed()) {
             this.axes.forEach(a => a.layout(xScale, [y, y + height]))
+        } else {
+            this.axes.forEach(a => a.clearLayout())
         }
     }
 
@@ -190,16 +213,25 @@ export class Layout {
 }
 
 export class Line {
+
+    private choices: Set<string>
+
     constructor(public readonly id: string, public readonly points: Array<LinePoint>) {
+        this.choices = new Set<string>()
+        points
+            .filter(p => typeof p.value === 'string' || typeof p.value === 'boolean')
+            .map(p => this.choices.add(`${p.axis}_${p.value}`))
+    }
+
+    intersects(axis: Axis, choice: Choice): boolean {
+        return this.choices.has(`${axis.id}_${choice.id}`)
     }
 }
 
 export class LinePoint {
     constructor(
         public readonly axis: string,
-        public readonly value: ConfigValue,
-        public readonly children: Array<LinePoint>
-    ) {
+        public readonly value: ConfigValue) {
     }
 }
 

@@ -9,6 +9,7 @@ interface CPCPChoiceProps {
 
     onExpand: (choice: cpc.Choice) => void
     onCollapse: (choice: cpc.Choice) => void
+    onChoiceHover: (axis: cpc.Axis, choice: cpc.Choice) => void
 }
 
 interface CPCChoiceState {
@@ -21,6 +22,8 @@ export class PCChoice extends React.Component<CPCPChoiceProps, CPCChoiceState> {
 
         this.expand = this.expand.bind(this)
         this.collapse = this.collapse.bind(this)
+        this.highlightLines = this.highlightLines.bind(this)
+        this.hideHighlightLines = this.hideHighlightLines.bind(this)
     }
 
     private expand(e: React.MouseEvent) {
@@ -44,8 +47,23 @@ export class PCChoice extends React.Component<CPCPChoiceProps, CPCChoiceState> {
         e.stopPropagation()
     }
 
+    private highlightLines(e: React.MouseEvent) {
+        this.processHighlight(e, this.props.parent, this.props.choice)
+    }
+
+    private hideHighlightLines(e: React.MouseEvent) {
+        this.processHighlight(e, undefined, undefined)
+    }
+
+    private processHighlight(e: React.MouseEvent, axis: cpc.Axis, choice: cpc.Choice) {
+        this.props.onChoiceHover(axis, choice)
+
+        e.stopPropagation()
+        e.preventDefault()
+    }
+
     render() {
-        const {choice, onCollapse, onExpand} = this.props
+        const {choice, onCollapse, onExpand, onChoiceHover} = this.props
         const {x, y, width, height} = choice.getLayout()
         const centeredX = choice.getLayout().centeredX()
         const centeredY = choice.getLayout().centeredY()
@@ -53,7 +71,9 @@ export class PCChoice extends React.Component<CPCPChoiceProps, CPCChoiceState> {
         return (
             <g id={`choice-${choice.id}`}
                className={`pc-choice ${choice.isExpandable() ? 'pc-choice-expandable' : ''}`}
-               onClick={this.expand}>
+               onClick={this.expand}
+               onMouseOver={this.highlightLines}
+               onMouseOut={this.hideHighlightLines}>
                 {choice.isCollapsed() && <circle cx={centeredX}
                                                  cy={centeredY}
                                                  r={Constants.CIRCLE_SIZE}/>}
@@ -67,7 +87,8 @@ export class PCChoice extends React.Component<CPCPChoiceProps, CPCChoiceState> {
                                                   axis={a}
                                                   parent={choice}
                                                   onCollapse={onCollapse}
-                                                  onExpand={onExpand}/>)}
+                                                  onExpand={onExpand}
+                                                  onChoiceHover={onChoiceHover}/>)}
                 </>}
             </g>
         )

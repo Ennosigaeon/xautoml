@@ -11,6 +11,7 @@ interface CPCAxisProps {
 
     onExpand: (choice: cpc.Choice) => void
     onCollapse: (choice: cpc.Choice) => void
+    onChoiceHover: (axis: cpc.Axis, choice: cpc.Choice) => void
 }
 
 interface CPCAxisState {
@@ -50,7 +51,7 @@ export class PCAxis extends React.Component<CPCAxisProps, CPCAxisState> {
     }
 
     render() {
-        const {axis, onExpand, onCollapse} = this.props
+        const {axis, onExpand, onCollapse, onChoiceHover} = this.props
         const {y, height, yScale} = axis.getLayout()
         const centeredX = axis.getLayout().centeredX()
 
@@ -61,7 +62,8 @@ export class PCAxis extends React.Component<CPCAxisProps, CPCAxisState> {
 
         const choices = axis.choices.map(c => <PCChoice choice={c} parent={axis}
                                                         onExpand={onExpand}
-                                                        onCollapse={onCollapse}/>)
+                                                        onCollapse={onCollapse}
+                                                        onChoiceHover={onChoiceHover}/>)
 
         const ticks = this.isNumerical() ?
             [...Array(Constants.TICK_COUNT)].map((_, i) => {
