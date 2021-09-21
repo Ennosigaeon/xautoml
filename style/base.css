@@ -194,6 +194,10 @@ text.pc-axis-tick {
     fill: none;
 }
 
+.pc-line.pc-missing-line {
+    stroke-dasharray: 4;
+}
+
 .pc-highlighted path {
     stroke-opacity: 1;
     stroke-width: 2px;

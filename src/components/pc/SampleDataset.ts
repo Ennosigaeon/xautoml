@@ -43,8 +43,16 @@ export namespace SampleData {
             new cpc.LinePoint('1_1_3', 2),
             new cpc.LinePoint('3', 0.5)
         ])
+        const line4 = new cpc.Line('4', [
+            new cpc.LinePoint('1', '1_1'),
+            new cpc.LinePoint('1_1_1', '1_1_1_1'),
+            new cpc.LinePoint('1_1_2', undefined),
+            new cpc.LinePoint('1_1_3', undefined),
+            new cpc.LinePoint('3', 0.667)
+        ])
+        const line5 = new cpc.Line('1', [new cpc.LinePoint('1', undefined), new cpc.LinePoint('3', 0.25)])
 
-        return [line1, line2, line3]
+        return [line1, line2, line3, line4, line5]
     }
 
     export function createModel(): cpc.Model {
