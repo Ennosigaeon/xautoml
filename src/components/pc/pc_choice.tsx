@@ -69,8 +69,7 @@ export class PCChoice extends React.Component<CPCPChoiceProps, CPCChoiceState> {
         const centeredY = choice.getLayout().centeredY()
 
         return (
-            <g id={`choice-${choice.id}`}
-               className={`pc-choice ${choice.isExpandable() ? 'pc-choice-expandable' : ''}`}
+            <g className={`pc-choice ${choice.isExpandable() ? 'pc-choice-expandable' : ''}`}
                onClick={this.expand}
                onMouseOver={this.highlightLines}
                onMouseOut={this.hideHighlightLines}>

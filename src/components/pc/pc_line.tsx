@@ -59,7 +59,7 @@ export class PCLine extends React.Component<PCLineProps, PCLineStats> {
                 if (axis.isNumerical()) {
                     y = (yScale as d3.ScaleLinear<number, number>)(point.value as number)
                 } else {
-                    const choice = axis.choices.filter(c => c.id == point.value).pop()
+                    const choice = axis.choices.filter(c => c.label == point.value).pop()
                     if (!choice.isCollapsed())
                         // Don't render axis that are expanded
                         return

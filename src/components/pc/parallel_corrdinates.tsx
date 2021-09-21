@@ -20,7 +20,7 @@ export class ParallelCoordinates extends React.Component<{}, PCState> {
         this.state = {model: SampleData.createModel(), highlightedLines: new Set<string>()}
 
         // init root node
-        this.root = new cpc.Choice(this.state.model.id, this.state.model.label, this.state.model.axes, false);
+        this.root = new cpc.Choice('', this.state.model.axes, false);
 
         this.onCollapse = this.onCollapse.bind(this)
         this.onExpand = this.onExpand.bind(this)
@@ -47,7 +47,7 @@ export class ParallelCoordinates extends React.Component<{}, PCState> {
     public render() {
         const width = 1000
         const height = 500
-        const yScale = d3.scaleBand([this.root.id], [0, height / this.root.getHeightWeight()])
+        const yScale = d3.scaleBand([this.root.label], [0, height / this.root.getHeightWeight()])
         this.root.layout([0, width], yScale)
 
         const {model, highlightedLines} = this.state

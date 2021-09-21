@@ -9,8 +9,6 @@ export class Model {
     private axesMap: Map<string, Axis>
 
     constructor(
-        public readonly id: string,
-        public readonly label: string,
         public readonly axes: Array<Axis>,
         public readonly lines: Array<Line>) {
         this.axesMap = new Map<string, Axis>()
@@ -111,11 +109,10 @@ export class Axis {
 
 export class Choice {
 
-    public layout_: Layout
+    private layout_: Layout
     private collapsed: boolean
 
     constructor(
-        public readonly id: string,
         public readonly label: string,
         public readonly axes: Array<Axis> = new Array<Axis>(),
         public readonly collapsible: boolean = true) {
@@ -158,7 +155,7 @@ export class Choice {
         const x = xRange[0]
         const width = xRange[1] - xRange[0]
 
-        const y = yScale(this.id)
+        const y = yScale(this.label)
         const height = this.getHeightWeight() * yScale.bandwidth()
         this.layout_ = new Layout(x, y, width, height, xScale, yScale)
 
@@ -224,7 +221,7 @@ export class Line {
     }
 
     intersects(axis: Axis, choice: Choice): boolean {
-        return this.choices.has(`${axis.id}_${choice.id}`)
+        return this.choices.has(`${axis.id}_${choice.label}`)
     }
 }
 
