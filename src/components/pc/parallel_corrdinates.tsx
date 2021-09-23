@@ -1,23 +1,28 @@
 import * as cpc from "./model";
 import {PCChoice} from "./pc_choice";
 import React from "react";
-import {SampleData} from "./SampleDataset";
 import * as d3 from "d3";
 import {PCLine} from "./pc_line";
+import {Runhistory} from "../../model";
+import {ParCord} from "./util";
 
+
+interface PCProps {
+    runhistory: Runhistory
+}
 
 interface PCState {
     model: cpc.Model
     highlightedLines: Set<string>
 }
 
-export class ParallelCoordinates extends React.Component<{}, PCState> {
+export class ParallelCoordinates extends React.Component<PCProps, PCState> {
 
     private readonly root: cpc.Choice;
 
-    constructor(props: {}) {
+    constructor(props: PCProps) {
         super(props)
-        this.state = {model: SampleData.createModel(), highlightedLines: new Set<string>()}
+        this.state = {model: ParCord.parseRunhistory(this.props.runhistory), highlightedLines: new Set<string>()}
 
         // init root node
         this.root = new cpc.Choice('', this.state.model.axes, false);
@@ -47,7 +52,7 @@ export class ParallelCoordinates extends React.Component<{}, PCState> {
     public render() {
         const width = 1000
         const height = 500
-        const yScale = d3.scaleBand([this.root.label], [0, height / this.root.getHeightWeight()])
+        const yScale = d3.scaleBand([this.root.label.toString()], [0, height / this.root.getHeightWeight()])
         this.root.layout([0, width], yScale)
 
         const {model, highlightedLines} = this.state

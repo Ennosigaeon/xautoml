@@ -78,7 +78,7 @@ export class PCChoice extends React.Component<CPCPChoiceProps, CPCChoiceState> {
                                                  r={Constants.CIRCLE_SIZE}/>}
                 <text x={centeredX}
                       y={centeredY}
-                      transform={`rotate(${Constants.TEXT_ROTATION}, ${centeredX}, ${centeredY})`}>{choice.label}</text>
+                      transform={`rotate(${Constants.TEXT_ROTATION}, ${centeredX}, ${centeredY})`}>{choice.label.toString()}</text>
 
                 {!choice.isCollapsed() && <>
                     <rect x={x} y={y} width={width} height={height} onClick={this.collapse}/>

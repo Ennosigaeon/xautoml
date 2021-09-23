@@ -112,7 +112,7 @@ export class Choice {
     private collapsed: boolean
 
     constructor(
-        public readonly label: string,
+        public readonly label: ConfigValue,
         public readonly axes: Array<Axis> = new Array<Axis>(),
         public readonly collapsible: boolean = true) {
         this.collapsed = collapsible
@@ -154,7 +154,7 @@ export class Choice {
         const x = xRange[0]
         const width = xRange[1] - xRange[0]
 
-        const y = yScale(this.label)
+        const y = yScale(this.label.toString())
         const height = this.getHeightWeight() * yScale.bandwidth()
         this.layout_ = new Layout(x, y, width, height, xScale, yScale)
 

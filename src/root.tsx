@@ -86,7 +86,7 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
         }
         return (
             <JupyterContext.Provider value={jupyter}>
-                <ParallelCoordinates/>
+                <ParallelCoordinates runhistory={data}/>
                 <MetaInformationTable meta={data.meta}/>
                 <CandidateTable structures={data.structures}
                                 selectedCandidates={selectedCandidates}
