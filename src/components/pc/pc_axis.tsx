@@ -6,6 +6,7 @@ import React from "react";
 import {PCChoice} from "./pc_choice";
 import {Colors, prettyPrint} from "../../util";
 import {Constants} from "./constants";
+import {BrushEvent, SVGBrush} from "./brush";
 import {v4 as uuidv4} from "uuid";
 
 
@@ -140,7 +141,7 @@ class Axis extends React.Component<AxisProps, {}> {
                         <text x={centeredX + v.pos}
                               y={y + height + Constants.TICK_LENGTH}
                               className={'pc-axis-tick pc-axis-x-tick'}>
-                             {prettyPrint(v.value, 2)}
+                            {prettyPrint(v.value, 2)}
                             <title>{prettyPrint(v.value, 5)}</title>
                         </text>
                     </>
@@ -161,10 +162,11 @@ class Axis extends React.Component<AxisProps, {}> {
 interface CPCAxisProps {
     axis: cpc.Axis
     parent: cpc.Choice
+    svg: React.RefObject<SVGSVGElement>
 
     onExpand: (choice: cpc.Choice) => void
     onCollapse: (choice: cpc.Choice) => void
-    onChoiceHover: (axis: cpc.Axis, choice: cpc.Choice) => void
+    onHighlight: (axis: cpc.Axis, selection: cpc.Choice | [number, number]) => void
 }
 
 interface CPCAxisState {
@@ -178,6 +180,11 @@ export class PCAxis extends React.Component<CPCAxisProps, CPCAxisState> {
         this.state = {hover: false}
 
         this.collapse = this.collapse.bind(this)
+        this.onBrushEnd = this.onBrushEnd.bind(this)
+    }
+
+    componentWillUnmount() {
+        this.props.onHighlight(this.props.axis, undefined)
     }
 
     private isNumerical(): boolean {
@@ -195,15 +202,28 @@ export class PCAxis extends React.Component<CPCAxisProps, CPCAxisState> {
         e.stopPropagation()
     }
 
+    private onBrushEnd(event: BrushEvent) {
+        let yRange: [number, number] = undefined
+        if (event.selection !== undefined) {
+            const lower = event.selection.y
+            const upper = lower + event.selection.height
+
+            const scale = (this.props.axis.getLayout().yScale as d3.ScaleContinuousNumeric<number, number>)
+            yRange = [scale.invert(upper), scale.invert(lower)]
+        }
+
+        this.props.onHighlight(this.props.axis, yRange)
+    }
+
     render() {
-        const {axis, onExpand, onCollapse, onChoiceHover} = this.props
-        const {x, y, width, yScale} = axis.getLayout()
+        const {axis, onExpand, onCollapse, onHighlight, svg} = this.props
+        const {x, y, width, height, yScale} = axis.getLayout()
         const xScale = axis.getLayout().perfEstScale(axis.explanation)
 
-        const choices = axis.choices.map(c => <PCChoice choice={c} parent={axis}
+        const choices = axis.choices.map(c => <PCChoice choice={c} parent={axis} svg={svg}
                                                         onExpand={onExpand}
                                                         onCollapse={onCollapse}
-                                                        onChoiceHover={onChoiceHover}/>)
+                                                        onHighlight={onHighlight}/>)
 
         const id = `path-${uuidv4()}`
 
@@ -221,6 +241,11 @@ export class PCAxis extends React.Component<CPCAxisProps, CPCAxisState> {
                             <DiscretePerfEstimates xScale={xScale} choices={axis.choices}
                                                    perfEstimate={axis.explanation}/>}
                     </>}
+
+                    {this.isNumerical() && <SVGBrush svg={svg}
+                                                     extent={[[x, y], [x + width, y + height]]}
+                                                     onBrushEnd={this.onBrushEnd}
+                    />}
 
                     <text>
                         <path id={id} d={

@@ -1,4 +1,4 @@
-import {Config, ConfigValue} from "../../model";
+import {CandidateId, Config, ConfigValue} from "../../model";
 import {ParCord} from "./util";
 import * as d3 from "d3";
 import {Constants} from "./constants";
@@ -236,16 +236,26 @@ export class Layout {
 export class Line {
 
     private choices: Set<string>
+    private pointMap: Map<string, ConfigValue>
 
-    constructor(public readonly id: string, public readonly points: Array<LinePoint>) {
+    constructor(public readonly id: CandidateId, public readonly points: Array<LinePoint>) {
         this.choices = new Set<string>()
         points
             .filter(p => typeof p.value === 'string' || typeof p.value === 'boolean')
             .map(p => this.choices.add(`${p.axis}_${p.value}`))
+
+        this.pointMap = new Map<string, ConfigValue>(
+            points.map(p => [p.axis, p.value])
+        )
     }
 
-    intersects(axis: Axis, choice: Choice): boolean {
-        return this.choices.has(`${axis.id}_${choice.label}`)
+    intersects(axis: Axis, filter: Choice | [number, number]): boolean {
+        if (filter instanceof Choice)
+            return this.choices.has(`${axis.id}_${filter.label}`)
+        else {
+            const value = this.pointMap.get(axis.id) as number
+            return filter[0] <= value && value < filter[1]
+        }
     }
 }
 

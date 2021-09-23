@@ -206,6 +206,7 @@ div.structure-graph_tooltip {
     stroke: #DFE3E6;
     stroke-width: 1px;
     pointer-events: all;
+    cursor: pointer;
 }
 
 .pc-choice > .pc-border:hover {
@@ -296,4 +297,17 @@ text.pc-axis-x-tick {
 
 .pc-highlighted:hover .pc-tooltip {
     display: initial;
+}
+
+.pc-brush-overlay {
+    pointer-events: all;
+    fill: none;
+    cursor: crosshair;
+}
+
+.pc-brush-selection {
+    fill: #777;
+    fill-opacity: 0.3;
+    stroke: #fff;
+    pointer-events: none;
 }

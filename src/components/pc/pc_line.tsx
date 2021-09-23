@@ -2,11 +2,13 @@ import * as d3 from "d3";
 import * as cpc from "./model";
 import React from "react";
 import {fixedPrec} from "../../util";
+import {CandidateId} from "../../model";
 
 interface PCLineProps {
     model: cpc.Model
     line: cpc.Line
     highlight: boolean
+    onClick?: (id: CandidateId) => void
 }
 
 interface PCLineStats {
@@ -21,17 +23,31 @@ interface Tooltip {
 
 export class PCLine extends React.Component<PCLineProps, PCLineStats> {
 
+    static defaultProps = {
+        onClick: () => {
+        }
+    }
+
     constructor(props: PCLineProps) {
         super(props)
         this.state = {highlight: false}
 
-        this.toggleHighlight = this.toggleHighlight.bind(this)
+        this.onMouseEnter = this.onMouseEnter.bind(this)
+        this.onMouseLeave = this.onMouseLeave.bind(this)
+        this.onClick = this.onClick.bind(this)
     }
 
-    private toggleHighlight() {
-        this.setState(state => ({
-            highlight: !state.highlight
-        }));
+    private onMouseEnter() {
+        this.setState(() => ({highlight: true}));
+    }
+
+    private onMouseLeave() {
+        this.setState(() => ({highlight: false}));
+    }
+
+    private onClick(e: React.MouseEvent) {
+        this.props.onClick(this.props.line.id)
+        e.stopPropagation()
     }
 
     private renderPath(): [d3.Path, d3.Path, Array<Tooltip>] {
@@ -99,11 +115,12 @@ export class PCLine extends React.Component<PCLineProps, PCLineStats> {
                 <path className={'pc-line pc-missing-line'} d={missingPath.toString()}/>
 
                 <path className={'pc-fat-line'} d={path.toString()}
-                      onMouseEnter={this.toggleHighlight}
-                      onMouseLeave={this.toggleHighlight}/>
+                      onMouseEnter={this.onMouseEnter}
+                      onMouseLeave={this.onMouseLeave}
+                      onClick={this.onClick}/>
                 <path className={'pc-fat-line'} d={missingPath.toString()}
-                      onMouseEnter={this.toggleHighlight}
-                      onMouseLeave={this.toggleHighlight}/>
+                      onMouseEnter={this.onMouseEnter}
+                      onMouseLeave={this.onMouseLeave}/>
                 {tooltips.map(t =>
                     <>
                         <foreignObject x={t.x + tooltipOffset}

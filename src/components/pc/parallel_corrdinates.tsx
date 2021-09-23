@@ -1,11 +1,11 @@
 import * as cpc from "./model";
 import React from "react";
 import * as d3 from "d3";
-import {Candidate, Config, MetaInformation, Structure} from "../../model";
+import {Candidate, CandidateId, Config, MetaInformation, Structure} from "../../model";
 import {ParCord} from "./util";
 import {PCChoice} from "./pc_choice";
 import {PCLine} from "./pc_line";
-import {FlexibleSvg} from "../../util/flexible-svg";
+import {RefableFlexibleSvg} from "../../util/flexible-svg";
 
 
 interface PCProps {
@@ -13,12 +13,16 @@ interface PCProps {
     structures: Structure[]
     candidates?: [Candidate, Structure][]
     explanation?: Config.Explanation
+    selectedCandidates?: Set<CandidateId>
+    onCandidateSelection?: (cid: Set<CandidateId>) => void
 }
 
 interface PCState {
     model: cpc.Model
-    highlightedLines: Set<string>
+    normalLines: cpc.Line[]
+    highlightedLines: cpc.Line[]
     container: React.RefObject<any>
+    filter: Map<cpc.Axis, cpc.Choice | [number, number]>
 }
 
 export class ParallelCoordinates extends React.Component<PCProps, PCState> {
@@ -26,9 +30,14 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
     private readonly NODE_HEIGHT = 65
     private readonly root: cpc.Choice;
 
+    private svg: React.RefObject<SVGSVGElement> = React.createRef<SVGSVGElement>()
+
     static defaultProps = {
         candidates: (undefined as [Candidate, Structure][]),
-        explanation: (undefined as Config.Explanation)
+        explanation: (undefined as Config.Explanation),
+        selectedCandidates: new Set<CandidateId>(),
+        onCandidateSelection: () => {
+        }
     }
 
     constructor(props: PCProps) {
@@ -36,10 +45,16 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
 
         const candidates: [Candidate, Structure][] = this.props.candidates !== undefined ?
             this.props.candidates : [].concat(...this.props.structures.map(s => s.configs.map(c => [c, s])))
+
+        const model = ParCord.parseRunhistory(this.props.meta, this.props.structures, candidates, this.props.explanation)
+        const filter = new Map<cpc.Axis, cpc.Choice | [number, number]>()
+        const [highlights, normal] = this.calculateHighlightedLines(model.lines, filter)
         this.state = {
-            model: ParCord.parseRunhistory(this.props.meta, this.props.structures, candidates, this.props.explanation),
-            highlightedLines: new Set<string>(),
-            container: undefined
+            model: model,
+            highlightedLines: highlights,
+            normalLines: normal,
+            container: undefined,
+            filter: filter
         }
 
         // init root node
@@ -49,6 +64,14 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
         this.onExpand = this.onExpand.bind(this)
         this.highlightLines = this.highlightLines.bind(this)
         this.updateContainer = this.updateContainer.bind(this)
+        this.onClickLine = this.onClickLine.bind(this)
+    }
+
+    componentDidUpdate(prevProps: Readonly<PCProps>, prevState: Readonly<PCState>, snapshot?: any) {
+        if (prevProps.selectedCandidates.size !== this.props.selectedCandidates.size) {
+            const [highlights, normal] = this.calculateHighlightedLines(this.state.model.lines, this.state.filter)
+            this.setState({highlightedLines: highlights, normalLines: normal})
+        }
     }
 
     private onCollapse(choice: cpc.Choice) {
@@ -61,19 +84,44 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
         this.setState({model: this.state.model})
     }
 
-    private highlightLines(axis: cpc.Axis, choice: cpc.Choice) {
-        const highlights = !!axis && !!choice ? this.state.model.lines
-            .filter(l => l.intersects(axis, choice))
-            .map(l => l.id) : []
-        this.setState({highlightedLines: new Set<string>(highlights)})
+    private highlightLines(axis: cpc.Axis, filter: cpc.Choice | [number, number] | undefined) {
+        if (axis === undefined)
+            return
+        else if (filter === undefined)
+            this.state.filter.delete(axis)
+        else
+            this.state.filter.set(axis, filter)
+
+        const [highlights, normal] = this.calculateHighlightedLines(this.state.model.lines, this.state.filter)
+        this.setState({highlightedLines: highlights, normalLines: normal, filter: this.state.filter})
     }
 
-    private updateContainer(container: React.RefObject<any>) {
+    private calculateHighlightedLines(lines: cpc.Line[], filter: Map<cpc.Axis, cpc.Choice | [number, number]>) {
+        const normal: cpc.Line[] = []
+        const highlights: cpc.Line[] = []
+        lines.forEach(l => {
+            let matches: boolean = undefined
+            filter.forEach((value, key) => matches = (matches || matches === undefined) && l.intersects(key, value));
+            (matches !== undefined && matches) || this.props.selectedCandidates.has(l.id) ? highlights.push(l) : normal.push(l)
+        })
+        return [highlights, normal]
+    }
+
+    private updateContainer(container: React.RefObject<HTMLDivElement>) {
         this.setState({container: container})
     }
 
+    private onClickLine(cid: CandidateId) {
+        const selected = new Set(this.props.selectedCandidates)
+        if (this.props.selectedCandidates.has(cid))
+            selected.delete(cid)
+        else
+            selected.add(cid)
+        this.props.onCandidateSelection(selected)
+    }
+
     public render() {
-        const {model, highlightedLines, container} = this.state
+        const {model, highlightedLines, normalLines, container} = this.state
         const width = (container && container.current) ? container.current.clientWidth : 0
 
         // Estimate height based on maximum number of choices in all coordinates
@@ -83,19 +131,17 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
         this.root.layout([0, width], yScale)
 
         return (
-            <FlexibleSvg height={height} onContainerChange={this.updateContainer}>
+            <RefableFlexibleSvg height={height} onContainerChange={this.updateContainer} ref={this.svg}>
                 <PCChoice choice={this.root} parent={undefined}
+                          svg={model.lines.length > 1 ? this.svg : undefined} // Disable brushing when only when line present
                           onCollapse={this.onCollapse}
                           onExpand={this.onExpand}
-                          onChoiceHover={this.highlightLines}/>
-                {this.state.model.lines.map(line => {
-                        return <PCLine key={line.id}
-                                       model={model}
-                                       line={line}
-                                       highlight={highlightedLines.has(line.id)}/>
-                    }
-                )}
-            </FlexibleSvg>
+                          onHighlight={this.highlightLines}/>
+                {normalLines.map(line => <PCLine key={line.id} model={model} line={line} highlight={false}
+                                                 onClick={this.onClickLine}/>)}
+                {highlightedLines.map(line => <PCLine key={line.id} model={model} line={line} highlight={true}
+                                                      onClick={this.onClickLine}/>)}
+            </RefableFlexibleSvg>
         )
     }
 }

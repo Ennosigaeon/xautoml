@@ -7,9 +7,11 @@ interface CPCPChoiceProps {
     choice: cpc.Choice
     parent: cpc.Axis
 
+    svg: React.RefObject<SVGSVGElement>
+
     onExpand: (choice: cpc.Choice) => void
     onCollapse: (choice: cpc.Choice) => void
-    onChoiceHover: (axis: cpc.Axis, choice: cpc.Choice) => void
+    onHighlight: (axis: cpc.Axis, selection: cpc.Choice | [number, number]) => void
 }
 
 export class PCChoice extends React.Component<CPCPChoiceProps, {}> {
@@ -34,10 +36,11 @@ export class PCChoice extends React.Component<CPCPChoiceProps, {}> {
     }
 
     private collapse(e: React.MouseEvent) {
-        const {choice, onCollapse} = this.props
+        const {choice, onCollapse, onHighlight} = this.props
 
         if (!choice.isCollapsed()) {
             onCollapse(choice)
+            onHighlight(this.props.parent, undefined)
         }
 
         e.preventDefault()
@@ -49,18 +52,20 @@ export class PCChoice extends React.Component<CPCPChoiceProps, {}> {
     }
 
     private hideHighlightLines(e: React.MouseEvent) {
-        this.processHighlight(e, undefined, undefined)
+        this.processHighlight(e, this.props.parent, undefined)
     }
 
     private processHighlight(e: React.MouseEvent, axis: cpc.Axis, choice: cpc.Choice) {
-        this.props.onChoiceHover(axis, choice)
+        if (axis !== undefined) {
+            this.props.onHighlight(axis, choice)
 
-        e.stopPropagation()
-        e.preventDefault()
+            e.stopPropagation()
+            e.preventDefault()
+        }
     }
 
     render() {
-        const {choice, onCollapse, onExpand, onChoiceHover} = this.props
+        const {choice, onCollapse, onExpand, onHighlight, svg} = this.props
         const {x, y, width, height} = choice.getLayout()
         const centeredX = choice.getLayout().centeredX()
         const centeredY = choice.getLayout().centeredY()
@@ -82,9 +87,10 @@ export class PCChoice extends React.Component<CPCPChoiceProps, {}> {
                     {choice.axes.map(a => <PCAxis key={a.id}
                                                   axis={a}
                                                   parent={choice}
+                                                  svg={svg}
                                                   onCollapse={onCollapse}
                                                   onExpand={onExpand}
-                                                  onChoiceHover={onChoiceHover}/>)}
+                                                  onHighlight={onHighlight}/>)}
                 </>}
             </g>
         )

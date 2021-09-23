@@ -151,7 +151,9 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
                             </TabPanel>
                             <TabPanel value={'2'}>
                                 <ParallelCoordinates structures={runhistory.structures}
-                                                     meta={runhistory.meta}/>
+                                                         meta={runhistory.meta}
+                                                         selectedCandidates={selectedCandidates}
+                                                         onCandidateSelection={this.onCandidateSelection}/>
                                 {runhistory.explanations.structures &&
                                 <BanditExplanationsComponent explanations={runhistory.explanations.structures}
                                                              selectedCandidates={selectedCandidates}

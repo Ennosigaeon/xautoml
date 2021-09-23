@@ -4,7 +4,9 @@ import ResizeObserver from "resize-observer-polyfill";
 
 interface FlexibleSvgProps {
     height: number
-    onContainerChange?: (container: React.RefObject<any>) => void
+    onContainerChange?: (container: React.RefObject<HTMLDivElement>) => void
+
+    _svg?: React.ForwardedRef<SVGSVGElement>
 }
 
 interface FlexibleSvgState {
@@ -44,7 +46,7 @@ export class FlexibleSvg extends React.Component<FlexibleSvgProps, FlexibleSvgSt
     }
 
     render() {
-        const {height, children} = this.props
+        const {height, children, _svg} = this.props
         const {width} = this.state
 
         if (!width) {
@@ -59,11 +61,20 @@ export class FlexibleSvg extends React.Component<FlexibleSvgProps, FlexibleSvgSt
         return (
             <div className={'flexible-svg-container'} ref={this.container}
                  style={{paddingBottom: `${(height / width) * 100}%`}}>
-                <svg className={`flexible-svg`} preserveAspectRatio={"xMinYMin meet"}
-                     viewBox={`0 0 ${width} ${height + 1}`} style={{overflow: "visible"}}>
+                <svg className={`flexible-svg`} preserveAspectRatio={"xMinYMin meet"} xmlns="http://www.w3.org/2000/svg"
+                     viewBox={`0 0 ${width} ${height + 1}`} style={{overflow: "visible"}} ref={_svg}>
                     {children}
                 </svg>
             </div>
         )
     }
 }
+
+interface RefableFlexibleSvgProps extends FlexibleSvgProps {
+    children?: React.ReactNode;
+}
+
+export const RefableFlexibleSvg = React.forwardRef<SVGSVGElement, RefableFlexibleSvgProps>((props, ref) =>
+    <FlexibleSvg
+        _svg={ref} {...props}/>
+)

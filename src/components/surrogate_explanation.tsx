@@ -1,6 +1,6 @@
 import {ParallelCoordinates} from "./pc/parallel_corrdinates";
 import React from "react";
-import {Candidate, Config, MetaInformation, Structure} from "../model";
+import {Candidate, CandidateId, Config, MetaInformation, Structure} from "../model";
 import {requestSimulatedSurrogate} from "../handler";
 import {ErrorIndicator} from "../util/error";
 import {LoadingIndicator} from "./loading";
@@ -74,6 +74,7 @@ export class SurrogateExplanation extends React.Component<SurrogateExplanationPr
                                 }
                                 <ParallelCoordinates meta={meta} structures={[structure]}
                                                      candidates={[[candidate, structure]]}
+                                                     selectedCandidates={new Set<CandidateId>([candidate.id])}
                                                      explanation={explanation}/>
                             </>
                         }
