@@ -57,7 +57,7 @@ export class PCLine extends React.Component<PCLineProps, PCLineStats> {
             if (point.value !== undefined) {
                 let y
                 if (axis.isNumerical()) {
-                    y = (yScale as d3.ScaleLinear<number, number>)(point.value as number)
+                    y = (yScale as d3.ScaleContinuousNumeric<number, number>)(point.value as number)
                 } else {
                     const choice = axis.choices.filter(c => c.label == point.value).pop()
                     if (!choice.isCollapsed())

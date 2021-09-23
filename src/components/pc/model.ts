@@ -27,7 +27,6 @@ export class Model {
     }
 }
 
-// TODO linear and logarithmic axis
 export class Axis {
 
     public readonly domain: Domain
@@ -48,7 +47,7 @@ export class Axis {
         } else {
             if (choices === undefined)
                 throw new Error('Choices has to be provided for a categorical axis')
-            domain = new Domain(0, choices.length)
+            domain = new Domain(0, choices.length, false)
         }
         this.domain = domain
         this.choices = choices
@@ -84,7 +83,7 @@ export class Axis {
             yRange[1] - 0.5 * Constants.TEXT_HEIGHT
         ]
         const yScale = this.isNumerical() ?
-            d3.scaleLinear(this.domain.toD3(), adjustedYRange) :
+            this.domain.asScale(adjustedYRange) :
             ParCord.yScale(this.choices, adjustedYRange)
 
         const x = xScale(this.id)
@@ -175,7 +174,7 @@ export class Domain {
     public readonly min: number;
     public readonly max: number;
 
-    constructor(min: number, max: number) {
+    constructor(min: number, max: number, public readonly log: boolean) {
         if (min == max) {
             min = ParCord.guessMinimum(min)
             max = ParCord.guessMaximum(max)
@@ -185,8 +184,13 @@ export class Domain {
         this.max = fixedPrec(max)
     }
 
-    toD3(): [number, number] {
-        return [this.max, this.min]
+    asScale(range: [number, number]): d3.ScaleContinuousNumeric<any, any> {
+        const domain = [this.max, this.min]
+
+        if (this.log)
+            return d3.scaleLog(domain, range)
+        else
+            return d3.scaleLinear(domain, range)
     }
 
 }
@@ -237,4 +241,4 @@ export enum Type {
     NUMERICAL
 }
 
-export type Scale = d3.ScaleLinear<number, number> | d3.ScaleBand<string>
+export type Scale = d3.ScaleContinuousNumeric<number, number> | d3.ScaleBand<string>

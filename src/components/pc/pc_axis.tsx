@@ -65,12 +65,13 @@ export class PCAxis extends React.Component<CPCAxisProps, CPCAxisState> {
                                                         onCollapse={onCollapse}
                                                         onChoiceHover={onChoiceHover}/>)
 
+        const range = yScale.range()
         const ticks = this.isNumerical() ?
             [...Array(Constants.TICK_COUNT)].map((_, i) => {
-                const v = axis.domain.min + i * (axis.domain.max - axis.domain.min) / (Constants.TICK_COUNT - 1)
+                const v = range[0] + i * (range[1] - range[0]) / (Constants.TICK_COUNT - 1)
                 return {
-                    value: v,
-                    pos: (yScale as d3.ScaleLinear<number, number>)(v)
+                    value: (yScale as d3.ScaleContinuousNumeric<number, number>).invert(v),
+                    pos: v
                 }
             }) : []
 

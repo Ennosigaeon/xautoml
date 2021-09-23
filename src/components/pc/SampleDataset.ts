@@ -4,7 +4,7 @@ import * as cpc from "./model";
 export namespace SampleData {
 
     function createNumericalAxis() {
-        return new cpc.Axis('3', 'Accuracy', cpc.Type.NUMERICAL, new cpc.Domain(0, 1))
+        return new cpc.Axis('3', 'Accuracy', cpc.Type.NUMERICAL, new cpc.Domain(0, 1, false))
     }
 
     function createConditionalAxis() {
@@ -12,12 +12,12 @@ export namespace SampleData {
             new cpc.Choice('Quality'),
             new cpc.Choice('Intermediate'),
             new cpc.Choice('Speed', [
-                cpc.Axis.Numerical('1_1_1_3_1', 'alpha', new cpc.Domain(0, 1)),
-                cpc.Axis.Numerical('1_1_1_3_2', 'beta', new cpc.Domain(0, 1))
+                cpc.Axis.Numerical('1_1_1_3_1', 'alpha', new cpc.Domain(0, 1, false)),
+                cpc.Axis.Numerical('1_1_1_3_2', 'beta', new cpc.Domain(0, 100, true))
             ]),
         ])
-        const axis2 = cpc.Axis.Numerical('1_1_2', 'Holdout', new cpc.Domain(0.001, 0.999))
-        const axis3 = cpc.Axis.Numerical('1_1_3', 'EstimatorNumber', new cpc.Domain(1, 4))
+        const axis2 = cpc.Axis.Numerical('1_1_2', 'Holdout', new cpc.Domain(0.001, 0.999, false))
+        const axis3 = cpc.Axis.Numerical('1_1_3', 'EstimatorNumber', new cpc.Domain(1, 4, false))
 
         return cpc.Axis.Categorical('1', 'Configuration', [
             new cpc.Choice('ModelPool', [axis1, axis2, axis3]),
@@ -41,7 +41,7 @@ export namespace SampleData {
             new cpc.LinePoint('1', 'ModelPool'),
             new cpc.LinePoint('1_1_1', 'Speed'),
             new cpc.LinePoint('1_1_1_3_1', 0.333),
-            new cpc.LinePoint('1_1_1_3_2', 0),
+            new cpc.LinePoint('1_1_1_3_2', 10),
             new cpc.LinePoint('1_1_2', 0.666),
             new cpc.LinePoint('1_1_3', 2),
             new cpc.LinePoint('3', 0.5)
