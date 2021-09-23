@@ -137,6 +137,21 @@ div.structure-graph_tooltip {
 
 
 /** Parallel Coordinates */
+.pc-container {
+	display: inline-block;
+	position: relative;
+	width: 100%;
+	vertical-align: middle;
+	/*overflow: hidden; */
+}
+
+.pc {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
 .pc-choice > rect {
     fill: rgba(255, 255, 255, 0.85);
     stroke: #DFE3E6;
