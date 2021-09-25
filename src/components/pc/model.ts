@@ -1,5 +1,4 @@
 import {ConfigValue} from "../../model";
-import {fixedPrec} from "../../util";
 import {ParCord} from "./util";
 import * as d3 from "d3";
 import {Constants} from "./constants";
@@ -180,8 +179,8 @@ export class Domain {
             max = ParCord.guessMaximum(max)
         }
 
-        this.min = fixedPrec(min)
-        this.max = fixedPrec(max)
+        this.min = min
+        this.max = max
     }
 
     asScale(range: [number, number]): d3.ScaleContinuousNumeric<any, any> {
