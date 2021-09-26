@@ -123,7 +123,7 @@ async function requestOutput(cid: CandidateId, data_file: string, model_dir: str
     })
 }
 
-export function requestLimeApproximation(cid: CandidateId, idx: number, data_file: string, model_dir: string): CancelablePromise<LimeResult> {
+export function requestLimeApproximation(cid: CandidateId, idx: number, data_file: string, model_dir: string, step: string): CancelablePromise<LimeResult> {
     // Fake data for faster development
     // const promise = new Promise<LimeResult>((resolve, reject) => {
     //     resolve({
@@ -144,7 +144,8 @@ export function requestLimeApproximation(cid: CandidateId, idx: number, data_fil
             'cids': cid,
             'idx': idx,
             'data_file': data_file,
-            'model_dir': model_dir
+            'model_dir': model_dir,
+            'step': step
         })
     })
     return cancelablePromise(promise.then(data => {

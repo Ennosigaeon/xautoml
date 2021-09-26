@@ -67,6 +67,11 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
                         this.setState({loadingDf: false})
                     });
             }
+
+            if (this.state.selectedSample !== undefined) {
+                this.setState({lime: undefined})
+                this.queryLime(this.state.selectedSample)
+            }
         }
 
         if (!!this.dfTableRef.current) {
@@ -79,6 +84,29 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
                 }
             })
         }
+    }
+
+    private queryLime(idx: number) {
+        if (this.state.pendingLimeRequest !== undefined) {
+            // Request for data is currently still pending. Cancel previous request.
+            this.state.pendingLimeRequest.cancel()
+        }
+
+        const {candidate, meta, component} = this.props
+        const promise = requestLimeApproximation(candidate.id, idx, meta.data_file, meta.model_dir, component[0])
+        this.setState({pendingLimeRequest: promise, selectedSample: idx})
+
+        promise
+            .then(data => this.setState({lime: data, pendingLimeRequest: undefined}))
+            .catch(reason => {
+                if (!(reason instanceof CanceledPromiseError)) {
+                    // TODO handle error
+                    console.error(`Failed to fetch LimeResult data.\n${reason}`)
+                    this.setState({pendingLimeRequest: undefined})
+                } else {
+                    console.log('Cancelled promise due to user request')
+                }
+            });
     }
 
     private handleSampleClick(event: MouseEvent) {
@@ -94,25 +122,7 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
             .forEach(el => el.classList.remove(DataSetDetailsComponent.selectedClassName))
         row.classList.add(DataSetDetailsComponent.selectedClassName)
 
-        if (this.state.pendingLimeRequest !== undefined) {
-            // Request for data is currently still pending. Cancel previous request.
-            this.state.pendingLimeRequest.cancel()
-        }
-
-        const promise = requestLimeApproximation(this.props.candidate.id, idx, this.props.meta.data_file, this.props.meta.model_dir)
-        this.setState({pendingLimeRequest: promise, selectedSample: idx})
-
-        promise
-            .then(data => this.setState({lime: data, pendingLimeRequest: undefined}))
-            .catch(reason => {
-                if (!(reason instanceof CanceledPromiseError)) {
-                    // TODO handle error
-                    console.error(`Failed to fetch LimeResult data.\n${reason}`)
-                    this.setState({pendingLimeRequest: undefined})
-                } else {
-                    console.log('Cancelled promise due to user request')
-                }
-            });
+        this.queryLime(idx)
     }
 
     private handleLoadDataframe() {

@@ -10,10 +10,11 @@ from jupyter_server.base.handlers import APIHandler
 from jupyter_server.utils import url_path_join
 from tornado import gen
 
-from xautoml.model_details import ModelDetails
+from xautoml.model_details import ModelDetails, LimeResult
 from xautoml.output import OutputCalculator, DESCRIPTION, COMPLETE
 from xautoml.roc_auc import RocCurve
-from xautoml.util import internal_cid_name
+from xautoml.util import internal_cid_name, pipeline_utils
+from xautoml.util.constants import SOURCE, SINK
 
 
 class BaseHandler(APIHandler):
@@ -73,6 +74,14 @@ class BaseHandler(APIHandler):
 
         return X, y, feature_labels, models
 
+    def _get_intermediate_output(self, X, label, model, method):
+        df_handler = OutputCalculator()
+        try:
+            steps = df_handler.calculate_outputs(model, X, label, method=method)
+            return steps
+        except ValueError as ex:
+            self.log.error('Failed to calculate intermediate dataframes', exc_info=ex)
+
 
 class DummyHandler(APIHandler):
     # The following decorator should be present on all verb methods (head, get, post,
@@ -90,14 +99,10 @@ class OutputHandler(BaseHandler):
     def _calculate_output(self, model, method):
         X, y, feature_labels, models = self.load_models(model)
         assert len(models) == 1
+        pipeline = models.popitem()[1]
 
-        df_handler = OutputCalculator()
-        for cid, pipeline in models.items():
-            try:
-                steps = df_handler.calculate_outputs(pipeline, X, feature_labels, method=method)
-                self.finish(json.dumps(steps))
-            except ValueError as ex:
-                self.log.error('Failed to calculate intermediate dataframes for {}'.format(cid), exc_info=ex)
+        steps = self._get_intermediate_output(X, feature_labels, pipeline, method=method)
+        self.finish(json.dumps(steps))
 
 
 class OutputDescriptionHandler(OutputHandler):
@@ -144,10 +149,19 @@ class LimeHandler(BaseHandler):
 
     def _process_post(self, model):
         X, y, feature_labels, models = self.load_models(model)
+        assert len(models) == 1
+        pipeline = models.popitem()[1]
         idx = model.get('idx', None)
+        step = model.get('step', SOURCE)
 
-        details = ModelDetails()
-        res = details.calculate_lime(X, y, models.popitem()[1], feature_labels, idx)
+        if step == pipeline.steps[-1][0] or step == SINK:
+            self.log.debug('Unable to calculate LIME on predictions')
+            res = LimeResult(idx, {}, {}, y[idx].tolist())
+        else:
+            pipeline, X, feature_labels = pipeline_utils.get_subpipeline(pipeline, step, X, feature_labels)
+            details = ModelDetails()
+            res = details.calculate_lime(X, y, pipeline, feature_labels, idx)
+
         self.finish(json.dumps(res.as_dict()))
 
 

@@ -1,3 +1,5 @@
+from typing import Union
+
 import pandas as pd
 from mlinsights.helpers.pipeline import alter_pipeline_for_debugging, enumerate_pipeline_models
 
@@ -5,12 +7,13 @@ from xautoml.util.constants import SOURCE, SINK
 
 COMPLETE = 0
 DESCRIPTION = 1
+RAW = 2
 
 
 class OutputCalculator:
 
     @staticmethod
-    def load_data(d: dict, method: int, feature_labels: list[str]) -> pd.DataFrame:
+    def load_data(d: dict, method: int, feature_labels: list[str]) -> Union[str, pd.DataFrame]:
         assert len(d) == 1
         data = next(iter(d.values()))
 
@@ -21,14 +24,16 @@ class OutputCalculator:
 
         df = pd.DataFrame(data, columns=columns)
         if method == COMPLETE:
-            return df
+            return df._repr_html_()
         elif method == DESCRIPTION:
-            return df.describe()
+            return df.describe()._repr_html_()
+        elif method == RAW:
+            return df
         else:
             raise ValueError('Unknown method {}'.format(method))
 
     @staticmethod
-    def calculate_outputs(pipeline, X, feature_labels, method: int = DESCRIPTION) -> dict[str, str]:
+    def calculate_outputs(pipeline, X, feature_labels, method: int = RAW) -> dict[str, Union[str, pd.DataFrame]]:
         alter_pipeline_for_debugging(pipeline)
         pipeline.predict(X)
 
@@ -42,9 +47,9 @@ class OutputCalculator:
                 # Populate SINK and SOURCE instead of single step
                 input = OutputCalculator.load_data(model._debug.inputs, method, feature_labels=feature_labels)
 
-                result[SOURCE] = input._repr_html_()
-                result[SINK] = output._repr_html_()
+                result[SOURCE] = input
+                result[SINK] = output
             else:
-                result[step] = output._repr_html_()
+                result[step] = output
 
         return result

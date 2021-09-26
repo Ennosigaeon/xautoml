@@ -22,7 +22,6 @@ interface LimeState {
     selectedLabel: Label
 }
 
-// TODO currently LIME always generates explanations for original dataset. Maybe better to actually use features after processing by selected component
 export class LimeComponent extends React.Component<LimeProps, LimeState> {
 
     constructor(props: LimeProps) {
@@ -40,6 +39,12 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
     render() {
         const {result} = this.props
         const {selectedLabel} = this.state
+
+        if (result.expl.size === 0) {
+            return (
+                <p>LIME explanations are not available for the actual predictions.</p>
+            )
+        }
 
         const probs: any[] = []
         result.prob.forEach((p, label) => probs.push({x: label, y: p, color: +(label == selectedLabel)}))
