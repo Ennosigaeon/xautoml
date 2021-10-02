@@ -52,7 +52,8 @@ class BaseHandler(APIHandler):
 
         return wrapper
 
-    def load_models(self, model) -> tuple[np.ndarray, np.ndarray, list[str], dict[str, any]]:
+    @staticmethod
+    def load_models(model) -> tuple[np.ndarray, np.ndarray, list[str], dict[str, any]]:
         cids: list[str] = model.get('cids').split(',')
         data_file = model.get('data_file')
         model_dir = model.get('model_dir')
@@ -73,6 +74,12 @@ class BaseHandler(APIHandler):
                 pass
 
         return X, y, feature_labels, models
+
+    def load_model(self, model):
+        X, y, feature_labels, models = self.load_models(model)
+        assert len(models) == 1
+        pipeline = models.popitem()[1]
+        return X, y, feature_labels, pipeline
 
     def _get_intermediate_output(self, X, label, model, method):
         df_handler = OutputCalculator()
@@ -97,10 +104,7 @@ class DummyHandler(APIHandler):
 class OutputHandler(BaseHandler):
 
     def _calculate_output(self, model, method):
-        X, y, feature_labels, models = self.load_models(model)
-        assert len(models) == 1
-        pipeline = models.popitem()[1]
-
+        X, y, feature_labels, pipeline = self.load_model(model)
         steps = self._get_intermediate_output(X, feature_labels, pipeline, method=method)
         self.finish(json.dumps(steps))
 
@@ -117,7 +121,7 @@ class OutputCompleteHandler(OutputHandler):
 
     @BaseHandler.fixed_precision
     def _process_post(self, model):
-        with pd.option_context('display.max_columns', 1024, 'display.max_rows', 50, 'display.min_rows', 30):
+        with pd.option_context('display.max_columns', 1024, 'display.max_rows', 30, 'display.min_rows', 20):
             self._calculate_output(model, COMPLETE)
 
 
@@ -148,9 +152,7 @@ class RocCurveHandler(BaseHandler):
 class LimeHandler(BaseHandler):
 
     def _process_post(self, model):
-        X, y, feature_labels, models = self.load_models(model)
-        assert len(models) == 1
-        pipeline = models.popitem()[1]
+        X, y, feature_labels, pipeline = self.load_model(model)
         idx = model.get('idx', None)
         step = model.get('step', SOURCE)
 
@@ -165,6 +167,22 @@ class LimeHandler(BaseHandler):
         self.finish(json.dumps(res.as_dict()))
 
 
+class FeatureImportanceHandler(BaseHandler):
+
+    def _process_post(self, model):
+        X, y, feature_labels, pipeline = self.load_model(model)
+        step = model.get('step', SOURCE)
+
+        if step == pipeline.steps[-1][0] or step == SINK:
+            self.log.debug('Unable to calculate FeatureImportance on predictions')
+            res = pd.DataFrame(data={'0': {'0': 1, '1': 0}})
+        else:
+            pipeline, X, feature_labels = pipeline_utils.get_subpipeline(pipeline, step, X, feature_labels)
+            details = ModelDetails()
+            res = details.calculate_feature_importance(X, y, pipeline, feature_labels)
+        self.finish(json.dumps(res.to_dict()))
+
+
 def setup_handlers(web_app):
     host_pattern = ".*$"
 
@@ -175,5 +193,6 @@ def setup_handlers(web_app):
         (url_path_join(base_url, 'xautoml', 'output/description'), OutputDescriptionHandler),
         (url_path_join(base_url, 'xautoml', 'roc_auc'), RocCurveHandler),
         (url_path_join(base_url, 'xautoml', 'explanations/lime'), LimeHandler),
+        (url_path_join(base_url, 'xautoml', 'explanations/feature_importance'), FeatureImportanceHandler),
     ]
     web_app.add_handlers(host_pattern, handlers)

@@ -13,6 +13,7 @@ import {LoadingIndicator} from "./loading";
 import {JupyterButton} from "../util/jupyter-button";
 import {TwoColumnLayout} from "../util/layout";
 import {LimeComponent} from "./lime";
+import {FeatureImportanceComponent} from "./feature_importance";
 
 interface DataSetDetailsProps {
     candidate: Candidate
@@ -57,7 +58,7 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
                 return
             }
             if (this.state.outputs.size == 0) {
-                // Outputs not cached yet already cached
+                // Outputs not cached yet
                 this.setState({loadingDf: true})
                 requestOutputComplete(this.props.candidate.id, this.props.meta.data_file, this.props.meta.model_dir)
                     .then(data => this.setState({outputs: data, loadingDf: false}))
@@ -138,7 +139,7 @@ xautoml_df
     }
 
     render() {
-        const {component} = this.props
+        const {candidate, meta, component} = this.props
         const {loadingDf, outputs, pendingLimeRequest, lime} = this.state
 
         const outputRender = outputs.has(component[0]) ?
@@ -162,6 +163,8 @@ xautoml_df
                         <div style={{overflowX: 'auto'}}>
                             <LoadingIndicator loading={loadingDf}/>
                             {!loadingDf && outputRender}
+
+                            <FeatureImportanceComponent candidate={candidate} meta={meta} component={component[0]}/>
                         </div>
 
                     </>

@@ -186,7 +186,7 @@ xautoml_pipeline
                 </TableRow>
                 <TableRow>
                     <TableCell style={{paddingBottom: 0, paddingTop: 0}} colSpan={6}>
-                        <Collapse in={this.state.open} timeout='auto'>
+                        <Collapse in={this.state.open} timeout='auto' unmountOnExit={false} mountOnEnter={false}>
                             <Box margin={1}>
                                 <DataSetDetailsComponent
                                     candidate={data.candidate[1]}

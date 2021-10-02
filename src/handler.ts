@@ -89,6 +89,7 @@ export interface LimeResult {
 
 export type LocalExplanation = Array<[string, number]>
 
+export type FeatureImportance = Map<string, number>
 
 export function requestRocCurve(cids: CandidateId[], data_file: string, model_dir: string): CancelablePromise<RocCurveData> {
     const promise = requestAPI<Map<string, LineSeriesPoint[]>>('roc_auc', {
@@ -152,5 +153,51 @@ export function requestLimeApproximation(cid: CandidateId, idx: number, data_fil
         data.expl = new Map<Label, LocalExplanation>(Object.entries(data.expl))
         data.prob = new Map<Label, number>(Object.entries(data.prob))
         return data
+    }))
+}
+
+
+export function requestFeatureImportance(cid: CandidateId, data_file: string, model_dir: string, step: string): CancelablePromise<FeatureImportance> {
+    // Fake data for faster development
+    // const promise = new Promise<any>((resolve, reject) => {
+    //     resolve({
+    //             "loc": {"0": 0.03681858802502227},
+    //             "v(g)": {"0": 0.006409182305630012},
+    //             "ev(g)": {"0": 0.010908176943699633},
+    //             "iv(g)": {"0": 0.0037282171581769275},
+    //             "n": {"0": 0.013147899910634364},
+    //             "v": {"0": 0.0026670017873100305},
+    //             "l": {"0": 0.026077971403038313},
+    //             "d": {"0": 0.005074285075960638},
+    //             "i": {"0": 0.004071715817694277},
+    //             "e": {"0": 0.0032031948168006474},
+    //             "b": {"0": 0.003479669347631731},
+    //             "t": {"0": 0.004353775692582595},
+    //             "lOCode": {"0": 0.006920241286863171},
+    //             "lOComment": {"0": 0.0026390750670241213},
+    //             "lOBlank": {"0": 0.0027424039320821823},
+    //             "lOCodeAndComment": {"0": 0.0057808310991956935},
+    //             "uniq_Op": {"0": 0.009902815013404797},
+    //             "uniq_Opnd": {"0": 0.0},
+    //             "total_Op": {"0": 0.0},
+    //             "total_Opnd": {"0": 0.0},
+    //             "branchCount": {"0": 0.0}
+    //         }
+    //     )
+    // })
+
+    const promise = requestAPI<FeatureImportance>('explanations/feature_importance', {
+        method: 'POST', body: JSON.stringify({
+            'cids': cid,
+            'data_file': data_file,
+            'model_dir': model_dir,
+            'step': step
+        })
+    })
+    return cancelablePromise(promise.then(data => {
+        return new Map<string, number>(
+            // @ts-ignore
+            Object.entries(data).map(([key, value]) => [key, value['0']])
+        )
     }))
 }

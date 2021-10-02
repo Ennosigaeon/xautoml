@@ -1,4 +1,6 @@
 import numpy as np
+import pandas as pd
+from sklearn.inspection import permutation_importance
 from sklearn.metrics import confusion_matrix
 
 
@@ -52,6 +54,13 @@ class ModelDetails:
         probabilities = dict(zip(explanation.class_names, explanation.predict_proba.tolist()))
 
         return LimeResult(idx, all_explanations, probabilities, y[idx].tolist())
+
+    @staticmethod
+    def calculate_feature_importance(X: np.ndarray, y: np.ndarray, model, feature_labels: list[str]):
+        result = permutation_importance(model, X, y, scoring='roc_auc', random_state=0)
+
+        return pd.DataFrame(np.stack((result.importances_mean, result.importances_std)),
+                            columns=feature_labels)
 
     @staticmethod
     def _lime_interesting_indices(y: np.ndarray, y_probs: np.ndarray, n=1) -> tuple[np.ndarray, np.ndarray]:
