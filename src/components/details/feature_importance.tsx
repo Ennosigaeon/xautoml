@@ -15,6 +15,7 @@ import {DetailsModel} from "./model";
 
 interface FeatureImportanceProps {
     model: DetailsModel
+    height: number
 }
 
 interface FeatureImportanceState {
@@ -58,9 +59,11 @@ export class FeatureImportanceComponent extends React.Component<FeatureImportanc
         const {component} = this.props.model
 
         const bars: LabelSeriesPoint[] = []
+        let maxLabelLength = 0
         data.get(component)?.forEach((value, key) => {
             // @ts-ignore
             bars.push({x: key, y: value})
+            maxLabelLength = Math.max(maxLabelLength, key.length * 5)
         })
 
         return (
@@ -68,14 +71,15 @@ export class FeatureImportanceComponent extends React.Component<FeatureImportanc
                 <h4>Feature Importance</h4>
                 <LoadingIndicator loading={bars.length === 0}/>
                 {bars.length > 0 &&
-                <FlexibleXYPlot xType="ordinal">
-                    <VerticalGridLines/>
-                    <HorizontalGridLines/>
-                    {/*TODO: XAxis Labels are cut off*/}
-                    <XAxis tickLabelAngle={315}/>
-                    <YAxis/>
-                    <VerticalBarSeries data={bars} barWidth={0.75}/>
-                </FlexibleXYPlot>
+                <div style={{height: `${this.props.height}px`}}>
+                    <FlexibleXYPlot xType="ordinal" margin={{bottom: maxLabelLength}}>
+                        <VerticalGridLines/>
+                        <HorizontalGridLines/>
+                        <XAxis tickLabelAngle={330}/>
+                        <YAxis/>
+                        <VerticalBarSeries data={bars} barWidth={0.75}/>
+                    </FlexibleXYPlot>
+                </div>
                 }
             </>
         );

@@ -17,7 +17,6 @@ interface DataSetDetailsState {
     selectedSample: number
 }
 
-
 export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps, DataSetDetailsState> {
 
     static selectedClassName = 'selected-config'
@@ -47,10 +46,7 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
                 <TwoColumnLayout>
                     <>
                         <RawDataset model={model} onSampleClick={this.handleSampleSelection}/>
-
-                        <div style={{height: '200px'}}>
-                            <FeatureImportanceComponent model={model}/>
-                        </div>
+                        <FeatureImportanceComponent model={model} height={200}/>
                     </>
                     <>
                         <LimeComponent model={model}/>
