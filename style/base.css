@@ -9,13 +9,14 @@
 }
 
 .selected-config,
-.Mui-selected {
+.Mui-selected,
+.selected-config .bandit-explanation_node-content {
     background-color: #007bff !important;
     fill: #007bff !important;
 }
 
 .failed-config,
-.bandit-explanation_node-content.failed-config {
+.failed-config .bandit-explanation_node-content {
     background-color: #dc3545;
 }
 
@@ -39,15 +40,15 @@ svg.bandit-explanation {
     border: 1px solid black;
 }
 
-.bandit-explanation_node-content.selected {
+.selected .bandit-explanation_node-content {
     border: 3px solid black;
 }
 
-.bandit-explanation_node-content.node-duplicate {
+.node-duplicate .bandit-explanation_node-content {
     background-color: #ffc107;
 }
 
-.bandit-explanation_node-content.node-unvisited {
+.node-unvisited .bandit-explanation_node-content {
     background-color: #f8f9fa;
 }
 

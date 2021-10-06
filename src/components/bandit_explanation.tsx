@@ -1,137 +1,14 @@
 import React from "react";
 import * as d3 from "d3";
-import {HierarchyNode, HierarchyPointNode, TreeLayout} from "d3";
-import {Animate} from "react-move";
-import {easeExpInOut} from "d3-ease";
+import {TreeLayout} from "d3";
 import {BanditDetails, CandidateId, HierarchicalBandit, Pipeline, Structure} from "../model";
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
 import {normalizeComponent} from "../util";
-
-interface CollapsibleNode<Datum> extends HierarchyNode<Datum> {
-    _children?: this[];
-}
-
-interface CollapsiblePointNode<Datum> extends HierarchyPointNode<Datum> {
-    _children?: this[];
-}
+import {CollapsibleNode, CollapsiblePointNode, GraphEdge, GraphNode} from "./tree_structure";
 
 const NODE_HEIGHT = 65;
 const NODE_WIDTH = 190;
-
-
-interface GraphElementProps {
-    source: CollapsiblePointNode<HierarchicalBandit>;
-    node: CollapsiblePointNode<HierarchicalBandit>;
-    timestamp: string;
-    highlight: boolean;
-    onClickHandler?: (d: CollapsiblePointNode<HierarchicalBandit>) => void;
-    onAlternativeClickHandler?: (d: CollapsiblePointNode<HierarchicalBandit>) => void;
-}
-
-class GraphNode extends React.Component<GraphElementProps, any> {
-
-    constructor(props: GraphElementProps) {
-        super(props);
-        this.handleClick = this.handleClick.bind(this);
-    }
-
-    private handleClick(e: React.MouseEvent) {
-        if (e.ctrlKey && this.props.onAlternativeClickHandler) {
-            this.props.onAlternativeClickHandler(this.props.node);
-        } else if (this.props.onClickHandler) {
-            this.props.onClickHandler(this.props.node);
-        }
-    }
-
-    private determineState(details: BanditDetails) {
-        if (this.props.highlight) {
-            return 'selected selected-config'
-        }
-
-        const selected = details.selected ? 'selected' : ''
-
-        if (!details.failure_message)
-            return selected;
-        if (details.failure_message.startsWith('Duplicate') || details.failure_message === 'Ineffective')
-            return `${selected} node-duplicate`;
-        if (details.failure_message === 'Unvisited')
-            return `${selected} node-unvisited`;
-        return 'failed-config';
-    }
-
-    render() {
-        const node = this.props.node;
-        const parent = node.parent ? node.parent : this.props.source;
-        const data = node.data;
-        const details = data.getDetails(this.props.timestamp);
-
-        const className = this.determineState(details);
-
-        return (
-            <Animate
-                start={{x: parent.x, y: parent.y, opacity: 0, r: 1e-6}}
-                update={{x: [node.x], y: [node.y], opacity: [1], r: [10], timing: {duration: 750, ease: easeExpInOut}}}
-                enter={{x: [node.x], y: [node.y], opacity: [1], r: [10], timing: {duration: 750, ease: easeExpInOut}}}
-            >{({x: x, y: y, opacity: opacity, r: r}) =>
-                <g className={'bandit-explanation_node'} transform={`translate(${y},${x})`}
-                   onClick={this.handleClick}>
-                    <foreignObject x={0} y={-NODE_HEIGHT / 2} width={NODE_WIDTH} height={NODE_HEIGHT}>
-                        <div className={`bandit-explanation_node-content ${className}`}>
-                            <h3>{normalizeComponent(data.label)} ({data.id})</h3>
-                            <div className={'bandit-explanation_node-details'}>
-                                <div>{details.failure_message ? details.failure_message : 'Reward: ' + (details.reward / details.visits).toFixed(3)}</div>
-                                <div>Visits: {details.visits}</div>
-                                {Array.from(details.policy.keys()).map(k =>
-                                    <div key={k}>{`${k}: ${details.policy.get(k).toFixed(3)}`}</div>)
-                                }
-                            </div>
-                        </div>
-                    </foreignObject>
-                </g>
-            }
-            </Animate>
-        )
-    }
-}
-
-class GraphEdge extends React.Component<GraphElementProps, any> {
-
-    render() {
-        const node = this.props.node;
-        const parent = node.parent ? node.parent : this.props.source;
-        const details = node.data.getDetails(this.props.timestamp);
-
-        return (
-            <Animate
-                start={{
-                    source: {x: parent.x, y: parent.y + NODE_WIDTH},
-                    target: {x: parent.x, y: parent.y}
-                }}
-                update={{
-                    source: {x: [parent.x], y: [parent.y + NODE_WIDTH]},
-                    target: {x: [node.x], y: [node.y]},
-                    timing: {duration: 750, ease: easeExpInOut}
-                }}
-                enter={{
-                    source: {x: [parent.x], y: [parent.y + NODE_WIDTH]},
-                    target: {x: [node.x], y: [node.y]},
-                    timing: {duration: 750, ease: easeExpInOut}
-                }}
-            >{({source: source, target: target}) =>
-                <path
-                    className={details.selected || this.props.highlight ? 'bandit-explanation_link bandit-explanation_selected' : 'bandit-explanation_link'}
-                    d={
-                        d3.linkHorizontal().x(d => d[1]).y(d => d[0])({
-                            source: [source.x, source.y],
-                            target: [target.x, target.y]
-                        })}/>
-            }
-            </Animate>
-        )
-    }
-}
-
 
 interface BanditExplanationsProps {
     data: HierarchicalBandit;
@@ -322,6 +199,22 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
             })
     }
 
+    private static determineNodeClass(details: BanditDetails, highlight: boolean) {
+        if (highlight) {
+            return 'selected selected-config'
+        }
+
+        const selected = details.selected ? 'selected' : ''
+
+        if (!details.failure_message)
+            return selected;
+        if (details.failure_message.startsWith('Duplicate') || details.failure_message === 'Ineffective')
+            return `${selected} node-duplicate`;
+        if (details.failure_message === 'Unvisited')
+            return `${selected} node-unvisited`;
+        return 'failed-config';
+    }
+
     render() {
         const nodes = this.state.nodes ? (this.state.nodes.descendants() as CollapsiblePointNode<HierarchicalBandit>[]) : [];
         const nSteps = Object.keys(this.state.sliderMarks).length - 1;
@@ -333,17 +226,51 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
                 .forEach(n => highlightedNodes.add(n))
         })
 
+        const renderedEdges: JSX.Element[] = []
+        const renderedNodes: JSX.Element[] = []
+
+        nodes.forEach(node => {
+            const details = node.data.getDetails(this.state.timestamp)
+            const highlight = highlightedNodes.has(node.data.id)
+            const nodeClass = BanditExplanationsComponent.determineNodeClass(details, highlight)
+            const edgeClass = details.selected || highlight ? 'bandit-explanation_link bandit-explanation_selected' : 'bandit-explanation_link'
+            const data = node.data;
+
+            renderedEdges.push(
+                <GraphEdge key={node.data.id} source={this.state.nodes} node={node}
+                           nodeWidth={NODE_WIDTH} nodeHeight={NODE_HEIGHT}
+                           className={edgeClass}
+                />
+            )
+
+            renderedNodes.push(
+                <GraphNode key={node.data.id}
+                           source={this.state.nodes}
+                           node={node}
+                           className={nodeClass}
+                           nodeWidth={NODE_WIDTH}
+                           nodeHeight={NODE_HEIGHT}
+                           onClickHandler={this.selectNode}
+                           onAlternativeClickHandler={this.toggleNode}>
+                    <div className={`bandit-explanation_node-content`}>
+                        <h3>{normalizeComponent(data.label)} ({data.id})</h3>
+                        <div className={'bandit-explanation_node-details'}>
+                            <div>{details.failure_message ? details.failure_message : 'Reward: ' + (details.reward / details.visits).toFixed(3)}</div>
+                            <div>Visits: {details.visits}</div>
+                            {Array.from(details.policy.keys()).map(k =>
+                                <div key={k}>{`${k}: ${details.policy.get(k).toFixed(3)}`}</div>)
+                            }
+                        </div>
+                    </div>
+                </GraphNode>
+            )
+        })
+
         return <>
             <svg className={'bandit-explanation'} ref={this.containerRef}>
                 {this.state.nodes && <g transform={`translate(${this.margin},${this.margin})`}>
-                    {nodes.map(d => <GraphEdge key={d.data.id} source={this.state.nodes} node={d}
-                                               highlight={highlightedNodes.has(d.data.id)}
-                                               timestamp={this.state.timestamp}/>)}
-                    {nodes.map(d => <GraphNode key={d.data.id} source={this.state.nodes} node={d}
-                                               timestamp={this.state.timestamp}
-                                               highlight={highlightedNodes.has(d.data.id)}
-                                               onClickHandler={this.selectNode}
-                                               onAlternativeClickHandler={this.toggleNode}/>)}
+                    {renderedEdges}
+                    {renderedNodes}
                 </g>}
             </svg>
             <div style={{margin: '20px'}}>
