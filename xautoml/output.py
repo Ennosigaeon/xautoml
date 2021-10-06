@@ -1,3 +1,4 @@
+import warnings
 from typing import Union
 
 import pandas as pd
@@ -34,22 +35,24 @@ class OutputCalculator:
 
     @staticmethod
     def calculate_outputs(pipeline, X, feature_labels, method: int = RAW) -> dict[str, Union[str, pd.DataFrame]]:
-        alter_pipeline_for_debugging(pipeline)
-        pipeline.predict(X)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", UserWarning)
+            alter_pipeline_for_debugging(pipeline)
+            pipeline.predict(X)
 
-        step_names = ['Pipeline'] + list(pipeline.steps_.keys())
-        result = {}
-        for step, data in zip(step_names, enumerate_pipeline_models(pipeline)):
-            _, model, _ = data
-            output = OutputCalculator.load_data(model._debug.outputs, method, feature_labels=feature_labels)
+            step_names = ['Pipeline'] + list(pipeline.steps_.keys())
+            result = {}
+            for step, data in zip(step_names, enumerate_pipeline_models(pipeline)):
+                _, model, _ = data
+                output = OutputCalculator.load_data(model._debug.outputs, method, feature_labels=feature_labels)
 
-            if step == 'Pipeline':
-                # Populate SINK and SOURCE instead of single step
-                input = OutputCalculator.load_data(model._debug.inputs, method, feature_labels=feature_labels)
+                if step == 'Pipeline':
+                    # Populate SINK and SOURCE instead of single step
+                    input = OutputCalculator.load_data(model._debug.inputs, method, feature_labels=feature_labels)
 
-                result[SOURCE] = input
-                result[SINK] = output
-            else:
-                result[step] = output
+                    result[SOURCE] = input
+                    result[SINK] = output
+                else:
+                    result[step] = output
 
-        return result
+            return result
