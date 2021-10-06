@@ -47,28 +47,25 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
     }
 
     componentDidMount() {
-        // Crude hack to actually wait for base container to be rendered in Jupyter
-        window.setTimeout(() => {
-            const nodes: CollapsibleNode<HierarchicalBandit> = d3.hierarchy(this.props.data, d => d.children);
+        const nodes: CollapsibleNode<HierarchicalBandit> = d3.hierarchy(this.props.data, d => d.children);
 
-            const detailsKeysSet = new Set<string>()
-            nodes.descendants().map(d => Array.from(d.data.details.keys()).forEach(k => detailsKeysSet.add(k)));
-            const detailsKeysArray = Array.from(detailsKeysSet).sort()
-            const detailsKeys: { [key: string]: string; } = {}
-            detailsKeysArray.forEach((k, idx) => detailsKeys[idx] = k)
-            const timestamp = detailsKeysArray.slice(-1)[0]
+        const detailsKeysSet = new Set<string>()
+        nodes.descendants().map(d => Array.from(d.data.details.keys()).forEach(k => detailsKeysSet.add(k)));
+        const detailsKeysArray = Array.from(detailsKeysSet).sort()
+        const detailsKeys: { [key: string]: string; } = {}
+        detailsKeysArray.forEach((k, idx) => detailsKeys[idx] = k)
+        const timestamp = detailsKeysArray.slice(-1)[0]
 
-            BanditExplanationsComponent.collapseAll(nodes, timestamp);
+        BanditExplanationsComponent.collapseAll(nodes, timestamp);
 
-            const root = this.layout(nodes)
-            this.adaptHeight(root)
-            this.setState({
-                nodes: root,
-                source: root,
-                sliderMarks: detailsKeys,
-                timestamp: timestamp
-            });
-        }, 500)
+        const root = this.layout(nodes)
+        this.adaptHeight(root)
+        this.setState({
+            nodes: root,
+            source: root,
+            sliderMarks: detailsKeys,
+            timestamp: timestamp
+        });
     }
 
     componentDidUpdate(prevProps: Readonly<BanditExplanationsProps>, prevState: Readonly<BanditExplanationsState>, snapshot?: any) {
