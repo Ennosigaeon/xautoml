@@ -1,14 +1,49 @@
 import React from "react";
 import * as d3 from "d3";
-import {TreeLayout} from "d3";
 import {BanditDetails, CandidateId, HierarchicalBandit, Pipeline, Structure} from "../model";
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
 import {normalizeComponent} from "../util";
-import {CollapsibleNode, CollapsiblePointNode, GraphEdge, GraphNode} from "./tree_structure";
+import {CollapsibleNode, CollapsiblePointNode, GraphEdge, GraphNode, HierarchicalTree} from "./tree_structure";
 
 const NODE_HEIGHT = 65;
 const NODE_WIDTH = 190;
+
+namespace CollapsibleNodeActions {
+
+    export function collapseNode(node: CollapsibleNode<HierarchicalBandit>, key: string, recursive: boolean = false) {
+        if (node.children === undefined)
+            return
+        if (recursive)
+            node.children.forEach(child => collapseNode(child, key, recursive))
+
+        const hidden: CollapsibleNode<HierarchicalBandit>[] = [];
+        const visible: CollapsibleNode<HierarchicalBandit>[] = [];
+
+        node.children
+            .filter(child => child.data.shouldDisplay(key))
+            .forEach(child => {
+                const details = child.data.getDetails(key)
+                if (details.failure_message === 'Unvisited' && !details.selected)
+                    hidden.push(child);
+                else
+                    visible.push(child);
+            })
+
+        node._children = hidden
+        if (visible.length > 0)
+            node.children = visible.sort((a, b) => a.data.label.localeCompare(b.data.label))
+        else
+            node.children = undefined
+    }
+
+    export function expandNode(node: CollapsibleNode<HierarchicalBandit>) {
+        const children = node.children ? node.children.concat(node._children) : node._children;
+        node.children = children.sort((a, b) => a.data.label.localeCompare(b.data.label))
+        node._children = [];
+    }
+
+}
 
 interface BanditExplanationsProps {
     data: HierarchicalBandit;
@@ -19,18 +54,15 @@ interface BanditExplanationsProps {
 }
 
 interface BanditExplanationsState {
-    nodes: CollapsiblePointNode<HierarchicalBandit>;
-    source: CollapsiblePointNode<HierarchicalBandit>;
+    root: CollapsibleNode<HierarchicalBandit>;
     sliderMarks: { [key: string]: string; };
     timestamp: string;
 }
 
 export class BanditExplanationsComponent extends React.Component<BanditExplanationsProps, BanditExplanationsState> {
 
-    private readonly containerRef: React.RefObject<SVGSVGElement> = React.createRef<SVGSVGElement>();
-    private readonly layout: TreeLayout<HierarchicalBandit> = d3.tree<HierarchicalBandit>().size([1, 1]);
-    private readonly margin: number = 20;
     private reversePipelines: Map<number, CandidateId[]>;
+    private selectedPipelines: Set<number>;
 
     static defaultProps = {
         onCandidateSelection: (_: CandidateId[]) => {
@@ -39,83 +71,46 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
 
     constructor(props: BanditExplanationsProps) {
         super(props);
-        this.state = {nodes: undefined, source: undefined, sliderMarks: {}, timestamp: undefined};
+        this.state = {root: undefined, sliderMarks: {}, timestamp: undefined};
 
+        this.renderNodes = this.renderNodes.bind(this);
         this.selectNode = this.selectNode.bind(this);
         this.toggleNode = this.toggleNode.bind(this);
         this.changeTimestamp = this.changeTimestamp.bind(this);
+
+        this.reversePipelines = new Map<number, CandidateId[]>();
+        this.reversePipelines.set(0, [])
+
+        this.props.pipelines.forEach((v, k) => v.steps.map(v => Number.parseInt(v[0]))
+            .forEach(step => {
+                if (this.reversePipelines.has(step))
+                    this.reversePipelines.get(step).push(k)
+                else
+                    this.reversePipelines.set(step, [k])
+
+                // Always add to root
+                this.reversePipelines.get(0).push(k)
+            })
+        );
     }
 
     componentDidMount() {
-        const nodes: CollapsibleNode<HierarchicalBandit> = d3.hierarchy(this.props.data, d => d.children);
+        const root: CollapsibleNode<HierarchicalBandit> = d3.hierarchy(this.props.data, d => d.children);
 
         const detailsKeysSet = new Set<string>()
-        nodes.descendants().map(d => Array.from(d.data.details.keys()).forEach(k => detailsKeysSet.add(k)));
+        root.descendants().map(d => Array.from(d.data.details.keys()).forEach(k => detailsKeysSet.add(k)));
         const detailsKeysArray = Array.from(detailsKeysSet).sort()
         const detailsKeys: { [key: string]: string; } = {}
         detailsKeysArray.forEach((k, idx) => detailsKeys[idx] = k)
         const timestamp = detailsKeysArray.slice(-1)[0]
 
-        BanditExplanationsComponent.collapseAll(nodes, timestamp);
+        CollapsibleNodeActions.collapseNode(root, timestamp, true)
 
-        const root = this.layout(nodes)
-        this.adaptHeight(root)
         this.setState({
-            nodes: root,
-            source: root,
+            root: root,
             sliderMarks: detailsKeys,
             timestamp: timestamp
         });
-    }
-
-    componentDidUpdate(prevProps: Readonly<BanditExplanationsProps>, prevState: Readonly<BanditExplanationsState>, snapshot?: any) {
-        if (this.reversePipelines === undefined || prevProps.pipelines.size !== this.props.pipelines.size) {
-            this.reversePipelines = new Map<number, CandidateId[]>();
-            this.reversePipelines.set(0, [])
-
-            this.props.pipelines.forEach((v, k) => v.steps.map(v => Number.parseInt(v[0]))
-                .forEach(step => {
-                    if (this.reversePipelines.has(step))
-                        this.reversePipelines.get(step).push(k)
-                    else
-                        this.reversePipelines.set(step, [k])
-
-                    // Always add to root
-                    this.reversePipelines.get(0).push(k)
-                })
-            );
-        }
-    }
-
-    private static collapseAll(d: CollapsibleNode<HierarchicalBandit>, key: string) {
-        if (d.children) {
-            d.children.forEach(d2 => this.collapseAll(d2, key))
-            BanditExplanationsComponent.collapseNode(d, key)
-        }
-    }
-
-    private static collapseNode(d: CollapsibleNode<HierarchicalBandit>, key: string) {
-        const unvisited: CollapsibleNode<HierarchicalBandit>[] = [];
-        const visited: CollapsibleNode<HierarchicalBandit>[] = [];
-        // noinspection JSMismatchedCollectionQueryUpdate
-        const hidden: CollapsibleNode<HierarchicalBandit>[] = [];
-
-        d.children.forEach(child => {
-            const details = child.data.getDetails(key)
-            if (child.data.shouldDisplay(key)) {
-                if (details.failure_message === 'Unvisited' && !details.selected)
-                    unvisited.push(child);
-                else
-                    visited.push(child);
-            } else
-                hidden.push(child);
-        })
-
-        d._children = unvisited
-        if (visited.length > 0)
-            d.children = visited.sort((a, b) => a.data.label.localeCompare(b.data.label))
-        else
-            d.children = undefined
     }
 
     private selectNode(node: CollapsiblePointNode<HierarchicalBandit>) {
@@ -139,61 +134,21 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
             // No children
             return;
         } else if (node._children?.length === 0) {
-            // Node is expanded
-            BanditExplanationsComponent.collapseNode(node, this.state.timestamp);
+            CollapsibleNodeActions.collapseNode(node, this.state.timestamp)
         } else {
-            // Node is collapsed
-            const children = node.children ? node.children.concat(node._children) : node._children;
-            node.children = children.sort((a, b) => a.data.label.localeCompare(b.data.label))
-            node._children = [];
+            CollapsibleNodeActions.expandNode(node)
         }
-        const root = this.layout(this.state.nodes)
-        this.adaptHeight(root)
-        this.setState({nodes: root, source: node});
+
+        this.setState({root: this.state.root});
     }
 
     private changeTimestamp(v: number) {
         const timestamp = this.state.sliderMarks[v];
 
-        const nodes: CollapsibleNode<HierarchicalBandit> = d3.hierarchy(this.props.data, d => d.children);
-        BanditExplanationsComponent.collapseAll(nodes, timestamp);
+        const root: CollapsibleNode<HierarchicalBandit> = d3.hierarchy(this.props.data, d => d.children);
+        CollapsibleNodeActions.collapseNode(root, timestamp, true)
 
-        const root = this.layout(nodes)
-        this.adaptHeight(root)
-        this.setState({
-            nodes: root,
-            source: root,
-            timestamp: timestamp
-        });
-    }
-
-    private adaptHeight(root: CollapsibleNode<HierarchicalBandit>) {
-        if (!root) {
-            return 100;
-        }
-
-        const nodeCount = new Array<number>(Math.max(...root.descendants().map(d => d.depth)) + 1).fill(0);
-        root.descendants().map(d => nodeCount[d.depth]++);
-        const maxNodes = Math.max(...nodeCount);
-        const newHeight = maxNodes * (1.1 * NODE_HEIGHT + this.margin) + 2 * this.margin;
-
-
-        const currentHeight = this.containerRef.current ?
-            Number.parseFloat(this.containerRef.current.getAttribute('height')) : 100;
-        if (currentHeight > newHeight) {
-            window.setTimeout(() => {
-                this.containerRef.current?.setAttribute('height', newHeight.toString());
-            }, 500);
-        } else {
-            this.containerRef.current?.setAttribute('height', newHeight.toString());
-        }
-
-        (root.descendants() as CollapsiblePointNode<HierarchicalBandit>[])
-            .map(d => {
-                d.y = d.depth * (NODE_WIDTH + 75);
-                d.x = d.x * (newHeight - 2 * this.margin);
-                return d;
-            })
+        this.setState({root: root, timestamp: timestamp});
     }
 
     private static determineNodeClass(details: BanditDetails, highlight: boolean) {
@@ -212,64 +167,76 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
         return 'failed-config';
     }
 
-    render() {
-        const nodes = this.state.nodes ? (this.state.nodes.descendants() as CollapsiblePointNode<HierarchicalBandit>[]) : [];
-        const nSteps = Object.keys(this.state.sliderMarks).length - 1;
+    renderNode(node: CollapsiblePointNode<HierarchicalBandit>): [JSX.Element, JSX.Element] {
+        const details = node.data.getDetails(this.state.timestamp)
+        const parent: CollapsiblePointNode<HierarchicalBandit> = node.parent
+        const highlight = this.selectedPipelines.has(node.data.id)
 
-        const highlightedNodes = new Set()
-        this.props.selectedCandidates.forEach(cid => {
-            const sid = cid.substring(0, cid.indexOf(':', 4))
-            this.props.pipelines.get(sid).steps.map(v => Number.parseInt(v[0]))
-                .forEach(n => highlightedNodes.add(n))
-        })
+        const edgeClass = details.selected || highlight ? 'bandit-explanation_selected' : ''
+        const renderedEdge = <GraphEdge key={node.data.id} source={parent} node={node}
+                                        nodeWidth={NODE_WIDTH} nodeHeight={NODE_HEIGHT}
+                                        className={edgeClass}/>
 
+        const data = node.data;
+        const nodeClass = BanditExplanationsComponent.determineNodeClass(details, highlight)
+        const renderedNode =
+            <GraphNode key={node.data.id}
+                       source={parent}
+                       node={node}
+                       className={`bandit-explanation ${nodeClass}`}
+                       nodeWidth={NODE_WIDTH}
+                       nodeHeight={NODE_HEIGHT}
+                       onClickHandler={this.selectNode}
+                       onAlternativeClickHandler={this.toggleNode}>
+                <>
+                    <h3>{normalizeComponent(data.label)} ({data.id})</h3>
+                    <div className={'bandit-explanation_node-details'}>
+                        <div>{details.failure_message ? details.failure_message : 'Reward: ' + (details.reward / details.visits).toFixed(3)}</div>
+                        <div>Visits: {details.visits}</div>
+                        {Array.from(details.policy.keys()).map(k =>
+                            <div key={k}>{`${k}: ${details.policy.get(k).toFixed(3)}`}</div>)
+                        }
+                    </div>
+                </>
+            </GraphNode>
+
+        return [renderedNode, renderedEdge]
+    }
+
+    private renderNodes(root: CollapsiblePointNode<HierarchicalBandit>): JSX.Element {
         const renderedEdges: JSX.Element[] = []
         const renderedNodes: JSX.Element[] = []
 
-        nodes.forEach(node => {
-            const details = node.data.getDetails(this.state.timestamp)
-            const highlight = highlightedNodes.has(node.data.id)
-            const nodeClass = BanditExplanationsComponent.determineNodeClass(details, highlight)
-            const edgeClass = details.selected || highlight ? 'bandit-explanation_link bandit-explanation_selected' : 'bandit-explanation_link'
-            const data = node.data;
+        root.descendants().forEach(node => {
+            const [renderedNode, renderedEdge] = this.renderNode(node)
+            renderedEdges.push(renderedEdge)
+            renderedNodes.push(renderedNode)
+        })
 
-            renderedEdges.push(
-                <GraphEdge key={node.data.id} source={this.state.nodes} node={node}
-                           nodeWidth={NODE_WIDTH} nodeHeight={NODE_HEIGHT}
-                           className={edgeClass}
-                />
-            )
+        return (
+            <>
+                {renderedEdges}
+                {renderedNodes}
+            </>
+        )
+    }
 
-            renderedNodes.push(
-                <GraphNode key={node.data.id}
-                           source={this.state.nodes}
-                           node={node}
-                           className={nodeClass}
-                           nodeWidth={NODE_WIDTH}
-                           nodeHeight={NODE_HEIGHT}
-                           onClickHandler={this.selectNode}
-                           onAlternativeClickHandler={this.toggleNode}>
-                    <div className={`bandit-explanation_node-content`}>
-                        <h3>{normalizeComponent(data.label)} ({data.id})</h3>
-                        <div className={'bandit-explanation_node-details'}>
-                            <div>{details.failure_message ? details.failure_message : 'Reward: ' + (details.reward / details.visits).toFixed(3)}</div>
-                            <div>Visits: {details.visits}</div>
-                            {Array.from(details.policy.keys()).map(k =>
-                                <div key={k}>{`${k}: ${details.policy.get(k).toFixed(3)}`}</div>)
-                            }
-                        </div>
-                    </div>
-                </GraphNode>
-            )
+    render() {
+        const nSteps = Object.keys(this.state.sliderMarks).length - 1;
+
+        // TODO https://reactjs.org/blog/2018/06/07/you-probably-dont-need-derived-state.html#what-about-memoization
+        this.selectedPipelines = new Set()
+        this.props.selectedCandidates.forEach(cid => {
+            const sid = cid.substring(0, cid.indexOf(':', 4))
+            this.props.pipelines.get(sid).steps.map(v => Number.parseInt(v[0]))
+                .forEach(n => this.selectedPipelines.add(n))
         })
 
         return <>
-            <svg className={'bandit-explanation'} ref={this.containerRef}>
-                {this.state.nodes && <g transform={`translate(${this.margin},${this.margin})`}>
-                    {renderedEdges}
-                    {renderedNodes}
-                </g>}
-            </svg>
+            <HierarchicalTree nodeHeight={NODE_HEIGHT}
+                              nodeWidth={NODE_WIDTH}
+                              data={this.state.root}
+                              render={this.renderNodes}/>
             <div style={{margin: '20px'}}>
                 {/* Only display slider when actual data is already loaded*/}
                 {nSteps > 0 && <Slider min={0} max={nSteps} marks={this.state.sliderMarks} defaultValue={nSteps}

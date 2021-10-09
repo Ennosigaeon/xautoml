@@ -10,19 +10,19 @@
 
 .selected-config,
 .Mui-selected,
-.selected-config .bandit-explanation_node-content {
+.bandit-explanation.selected-config .hierarchical-tree_node-content {
     background-color: #007bff !important;
     fill: #007bff !important;
 }
 
 .failed-config,
-.failed-config .bandit-explanation_node-content {
+.bandit-explanation.failed-config .hierarchical-tree_node-content {
     background-color: #dc3545;
 }
 
 
-/** Bandit Explanation */
-svg.bandit-explanation {
+/** Hierarchical Tree */
+svg.hierarchical-tree {
     display: block;
     width: 99%;
     border: 2px solid gold;
@@ -30,46 +30,56 @@ svg.bandit-explanation {
     user-select: none;
 }
 
-.bandit-explanation_node-content {
+.hierarchical-tree_node-container {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+}
+
+.hierarchical-tree_node-content {
+    border: 1px solid black;
+    border-radius: 5px;
+    padding: 2px 5px;
+    width: 100%;
+}
+
+.hierarchical-tree_node-content h3 {
+    margin: 0;
+    padding: 0;
+}
+
+.hierarchical-tree_link {
+    fill: none;
+    stroke: #ccc;
+    stroke-width: 2px;
+}
+
+
+/** Bandit Explanation */
+.bandit-explanation .hierarchical-tree_node-content {
     background-color: #28a745;
     stroke: steelblue;
     stroke-width: 3px;
-    border-radius: 5px;
-    padding: 2px 5px;
     font-size: 8px;
-    border: 1px solid black;
 }
 
 .selected .bandit-explanation_node-content {
     border: 3px solid black;
 }
 
-.node-duplicate .bandit-explanation_node-content {
+.bandit-explanation.node-duplicate .hierarchical-tree_node-content {
     background-color: #ffc107;
 }
 
-.node-unvisited .bandit-explanation_node-content {
+.bandit-explanation.node-unvisited .hierarchical-tree_node-content {
     background-color: #f8f9fa;
-}
-
-.bandit-explanation_node {
-    cursor: pointer;
-}
-
-.bandit-explanation_node h3 {
-    margin: 0;
-    padding: 0;
 }
 
 .bandit-explanation_node-details {
     display: grid;
     grid-template-columns: 50% 50%;
-}
-
-.bandit-explanation_link {
-    fill: none;
-    stroke: #ccc;
-    stroke-width: 2px;
 }
 
 .bandit-explanation_link.selected {
@@ -139,11 +149,11 @@ div.structure-graph_tooltip {
 
 /** Parallel Coordinates */
 .pc-container {
-	display: inline-block;
-	position: relative;
-	width: 100%;
-	vertical-align: middle;
-	/*overflow: hidden; */
+    display: inline-block;
+    position: relative;
+    width: 100%;
+    vertical-align: middle;
+    /*overflow: hidden; */
 }
 
 .pc {
