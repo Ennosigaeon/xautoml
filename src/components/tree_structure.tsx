@@ -13,7 +13,6 @@ export interface CollapsiblePointNode<Datum> extends HierarchyPointNode<Datum> {
 }
 
 interface GraphElementProps<Datum> {
-    source: CollapsiblePointNode<Datum>;
     node: CollapsiblePointNode<Datum>;
     nodeWidth: number
     nodeHeight: number
@@ -50,8 +49,8 @@ export class GraphNode<Datum> extends React.Component<GraphNodeProps<Datum>, {}>
     }
 
     render() {
-        const {node, source, className, nodeWidth, nodeHeight} = this.props;
-        const parent = node.parent ? node.parent : source;
+        const {node, className, nodeWidth, nodeHeight} = this.props;
+        const parent = node.parent;
 
         return (
             <Animate
@@ -82,8 +81,11 @@ export class GraphEdge<Datum> extends React.Component<GraphElementProps<Datum>, 
     }
 
     render() {
-        const {node, className, source, nodeWidth} = this.props;
-        const parent = node.parent ? node.parent : source;
+        const {node, className, nodeWidth} = this.props;
+        const parent = node.parent
+
+        if (parent === node)
+            return <></>
 
         return (
             <Animate

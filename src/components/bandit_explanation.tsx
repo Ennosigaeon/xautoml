@@ -169,11 +169,11 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
 
     renderNode(node: CollapsiblePointNode<HierarchicalBandit>): [JSX.Element, JSX.Element] {
         const details = node.data.getDetails(this.state.timestamp)
-        const parent: CollapsiblePointNode<HierarchicalBandit> = node.parent
         const highlight = this.selectedPipelines.has(node.data.id)
 
         const edgeClass = details.selected || highlight ? 'bandit-explanation_selected' : ''
-        const renderedEdge = <GraphEdge key={node.data.id} source={parent} node={node}
+        const renderedEdge = <GraphEdge key={node.data.id}
+                                        node={node}
                                         nodeWidth={NODE_WIDTH} nodeHeight={NODE_HEIGHT}
                                         className={edgeClass}/>
 
@@ -181,11 +181,9 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
         const nodeClass = BanditExplanationsComponent.determineNodeClass(details, highlight)
         const renderedNode =
             <GraphNode key={node.data.id}
-                       source={parent}
                        node={node}
                        className={`bandit-explanation ${nodeClass}`}
-                       nodeWidth={NODE_WIDTH}
-                       nodeHeight={NODE_HEIGHT}
+                       nodeWidth={NODE_WIDTH} nodeHeight={NODE_HEIGHT}
                        onClickHandler={this.selectNode}
                        onAlternativeClickHandler={this.toggleNode}>
                 <>
