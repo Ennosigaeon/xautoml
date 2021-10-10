@@ -123,7 +123,7 @@ class CandidateTableRow extends React.Component<CandidateTableRowProps, Candidat
     private toggleOpen(e: React.MouseEvent) {
         this.setState({
             open: !this.state.open,
-            selectedComponent: [StructureGraphComponent.SINK, StructureGraphComponent.SINK]
+            selectedComponent: [StructureGraphComponent.SOURCE, StructureGraphComponent.SOURCE]
         })
         e.stopPropagation()
     }

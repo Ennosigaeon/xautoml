@@ -43,6 +43,7 @@ svg.hierarchical-tree {
     border-radius: 5px;
     padding: 2px 5px;
     width: 100%;
+    overflow: hidden;
 }
 
 .hierarchical-tree_node-content h3 {
