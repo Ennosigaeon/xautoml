@@ -21,21 +21,31 @@
 }
 
 
-/** Hierarchical Tree */
-svg.hierarchical-tree {
-    display: block;
+/** Flexible SVG */
+.flexible-svg-container {
+    display: inline-block;
+    position: relative;
     width: 99%;
-    border: 2px solid gold;
-    font: 10px sans-serif;
-    user-select: none;
+    vertical-align: middle;
+    /*overflow: hidden; */
 }
 
+.flexible-svg {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+
+/** Hierarchical Tree */
 .hierarchical-tree_node-container {
     cursor: pointer;
     display: flex;
     align-items: center;
     height: 100%;
     width: 100%;
+    font: 10px sans-serif;
 }
 
 .hierarchical-tree_node-content {
@@ -149,21 +159,6 @@ div.structure-graph_tooltip {
 
 
 /** Parallel Coordinates */
-.pc-container {
-    display: inline-block;
-    position: relative;
-    width: 100%;
-    vertical-align: middle;
-    /*overflow: hidden; */
-}
-
-.pc {
-    display: block;
-    position: absolute;
-    top: 0;
-    left: 0;
-}
-
 .pc-choice > rect {
     fill: rgba(255, 255, 255, 0.85);
     stroke: #DFE3E6;

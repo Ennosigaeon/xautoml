@@ -3,6 +3,7 @@ import {Animate} from "react-move";
 import {easeExpInOut} from "d3-ease";
 import * as d3 from "d3";
 import {HierarchyNode, HierarchyPointNode, TreeLayout} from "d3";
+import {FlexibleSvg} from "../util/flexible-svg";
 
 export interface CollapsibleNode<Datum> extends HierarchyNode<Datum> {
     _children?: this[];
@@ -127,38 +128,31 @@ interface HierarchicalTreeProps<Datum> {
 }
 
 interface HierarchicalTreeState {
-    containerWidth: number
-    containerHeight: number
+    container: React.RefObject<any>
 }
 
 export class HierarchicalTree<Datum> extends React.Component<HierarchicalTreeProps<Datum>, HierarchicalTreeState> {
-    private readonly containerRef: React.RefObject<SVGSVGElement> = React.createRef<SVGSVGElement>();
     private readonly layout: TreeLayout<Datum> = d3.tree<Datum>().size([1, 1]);
     private readonly margin: number = 10;
 
     constructor(props: HierarchicalTreeProps<Datum>) {
         super(props);
-        this.state = {containerWidth: 0, containerHeight: 0}
-    }
+        this.state = {container: undefined}
 
-    componentDidMount() {
-        this.setState({
-            containerWidth: this.containerRef.current?.clientWidth,
-            containerHeight: this.containerRef.current?.clientHeight
-        });
+        this.updateContainer = this.updateContainer.bind(this)
     }
 
     private calcHeight(root: CollapsibleNode<Datum>): number {
         const {nodeWidth, nodeHeight} = this.props
+        const {container} = this.state
 
         const nodeCount = new Array<number>(Math.max(...root.descendants().map(d => d.depth)) + 1).fill(0);
         root.descendants().map(d => nodeCount[d.depth]++);
         const maxNodes = Math.max(...nodeCount);
         const newHeight = 1.3 * maxNodes * nodeHeight;
 
-        if (this.containerRef.current) {
-            const currentHeight = this.containerRef.current.clientHeight
-            const currentWidth = this.containerRef.current.clientWidth;
+        if (container?.current !== undefined) {
+            const currentWidth = container.current.clientWidth;
 
             (root.descendants() as CollapsiblePointNode<Datum>[])
                 .map(d => {
@@ -167,21 +161,16 @@ export class HierarchicalTree<Datum> extends React.Component<HierarchicalTreePro
                     const y = d.y
 
                     d.y = x * newHeight;
-                    d.x = y * (currentWidth - nodeWidth - 2*this.margin);
+                    d.x = y * (currentWidth - nodeWidth - 2 * this.margin);
                     return d;
                 })
-
-            if (currentHeight > newHeight) {
-                window.setTimeout(() => {
-                    this.containerRef.current.setAttribute('height', newHeight.toString());
-                }, 400);
-                // Return old height as height is going to be changed after animation
-                return currentHeight
-            }
         }
         return newHeight
     }
 
+    private updateContainer(container: React.RefObject<any>) {
+        this.setState({container: container})
+    }
 
     render() {
         if (this.props.data === undefined)
@@ -192,11 +181,11 @@ export class HierarchicalTree<Datum> extends React.Component<HierarchicalTreePro
         const height = this.calcHeight(root)
 
         return (
-            <svg className={'hierarchical-tree'} ref={this.containerRef} height={height}>
+            <FlexibleSvg height={height} onContainerChange={this.updateContainer}>
                 {root && <g transform={`translate(${this.margin},0)`}>
                     {this.props.render(root)}
                 </g>}
-            </svg>
+            </FlexibleSvg>
         )
     }
 }
