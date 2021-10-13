@@ -10,6 +10,7 @@ import {BanditExplanationsComponent} from "./components/bandit_explanation";
 import {CandidateTable} from "./components/candidate_table";
 import {Jupyter} from "./jupyter";
 import {ParallelCoordinates} from "./components/pc/parallel_corrdinates";
+import {LoadingIndicator} from "./components/loading";
 
 
 /**
@@ -60,14 +61,16 @@ export interface ReactRootProps {
 
 export interface ReactRootState {
     selectedCandidates: Set<CandidateId>
+    mounted: boolean
 }
-
 
 export default class ReactRoot extends React.Component<ReactRootProps, ReactRootState> {
 
+    private readonly container: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
+
     constructor(props: ReactRootProps) {
         super(props);
-        this.state = {selectedCandidates: new Set<CandidateId>()}
+        this.state = {selectedCandidates: new Set<CandidateId>(), mounted: false}
 
         this.onCandidateSelection = this.onCandidateSelection.bind(this)
     }
@@ -76,10 +79,28 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
         this.setState({selectedCandidates: cids})
     }
 
+    componentDidMount() {
+        if (this.container.current.clientWidth > 0)
+            this.setState({mounted: true})
+        else
+            // Jupyter renders all components before output containers are rendered.
+            // Delay rendering to get the container width.
+            window.setTimeout(() => this.setState({mounted: true}), 100)
+    }
+
     render() {
         const {data, jupyter} = this.props
-        const selectedCandidates = this.state.selectedCandidates
+        const {selectedCandidates, mounted} = this.state
         const pipelines = new Map<CandidateId, Pipeline>(data.structures.map(s => [s.cid, s.pipeline]))
+
+        if (!mounted) {
+            // Render loading indicator while waiting for delayed re-rendering with mounted container
+            return (
+                <div ref={this.container} style={{width: '100%'}}>
+                    <LoadingIndicator loading={true}/>
+                </div>
+            )
+        }
 
         if (!data) {
             return <p>Error loading data...</p>
