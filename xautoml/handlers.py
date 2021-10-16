@@ -10,7 +10,7 @@ from jupyter_server.base.handlers import APIHandler
 from jupyter_server.utils import url_path_join
 from tornado import gen
 
-from xautoml.model_details import ModelDetails, LimeResult
+from xautoml.model_details import ModelDetails, LimeResult, DecisionTreeResult
 from xautoml.output import OutputCalculator, DESCRIPTION, COMPLETE
 from xautoml.roc_auc import RocCurve
 from xautoml.util import internal_cid_name, pipeline_utils
@@ -167,6 +167,24 @@ class LimeHandler(BaseHandler):
         self.finish(json.dumps(res.as_dict()))
 
 
+class DecisionTreeHandler(BaseHandler):
+
+    def _process_post(self, model):
+        X, y, feature_labels, pipeline = self.load_model(model)
+        step = model.get('step', SOURCE)
+        max_leaf_nodes = model.get('max_leaf_nodes', 10)
+
+        if step == pipeline.steps[-1][0] or step == SINK:
+            self.log.debug('Unable to calculate LIME on predictions')
+            res = DecisionTreeResult(pipeline_utils.Node('empty', []), 0, 0, 0)
+        else:
+            pipeline, X, feature_labels = pipeline_utils.get_subpipeline(pipeline, step, X, feature_labels)
+            details = ModelDetails()
+            res = details.calculate_decision_tree(X, pipeline, feature_labels, max_leaf_nodes=max_leaf_nodes)
+
+        self.finish(json.dumps(res.as_dict()))
+
+
 class FeatureImportanceHandler(BaseHandler):
 
     def _process_post(self, model):
@@ -194,5 +212,6 @@ def setup_handlers(web_app):
         (url_path_join(base_url, 'xautoml', 'roc_auc'), RocCurveHandler),
         (url_path_join(base_url, 'xautoml', 'explanations/lime'), LimeHandler),
         (url_path_join(base_url, 'xautoml', 'explanations/feature_importance'), FeatureImportanceHandler),
+        (url_path_join(base_url, 'xautoml', 'explanations/dt'), DecisionTreeHandler),
     ]
     web_app.add_handlers(host_pattern, handlers)

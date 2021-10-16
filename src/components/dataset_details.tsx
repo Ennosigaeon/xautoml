@@ -6,6 +6,7 @@ import {LimeComponent} from "./details/lime";
 import {FeatureImportanceComponent} from "./details/feature_importance";
 import {RawDataset} from "./details/raw_dataset";
 import {DetailsModel} from "./details/model";
+import {GlobalSurrogateComponent} from "./details/global_surrogate";
 
 interface DataSetDetailsProps {
     candidate: Candidate
@@ -47,6 +48,7 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
                     <>
                         <RawDataset model={model} onSampleClick={this.handleSampleSelection}/>
                         <FeatureImportanceComponent model={model} height={200}/>
+                        <GlobalSurrogateComponent model={model}/>
                     </>
                     <>
                         <LimeComponent model={model}/>

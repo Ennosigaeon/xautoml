@@ -87,6 +87,18 @@ export interface LimeResult {
     label: Label
 }
 
+export interface DecisionTreeNode {
+    label: string,
+    children: DecisionTreeNode[]
+}
+
+export interface DecisionTreeResult {
+    fidelity: number,
+    n_pred: number,
+    n_leaves: number,
+    root: DecisionTreeNode
+}
+
 export type LocalExplanation = Array<[string, number]>
 
 export type FeatureImportance = Map<string, number>
@@ -156,6 +168,18 @@ export function requestLimeApproximation(cid: CandidateId, idx: number, data_fil
     }))
 }
 
+export function requestGlobalSurrogate(cid: CandidateId, data_file: string, model_dir: string, step: string, max_leaf_nodes: number = 10): CancelablePromise<DecisionTreeResult> {
+    const promise = requestAPI<DecisionTreeResult>('explanations/dt', {
+        method: 'POST', body: JSON.stringify({
+            'cids': cid,
+            'data_file': data_file,
+            'model_dir': model_dir,
+            'step': step,
+            'max_leaf_nodes': max_leaf_nodes
+        })
+    })
+    return cancelablePromise(promise)
+}
 
 export function requestFeatureImportance(cid: CandidateId, data_file: string, model_dir: string, step: string): CancelablePromise<FeatureImportance> {
     // Fake data for faster development
