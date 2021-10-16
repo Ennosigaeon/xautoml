@@ -90,17 +90,6 @@ class BaseHandler(APIHandler):
             self.log.error('Failed to calculate intermediate dataframes', exc_info=ex)
 
 
-class DummyHandler(APIHandler):
-    # The following decorator should be present on all verb methods (head, get, post,
-    # patch, put, delete, options) to ensure only authorized user can request the
-    # Jupyter server
-    @tornado.web.authenticated
-    def get(self):
-        self.finish(json.dumps({
-            "data": "This is /xautoml/get_example endpoint!"
-        }))
-
-
 class OutputHandler(BaseHandler):
 
     def _calculate_output(self, model, method):
@@ -206,7 +195,6 @@ def setup_handlers(web_app):
 
     base_url = web_app.settings["base_url"]
     handlers = [
-        (url_path_join(base_url, 'xautoml', 'get_example'), DummyHandler),
         (url_path_join(base_url, 'xautoml', 'output/complete'), OutputCompleteHandler),
         (url_path_join(base_url, 'xautoml', 'output/description'), OutputDescriptionHandler),
         (url_path_join(base_url, 'xautoml', 'roc_auc'), RocCurveHandler),
