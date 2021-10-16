@@ -23,7 +23,6 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
     static selectedClassName = 'selected-config'
     static contextType = JupyterContext;
     context: React.ContextType<typeof JupyterContext>;
-    dfTableRef = React.createRef<HTMLDivElement>()
 
     constructor(props: DataSetDetailsProps) {
         super(props);

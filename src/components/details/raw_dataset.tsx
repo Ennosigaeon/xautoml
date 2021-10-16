@@ -5,6 +5,7 @@ import {LoadingIndicator} from "../loading";
 import {DetailsModel} from "./model";
 import {TwoColumnLayout} from "../../util/layout";
 import {JupyterButton} from "../../util/jupyter-button";
+import {JupyterContext} from "../../util";
 
 
 interface RawDatasetProps {
@@ -19,7 +20,10 @@ interface RawDatasetState {
 
 export class RawDataset extends React.Component<RawDatasetProps, RawDatasetState> {
 
-    dfTableRef = React.createRef<HTMLDivElement>()
+    static contextType = JupyterContext;
+    context: React.ContextType<typeof JupyterContext>;
+
+    private readonly dfTableRef = React.createRef<HTMLDivElement>()
 
     constructor(props: RawDatasetProps) {
         super(props);
