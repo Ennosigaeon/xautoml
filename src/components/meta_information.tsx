@@ -49,7 +49,7 @@ export default class MetaInformationTable extends React.Component<MetaInformatio
 
                 <Collapse in={this.state.overviewOpen}>
                     <div className={'overview-row'}>
-                        Data Set: <a href={`https://www.openml.org/t/${meta.openml_task}`} target={'_blank'}>{meta.openml_task} on fold {meta.openml_fold}</a>
+                        Data Set: <a href={`https://www.openml.org/t/${meta.openml_task}`} target={'_blank'}>Task {meta.openml_task} on fold {meta.openml_fold}</a>
                     </div>
                     <div className={'overview-row'}>
                         Start Time: {start.toLocaleString()}
