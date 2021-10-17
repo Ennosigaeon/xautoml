@@ -107,26 +107,33 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
         }
         return (
             <JupyterContext.Provider value={jupyter}>
-                <ParallelCoordinates runhistory={data}/>
-                <MetaInformationTable meta={data.meta}/>
-                <CandidateTable structures={data.structures}
-                                selectedCandidates={selectedCandidates}
-                                meta={data.meta}
-                                onCandidateSelection={this.onCandidateSelection}/>
-                <div style={{display: 'flex', height: '400px'}}>
-                    <div style={{height: '100%', flexBasis: 0, flexGrow: 1}}>
-                        <PerformanceTimeline data={data.structures} meta={data.meta}
-                                             selectedCandidates={selectedCandidates}
-                                             onCandidateSelection={this.onCandidateSelection}/>
+                <div style={{display: 'flex'}}>
+                    <div style={{flexGrow: 1, flexShrink: 0.25, margin: '5px', marginRight: '10px'}}>
+                        <div className={'container'}>
+                            <MetaInformationTable meta={data.meta}/>
+                        </div>
+                        <div className={'container'}>
+                            <PerformanceTimeline data={data.structures} meta={data.meta}
+                                                 selectedCandidates={selectedCandidates}
+                                                 onCandidateSelection={this.onCandidateSelection}/>
+                        </div>
+                        <div className={'container'}>
+                            <RocCurve selectedCandidates={selectedCandidates} meta={data.meta}/>
+                        </div>
                     </div>
-                    <div style={{height: '100%', flexBasis: 0, flexGrow: 1}}>
-                        <RocCurve selectedCandidates={selectedCandidates} meta={data.meta}/>
+                    <div style={{flexGrow: 2, margin: '5px', marginLeft: '10px'}}>
+                        <CandidateTable structures={data.structures}
+                                        selectedCandidates={selectedCandidates}
+                                        meta={data.meta}
+                                        onCandidateSelection={this.onCandidateSelection}/>
+
+                        <ParallelCoordinates runhistory={data}/>
+                        <BanditExplanationsComponent data={data.explanations.structures} pipelines={pipelines}
+                                                     selectedCandidates={selectedCandidates}
+                                                     structures={data.structures}
+                                                     onCandidateSelection={this.onCandidateSelection}/>
                     </div>
                 </div>
-
-                <BanditExplanationsComponent data={data.explanations.structures} pipelines={pipelines}
-                                             selectedCandidates={selectedCandidates} structures={data.structures}
-                                             onCandidateSelection={this.onCandidateSelection}/>
             </JupyterContext.Provider>
         )
     }

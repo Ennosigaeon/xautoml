@@ -43,7 +43,7 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
 
         return (
             <>
-                <TwoColumnLayout>
+                <TwoColumnLayout widthRight={'15%'}>
                     <>
                         <RawDataset model={model} onSampleClick={this.handleSampleSelection}/>
                         <FeatureImportanceComponent model={model} height={200}/>

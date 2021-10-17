@@ -1,7 +1,16 @@
 import React from 'react';
 import {CandidateId, MetaInformation, Structure} from "../model";
 import {fixedPrec} from "../util";
-import {FlexibleXYPlot, HorizontalGridLines, LineSeries, MarkSeries, VerticalGridLines, XAxis, YAxis} from "react-vis";
+import {
+    FlexibleWidthXYPlot,
+    FlexibleXYPlot,
+    HorizontalGridLines,
+    LineSeries,
+    MarkSeries,
+    VerticalGridLines,
+    XAxis, XYPlot,
+    YAxis
+} from "react-vis";
 import 'react-vis/dist/style.css'
 
 import * as d3 from 'd3'
@@ -77,22 +86,25 @@ export default class PerformanceTimeline extends React.Component<ConfigHistoryPr
         const incumbent = this.state.data.map(d => ({x: d.x, y: d.Incumbent}))
 
         return (
-            <FlexibleXYPlot>
-                <HorizontalGridLines/>
-                <VerticalGridLines/>
-                <XAxis title="Timestamp"/>
-                <YAxis title="Performance"/>
+            <>
+                <h4>Performance Timeline</h4>
+                <FlexibleWidthXYPlot height={300}>
+                    <HorizontalGridLines/>
+                    <VerticalGridLines/>
+                    <XAxis title="Timestamp"/>
+                    <YAxis title="Performance"/>
 
-                <LineSeries data={incumbent} curve={d3.curveStepAfter}/>
-                <MarkSeries data={dataWithColor} colorRange={['#007bff', '#c6c8e0']}
-                            onValueMouseOver={value => this.setState({hovered: value as ConfigRecord})}
-                            onValueMouseOut={() => this.setState({hovered: undefined})}
-                            onValueClick={this.onScatterClick}
-                />
+                    <LineSeries data={incumbent} curve={d3.curveStepAfter}/>
+                    <MarkSeries data={dataWithColor} colorRange={['#007bff', '#c6c8e0']}
+                                onValueMouseOver={value => this.setState({hovered: value as ConfigRecord})}
+                                onValueMouseOut={() => this.setState({hovered: undefined})}
+                                onValueClick={this.onScatterClick}
+                    />
 
-                {/*TODO hint is currently broken. Does not disappear on onValueMouseOut and shows information for wrong item*/}
-                {/*{this.state.hovered ? <Hint value={{'x': (this.state.hovered.x + 10), 'y': this.state.hovered.y}}/> : null}*/}
-            </FlexibleXYPlot>
+                    {/*TODO hint is currently broken. Does not disappear on onValueMouseOut and shows information for wrong item*/}
+                    {/*{this.state.hovered ? <Hint value={{'x': (this.state.hovered.x + 10), 'y': this.state.hovered.y}}/> : null}*/}
+                </FlexibleWidthXYPlot>
+            </>
         );
     }
 }

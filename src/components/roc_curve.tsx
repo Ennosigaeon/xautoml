@@ -3,7 +3,7 @@ import {CandidateId, MetaInformation} from "../model";
 import {CancelablePromise, CanceledPromiseError, requestRocCurve, RocCurveData} from "../handler";
 import {
     DiscreteColorLegend,
-    FlexibleXYPlot,
+    FlexibleWidthXYPlot,
     HorizontalGridLines,
     LineSeries,
     LineSeriesPoint,
@@ -79,6 +79,7 @@ export class RocCurve extends React.Component<RocCurveProps, RocCurveState> {
     }
 
     render() {
+        let content: JSX.Element
         if (this.state.data.size > 0) {
             const labels: string[] = []
             const data: any[] = []
@@ -91,8 +92,8 @@ export class RocCurve extends React.Component<RocCurveProps, RocCurveState> {
             const legend = <DiscreteColorLegend style={{position: 'absolute', right: '10px', bottom: '55px'}}
                                                 items={labels}/>
 
-            return (
-                <FlexibleXYPlot>
+            content = (
+                <FlexibleWidthXYPlot height={300}>
                     <HorizontalGridLines/>
                     <VerticalGridLines/>
                     <XAxis title="False Positive Rate"/>
@@ -100,11 +101,18 @@ export class RocCurve extends React.Component<RocCurveProps, RocCurveState> {
 
                     {data.map((s, idx) => <LineSeries key={labels[idx]} data={s}/>)}
                     {labels.length < 15 && legend}
-                </FlexibleXYPlot>
+                </FlexibleWidthXYPlot>
             )
         } else if (this.state.pendingRequest !== undefined)
-            return <LoadingIndicator loading={true}/>
+            content = <LoadingIndicator loading={true}/>
         else
-            return <p>No Configuration selected</p>
+            content = <p>No Configuration selected</p>
+
+        return (
+            <>
+                <h4>ROC Curve</h4>
+                {content}
+            </>
+        )
     }
 }
