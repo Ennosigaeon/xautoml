@@ -1,5 +1,5 @@
 import React from "react";
-import {MetaInformation} from "../model";
+import {ConfigValue, MetaInformation} from "../model";
 import {Collapse, IconButton} from "@material-ui/core";
 import KeyboardArrowUpIcon from "@material-ui/icons/KeyboardArrowUp";
 import KeyboardArrowDownIcon from "@material-ui/icons/KeyboardArrowDown";
@@ -38,6 +38,9 @@ export default class MetaInformationTable extends React.Component<MetaInformatio
         const end = new Date(0)
         end.setUTCSeconds(meta.end_time)
 
+        const configValues: [string, ConfigValue][] = []
+        meta.configuration.forEach((value, key) => configValues.push([key, value]))
+
         return (
             <div className={'overview'}>
                 <div style={{display: "flex"}}>
@@ -49,7 +52,8 @@ export default class MetaInformationTable extends React.Component<MetaInformatio
 
                 <Collapse in={this.state.overviewOpen}>
                     <div className={'overview-row'}>
-                        Data Set: <a href={`https://www.openml.org/t/${meta.openml_task}`} target={'_blank'}>Task {meta.openml_task} on fold {meta.openml_fold}</a>
+                        Data Set: <a href={`https://www.openml.org/t/${meta.openml_task}`}
+                                     target={'_blank'}>Task {meta.openml_task} on Fold {meta.openml_fold}</a>
                     </div>
                     <div className={'overview-row'}>
                         Start Time: {start.toLocaleString()}
@@ -81,19 +85,11 @@ export default class MetaInformationTable extends React.Component<MetaInformatio
                 </div>
 
                 <Collapse in={this.state.configOpen}>
-                    <div className={'overview-row'}>
-                        Wallclock Limit: {meta.wallclock_limit}
-                    </div>
-                    <div className={'overview-row'}>
-                        Cutoff Limit: {meta.cutoff}
-                    </div>
-                    <div className={'overview-row'}>
-                        {/* TODO */}
-                        Iterations: 10
-                    </div>
-                    <div className={'overview-row'}>
-                        Work Directory: {meta.model_dir}
-                    </div>
+                    {configValues.map(([key, value]) =>
+                        <div className={'overview-row'} key={key}>
+                            {key}: {value.toString()}
+                        </div>
+                    )}
                 </Collapse>
             </div>
         )

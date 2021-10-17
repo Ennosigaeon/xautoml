@@ -94,19 +94,22 @@ export class MetaInformation {
                 public readonly end_time: number,
                 public readonly metric: string,
                 public readonly metric_sign: number,
-                public readonly cutoff: number,
                 public readonly openml_task: number,
                 public readonly openml_fold: number,
-                public readonly wallclock_limit: number,
                 public readonly n_structures: number,
                 public readonly n_configs: number,
                 public readonly iterations: {},
                 public readonly model_dir: string,
-                public readonly data_file: string) {
+                public readonly data_file: string,
+                public readonly configuration: Map<string, ConfigValue>) {
     }
 
     static fromJson(meta: MetaInformation): MetaInformation {
-        return new MetaInformation('dswizard', meta.start_time, meta.end_time, meta.metric, meta.metric_sign, meta.cutoff, meta.openml_task, meta.openml_fold, meta.wallclock_limit, meta.n_structures, meta.n_configs, meta.iterations, meta.model_dir, meta.data_file)
+        return new MetaInformation('dswizard', meta.start_time, meta.end_time, meta.metric, meta.metric_sign,
+            meta.openml_task, meta.openml_fold, meta.n_structures, meta.n_configs, meta.iterations, meta.model_dir,
+            meta.data_file,
+            // TODO fill with actual values
+            new Map<string, ConfigValue>([['Work Dir.', meta.model_dir], ['foo', 1], ['bar', true]]))
     }
 }
 
