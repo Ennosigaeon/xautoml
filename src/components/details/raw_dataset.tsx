@@ -6,6 +6,7 @@ import {DetailsModel} from "./model";
 import {TwoColumnLayout} from "../../util/layout";
 import {JupyterButton} from "../../util/jupyter-button";
 import {JupyterContext} from "../../util";
+import {ErrorIndicator} from "../../util/error";
 
 
 interface RawDatasetProps {
@@ -16,6 +17,7 @@ interface RawDatasetProps {
 interface RawDatasetState {
     loadingDf: boolean
     outputs: OutputDescriptionData
+    error: Error
 }
 
 export class RawDataset extends React.Component<RawDatasetProps, RawDatasetState> {
@@ -27,7 +29,7 @@ export class RawDataset extends React.Component<RawDatasetProps, RawDatasetState
 
     constructor(props: RawDatasetProps) {
         super(props);
-        this.state = {loadingDf: false, outputs: new Map<string, string>()}
+        this.state = {loadingDf: false, outputs: new Map<string, string>(), error: undefined}
 
         this.handleSampleClick = this.handleSampleClick.bind(this)
         this.handleLoadDataframe = this.handleLoadDataframe.bind(this)
@@ -64,10 +66,9 @@ export class RawDataset extends React.Component<RawDatasetProps, RawDatasetState
             this.setState({loadingDf: true})
             requestOutputComplete(candidate.id, meta.data_file, meta.model_dir)
                 .then(data => this.setState({outputs: data, loadingDf: false}))
-                .catch(reason => {
-                    // TODO handle error
-                    console.error(`Failed to fetch output data.\n${reason}`);
-                    this.setState({loadingDf: false})
+                .catch(error => {
+                    console.error(`Failed to fetch output data: \n${error.name}: ${error.message}`);
+                    this.setState({error: error})
                 });
         }
     }
@@ -103,7 +104,7 @@ xautoml_df
 
     render() {
         const {component, algorithm} = this.props.model
-        const {loadingDf, outputs} = this.state
+        const {loadingDf, outputs, error} = this.state
 
         const outputRender = outputs.has(component) ?
             <div style={{overflowX: 'auto'}}>
@@ -121,8 +122,13 @@ xautoml_df
                                    onClickHandler={this.handleLoadDataframe}/>
                     }
                 </TwoColumnLayout>
-                <LoadingIndicator loading={loadingDf}/>
-                {!loadingDf && outputRender}
+                <ErrorIndicator error={error}/>
+                {!error &&
+                <>
+                    <LoadingIndicator loading={loadingDf}/>
+                    {!loadingDf && outputRender}
+                </>}
+
             </>
         )
     }

@@ -11,6 +11,7 @@ import {
 import {FeatureImportance, requestFeatureImportance} from "../../handler";
 import {LoadingIndicator} from "../loading";
 import {DetailsModel} from "./model";
+import {ErrorIndicator} from "../../util/error";
 
 
 interface FeatureImportanceProps {
@@ -20,6 +21,7 @@ interface FeatureImportanceProps {
 
 interface FeatureImportanceState {
     data: Map<string, FeatureImportance>
+    error: Error
 }
 
 export class FeatureImportanceComponent extends React.Component<FeatureImportanceProps, FeatureImportanceState> {
@@ -27,7 +29,7 @@ export class FeatureImportanceComponent extends React.Component<FeatureImportanc
     constructor(props: FeatureImportanceProps) {
         super(props);
 
-        this.state = {data: new Map<string, FeatureImportance>()}
+        this.state = {data: new Map<string, FeatureImportance>(), error: undefined}
     }
 
     componentDidMount() {
@@ -44,18 +46,19 @@ export class FeatureImportanceComponent extends React.Component<FeatureImportanc
         if (!component || this.state.data.has(component))
             return
 
+        this.setState({error: undefined})
         const promise = requestFeatureImportance(candidate.id, meta.data_file, meta.model_dir, component)
 
         promise
             .then(data => this.setState((state) => ({data: state.data.set(component, data)})))
-            .catch(reason => {
-                // TODO handle error
-                console.error(`Failed to fetch FeatureImportance data.\n${reason}`)
+            .catch(error => {
+                console.error(`Failed to fetch FeatureImportance data.\n${error.name}: ${error.message}`)
+                this.setState({error: error})
             });
     }
 
     render() {
-        const {data} = this.state
+        const {data, error} = this.state
         const {component} = this.props.model
 
         const bars: LabelSeriesPoint[] = []
@@ -69,17 +72,22 @@ export class FeatureImportanceComponent extends React.Component<FeatureImportanc
         return (
             <>
                 <h4>Feature Importance</h4>
-                <LoadingIndicator loading={bars.length === 0}/>
-                {bars.length > 0 &&
-                <div style={{height: `${this.props.height}px`}}>
-                    <FlexibleXYPlot xType="ordinal" margin={{bottom: maxLabelLength}}>
-                        <VerticalGridLines/>
-                        <HorizontalGridLines/>
-                        <XAxis tickLabelAngle={330}/>
-                        <YAxis/>
-                        <VerticalBarSeries data={bars} barWidth={0.75}/>
-                    </FlexibleXYPlot>
-                </div>
+                <ErrorIndicator error={error}/>
+                {!error &&
+                <>
+                    <LoadingIndicator loading={bars.length === 0}/>
+                    {bars.length > 0 &&
+                    <div style={{height: `${this.props.height}px`}}>
+                        <FlexibleXYPlot xType="ordinal" margin={{bottom: maxLabelLength}}>
+                            <VerticalGridLines/>
+                            <HorizontalGridLines/>
+                            <XAxis tickLabelAngle={330}/>
+                            <YAxis/>
+                            <VerticalBarSeries data={bars} barWidth={0.75}/>
+                        </FlexibleXYPlot>
+                    </div>
+                    }
+                </>
                 }
             </>
         );

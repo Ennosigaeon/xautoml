@@ -28,7 +28,14 @@ class BaseHandler(APIHandler):
         model = self.get_json_body()
 
         if model is not None:
-            self._process_post(model)
+            try:
+                self._process_post(model)
+            except FileNotFoundError as ex:
+                self.set_status(500)
+                self.finish({'name': type(ex).__name__, 'message': '{} can not be read'.format(ex.filename)})
+            except Exception as ex:
+                self.set_status(500)
+                self.finish({'name': type(ex).__name__, 'message': 'Unhandled exception {}'.format(ex)})
         else:
             self.set_status(400)
             self.finish()

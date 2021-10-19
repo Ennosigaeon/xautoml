@@ -4,8 +4,9 @@ import * as dagre from "dagre";
 import {graphlib} from "dagre";
 import {fixedPrec, normalizeComponent} from "../util";
 import {Table, TableBody, TableCell, TableRow, Tooltip, Typography} from "@material-ui/core";
-import {OutputDescriptionData, requestOutputDescription} from "../handler";
+import {OutputDescriptionData, requestOutputDescription, ServerError} from "../handler";
 import {LoadingIndicator} from "./loading";
+import {ErrorIndicator} from "../util/error";
 
 
 interface StructureGraphProps {
@@ -18,6 +19,7 @@ interface StructureGraphProps {
 interface StructureGraphState {
     loading: boolean
     outputs: OutputDescriptionData
+    error: Error
 }
 
 export class StructureGraphComponent extends React.Component<StructureGraphProps, StructureGraphState> {
@@ -28,7 +30,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
     constructor(props: StructureGraphProps) {
         super(props);
 
-        this.state = {loading: false, outputs: new Map<string, string>()}
+        this.state = {loading: false, outputs: new Map<string, string>(), error: undefined}
         this.fetchOutputs = this.fetchOutputs.bind(this)
     }
 
@@ -45,10 +47,9 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
         this.setState({loading: true})
         requestOutputDescription(this.props.candidate.id, this.props.meta.data_file, this.props.meta.model_dir)
             .then(data => this.setState({outputs: data, loading: false}))
-            .catch(reason => {
-                // TODO handle error
-                console.error(`Failed to fetch output data.\n${reason}`);
-                this.setState({loading: false})
+            .catch(error => {
+                console.error(`Failed to fetch output data.\n${error.name}: ${error.message}`);
+                this.setState({error: error})
             });
     }
 
@@ -58,6 +59,8 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
 
     render() {
         const {structure, candidate} = this.props
+        const {outputs, loading, error} = this.state
+
         const nodeDimensions = {width: 100, height: 40}
         const margin = {top: 5, left: 10}
 
@@ -128,15 +131,20 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
                             </Table>
                         </> : <Typography color="inherit" component={'h4'}>No Configuration</Typography>
 
-                        const output = this.state.outputs.has(id) ?
-                            <div dangerouslySetInnerHTML={{__html: this.state.outputs.get(id)}}/> : <div>Missing</div>
+                        const output = outputs.has(id) ?
+                            <div dangerouslySetInnerHTML={{__html: outputs.get(id)}}/> : <div>Missing</div>
 
                         const tooltipContent = <>
                             {configuration}
                             <hr/>
                             <Typography color="inherit" component={'h4'}>Output</Typography>
-                            <LoadingIndicator loading={this.state.loading}/>
-                            {!this.state.loading && output}
+
+                            <ErrorIndicator error={error}/>
+                            {!error &&
+                            <>
+                                <LoadingIndicator loading={loading}/>
+                                {!loading && output}
+                            </>}
                         </>
 
                         return <g key={id}

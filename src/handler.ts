@@ -4,6 +4,15 @@ import {ServerConnection} from '@jupyterlab/services';
 import {CandidateId} from "./model";
 import {LineSeriesPoint} from "react-vis";
 
+export class ServerError extends Error {
+
+    constructor(public readonly response: Response, name?: string, message?: string, public readonly traceback?: string) {
+        super(message);
+        if (name)
+            super.name = name
+    }
+}
+
 
 export class CanceledPromiseError extends Error {
     constructor() {
@@ -69,7 +78,7 @@ export async function requestAPI<T>(
     }
 
     if (!response.ok) {
-        throw new ServerConnection.ResponseError(response, data.message || data);
+        throw new ServerError(response, data?.name, data?.message)
     }
 
     return data;

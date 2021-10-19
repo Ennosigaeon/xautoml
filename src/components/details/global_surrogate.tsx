@@ -12,6 +12,7 @@ import * as d3 from "d3";
 import {CollapsiblePointNode, GraphEdge, GraphNode, HierarchicalTree} from "../tree_structure";
 import {fixedPrec} from "../../util";
 import Slider from "rc-slider";
+import {ErrorIndicator} from "../../util/error";
 
 
 const NODE_HEIGHT = 45;
@@ -25,6 +26,7 @@ interface GlobalSurrogateState {
     pendingRequest: CancelablePromise<DecisionTreeResult>
     data: DecisionTreeResult
     maxLeaves: number
+    error: Error
 }
 
 
@@ -34,7 +36,7 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
 
     constructor(props: GlobalSurrogateProps) {
         super(props);
-        this.state = {pendingRequest: undefined, data: undefined, maxLeaves: 10}
+        this.state = {pendingRequest: undefined, data: undefined, maxLeaves: 10, error: undefined}
 
         this.onMaxLeavesChange = this.onMaxLeavesChange.bind(this)
     }
@@ -56,17 +58,16 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
             return
 
         const promise = requestGlobalSurrogate(candidate.id, meta.data_file, meta.model_dir, component, this.state.maxLeaves)
-        this.setState({pendingRequest: promise, data: undefined})
+        this.setState({pendingRequest: promise, data: undefined, error: undefined})
 
         promise
             .then(data => {
                 this.setState({data: data, pendingRequest: undefined})
             })
-            .catch(reason => {
-                if (!(reason instanceof CanceledPromiseError)) {
-                    // TODO handle error
-                    console.error(`Failed to fetch DecisionTreeResult data.\n${reason}`)
-                    this.setState({pendingRequest: undefined})
+            .catch(error => {
+                if (!(error instanceof CanceledPromiseError)) {
+                    console.error(`Failed to fetch DecisionTreeResult data.\n${error.name}: ${error.message}`)
+                    this.setState({error: error, pendingRequest: undefined})
                 } else {
                     console.log('Cancelled promise due to user request')
                 }
@@ -102,7 +103,7 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
     }
 
     render() {
-        const {data, pendingRequest, maxLeaves} = this.state
+        const {data, pendingRequest, maxLeaves, error} = this.state
 
         const marks: any = {}
         this.ticks.forEach((v, idx) => marks[idx] = v)
@@ -121,23 +122,27 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
                                 onAfterChange={this.onMaxLeavesChange}/>
                     </div>
                 </div>
-                <LoadingIndicator loading={!!pendingRequest}/>
 
-                {data?.root.children.length === 0 &&
-                <p>Decision Tree approximation not available for the actual predictions.</p>
-                }
-
-                {data?.root.children.length > 0 &&
+                <ErrorIndicator error={error}/>
+                {!error &&
                 <>
-                    <p><strong>Fidelity:</strong> {fixedPrec(data.fidelity)}</p>
-                    <p><strong>Leave Nodes:</strong> {data.n_leaves}</p>
-                    <HierarchicalTree nodeHeight={NODE_HEIGHT}
-                                      nodeWidth={NODE_WIDTH}
-                                      data={d3.hierarchy(data.root, d => d.children)}
-                                      render={this.renderNodes}/>
-                </>
+                    <LoadingIndicator loading={!!pendingRequest}/>
 
-                }
+                    {data?.root.children.length === 0 &&
+                    <p>Decision Tree approximation not available for the actual predictions.</p>
+                    }
+
+                    {data?.root.children.length > 0 &&
+                    <>
+                        <p><strong>Fidelity:</strong> {fixedPrec(data.fidelity)}</p>
+                        <p><strong>Leave Nodes:</strong> {data.n_leaves}</p>
+                        <HierarchicalTree nodeHeight={NODE_HEIGHT}
+                                          nodeWidth={NODE_WIDTH}
+                                          data={d3.hierarchy(data.root, d => d.children)}
+                                          render={this.renderNodes}/>
+                    </>
+                    }
+                </>}
             </>
         )
     }

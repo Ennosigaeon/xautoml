@@ -14,6 +14,7 @@ import {CancelablePromise, CanceledPromiseError, Label, LimeResult, requestLimeA
 import {Colors} from "../../util";
 import {LoadingIndicator} from "../loading";
 import {DetailsModel} from "./model";
+import {ErrorIndicator} from "../../util/error";
 
 
 interface LimeProps {
@@ -24,13 +25,14 @@ interface LimeState {
     selectedLabel: Label
     pendingRequest: CancelablePromise<LimeResult>
     data: LimeResult
+    error: Error
 }
 
 export class LimeComponent extends React.Component<LimeProps, LimeState> {
 
     constructor(props: LimeProps) {
         super(props);
-        this.state = {selectedLabel: undefined, pendingRequest: undefined, data: undefined}
+        this.state = {selectedLabel: undefined, pendingRequest: undefined, data: undefined, error: undefined}
 
         this.onLabelClick = this.onLabelClick.bind(this)
     }
@@ -52,15 +54,14 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
             return
 
         const promise = requestLimeApproximation(candidate.id, idx, meta.data_file, meta.model_dir, component)
-        this.setState({pendingRequest: promise, data: undefined, selectedLabel: undefined})
+        this.setState({pendingRequest: promise, data: undefined, selectedLabel: undefined, error: undefined})
 
         promise
             .then(data => this.setState({data: data, pendingRequest: undefined, selectedLabel: data.label}))
-            .catch(reason => {
-                if (!(reason instanceof CanceledPromiseError)) {
-                    // TODO handle error
-                    console.error(`Failed to fetch LimeResult data.\n${reason}`)
-                    this.setState({pendingRequest: undefined})
+            .catch(error => {
+                if (!(error instanceof CanceledPromiseError)) {
+                    console.error(`Failed to fetch LimeResult data.\n${error.name}: ${error.message}`)
+                    this.setState({error: error, pendingRequest: undefined})
                 } else {
                     console.log('Cancelled promise due to user request')
                 }
@@ -74,7 +75,7 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
 
     render() {
         const {selectedSample} = this.props.model
-        const {selectedLabel, data, pendingRequest} = this.state
+        const {selectedLabel, data, pendingRequest, error} = this.state
 
         const probs: any[] = []
         data?.prob.forEach((p, label) => probs.push({x: label, y: p, color: +(label == selectedLabel)}))
@@ -94,73 +95,77 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
         return (
             <div className={'lime'} style={{height: '100%'}}>
                 <h4>Local Approximation</h4>
-                <LoadingIndicator loading={!!pendingRequest}/>
-
-                {!pendingRequest && !selectedSample &&
-                <p>Select a data set sample to calculate a local model approximation (LIME).</p>
-                }
-
-                {data?.expl.size === 0 &&
-                <p>LIME explanations are not available for the actual predictions.</p>
-                }
-
-                {data?.expl.size > 0 &&
+                <ErrorIndicator error={error}/>
+                {!error &&
                 <>
-                    <div style={{height: '33%', display: 'flex', flexDirection: 'column'}}>
-                        <h5>Predicted Class Probabilities</h5>
-                        <FlexibleHeightXYPlot
-                            xType="ordinal"
-                            width={300}
-                            colorRange={[Colors.DEFAULT, Colors.HIGHLIGHT]}
-                            style={{flexGrow: 1}}
-                        >
-                            <VerticalGridLines/>
-                            <HorizontalGridLines/>
-                            <XAxis tickFormat={tickFormat}/>
-                            <YAxis/>
-                            <VerticalBarSeries
-                                barWidth={0.75}
-                                data={probs}
-                                onValueClick={this.onLabelClick}
-                            />
-                        </FlexibleHeightXYPlot>
-                    </div>
+                    <LoadingIndicator loading={!!pendingRequest}/>
 
-                    <hr/>
+                    {!pendingRequest && !selectedSample &&
+                    <p>Select a data set sample to calculate a local model approximation (LIME).</p>
+                    }
 
-                    <div style={{height: '50%', display: 'flex', flexDirection: 'column'}}>
-                        <h5>Explanations for Class {selectedLabel}</h5>
-                        <FlexibleHeightXYPlot
-                            yType="ordinal"
-                            width={300}
-                            margin={{left: maxLabelLength, top: 20}}
-                            style={{flexGrow: 1}}
-                        >
-                            <VerticalGridLines/>
-                            <HorizontalGridLines/>
-                            <XAxis/>
-                            <YAxis/>
-                            <HorizontalBarSeries
-                                barWidth={0.75}
-                                data={expl}
-                            />
+                    {data?.expl.size === 0 &&
+                    <p>LIME explanations are not available for the actual predictions.</p>
+                    }
 
-                            <ChartLabel
-                                text={`Not ${selectedLabel}`}
-                                includeMargin={false}
-                                xPercent={-0.33}
-                                yPercent={0.05}
-                            />
-                            <ChartLabel
-                                text={selectedLabel.toString()}
-                                includeMargin={false}
-                                xPercent={0.9}
-                                yPercent={0.05}
-                            />
-                        </FlexibleHeightXYPlot>
-                    </div>
-                </>
-                }
+                    {data?.expl.size > 0 &&
+                    <>
+                        <div style={{height: '33%', display: 'flex', flexDirection: 'column'}}>
+                            <h5>Predicted Class Probabilities</h5>
+                            <FlexibleHeightXYPlot
+                                xType="ordinal"
+                                width={300}
+                                colorRange={[Colors.DEFAULT, Colors.HIGHLIGHT]}
+                                style={{flexGrow: 1}}
+                            >
+                                <VerticalGridLines/>
+                                <HorizontalGridLines/>
+                                <XAxis tickFormat={tickFormat}/>
+                                <YAxis/>
+                                <VerticalBarSeries
+                                    barWidth={0.75}
+                                    data={probs}
+                                    onValueClick={this.onLabelClick}
+                                />
+                            </FlexibleHeightXYPlot>
+                        </div>
+
+                        <hr/>
+
+                        <div style={{height: '50%', display: 'flex', flexDirection: 'column'}}>
+                            <h5>Explanations for Class {selectedLabel}</h5>
+                            <FlexibleHeightXYPlot
+                                yType="ordinal"
+                                width={300}
+                                margin={{left: maxLabelLength, top: 20}}
+                                style={{flexGrow: 1}}
+                            >
+                                <VerticalGridLines/>
+                                <HorizontalGridLines/>
+                                <XAxis/>
+                                <YAxis/>
+                                <HorizontalBarSeries
+                                    barWidth={0.75}
+                                    data={expl}
+                                />
+
+                                <ChartLabel
+                                    text={`Not ${selectedLabel}`}
+                                    includeMargin={false}
+                                    xPercent={-0.33}
+                                    yPercent={0.05}
+                                />
+                                <ChartLabel
+                                    text={selectedLabel.toString()}
+                                    includeMargin={false}
+                                    xPercent={0.9}
+                                    yPercent={0.05}
+                                />
+                            </FlexibleHeightXYPlot>
+                        </div>
+                    </>
+                    }
+                </>}
             </div>
         )
     }
