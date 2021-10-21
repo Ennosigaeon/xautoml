@@ -11,6 +11,7 @@ import {CandidateTable} from "./components/candidate_table";
 import {Jupyter} from "./jupyter";
 import {ParallelCoordinates} from "./components/pc/parallel_corrdinates";
 import {LoadingIndicator} from "./components/loading";
+import {CollapseComp} from "./util/collapse";
 
 
 /**
@@ -108,20 +109,20 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
         return (
             <JupyterContext.Provider value={jupyter}>
                 <div style={{display: 'flex'}}>
-                    <div style={{flexGrow: 1, flexShrink: 0.25, margin: '5px', marginRight: '10px'}}>
-                        <div className={'container'}>
-                            <MetaInformationTable meta={data.meta}/>
-                        </div>
-                        <div className={'container'}>
+                    <div style={{flexGrow: 1, flexShrink: 0.25, marginRight: '20px'}}>
+                        <MetaInformationTable meta={data.meta}/>
+                        <CollapseComp showInitial={true}>
+                            <h4>Performance Timeline</h4>
                             <PerformanceTimeline data={data.structures} meta={data.meta}
                                                  selectedCandidates={selectedCandidates}
                                                  onCandidateSelection={this.onCandidateSelection}/>
-                        </div>
-                        <div className={'container'}>
+                        </CollapseComp>
+                        <CollapseComp showInitial={true}>
+                            <h4>ROC Curve</h4>
                             <RocCurve selectedCandidates={selectedCandidates} meta={data.meta}/>
-                        </div>
+                        </CollapseComp>
                     </div>
-                    <div style={{flexGrow: 2, margin: '5px', marginLeft: '10px'}}>
+                    <div style={{flexGrow: 2}}>
                         <CandidateTable structures={data.structures}
                                         selectedCandidates={selectedCandidates}
                                         meta={data.meta}

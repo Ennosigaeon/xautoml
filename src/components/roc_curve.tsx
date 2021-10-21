@@ -23,6 +23,7 @@ interface RocCurveProps {
 
 interface RocCurveState {
     data: Map<string, LineSeriesPoint[]>
+    pendingCount: number
     pendingRequest: CancelablePromise<RocCurveData>
     error: Error
 }
@@ -32,7 +33,12 @@ export class RocCurve extends React.Component<RocCurveProps, RocCurveState> {
     constructor(props: RocCurveProps) {
         super(props)
 
-        this.state = {data: new Map<string, LineSeriesPoint[]>(), pendingRequest: undefined, error: undefined}
+        this.state = {
+            data: new Map<string, LineSeriesPoint[]>(),
+            pendingRequest: undefined,
+            error: undefined,
+            pendingCount: 0
+        }
     }
 
     componentDidUpdate(prevProps: Readonly<RocCurveProps>, prevState: Readonly<RocCurveState>, snapshot?: any) {
@@ -62,7 +68,7 @@ export class RocCurve extends React.Component<RocCurveProps, RocCurveState> {
             // Fetch new selected candidates
             if (newCandidates.length > 0) {
                 const promise = requestRocCurve(newCandidates, this.props.meta.data_file, this.props.meta.model_dir)
-                this.setState({pendingRequest: promise, error: undefined})
+                this.setState({pendingRequest: promise, error: undefined, pendingCount: newCandidates.length})
 
                 promise
                     .then(data => {
@@ -83,10 +89,12 @@ export class RocCurve extends React.Component<RocCurveProps, RocCurveState> {
     }
 
     render() {
-        const {data, pendingRequest, error} = this.state
+        const {data, pendingRequest, pendingCount, error} = this.state
 
         let content: JSX.Element
-        if (data.size > 0) {
+        if (pendingRequest !== undefined && pendingCount > 2)
+            content = <LoadingIndicator loading={true}/>
+        else if (data.size > 0) {
             const labels: string[] = []
             const data: any[] = []
             this.state.data.forEach((v, k) => {
@@ -109,14 +117,11 @@ export class RocCurve extends React.Component<RocCurveProps, RocCurveState> {
                     {labels.length < 15 && legend}
                 </FlexibleWidthXYPlot>
             )
-        } else if (pendingRequest !== undefined)
-            content = <LoadingIndicator loading={true}/>
-        else
+        } else
             content = <p>No Configuration selected</p>
 
         return (
             <>
-                <h4>ROC Curve</h4>
                 <ErrorIndicator error={error}/>
                 {!error && content}
             </>

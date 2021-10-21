@@ -7,6 +7,7 @@ import {FeatureImportanceComponent} from "./details/feature_importance";
 import {RawDataset} from "./details/raw_dataset";
 import {DetailsModel} from "./details/model";
 import {GlobalSurrogateComponent} from "./details/global_surrogate";
+import {CollapseComp} from "../util/collapse";
 
 interface DataSetDetailsProps {
     candidate: Candidate
@@ -16,6 +17,9 @@ interface DataSetDetailsProps {
 
 interface DataSetDetailsState {
     selectedSample: number
+
+    showFeatureImportance: boolean
+    showGlobalSurrogate: boolean
 }
 
 export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps, DataSetDetailsState> {
@@ -26,13 +30,23 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
 
     constructor(props: DataSetDetailsProps) {
         super(props);
-        this.state = {selectedSample: undefined}
+        this.state = {selectedSample: undefined, showFeatureImportance: true, showGlobalSurrogate: true}
 
         this.handleSampleSelection = this.handleSampleSelection.bind(this)
+        this.toggleFeatureImportance = this.toggleFeatureImportance.bind(this)
+        this.toggleGlobalSurrogate = this.toggleGlobalSurrogate.bind(this)
     }
 
     private handleSampleSelection(idx: number) {
         this.setState({selectedSample: idx})
+    }
+
+    private toggleFeatureImportance() {
+        this.setState((state) => ({showFeatureImportance: !state.showFeatureImportance}))
+    }
+
+    private toggleGlobalSurrogate() {
+        this.setState((state) => ({showGlobalSurrogate: !state.showGlobalSurrogate}))
     }
 
     render() {
@@ -43,16 +57,23 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
 
         return (
             <>
-                <TwoColumnLayout widthRight={'15%'}>
-                    <>
+                <CollapseComp showInitial={true}>
+                    <h4>Data Set Preview</h4>
+                    <TwoColumnLayout widthRight={'15%'}>
                         <RawDataset model={model} onSampleClick={this.handleSampleSelection}/>
-                        <FeatureImportanceComponent model={model} height={200}/>
-                        <GlobalSurrogateComponent model={model}/>
-                    </>
-                    <>
                         <LimeComponent model={model}/>
-                    </>
-                </TwoColumnLayout>
+                    </TwoColumnLayout>
+                </CollapseComp>
+
+                <CollapseComp showInitial={true}>
+                    <h4>Feature Importance</h4>
+                    <FeatureImportanceComponent model={model} height={200}/>
+                </CollapseComp>
+
+                <CollapseComp showInitial={true}>
+                    <h4>Global Approximation</h4>
+                    <GlobalSurrogateComponent model={model}/>
+                </CollapseComp>
             </>
         )
     }

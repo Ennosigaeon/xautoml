@@ -110,19 +110,6 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
 
         return (
             <>
-                <div style={{display: 'flex'}}>
-                    <div style={{flexGrow: 1}}>
-                        <h4>Global Approximation</h4>
-                    </div>
-                    <div style={{padding: '10px', flexGrow: 2}}>
-                        <span>Max. Leaf Nodes</span>
-                        <Slider min={0} max={this.ticks.length - 1}
-                                defaultValue={this.ticks.indexOf(maxLeaves)}
-                                step={null} marks={marks}
-                                onAfterChange={this.onMaxLeavesChange}/>
-                    </div>
-                </div>
-
                 <ErrorIndicator error={error}/>
                 {!error &&
                 <>
@@ -134,8 +121,21 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
 
                     {data?.root.children.length > 0 &&
                     <>
-                        <p><strong>Fidelity:</strong> {fixedPrec(data.fidelity)}</p>
-                        <p><strong>Leave Nodes:</strong> {data.n_leaves}</p>
+                        <div style={{display: 'flex'}}>
+                            <div style={{flexGrow: 1}}>
+                                <div style={{display: "flex", flexDirection: "column", justifyContent: "space-between"}}>
+                                    <p><strong>Fidelity:</strong> {fixedPrec(data.fidelity)}</p>
+                                    <p><strong>Leave Nodes:</strong> {data.n_leaves}</p>
+                                </div>
+                            </div>
+                            <div style={{padding: '0 10px 1em', flexGrow: 2}}>
+                                <span>Max. Leaf Nodes</span>
+                                <Slider min={0} max={this.ticks.length - 1}
+                                        defaultValue={this.ticks.indexOf(maxLeaves)}
+                                        step={null} marks={marks}
+                                        onAfterChange={this.onMaxLeavesChange}/>
+                            </div>
+                        </div>
                         <HierarchicalTree nodeHeight={NODE_HEIGHT}
                                           nodeWidth={NODE_WIDTH}
                                           data={d3.hierarchy(data.root, d => d.children)}

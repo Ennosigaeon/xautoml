@@ -3,12 +3,11 @@ import {CandidateId, MetaInformation, Structure} from "../model";
 import {fixedPrec} from "../util";
 import {
     FlexibleWidthXYPlot,
-    FlexibleXYPlot,
     HorizontalGridLines,
     LineSeries,
     MarkSeries,
     VerticalGridLines,
-    XAxis, XYPlot,
+    XAxis,
     YAxis
 } from "react-vis";
 import 'react-vis/dist/style.css'
@@ -77,17 +76,23 @@ export default class PerformanceTimeline extends React.Component<ConfigHistoryPr
     }
 
     render() {
-        if (this.state.data.length === 0)
-            return <p>Loading...</p>
-        const dataWithColor = this.state.data.map(d => ({
-            ...d,
-            color: Number(!this.props.selectedCandidates.has(d.cid))
-        }));
-        const incumbent = this.state.data.map(d => ({x: d.x, y: d.Incumbent}))
+        const {data} = this.state
+        const {selectedCandidates} = this.props
 
+        if (data.length === 0)
+            return <p>Loading...</p>
+        const dataWithColor = data.map(d => ({
+            ...d,
+            color: Number(!selectedCandidates.has(d.cid))
+        }));
+        const incumbent = data.map(d => ({x: d.x, y: d.Incumbent}))
+
+        const bc = '#c6c8e0'
+        const hc = '#007bff'
+        // Somehow, if all points are selected only the base color is used and not the highlight color. Bug in react-vis?
+        const colorRange = data.length === selectedCandidates.size ? [hc, hc] : [hc, bc]
         return (
             <>
-                <h4>Performance Timeline</h4>
                 <FlexibleWidthXYPlot height={300}>
                     <HorizontalGridLines/>
                     <VerticalGridLines/>
@@ -95,7 +100,7 @@ export default class PerformanceTimeline extends React.Component<ConfigHistoryPr
                     <YAxis title="Performance"/>
 
                     <LineSeries data={incumbent} curve={d3.curveStepAfter}/>
-                    <MarkSeries data={dataWithColor} colorRange={['#007bff', '#c6c8e0']}
+                    <MarkSeries data={dataWithColor} colorRange={colorRange}
                                 onValueMouseOver={value => this.setState({hovered: value as ConfigRecord})}
                                 onValueMouseOut={() => this.setState({hovered: undefined})}
                                 onValueClick={this.onScatterClick}

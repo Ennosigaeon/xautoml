@@ -1,13 +1,13 @@
 import React from "react";
 import {
     ChartLabel,
-    FlexibleHeightXYPlot,
+    FlexibleWidthXYPlot,
     HorizontalBarSeries,
     HorizontalGridLines,
-    RVTickFormat,
     VerticalBarSeries,
     VerticalGridLines,
     XAxis,
+    XYPlot,
     YAxis
 } from "react-vis";
 import {CancelablePromise, CanceledPromiseError, Label, LimeResult, requestLimeApproximation} from "../../handler";
@@ -15,6 +15,7 @@ import {Colors} from "../../util";
 import {LoadingIndicator} from "../loading";
 import {DetailsModel} from "./model";
 import {ErrorIndicator} from "../../util/error";
+import {CollapseComp} from "../../util/collapse";
 
 
 interface LimeProps {
@@ -83,14 +84,13 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
         let maxLabelLength = 0
         const expl: any[] = data?.expl.get(selectedLabel.toString())
             ?.map(([label, score]) => {
-                maxLabelLength = Math.max(maxLabelLength, label.length * 7)
+                maxLabelLength = Math.max(maxLabelLength, label.length * 6)
                 return {x: score, y: label}
             })
             .reverse()
 
-        // @ts-ignore
-        const tickFormat: RVTickFormat = (tick: string) => tick == data.label ?
-            <tspan fontSizeAdjust={1} fontWeight={'bold'}>{tick}</tspan> : tick
+        const nrClasses = data?.expl.size
+        const nrExpl = data?.expl.get(selectedLabel.toString()).length
 
         return (
             <div className={'lime'} style={{height: '100%'}}>
@@ -109,36 +109,37 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
                     }
 
                     {data?.expl.size > 0 &&
-                    <>
-                        <div style={{height: '33%', display: 'flex', flexDirection: 'column'}}>
+                    <div style={{minWidth: "200px"}}>
+                        <CollapseComp showInitial={true}>
                             <h5>Predicted Class Probabilities</h5>
-                            <FlexibleHeightXYPlot
-                                xType="ordinal"
-                                width={300}
-                                colorRange={[Colors.DEFAULT, Colors.HIGHLIGHT]}
-                                style={{flexGrow: 1}}
-                            >
-                                <VerticalGridLines/>
-                                <HorizontalGridLines/>
-                                <XAxis tickFormat={tickFormat}/>
-                                <YAxis/>
-                                <VerticalBarSeries
-                                    barWidth={0.75}
-                                    data={probs}
-                                    onValueClick={this.onLabelClick}
-                                />
-                            </FlexibleHeightXYPlot>
-                        </div>
+                            <>
+                                <FlexibleWidthXYPlot
+                                    xType="ordinal"
+                                    height={200}
+                                    colorRange={[Colors.DEFAULT, Colors.HIGHLIGHT]}
+                                    style={{flexGrow: 1}}
+                                >
+                                    <VerticalGridLines/>
+                                    <HorizontalGridLines/>
+                                    <XAxis/>
+                                    <YAxis/>
+                                    <VerticalBarSeries
+                                        barWidth={0.75}
+                                        data={probs}
+                                        onValueClick={this.onLabelClick}
+                                    />
+                                </FlexibleWidthXYPlot>
+                                <p>Correct Class: {data.label}</p>
+                            </>
+                        </CollapseComp>
 
-                        <hr/>
-
-                        <div style={{height: '50%', display: 'flex', flexDirection: 'column'}}>
+                        <CollapseComp showInitial={true}>
                             <h5>Explanations for Class {selectedLabel}</h5>
-                            <FlexibleHeightXYPlot
+                            <XYPlot
                                 yType="ordinal"
-                                width={300}
+                                width={nrClasses * 35 + maxLabelLength}
+                                height={nrExpl * 30}
                                 margin={{left: maxLabelLength, top: 20}}
-                                style={{flexGrow: 1}}
                             >
                                 <VerticalGridLines/>
                                 <HorizontalGridLines/>
@@ -152,18 +153,18 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
                                 <ChartLabel
                                     text={`Not ${selectedLabel}`}
                                     includeMargin={false}
-                                    xPercent={-0.33}
-                                    yPercent={0.05}
+                                    xPercent={-0.5}
+                                    yPercent={0.075}
                                 />
                                 <ChartLabel
                                     text={selectedLabel.toString()}
                                     includeMargin={false}
                                     xPercent={0.9}
-                                    yPercent={0.05}
+                                    yPercent={0.075}
                                 />
-                            </FlexibleHeightXYPlot>
-                        </div>
-                    </>
+                            </XYPlot>
+                        </CollapseComp>
+                    </div>
                     }
                 </>}
             </div>

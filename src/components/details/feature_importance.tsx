@@ -71,7 +71,6 @@ export class FeatureImportanceComponent extends React.Component<FeatureImportanc
 
         return (
             <>
-                <h4>Feature Importance</h4>
                 <ErrorIndicator error={error}/>
                 {!error &&
                 <>
