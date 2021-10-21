@@ -20,7 +20,7 @@ class LimeResult:
     probabilities: dict[float, float]
     label: float
 
-    def as_dict(self):
+    def to_dict(self):
         return {
             'idx': self.idx,
             'expl': self.explanations,

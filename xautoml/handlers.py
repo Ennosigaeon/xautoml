@@ -1,4 +1,5 @@
 import json
+import multiprocessing
 import os
 from typing import Optional, Awaitable
 
@@ -8,40 +9,64 @@ import pandas as pd
 import tornado.web
 from jupyter_server.base.handlers import APIHandler
 from jupyter_server.utils import url_path_join
-from tornado import gen
 
 from xautoml.model_details import ModelDetails, LimeResult, DecisionTreeResult
 from xautoml.output import OutputCalculator, DESCRIPTION, COMPLETE
 from xautoml.roc_auc import RocCurve
 from xautoml.util import internal_cid_name, pipeline_utils
+from xautoml.util.async_queue import AsyncProcessQueue
 from xautoml.util.constants import SOURCE, SINK
 
 
 class BaseHandler(APIHandler):
+    is_async = False
 
     def data_received(self, chunk: bytes) -> Optional[Awaitable[None]]:
         pass
 
     @tornado.web.authenticated
-    @gen.coroutine
-    def post(self):
+    async def post(self):
         model = self.get_json_body()
 
         if model is not None:
             try:
-                self._process_post(model)
+                if self.is_async:
+                    await self._process_async(model)
+                else:
+                    self._process_post(model)
             except FileNotFoundError as ex:
                 self.set_status(500)
-                self.finish({'name': type(ex).__name__, 'message': '{} can not be read'.format(ex.filename)})
+                await self.finish({'name': type(ex).__name__, 'message': '{} can not be read'.format(ex.filename)})
             except Exception as ex:
                 self.set_status(500)
-                self.finish({'name': type(ex).__name__, 'message': 'Unhandled exception {}'.format(ex)})
+                await self.finish({'name': type(ex).__name__, 'message': 'Unhandled exception {}'.format(ex)})
         else:
             self.set_status(400)
-            self.finish()
+            await self.finish({'name': type(KeyError).__name__, 'message': 'Excepted a model parameter in request'})
 
     def _process_post(self, model):
         pass
+
+    @staticmethod
+    def _process_post_async(model, queue):
+        pass
+
+    async def _process_async(self, model):
+        def exception_safe(model, queue, func):
+            try:
+                func(model, q)
+            except Exception as ex:
+                queue.put(ex)
+
+        q = AsyncProcessQueue()
+        p = multiprocessing.Process(target=exception_safe, args=(model, q, self._process_post_async))
+        p.start()
+
+        res = await q.coro_get()
+        p.join()
+        if isinstance(res, Exception):
+            raise res
+        await self.finish(res)
 
     @staticmethod
     def fixed_precision(func, precision: int = 3):
@@ -82,8 +107,9 @@ class BaseHandler(APIHandler):
 
         return X, y, feature_labels, models
 
-    def load_model(self, model):
-        X, y, feature_labels, models = self.load_models(model)
+    @staticmethod
+    def load_model(model):
+        X, y, feature_labels, models = BaseHandler.load_models(model)
         assert len(models) == 1
         pipeline = models.popitem()[1]
         return X, y, feature_labels, pipeline
@@ -146,21 +172,22 @@ class RocCurveHandler(BaseHandler):
 
 
 class LimeHandler(BaseHandler):
+    is_async = True
 
-    def _process_post(self, model):
-        X, y, feature_labels, pipeline = self.load_model(model)
+    @staticmethod
+    def _process_post_async(model, queue):
+        X, y, feature_labels, pipeline = BaseHandler.load_model(model)
         idx = model.get('idx', None)
         step = model.get('step', SOURCE)
 
         if step == pipeline.steps[-1][0] or step == SINK:
-            self.log.debug('Unable to calculate LIME on predictions')
             res = LimeResult(idx, {}, {}, y[idx].tolist())
         else:
             pipeline, X, feature_labels = pipeline_utils.get_subpipeline(pipeline, step, X, feature_labels)
             details = ModelDetails()
             res = details.calculate_lime(X, y, pipeline, feature_labels, idx)
 
-        self.finish(json.dumps(res.as_dict()))
+        queue.put(res.to_dict())
 
 
 class DecisionTreeHandler(BaseHandler):
@@ -182,19 +209,20 @@ class DecisionTreeHandler(BaseHandler):
 
 
 class FeatureImportanceHandler(BaseHandler):
+    is_async = True
 
-    def _process_post(self, model):
-        X, y, feature_labels, pipeline = self.load_model(model)
+    @staticmethod
+    def _process_post_async(model, queue):
+        X, y, feature_labels, pipeline = FeatureImportanceHandler.load_model(model)
         step = model.get('step', SOURCE)
 
         if step == pipeline.steps[-1][0] or step == SINK:
-            self.log.debug('Unable to calculate FeatureImportance on predictions')
             res = pd.DataFrame(data={'0': {'0': 1, '1': 0}})
         else:
             pipeline, X, feature_labels = pipeline_utils.get_subpipeline(pipeline, step, X, feature_labels)
             details = ModelDetails()
             res = details.calculate_feature_importance(X, y, pipeline, feature_labels)
-        self.finish(json.dumps(res.to_dict()))
+        queue.put(res.to_dict())
 
 
 def setup_handlers(web_app):
