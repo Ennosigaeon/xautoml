@@ -119,7 +119,7 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
                         </CollapseComp>
                         <CollapseComp showInitial={true}>
                             <h4>ROC Curve</h4>
-                            <RocCurve selectedCandidates={selectedCandidates} meta={data.meta}/>
+                            <RocCurve selectedCandidates={selectedCandidates} meta={data.meta} height={300}/>
                         </CollapseComp>
                     </div>
                     <div style={{flexGrow: 2}}>

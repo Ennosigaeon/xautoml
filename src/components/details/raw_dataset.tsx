@@ -35,6 +35,10 @@ export class RawDataset extends React.Component<RawDatasetProps, RawDatasetState
         this.handleLoadDataframe = this.handleLoadDataframe.bind(this)
     }
 
+    componentDidMount() {
+        this.queryOutputs()
+    }
+
     componentDidUpdate(prevProps: Readonly<RawDatasetProps>, prevState: Readonly<RawDatasetState>, snapshot?: any) {
         if (prevProps.model.component !== this.props.model.component) {
             this.queryOutputs()

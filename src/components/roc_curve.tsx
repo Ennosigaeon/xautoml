@@ -19,6 +19,8 @@ import {ErrorIndicator} from "../util/error";
 interface RocCurveProps {
     selectedCandidates: Set<CandidateId>
     meta: MetaInformation
+
+    height: number
 }
 
 interface RocCurveState {
@@ -39,6 +41,11 @@ export class RocCurve extends React.Component<RocCurveProps, RocCurveState> {
             error: undefined,
             pendingCount: 0
         }
+    }
+
+    componentDidMount() {
+        if (this.props.selectedCandidates.size > 0)
+            this.queryROCCurve(Array.from(this.props.selectedCandidates))
     }
 
     componentDidUpdate(prevProps: Readonly<RocCurveProps>, prevState: Readonly<RocCurveState>, snapshot?: any) {
@@ -67,25 +74,29 @@ export class RocCurve extends React.Component<RocCurveProps, RocCurveState> {
 
             // Fetch new selected candidates
             if (newCandidates.length > 0) {
-                const promise = requestRocCurve(newCandidates, this.props.meta.data_file, this.props.meta.model_dir)
-                this.setState({pendingRequest: promise, error: undefined, pendingCount: newCandidates.length})
-
-                promise
-                    .then(data => {
-                        const currentCandidates = this.state.data
-                        data.forEach((v, k) => currentCandidates.set(k, v))
-                        this.setState({data: currentCandidates, pendingRequest: undefined})
-                    })
-                    .catch(error => {
-                        if (!(error instanceof CanceledPromiseError)) {
-                            console.error(`Failed to fetch Roc Curve data.\n${error.name}: ${error.message}`)
-                            this.setState({error: error, pendingRequest: undefined})
-                        } else {
-                            console.log('Cancelled promise due to user request')
-                        }
-                    });
+                this.queryROCCurve(newCandidates)
             }
         }
+    }
+
+    private queryROCCurve(candidates: CandidateId[]) {
+        const promise = requestRocCurve(candidates, this.props.meta.data_file, this.props.meta.model_dir)
+        this.setState({pendingRequest: promise, error: undefined, pendingCount: candidates.length})
+
+        promise
+            .then(data => {
+                const currentCandidates = this.state.data
+                data.forEach((v, k) => currentCandidates.set(k, v))
+                this.setState({data: currentCandidates, pendingRequest: undefined})
+            })
+            .catch(error => {
+                if (!(error instanceof CanceledPromiseError)) {
+                    console.error(`Failed to fetch Roc Curve data.\n${error.name}: ${error.message}`)
+                    this.setState({error: error, pendingRequest: undefined})
+                } else {
+                    console.log('Cancelled promise due to user request')
+                }
+            });
     }
 
     render() {
@@ -107,7 +118,7 @@ export class RocCurve extends React.Component<RocCurveProps, RocCurveState> {
                                                 items={labels}/>
 
             content = (
-                <FlexibleWidthXYPlot height={300}>
+                <FlexibleWidthXYPlot height={this.props.height}>
                     <HorizontalGridLines/>
                     <VerticalGridLines/>
                     <XAxis title="False Positive Rate"/>

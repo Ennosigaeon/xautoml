@@ -41,6 +41,10 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
         this.onMaxLeavesChange = this.onMaxLeavesChange.bind(this)
     }
 
+    componentDidMount() {
+        this.queryDT()
+    }
+
     componentDidUpdate(prevProps: Readonly<GlobalSurrogateProps>, prevState: Readonly<GlobalSurrogateState>, snapshot?: any) {
         if (prevProps.model.component !== this.props.model.component ||
             prevState.maxLeaves !== this.state.maxLeaves)
