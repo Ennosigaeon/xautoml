@@ -32,7 +32,7 @@
 }
 
 .container h4,
-.container h5{
+.container h5 {
     margin-top: 0.3rem;
     margin-bottom: 0.3rem;
 }
@@ -159,13 +159,23 @@
 }
 
 div.structure-graph_tooltip {
-    max-width: 1500px;
+    max-width: 800px;
+    background-color: white;
+    color: rgba(0, 0, 0, 0.87);
+
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2), 0 1px 1px 0 rgba(0, 0, 0, 0.14), 0 2px 1px -1px rgba(0, 0, 0, 0.12);
+    padding: 5px 20px;
+    border-radius: 4px;
+    font-weight: initial;
 }
 
 .structure-graph_tooltip .MuiTable-root {
     width: initial;
 }
 
+.structure-graph_tooltip .MuiTableCell-root {
+    font-size: 12px;
+}
 
 /** JupyterButton */
 .jupyter-button svg {
