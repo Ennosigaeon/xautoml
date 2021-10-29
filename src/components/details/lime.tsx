@@ -7,7 +7,6 @@ import {
     VerticalBarSeries,
     VerticalGridLines,
     XAxis,
-    XYPlot,
     YAxis
 } from "react-vis";
 import {CancelablePromise, CanceledPromiseError, Label, LimeResult, requestLimeApproximation} from "../../handler";
@@ -89,8 +88,9 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
             })
             .reverse()
 
-        const nrClasses = data?.expl.size
         const nrExpl = data?.expl.get(selectedLabel.toString()).length
+
+        const labelHeight = 23
 
         return (
             <div className={'lime'} style={{height: '100%'}}>
@@ -135,11 +135,10 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
 
                         <CollapseComp showInitial={true}>
                             <h5>Explanations for Class {selectedLabel}</h5>
-                            <XYPlot
+                            <FlexibleWidthXYPlot
                                 yType="ordinal"
-                                width={nrClasses * 35 + maxLabelLength}
                                 height={nrExpl * 30}
-                                margin={{left: maxLabelLength, top: 20}}
+                                margin={{left: maxLabelLength, top: labelHeight}}
                             >
                                 <VerticalGridLines/>
                                 <HorizontalGridLines/>
@@ -153,16 +152,16 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
                                 <ChartLabel
                                     text={`Not ${selectedLabel}`}
                                     includeMargin={false}
-                                    xPercent={-0.5}
-                                    yPercent={0.075}
+                                    xPercent={0}
+                                    yPercent={(1.5 * labelHeight) / (nrExpl * 30)}
                                 />
                                 <ChartLabel
                                     text={selectedLabel.toString()}
                                     includeMargin={false}
                                     xPercent={0.9}
-                                    yPercent={0.075}
+                                    yPercent={(1.5 * labelHeight) / (nrExpl * 30)}
                                 />
-                            </XYPlot>
+                            </FlexibleWidthXYPlot>
                         </CollapseComp>
                     </div>
                     }
