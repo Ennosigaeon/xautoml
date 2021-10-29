@@ -13,6 +13,7 @@ import {CollapsiblePointNode, GraphEdge, GraphNode, HierarchicalTree} from "../t
 import {fixedPrec} from "../../util";
 import Slider from "rc-slider";
 import {ErrorIndicator} from "../../util/error";
+import {KeyValue} from "../../util/KeyValue";
 
 
 const NODE_HEIGHT = 45;
@@ -128,8 +129,8 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
                         <div style={{display: 'flex'}}>
                             <div style={{flexGrow: 1}}>
                                 <div style={{display: "flex", flexDirection: "column", justifyContent: "space-between"}}>
-                                    <p><strong>Fidelity:</strong> {fixedPrec(data.fidelity)}</p>
-                                    <p><strong>Leave Nodes:</strong> {data.n_leaves}</p>
+                                    <KeyValue key_={'Fidelity'} value={data.fidelity}/>
+                                    <KeyValue key_={'Leave Nodes'} value={data.n_leaves}/>
                                 </div>
                             </div>
                             <div style={{padding: '0 10px 1em', flexGrow: 2}}>

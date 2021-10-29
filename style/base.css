@@ -84,12 +84,6 @@
     stroke-width: 2px;
 }
 
-
-/** Overview */
-.overview-row {
-    margin: 4px;
-}
-
 /** Bandit Explanation */
 .bandit-explanation .hierarchical-tree_node-content {
     background-color: #28a745;
@@ -173,7 +167,7 @@ div.structure-graph_tooltip {
     width: initial;
 }
 
-.structure-graph_tooltip .MuiTableCell-root {
+.jp-RenderedHTMLCommon .MuiTableCell-root {
     font-size: 12px;
 }
 
