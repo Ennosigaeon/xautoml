@@ -17,7 +17,7 @@ export default class MetaInformationTable extends React.Component<MetaInformatio
         end.setUTCSeconds(meta.end_time)
 
         const configValues: [string, ConfigValue][] = []
-        meta.configuration.forEach((value, key) => configValues.push([key, value]))
+        meta.config.forEach((value, key) => configValues.push([key, value]))
 
         return (
             <>

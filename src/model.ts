@@ -59,11 +59,11 @@ export class Explanations {
 }
 
 export class Runtime {
-    constructor(public readonly total: number, public readonly timestamp: number) {
+    constructor(public readonly training_time: number, public readonly timestamp: number) {
     }
 
     public static fromJson(runtime: Runtime): Runtime {
-        return new Runtime(runtime.total, runtime.timestamp)
+        return new Runtime(runtime.training_time, runtime.timestamp)
     }
 }
 
@@ -101,15 +101,13 @@ export class MetaInformation {
                 public readonly iterations: {},
                 public readonly model_dir: string,
                 public readonly data_file: string,
-                public readonly configuration: Map<string, ConfigValue>) {
+                public readonly config: Map<string, ConfigValue>) {
     }
 
     static fromJson(meta: MetaInformation): MetaInformation {
         return new MetaInformation('dswizard', meta.start_time, meta.end_time, meta.metric, meta.metric_sign,
             meta.openml_task, meta.openml_fold, meta.n_structures, meta.n_configs, meta.iterations, meta.model_dir,
-            meta.data_file,
-            // TODO fill with actual values
-            new Map<string, ConfigValue>([['Work Dir.', meta.model_dir], ['foo', 1], ['bar', true]]))
+            meta.data_file, new Map<string, ConfigValue>(Object.entries(meta.config)))
     }
 }
 
