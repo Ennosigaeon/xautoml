@@ -9,6 +9,7 @@ from sklearn.metrics import confusion_matrix
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OrdinalEncoder
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.utils.multiclass import unique_labels
 
 from xautoml.util.pipeline_utils import export_tree, DataFrameImputer, Node
 
@@ -51,7 +52,8 @@ class ModelDetails:
     def calculate_confusion_matrix(X: np.ndarray, y: np.ndarray, model):
         y_pred = model.predict(X)
         cm = confusion_matrix(y, y_pred)
-        return cm
+        labels = unique_labels(y, y_pred)
+        return pd.DataFrame(cm, columns=labels, index=labels)
 
     @staticmethod
     def calculate_lime(X: np.ndarray, y: np.ndarray, model, feature_labels: list[str], idx: int = None) -> LimeResult:

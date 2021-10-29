@@ -145,6 +145,21 @@ async function requestOutput(cid: CandidateId, data_file: string, model_dir: str
     })
 }
 
+export interface ConfusionMatrixData {
+    classes: string[]
+    values: number[][]
+}
+
+export async function requestConfusionMatrix(cid: CandidateId, data_file: string, model_dir: string): Promise<ConfusionMatrixData> {
+    return requestAPI<ConfusionMatrixData>(`confusion_matrix`, {
+        method: 'POST', body: JSON.stringify({
+            'cids': cid,
+            'data_file': data_file,
+            'model_dir': model_dir
+        })
+    })
+}
+
 export function requestLimeApproximation(cid: CandidateId, idx: number, data_file: string, model_dir: string, step: string): CancelablePromise<LimeResult> {
     // Fake data for faster development
     // const promise = new Promise<LimeResult>((resolve, reject) => {

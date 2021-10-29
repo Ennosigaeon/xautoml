@@ -192,6 +192,15 @@ class LimeHandler(BaseHandler):
         queue.put(res.to_dict())
 
 
+class ConfusionMatrixHandler(BaseHandler):
+
+    def _process_post(self, model):
+        X, y, feature_labels, pipeline = self.load_model(model)
+        details = ModelDetails()
+        cm = details.calculate_confusion_matrix(X, y, pipeline)
+        self.finish(json.dumps({"classes": cm.columns.to_list(), "values": cm.values.tolist()}))
+
+
 class DecisionTreeHandler(BaseHandler):
 
     def _process_post(self, model):
@@ -235,6 +244,7 @@ def setup_handlers(web_app):
         (url_path_join(base_url, 'xautoml', 'output/complete'), OutputCompleteHandler),
         (url_path_join(base_url, 'xautoml', 'output/description'), OutputDescriptionHandler),
         (url_path_join(base_url, 'xautoml', 'roc_auc'), RocCurveHandler),
+        (url_path_join(base_url, 'xautoml', 'confusion_matrix'), ConfusionMatrixHandler),
         (url_path_join(base_url, 'xautoml', 'explanations/lime'), LimeHandler),
         (url_path_join(base_url, 'xautoml', 'explanations/feature_importance'), FeatureImportanceHandler),
         (url_path_join(base_url, 'xautoml', 'explanations/dt'), DecisionTreeHandler),

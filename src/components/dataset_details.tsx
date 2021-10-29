@@ -8,6 +8,7 @@ import {RawDataset} from "./details/raw_dataset";
 import {DetailsModel} from "./details/model";
 import {GlobalSurrogateComponent} from "./details/global_surrogate";
 import {CollapseComp} from "../util/collapse";
+import {PerformanceComponent} from "./details/performance";
 
 interface DataSetDetailsProps {
     candidate: Candidate
@@ -63,6 +64,11 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
                         <RawDataset model={model} onSampleClick={this.handleSampleSelection}/>
                         <LimeComponent model={model}/>
                     </TwoColumnLayout>
+                </CollapseComp>
+
+                <CollapseComp showInitial={true}>
+                    <h4>Performance Details</h4>
+                    <PerformanceComponent model={model}/>
                 </CollapseComp>
 
                 <CollapseComp showInitial={true}>
