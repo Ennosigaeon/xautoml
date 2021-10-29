@@ -1,5 +1,6 @@
 import React from "react";
 import {LoadingIndicator} from "../components/loading";
+import ResizeObserver from "resize-observer-polyfill";
 
 interface FlexibleSvgProps {
     height: number
@@ -12,6 +13,7 @@ interface FlexibleSvgState {
 
 export class FlexibleSvg extends React.Component<FlexibleSvgProps, FlexibleSvgState> {
 
+    private resizeObserver: ResizeObserver
     private readonly container: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
 
     constructor(props: FlexibleSvgProps) {
@@ -23,8 +25,23 @@ export class FlexibleSvg extends React.Component<FlexibleSvgProps, FlexibleSvgSt
         const width = this.container.current.clientWidth
         this.setState({width: width})
 
+        this.resizeObserver = new ResizeObserver(entries => {
+            const newWidth = Math.max(...entries.map(e => e.contentRect.width))
+            if (Math.abs(this.state.width - newWidth) > 30) {
+                this.setState({width: newWidth})
+                if (this.props.onContainerChange)
+                    this.props.onContainerChange(this.container)
+            }
+        })
+        this.resizeObserver.observe(this.container.current)
+
         if (this.props.onContainerChange)
             this.props.onContainerChange(this.container)
+    }
+
+    componentWillUnmount() {
+        if (this.resizeObserver)
+            this.resizeObserver.disconnect()
     }
 
     render() {
