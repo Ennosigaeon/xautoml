@@ -35,9 +35,11 @@ class BaseHandler(APIHandler):
                 else:
                     self._process_post(model)
             except FileNotFoundError as ex:
+                self.log.exception(ex)
                 self.set_status(500)
                 await self.finish({'name': type(ex).__name__, 'message': '{} can not be read'.format(ex.filename)})
             except Exception as ex:
+                self.log.exception(ex)
                 self.set_status(500)
                 await self.finish({'name': type(ex).__name__, 'message': 'Unhandled exception {}'.format(ex)})
         else:
@@ -110,7 +112,7 @@ class BaseHandler(APIHandler):
     @staticmethod
     def load_model(model):
         X, y, feature_labels, models = BaseHandler.load_models(model)
-        assert len(models) == 1
+        assert len(models) == 1, 'Expected exactly 1 model, got {}'.format(len(models))
         pipeline = models.popitem()[1]
         return X, y, feature_labels, pipeline
 

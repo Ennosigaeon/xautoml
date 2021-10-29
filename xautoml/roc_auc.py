@@ -11,6 +11,7 @@ MACRO = 'macro'
 MICRO = 'micro'
 
 
+# Code based on https://www.scikit-yb.org/en/latest/_modules/yellowbrick/classifier/rocauc.html
 class RocCurve:
 
     def __init__(self, micro: bool = True, macro: bool = False):
@@ -65,6 +66,10 @@ class RocCurve:
             if self.micro:
                 self._score_micro_average(y, y_pred)
             elif self.macro:
+                # Compute ROC curve for all classes
+                for i, c in enumerate(self.classes):
+                    self.fpr[i], self.tpr[i], _ = roc_curve(y, y_pred[:, i], pos_label=c)
+                    self.roc_auc[i] = auc(self.fpr[i], self.tpr[i])
                 self._score_macro_average()
             else:
                 raise ValueError('Provide either micro or macro for multiclass')

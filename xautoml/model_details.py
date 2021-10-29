@@ -124,7 +124,6 @@ class ModelDetails:
 
     @staticmethod
     def calculate_feature_importance(X: np.ndarray, y: np.ndarray, model, feature_labels: list[str]):
-        result = permutation_importance(model, X, y, scoring='roc_auc', random_state=0)
-
+        result = permutation_importance(model, X, y, scoring='f1_weighted', random_state=0)
         return pd.DataFrame(np.stack((result.importances_mean, result.importances_std)),
                             columns=feature_labels)
