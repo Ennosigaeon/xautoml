@@ -8,16 +8,12 @@ import {
     requestGlobalSurrogate
 } from "../../handler";
 import {LoadingIndicator} from "../loading";
-import * as d3 from "d3";
-import {CollapsiblePointNode, GraphEdge, GraphNode, HierarchicalTree} from "../tree_structure";
-import {fixedPrec} from "../../util";
+import {GraphEdge, GraphNode, HierarchicalTree} from "../tree_structure";
 import Slider from "rc-slider";
 import {ErrorIndicator} from "../../util/error";
 import {KeyValue} from "../../util/KeyValue";
+import {Dag} from "d3-dag";
 
-
-const NODE_HEIGHT = 45;
-const NODE_WIDTH = 100;
 
 interface GlobalSurrogateProps {
     model: DetailsModel
@@ -32,6 +28,10 @@ interface GlobalSurrogateState {
 
 
 export class GlobalSurrogateComponent extends React.Component<GlobalSurrogateProps, GlobalSurrogateState> {
+
+
+    private static readonly NODE_HEIGHT = 45;
+    private static readonly NODE_WIDTH = 100;
 
     private readonly ticks = [2, 3, 5, 7, 10, 15, 25, 50, 100]
 
@@ -79,22 +79,21 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
             });
     }
 
-    private renderNodes(root: CollapsiblePointNode<DecisionTreeNode>): JSX.Element {
-        const renderedEdges: JSX.Element[] = []
-        const renderedNodes: JSX.Element[] = []
-
-        root.descendants().forEach(node => {
-            renderedNodes.push(
-                <GraphNode key={node.data.label} node={node} nodeWidth={NODE_WIDTH} nodeHeight={NODE_HEIGHT}>
-                    <p>{node.data.label}</p>
-                </GraphNode>
-            )
-
-            renderedEdges.push(
-                <GraphEdge key={node.data.label} node={node} nodeWidth={NODE_WIDTH} nodeHeight={NODE_HEIGHT}/>
-            )
-        })
-
+    private renderNodes(root: Dag<DecisionTreeNode>): JSX.Element {
+        const renderedNodes = root.descendants().map(node =>
+            <GraphNode key={node.data.label}
+                       node={node}
+                       nodeWidth={GlobalSurrogateComponent.NODE_WIDTH}
+                       nodeHeight={GlobalSurrogateComponent.NODE_HEIGHT}>
+                <p>{node.data.label}</p>
+            </GraphNode>
+        )
+        const renderedEdges = root.links().map(link =>
+            <GraphEdge key={link.source.data.label + '-' + link.target.data.label}
+                       link={link}
+                       nodeWidth={GlobalSurrogateComponent.NODE_WIDTH}
+                       nodeHeight={GlobalSurrogateComponent.NODE_HEIGHT}/>
+        )
         return (
             <>
                 {renderedEdges}
@@ -128,7 +127,8 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
                     <>
                         <div style={{display: 'flex'}}>
                             <div style={{flexGrow: 1}}>
-                                <div style={{display: "flex", flexDirection: "column", justifyContent: "space-between"}}>
+                                <div
+                                    style={{display: "flex", flexDirection: "column", justifyContent: "space-between"}}>
                                     <KeyValue key_={'Fidelity'} value={data.fidelity}/>
                                     <KeyValue key_={'Leave Nodes'} value={data.n_leaves}/>
                                 </div>
@@ -141,9 +141,9 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
                                         onAfterChange={this.onMaxLeavesChange}/>
                             </div>
                         </div>
-                        <HierarchicalTree nodeHeight={NODE_HEIGHT}
-                                          nodeWidth={NODE_WIDTH}
-                                          data={d3.hierarchy(data.root, d => d.children)}
+                        <HierarchicalTree nodeHeight={GlobalSurrogateComponent.NODE_HEIGHT}
+                                          nodeWidth={GlobalSurrogateComponent.NODE_WIDTH}
+                                          data={data.root}
                                           render={this.renderNodes}/>
                     </>
                     }

@@ -12,7 +12,8 @@ import {PerformanceComponent} from "./details/performance";
 
 interface DataSetDetailsProps {
     candidate: Candidate
-    component: [string, string]
+    componentId: string
+    componentLabel: string
     meta: MetaInformation
 }
 
@@ -51,10 +52,10 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
     }
 
     render() {
-        const {candidate, meta, component} = this.props
+        const {candidate, meta, componentId, componentLabel} = this.props
         const {selectedSample} = this.state
 
-        const model = new DetailsModel(meta, candidate, component[0], component[1], selectedSample)
+        const model = new DetailsModel(meta, candidate, componentId, componentLabel, selectedSample)
 
         return (
             <>

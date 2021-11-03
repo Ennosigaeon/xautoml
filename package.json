@@ -57,7 +57,8 @@
     "@material-ui/icons": "^4.11.0",
     "@material-ui/lab": "^4.0.0-alpha.60",
     "d3": "^6.7.0",
-    "dagre": "^0.8.5",
+    "d3-dag": "^0.8.2",
+    "memoize-one": "^6.0.0",
     "rc-slider": "^9.7.0",
     "react-move": "^6.5.0",
     "react-vis": "^1.11.0"

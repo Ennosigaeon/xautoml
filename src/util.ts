@@ -30,6 +30,17 @@ export function normalizeComponent(component: string): string {
 }
 
 
+export function areSetInputsEqual(
+    newInputs: readonly Set<unknown>[],
+    lastInputs: readonly Set<unknown>[],
+): boolean {
+    const a = newInputs[0]
+    const b = lastInputs[0]
+
+    return a.size === b.size && [...a].every(value => b.has(value))
+}
+
+
 export namespace Colors {
     export const DEFAULT: string = '#12939a'
     export const HIGHLIGHT: string = '#007bff'

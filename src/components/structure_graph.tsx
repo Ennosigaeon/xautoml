@@ -1,42 +1,40 @@
 import React from "react";
-import {Candidate, Config, ConfigValue, MetaInformation, Structure} from "../model";
-import * as dagre from "dagre";
-import {graphlib} from "dagre";
+import {Candidate, Config, ConfigValue, MetaInformation, Pipeline, Structure} from "../model";
 import {fixedPrec, normalizeComponent} from "../util";
 import {Table, TableBody, TableCell, TableRow, Tooltip, Typography} from "@material-ui/core";
 import {OutputDescriptionData, requestOutputDescription} from "../handler";
 import {LoadingIndicator} from "./loading";
 import {ErrorIndicator} from "../util/error";
+import {GraphEdge, GraphNode, HierarchicalTree} from "./tree_structure";
+import {Dag} from "d3-dag";
 
 
-interface Node {
-    label: string
-    config: Config
-    x: number,
-    y: number,
-    width: number
-    height: number
+export class PipelineStep {
+    public readonly children: PipelineStep[] = []
+
+    constructor(public readonly id: string,
+                public readonly label: string,
+                public readonly config: Config) {
+    }
 }
 
 interface SingleComponentProps {
-    id: string
-    node: Node
+    step: PipelineStep
 
     error: Error
     loading: boolean
     output: string
 
     onHover: () => void
-    onClick?: (component: [string, string]) => void
 }
 
 class SingleComponent extends React.Component<SingleComponentProps, any> {
 
     render() {
-        const {id, node, error, loading, output, onHover, onClick} = this.props
+        const {step, error, loading, output, onHover} = this.props
 
         const configTable: [[string, ConfigValue][], [string, ConfigValue][]] = [[], []]
-        Array.from(node.config?.entries())
+        Array.from(step.config.entries())
             .forEach(([name, value], idx) => {
                 configTable[idx % 2].push([name, value])
             })
@@ -75,7 +73,7 @@ class SingleComponent extends React.Component<SingleComponentProps, any> {
         </>
 
         const tooltipContent = <>
-            {node.config.size > 0 ?
+            {step.config.size > 0 ?
                 configuration :
                 <Typography color="inherit" component={'h4'}>No Configuration</Typography>}
             <hr/>
@@ -93,34 +91,19 @@ class SingleComponent extends React.Component<SingleComponentProps, any> {
         </>
 
         return (
-            <g key={id}
-               transform={`translate(${node.x - node.width / 2}, ${node.y - node.height / 2})`}>
-                <foreignObject
-                    width={`${node.width}px`}
-                    height={`${node.height}px`}
-                    requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
-                    onClick={(e) => {
-                        if (!!onClick) {
-                            onClick([id, node.label])
-                            e.stopPropagation()
-                        }
-                    }}>
-                    <Tooltip placement={'top'}
-                             classes={{tooltip: 'structure-graph_tooltip jp-RenderedHTMLCommon'}}
-                             title={tooltipContent}
-                             enterDelay={500}
-                             enterNextDelay={500}
-                             leaveDelay={500}
-                             interactive={true}
-                             onOpen={onHover}>
-                        {isPipEnd(id) ?
-                            <div className={'structure-graph_node structure-graph_end-node'}/> :
-                            <div className={'structure-graph_node'}>{node.label}</div>
-                        }
-                    </Tooltip>
-                </foreignObject>
-            </g>
-
+            <Tooltip placement={'top'}
+                     classes={{tooltip: 'structure-graph_tooltip jp-RenderedHTMLCommon'}}
+                     title={tooltipContent}
+                     enterDelay={500}
+                     enterNextDelay={500}
+                     leaveDelay={500}
+                     interactive={true}
+                     onOpen={onHover}>
+                {isPipEnd(step.id) ?
+                    <p className={'structure-graph_end-node'}/> :
+                    <p>{step.label}</p>
+                }
+            </Tooltip>
         )
     }
 }
@@ -129,7 +112,7 @@ interface StructureGraphProps {
     structure: Structure
     candidate: Candidate
     meta: MetaInformation
-    onComponentSelection?: (component: [string, string]) => void
+    onComponentSelection?: (component: PipelineStep) => void
 }
 
 interface StructureGraphState {
@@ -143,11 +126,16 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
     static readonly SOURCE = 'SOURCE'
     static readonly SINK = 'SINK'
 
+    private static readonly NODE_HEIGHT = 20;
+    private static readonly NODE_WIDTH = 100;
+
     constructor(props: StructureGraphProps) {
         super(props);
-
         this.state = {loading: false, outputs: new Map<string, string>(), error: undefined}
+
         this.fetchOutputs = this.fetchOutputs.bind(this)
+        this.renderNodes = this.renderNodes.bind(this)
+        this.onComponentSelection = this.onComponentSelection.bind(this)
     }
 
     fetchOutputs() {
@@ -167,75 +155,82 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
             });
     }
 
-    render() {
-        const {structure, candidate, onComponentSelection} = this.props
-        const {outputs, loading, error} = this.state
-
-        const nodeDimensions = {width: 100, height: 40}
-        const margin = {top: 5, left: 10}
-
-        const graph = new graphlib.Graph<Node>();
-        graph.setGraph({rankdir: 'LR', nodesep: 20, ranksep: 20});
-        graph.setDefaultEdgeLabel(() => ({}))
-
-        const edges: [string, string][] = []
-        const nodeMap = new Map<string, string>([[StructureGraphComponent.SOURCE, 'Source'], [StructureGraphComponent.SINK, 'Sink']])
-        let source = StructureGraphComponent.SOURCE
-        structure.pipeline.steps.forEach(([id, label]) => {
-            nodeMap.set(id, label)
-            edges.push([source, id])
-            source = id
-        })
-        edges.push([source, StructureGraphComponent.SINK])
-
-        nodeMap.forEach((label, id) => {
+    // TODO wrong place, move to model.ts
+    private toPipelineStep(candidate: Candidate, pipeline: Pipeline): PipelineStep {
+        // TODO Pipeline currently only supports linear pipelines
+        const root = new PipelineStep(StructureGraphComponent.SOURCE, 'Source', new Map<string, ConfigValue>())
+        let prev = root
+        pipeline.steps.forEach(([id, label]) => {
             const prefix = `${id}:`
             const subConfig = new Map<string, ConfigValue>()
-
             Array.from(candidate.config.keys())
                 .filter(k => k.startsWith(prefix))
                 .forEach(key => {
                     subConfig.set(key.substring(prefix.length), candidate.config.get(key))
                 })
 
-            graph.setNode(id, {
-                label: normalizeComponent(label),
-                config: subConfig,
-                width: isPipEnd(id) ? nodeDimensions.width / 4 : nodeDimensions.width,
-                height: isPipEnd(id) ? nodeDimensions.width / 4 : nodeDimensions.height
-            })
+            const node = new PipelineStep(id, normalizeComponent(label), subConfig)
+            prev.children.push(node)
+            prev = node
         })
-        edges.forEach(([source, target]) => graph.setEdge(source, target))
-        dagre.layout(graph);
+
+        prev.children.push(new PipelineStep(StructureGraphComponent.SINK, 'Sink', new Map<string, ConfigValue>()))
+        return root
+    }
+
+    private onComponentSelection(step: PipelineStep, e: React.MouseEvent): void {
+        const {onComponentSelection} = this.props
+        if (!!onComponentSelection) {
+            onComponentSelection(step)
+            e.stopPropagation()
+        }
+    }
+
+    private renderNodes(root: Dag<PipelineStep>): JSX.Element {
+        const {outputs, loading, error} = this.state
+
+        const renderedNodes = root.descendants().map(node => {
+            return (
+                <GraphNode key={node.data.label}
+                           node={node}
+                           isRoot={node.data.id === StructureGraphComponent.SOURCE}
+                           isTerminal={node.data.id === StructureGraphComponent.SINK}
+                           nodeWidth={StructureGraphComponent.NODE_WIDTH}
+                           nodeHeight={StructureGraphComponent.NODE_HEIGHT}
+                           onClickHandler={this.onComponentSelection}>
+                    <SingleComponent step={node.data}
+                                     error={error}
+                                     loading={loading}
+                                     output={outputs.get(node.data.id)}
+                                     onHover={this.fetchOutputs}/>
+                </GraphNode>
+            )
+        })
+
+        const renderedEdges = root.links().map(link =>
+            <GraphEdge key={link.source.data.label + '-' + link.target.data.label}
+                       link={link}
+                       nodeWidth={StructureGraphComponent.NODE_WIDTH}
+                       nodeHeight={StructureGraphComponent.NODE_HEIGHT}/>
+        )
 
         return (
-            <svg style={{width: '100%', height: '100%'}}>
-                <g id={"transformGroup"} transform={`translate(${margin.left},${margin.top})`}>
-                    {graph.nodes().map(id => {
-                        return <SingleComponent id={id}
-                                                node={graph.node(id)}
-                                                loading={loading}
-                                                error={error}
-                                                output={outputs.get(id)}
-                                                onHover={this.fetchOutputs}
-                                                onClick={onComponentSelection}/>
-                    })}
+            <>
+                {renderedEdges}
+                {renderedNodes}
+            </>
+        )
+    }
 
-                    {graph.edges().map(edge => {
-                        return (
-                            <path
-                                key={`${edge.v}-${edge.w}`}
-                                markerEnd="url(#triangle)"
-                                stroke="black"
-                                fill="none"
-                                d={`${graph.edge(edge).points
-                                    .map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x} ${p.y}`)
-                                    .join(' ')}`}
-                            />
-                        );
-                    })}
-                </g>
-            </svg>
+    render() {
+        const {structure, candidate} = this.props
+        const data = this.toPipelineStep(candidate, structure.pipeline)
+
+        return (
+            <HierarchicalTree nodeHeight={StructureGraphComponent.NODE_HEIGHT}
+                              nodeWidth={StructureGraphComponent.NODE_WIDTH}
+                              data={data}
+                              render={this.renderNodes}/>
         )
     }
 

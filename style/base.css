@@ -71,6 +71,14 @@
     padding: 2px 5px;
     width: 100%;
     overflow: hidden;
+    text-align: center;
+    text-overflow: ellipsis;
+}
+
+.hierarchical-tree_node-content-round {
+    border-radius: 50%;
+    height: 100%;
+    box-sizing: border-box;
 }
 
 .hierarchical-tree_node-content h3 {
@@ -82,6 +90,10 @@
     fill: none;
     stroke: #ccc;
     stroke-width: 2px;
+}
+
+.hierarchical-tree_link.selected {
+    stroke-width: 4px;
 }
 
 /** Bandit Explanation */
@@ -109,10 +121,6 @@
     grid-template-columns: 50% 50%;
 }
 
-.bandit-explanation_link.selected {
-    stroke-width: 5px;
-}
-
 
 /** Candidate Table */
 .MuiDataGrid-cell:focus {
@@ -133,23 +141,10 @@
 
 
 /** Structure Graph */
-.structure-graph_node {
-    border: 1px solid black;
-    box-sizing: border-box;
+.structure-graph_end-node {
     width: 100%;
     height: 100%;
     display: block;
-    text-align: center;
-    line-height: 40px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    padding: 0 2px;
-}
-
-.structure-graph_end-node {
-    border-radius: 50%;
-    box-sizing: border-box;
-    border: 2px solid black;
 }
 
 div.structure-graph_tooltip {

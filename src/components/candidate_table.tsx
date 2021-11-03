@@ -9,7 +9,7 @@ import Checkbox from '@material-ui/core/Checkbox';
 import {Box, IconButton, Table, TableContainer} from '@material-ui/core';
 import {Candidate, CandidateId, MetaInformation, Structure} from '../model';
 import {fixedPrec, JupyterContext} from '../util';
-import {StructureGraphComponent} from './structure_graph';
+import {PipelineStep, StructureGraphComponent} from './structure_graph';
 import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@material-ui/icons/KeyboardArrowUp';
 import Collapse from '@material-ui/core/Collapse';
@@ -128,12 +128,12 @@ class CandidateTableRow extends React.Component<CandidateTableRowProps, Candidat
         e.stopPropagation()
     }
 
-    private openComponent(component: [string, string]) {
-        if (this.state.open && this.state.selectedComponent === component) {
-            // Close details when selecting the same component again
+    private openComponent(step: PipelineStep) {
+        if (this.state.open && this.state.selectedComponent[0] === step.id) {
+            // Close details when selecting the same step again
             this.setState({open: false, selectedComponent: [undefined, undefined]})
         } else {
-            this.setState({open: true, selectedComponent: component})
+            this.setState({open: true, selectedComponent: [step.id, step.label]})
         }
     }
 
@@ -190,7 +190,8 @@ xautoml_pipeline
                             <Box margin={1}>
                                 <DataSetDetailsComponent
                                     candidate={data.candidate[1]}
-                                    component={this.state.selectedComponent}
+                                    componentId={this.state.selectedComponent[0]}
+                                    componentLabel={this.state.selectedComponent[1]}
                                     meta={this.props.meta}
                                 />
                             </Box>
@@ -326,7 +327,8 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
                     <Table
                         aria-labelledby='tableTitle'
                         aria-label='enhanced table'
-                        //TODO: To prevent the table from getting wider than parent, a fixed table-layout is necessary. Yet, this requires hardcoded columns width which is quite ugly (see HeadCell above).
+                        //TODO: To prevent the table from getting wider than parent, a fixed table-layout is necessary.
+                        //Yet, this requires hardcoded columns width which is quite ugly (see HeadCell above).
                         //Replace everything with DataGrid once https://github.com/mui-org/material-ui-x/issues/192 is resolved.
                         style={{tableLayout: 'fixed'}}
                     >
