@@ -5,6 +5,7 @@ import React from "react";
 
 interface CollapseProps {
     showInitial: boolean
+    className?: string
 }
 
 interface CollapseState {
@@ -12,6 +13,10 @@ interface CollapseState {
 }
 
 export class CollapseComp extends React.Component<CollapseProps, CollapseState> {
+
+    static defaultProps = {
+        className: 'container'
+    }
 
     constructor(props: CollapseProps) {
         super(props);
@@ -21,15 +26,16 @@ export class CollapseComp extends React.Component<CollapseProps, CollapseState> 
     }
 
 
-    private toggleShow() {
+    private toggleShow(e: React.MouseEvent) {
         this.setState((state) => ({show: !state.show}))
+        e.stopPropagation()
     }
 
     render() {
         const children = React.Children.toArray(this.props.children);
 
         return (
-            <div className={'container'}>
+            <div className={this.props.className}>
                 <div style={{display: 'flex', alignItems: 'center'}}>
                     <div style={{flexGrow: 1}}>
                         {children[0]}

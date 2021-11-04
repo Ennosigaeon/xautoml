@@ -8,7 +8,7 @@ export class BanditDetails {
 
     constructor(public readonly failure_message: string,
                 public readonly visits: number,
-                public readonly reward: number,
+                public readonly score: number,
                 public readonly selected: boolean,
                 public readonly policy: PolicyData) {
     }
@@ -16,7 +16,7 @@ export class BanditDetails {
     static fromJson(nodeDetails: BanditDetails): BanditDetails {
         return new BanditDetails(nodeDetails.failure_message,
             nodeDetails.visits,
-            nodeDetails.reward,
+            nodeDetails.score,
             nodeDetails.selected,
             new Map<string, number>(Object.entries(nodeDetails.policy)));
     }

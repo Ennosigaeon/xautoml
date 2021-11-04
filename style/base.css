@@ -66,7 +66,7 @@
 }
 
 .hierarchical-tree_node-content {
-    border: 1px solid black;
+    border: 1px solid #b8b8b8;
     border-radius: 5px;
     padding: 2px 5px;
     width: 100%;
@@ -99,13 +99,7 @@
 /** Bandit Explanation */
 .bandit-explanation .hierarchical-tree_node-content {
     background-color: #28a745;
-    stroke: steelblue;
-    stroke-width: 3px;
     font-size: 8px;
-}
-
-.selected .bandit-explanation_node-content {
-    border: 3px solid black;
 }
 
 .bandit-explanation.node-duplicate .hierarchical-tree_node-content {

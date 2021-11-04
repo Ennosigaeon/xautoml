@@ -6,13 +6,17 @@ interface KeyValueProps {
     key_: string
     value: any
     href?: string
+    tight?: boolean
 }
 
 export class KeyValue extends React.PureComponent<KeyValueProps> {
 
+    static defaultProps = {
+        tight: false
+    }
 
     render() {
-        const {key_, value, href} = this.props
+        const {key_, value, href, tight} = this.props
 
         let renderedValue: string | number
         if (typeof value === 'number') {
@@ -24,7 +28,7 @@ export class KeyValue extends React.PureComponent<KeyValueProps> {
         }
 
         return (
-            <div style={{margin: '4px'}}>
+            <div style={{margin: tight ? '2px' : '4px'}}>
                 <strong>{key_}: </strong>
                 {href ?
                     <a href={href} target={'_blank'} style={{color: 'rgb(16, 107, 163)'}}>{renderedValue}</a> :

@@ -3,10 +3,12 @@ import * as d3 from "d3";
 import {BanditDetails, CandidateId, HierarchicalBandit, Pipeline, Structure} from "../model";
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
-import {areSetInputsEqual, normalizeComponent} from "../util";
+import {areSetInputsEqual, fixedPrec, normalizeComponent} from "../util";
 import {GraphEdge, GraphNode, HierarchicalTree} from "./tree_structure";
 import {Dag, DagNode} from "d3-dag";
 import memoizeOne from "memoize-one";
+import {CollapseComp} from "../util/collapse";
+import {KeyValue} from "../util/KeyValue";
 
 
 interface CollapsibleNode {
@@ -73,7 +75,7 @@ interface BanditExplanationsState {
 
 export class BanditExplanationsComponent extends React.Component<BanditExplanationsProps, BanditExplanationsState> {
 
-    private static readonly NODE_HEIGHT = 65;
+    private static readonly NODE_HEIGHT = 87;
     private static readonly NODE_WIDTH = 190;
 
     static defaultProps = {
@@ -196,14 +198,18 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
                        onClickHandler={this.selectNode}
                        onAlternativeClickHandler={this.toggleNode}>
                 <>
-                    <h3>{normalizeComponent(data.label)} ({data.id})</h3>
-                    <div className={'bandit-explanation_node-details'}>
-                        <div>{details.failure_message ? details.failure_message : 'Reward: ' + (details.reward / details.visits).toFixed(3)}</div>
-                        <div>Visits: {details.visits}</div>
-                        {Array.from(details.policy.keys()).map(k =>
-                            <div>{`${k}: ${details.policy.get(k).toFixed(3)}`}</div>)
-                        }
-                    </div>
+                    <CollapseComp showInitial={false} className={''}>
+                        <h3>{normalizeComponent(data.label)}: {fixedPrec(details.score)}</h3>
+                        <div className={'bandit-explanation_node-details'} style={{marginTop: "-10px"}}>
+                            <KeyValue key_={'Id'} value={data.id} tight={true}/>
+                            {details.failure_message &&
+                            <KeyValue key_={'Reason'} value={details.failure_message} tight={true}/>}
+
+                            {Array.from(details.policy.keys()).map(k =>
+                                <KeyValue key={k} key_={k} value={fixedPrec(details.policy.get(k))} tight={true}/>
+                            )}
+                        </div>
+                    </CollapseComp>
                 </>
             </GraphNode>
         )
