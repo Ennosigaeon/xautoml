@@ -112,6 +112,7 @@
 
 .bandit-explanation_node-details {
     display: grid;
+    text-align: left;
     grid-template-columns: 50% 50%;
 }
 
