@@ -20,7 +20,7 @@ interface PCState {
 
 export class ParallelCoordinates extends React.Component<PCProps, PCState> {
 
-    private readonly HEIGHT = 65
+    private readonly NODE_HEIGHT = 65
     private readonly root: cpc.Choice;
 
     constructor(props: PCProps) {
@@ -65,8 +65,9 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
         const {model, highlightedLines, container} = this.state
         const width = (container && container.current) ? container.current.clientWidth : 0
 
-        // Estimate height based on maximum number of components
-        const height = this.HEIGHT * Math.max(...this.root.axes.map(a => a.choices.length))
+        // Estimate height based on maximum number of choices in all coordinates
+        const maxNodes = Math.max(...this.root.axes.map(a => a.getHeightWeight()))
+        const height = this.NODE_HEIGHT * maxNodes
         const yScale = d3.scaleBand([this.root.label.toString()], [0, height / this.root.getHeightWeight()])
         this.root.layout([0, width], yScale)
 
