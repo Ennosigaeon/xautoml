@@ -230,6 +230,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
             <HierarchicalTree nodeHeight={StructureGraphComponent.NODE_HEIGHT}
                               nodeWidth={StructureGraphComponent.NODE_WIDTH}
                               data={data}
+                              containsTerminalNodes={true}
                               render={this.renderNodes}/>
         )
     }

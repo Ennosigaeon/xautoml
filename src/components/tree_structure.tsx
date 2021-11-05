@@ -138,6 +138,7 @@ interface HierarchicalTreeProps<Datum> {
     data: Datum
     render: (node: Dag<Datum>) => JSX.Element
     count?: number
+    containsTerminalNodes?: boolean
 }
 
 interface HierarchicalTreeState {
@@ -158,7 +159,8 @@ export class HierarchicalTree<Datum> extends React.Component<HierarchicalTreePro
     }
 
     static defaultProps = {
-        count: 1
+        count: 1,
+        containsTerminalNodes: false
     }
 
     private updateContainer(container: React.RefObject<any>) {
@@ -168,7 +170,8 @@ export class HierarchicalTree<Datum> extends React.Component<HierarchicalTreePro
     private doLayout(width: number, height: number, count: number): any {
         const root = d3ag.dagHierarchy()(this.props.data)
 
-        const dimensions: [number, number] | null = (height && width) && (count == this.previousCount) ? [height, width] : null
+        const padding = this.props.containsTerminalNodes ? 2 * (this.props.nodeWidth - this.props.nodeHeight) : 0
+        const dimensions: [number, number] | null = (height && width) && (count == this.previousCount) ? [height, width + padding] : null
         const layout = d3ag
             .sugiyama()
             .coord(d3ag.coordCenter())
@@ -194,7 +197,9 @@ export class HierarchicalTree<Datum> extends React.Component<HierarchicalTreePro
 
         return (
             <FlexibleSvg height={height} onContainerChange={this.updateContainer}>
-                {root && this.props.render(root)}
+                <g transform={`translate(${this.props.containsTerminalNodes ? -(this.props.nodeWidth - this.props.nodeHeight) : 0},0)`}>
+                    {root && this.props.render(root)}
+                </g>
             </FlexibleSvg>
         )
     }
