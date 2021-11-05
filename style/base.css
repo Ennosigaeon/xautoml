@@ -97,20 +97,7 @@ tr.MuiTableRow-root.MuiTableRow-hover:hover {
 
 /** Bandit Explanation */
 .bandit-explanation .hierarchical-tree_node-content {
-    background-color: #28a745;
     font-size: 8px;
-}
-
-.failed-config .hierarchical-tree_node-content {
-    background-color: #dc3545;
-}
-
-.node-duplicate .hierarchical-tree_node-content {
-    background-color: #ffc107;
-}
-
-.node-unvisited .hierarchical-tree_node-content {
-    background-color: #f8f9fa;
 }
 
 .bandit-explanation_node-details {

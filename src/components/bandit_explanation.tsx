@@ -172,29 +172,12 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
         this.setState({root: root, timestamp: timestamp});
     }
 
-    private static determineNodeClass(details: RF.StateDetails, highlight: boolean) {
-        if (highlight) {
-            return 'selected selected-config'
-        }
-
-        const selected = details.selected ? 'selected' : ''
-
-        if (details.isDuplicate())
-            return `${selected} node-duplicate`;
-        else if (details.isUnvisited())
-            return `${selected} node-unvisited`;
-        else if (details.isFailure())
-            return 'failed-config';
-        else
-            return selected
-    }
-
     renderNode(node: DagNode<CollapsibleNode>): JSX.Element {
         const data = node.data.data
         const details = data.getDetails(this.state.timestamp)
         const highlight = this.selectedNodes(this.props.selectedCandidates).has(data.id)
 
-        const nodeClass = BanditExplanationsComponent.determineNodeClass(details, highlight)
+        const nodeClass = highlight || details.selected ? 'selected' : ''
         return (
             <GraphNode key={data.id}
                        node={node}
