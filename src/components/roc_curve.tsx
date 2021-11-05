@@ -14,6 +14,7 @@ import {
 import 'react-vis/dist/style.css'
 import {LoadingIndicator} from "./loading";
 import {ErrorIndicator} from "../util/error";
+import {Colors} from "../util";
 
 
 interface RocCurveProps {
@@ -124,7 +125,7 @@ export class RocCurve extends React.Component<RocCurveProps, RocCurveState> {
                     <XAxis title="False Positive Rate"/>
                     <YAxis title="True Positive Rate"/>
 
-                    {data.map((s, idx) => <LineSeries key={labels[idx]} data={s}/>)}
+                    {data.map((s, idx) => <LineSeries key={labels[idx]} data={s} color={Colors.getColor(idx)}/>)}
                     {labels.length < 15 && legend}
                 </FlexibleWidthXYPlot>
             )

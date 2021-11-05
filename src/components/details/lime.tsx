@@ -147,6 +147,7 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
                                 <HorizontalBarSeries
                                     barWidth={0.75}
                                     data={expl}
+                                    color={Colors.DEFAULT}
                                 />
 
                                 <ChartLabel

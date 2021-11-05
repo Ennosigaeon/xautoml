@@ -10,14 +10,13 @@
 
 .selected-config,
 .Mui-selected,
-.bandit-explanation.selected-config .hierarchical-tree_node-content {
-    background-color: #007bff !important;
-    fill: #007bff !important;
+.selected .hierarchical-tree_node-content {
+    background-color: var(--jp-brand-color1) !important;
+    fill: var(--jp-brand-color1) !important;
 }
 
-.failed-config,
-.bandit-explanation.failed-config .hierarchical-tree_node-content {
-    background-color: #dc3545;
+tr.MuiTableRow-root.MuiTableRow-hover:hover {
+    background-color: var(--jp-rendermime-table-row-hover-background);
 }
 
 .MuiTableContainer-root {
@@ -44,7 +43,6 @@
     position: relative;
     width: 99%;
     vertical-align: middle;
-    /*overflow: hidden; */
 }
 
 .flexible-svg {
@@ -103,11 +101,15 @@
     font-size: 8px;
 }
 
-.bandit-explanation.node-duplicate .hierarchical-tree_node-content {
+.failed-config .hierarchical-tree_node-content {
+    background-color: #dc3545;
+}
+
+.node-duplicate .hierarchical-tree_node-content {
     background-color: #ffc107;
 }
 
-.bandit-explanation.node-unvisited .hierarchical-tree_node-content {
+.node-unvisited .hierarchical-tree_node-content {
     background-color: #f8f9fa;
 }
 
@@ -183,7 +185,7 @@ div.structure-graph_tooltip {
 }
 
 .pc-choice > rect:hover {
-    stroke: #007bff !important;
+    stroke: var(--jp-brand-color1) !important;
     fill: rgba(255, 255, 255, 0.4);
     stroke-width: 1px;
 }
@@ -207,7 +209,7 @@ div.structure-graph_tooltip {
 
 .pc-choice-expandable:hover > circle {
     fill: rgb(198, 200, 224);
-    stroke: #007bff !important;
+    stroke: var(--jp-brand-color1) !important;
     stroke-width: 2px;
 }
 
@@ -240,7 +242,7 @@ text.pc-axis-tick {
     stroke-opacity: 1;
     stroke-width: 2px;
     cursor: pointer;
-    stroke: #007bff;
+    stroke: var(--jp-brand-color1);
 }
 
 .pc-tooltip {

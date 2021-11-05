@@ -12,6 +12,7 @@ import {FeatureImportance, requestFeatureImportance} from "../../handler";
 import {LoadingIndicator} from "../loading";
 import {DetailsModel} from "./model";
 import {ErrorIndicator} from "../../util/error";
+import {Colors} from "../../util";
 
 
 interface FeatureImportanceProps {
@@ -82,7 +83,7 @@ export class FeatureImportanceComponent extends React.Component<FeatureImportanc
                             <HorizontalGridLines/>
                             <XAxis tickLabelAngle={330}/>
                             <YAxis/>
-                            <VerticalBarSeries data={bars} barWidth={0.75}/>
+                            <VerticalBarSeries data={bars} barWidth={0.75} color={Colors.DEFAULT}/>
                         </FlexibleXYPlot>
                     </div>
                     }

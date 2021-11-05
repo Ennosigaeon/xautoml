@@ -258,6 +258,11 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
                 .get(sid).steps
                 .map(([id, _]) => selectedPipelines.add(Number.parseInt(id)))
         })
+
+        // Also add root node if at least one candidate is selected
+        if (selectedPipelines.size > 0)
+            selectedPipelines.add(0)
+
         return selectedPipelines
     }
 

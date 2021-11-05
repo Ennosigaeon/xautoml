@@ -1,6 +1,6 @@
 import React from 'react';
 import {CandidateId, MetaInformation, Structure} from "../model";
-import {fixedPrec} from "../util";
+import {Colors, fixedPrec} from "../util";
 import {
     FlexibleWidthXYPlot,
     HorizontalGridLines,
@@ -87,8 +87,8 @@ export default class PerformanceTimeline extends React.Component<ConfigHistoryPr
         }));
         const incumbent = data.map(d => ({x: d.x, y: d.Incumbent}))
 
-        const bc = '#c6c8e0'
-        const hc = '#007bff'
+        const bc = Colors.DEFAULT
+        const hc = Colors.HIGHLIGHT
         // Somehow, if all points are selected only the base color is used and not the highlight color. Bug in react-vis?
         const colorRange = data.length === selectedCandidates.size ? [hc, hc] : [hc, bc]
         return (
@@ -99,7 +99,7 @@ export default class PerformanceTimeline extends React.Component<ConfigHistoryPr
                     <XAxis title="Timestamp"/>
                     <YAxis title="Performance"/>
 
-                    <LineSeries data={incumbent} curve={d3.curveStepAfter}/>
+                    <LineSeries data={incumbent} curve={d3.curveStepAfter} color={Colors.HIGHLIGHT}/>
                     <MarkSeries data={dataWithColor} colorRange={colorRange}
                                 onValueMouseOver={value => this.setState({hovered: value as ConfigRecord})}
                                 onValueMouseOut={() => this.setState({hovered: undefined})}
