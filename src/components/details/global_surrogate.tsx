@@ -29,6 +29,10 @@ interface GlobalSurrogateState {
 
 export class GlobalSurrogateComponent extends React.Component<GlobalSurrogateProps, GlobalSurrogateState> {
 
+    static HELP = 'Approximates the pipeline using a global surrogate model. The surrogate model is a decision tree ' +
+        'that is trained to approximate the predictions of a black-box model. By adjusting the maximum number of ' +
+        'leaves in the decision tree, the fidelity of the approximation can be weighted against the simplicity of the ' +
+        'explanation.'
 
     private static readonly NODE_HEIGHT = 45;
     private static readonly NODE_WIDTH = 100;

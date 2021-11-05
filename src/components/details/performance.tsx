@@ -12,6 +12,9 @@ interface PerformanceComponentProps {
 
 export class PerformanceComponent extends React.Component<PerformanceComponentProps, {}> {
 
+    static HELP = 'Displays basic performance details like train and test performance. Additionally, a confusion ' +
+        'matrix for all classes is computed. Finally, the ROC curve for this candidate is displayed.'
+
     render() {
         const {model} = this.props
 
@@ -35,7 +38,7 @@ export class PerformanceComponent extends React.Component<PerformanceComponentPr
                 </div>
 
                 <div style={{flexGrow: 1, flexBasis: "40%"}}>
-                    <h5>ROC AUC</h5>
+                    <h5>Receiver Operating Characteristic (ROC) Curve</h5>
                     <RocCurve selectedCandidates={new Set([model.candidate.id])} meta={model.meta} height={200}/>
                 </div>
             </div>

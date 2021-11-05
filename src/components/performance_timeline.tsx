@@ -36,6 +36,10 @@ export interface ConfigRecord {
 
 export default class PerformanceTimeline extends React.Component<ConfigHistoryProps, ConfigHistoryState> {
 
+    static HELP = 'This component provides a scatter plot of the performance of each evaluated candidate over the ' +
+        'time. The line plot show the performance of the best candidate over time. Individual pipelines can be ' +
+        'selected by clicking on the corresponding patch.'
+
     static defaultProps = {
         onCandidateSelection: (_: CandidateId[]) => {
         }

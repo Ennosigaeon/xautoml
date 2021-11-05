@@ -33,6 +33,11 @@ interface RocCurveState {
 
 export class RocCurve extends React.Component<RocCurveProps, RocCurveState> {
 
+    static HELP = 'Displays the ROC curve for all selected candidates.\n\n' +
+        'A ROC curve is a graphical plot that illustrates the diagnostic ability of a binary classifier system as ' +
+        'its discrimination threshold is varied. The ROC curve is created by plotting the true positive rate (TPR) ' +
+        'against the false positive rate (FPR) at various threshold settings.'
+
     constructor(props: RocCurveProps) {
         super(props)
 

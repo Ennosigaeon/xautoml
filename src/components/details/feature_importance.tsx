@@ -27,6 +27,10 @@ interface FeatureImportanceState {
 
 export class FeatureImportanceComponent extends React.Component<FeatureImportanceProps, FeatureImportanceState> {
 
+    static HELP = 'The permutation feature importance is defined to be the decrease in a model score when a single ' +
+        'feature value is randomly shuffled. This procedure breaks the relationship between the feature and the ' +
+        'target, thus the drop in the model score is indicative of how much the model depends on the feature.'
+
     constructor(props: FeatureImportanceProps) {
         super(props);
 

@@ -21,7 +21,8 @@ export default class MetaInformationTable extends React.Component<MetaInformatio
 
         return (
             <>
-                <CollapseComp showInitial={true}>
+                <CollapseComp showInitial={true}
+                              help={'View the most important settings and statistics for this optimization run.'}>
                     <h4>Optimization Overview</h4>
                     <>
                         <KeyValue key_={'Data Set'} value={`Task ${meta.openml_task} on Fold ${meta.openml_fold}`}
@@ -30,13 +31,13 @@ export default class MetaInformationTable extends React.Component<MetaInformatio
                         <KeyValue key_={'End Time'} value={end}/>
                         <KeyValue key_={'Metric'} value={meta.metric}/>
                         {/* TODO */}
-                        <KeyValue key_={'Best Performance'} value={0}/>
+                        <KeyValue key_={'Best Performance'} value={'TODO'}/>
                         <KeyValue key_={'Total Nr. Configs.'} value={meta.n_configs}/>
                         <KeyValue key_={'Unique Structures'} value={meta.n_structures}/>
                     </>
                 </CollapseComp>
 
-                <CollapseComp showInitial={false}>
+                <CollapseComp showInitial={false} help={'View additional settings for this optimization run.'}>
                     <h4>Optimization Configuration</h4>
                     <>
                         {configValues.map(([key, value]) =>

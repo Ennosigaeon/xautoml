@@ -62,7 +62,7 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
 
         return (
             <>
-                <CollapseComp showInitial={true}>
+                <CollapseComp showInitial={true} help={RawDataset.HELP + '\n\n' + LimeComponent.HELP}>
                     <h4>Data Set Preview</h4>
                     <TwoColumnLayout widthRight={'15%'}>
                         <RawDataset model={model} onSampleClick={this.handleSampleSelection}/>
@@ -70,17 +70,17 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
                     </TwoColumnLayout>
                 </CollapseComp>
 
-                <CollapseComp showInitial={true}>
+                <CollapseComp showInitial={true} help={PerformanceComponent.HELP}>
                     <h4>Performance Details</h4>
                     <PerformanceComponent model={model}/>
                 </CollapseComp>
 
-                <CollapseComp showInitial={true}>
+                <CollapseComp showInitial={true} help={FeatureImportanceComponent.HELP}>
                     <h4>Feature Importance</h4>
                     <FeatureImportanceComponent model={model} height={200}/>
                 </CollapseComp>
 
-                <CollapseComp showInitial={true}>
+                <CollapseComp showInitial={true} help={GlobalSurrogateComponent.HELP}>
                     <h4>Global Approximation</h4>
                     <GlobalSurrogateComponent model={model}/>
                 </CollapseComp>

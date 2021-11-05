@@ -30,6 +30,13 @@ interface LimeState {
 
 export class LimeComponent extends React.Component<LimeProps, LimeState> {
 
+    static HELP = 'LIME, the acronym for local interpretable model-agnostic explanations, is a technique that ' +
+        'approximates any black box machine learning model with a local, interpretable model to explain each ' +
+        'individual prediction. The algorithm perturbs the original data points, feed them into the black box model, ' +
+        'and then observe the corresponding outputs. The method then weighs those new data points as a function of ' +
+        'their proximity to the original point. Ultimately, it fits a linear regression on the dataset with ' +
+        'variations using those sample weights.'
+
     constructor(props: LimeProps) {
         super(props);
         this.state = {selectedLabel: undefined, pendingRequest: undefined, data: undefined, error: undefined}
