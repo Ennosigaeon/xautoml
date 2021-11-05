@@ -109,7 +109,7 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
         return (
             <JupyterContext.Provider value={jupyter}>
                 <div style={{display: 'flex'}}>
-                    <div style={{flexGrow: 1, flexShrink: 0.25, marginRight: '20px'}}>
+                    <div style={{flexGrow: 1, flexShrink: 0, marginRight: '20px'}}>
                         <MetaInformationTable meta={data.meta}/>
                         <CollapseComp showInitial={true}>
                             <h4>Performance Timeline</h4>

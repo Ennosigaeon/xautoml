@@ -78,6 +78,7 @@
 .hierarchical-tree_node-content-round {
     border-radius: 50%;
     height: 100%;
+    padding: 0;
     box-sizing: border-box;
 }
 

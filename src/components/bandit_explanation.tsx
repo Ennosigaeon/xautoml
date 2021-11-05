@@ -75,7 +75,7 @@ interface BanditExplanationsState {
 
 export class BanditExplanationsComponent extends React.Component<BanditExplanationsProps, BanditExplanationsState> {
 
-    private static readonly NODE_HEIGHT = 87;
+    private static readonly NODE_HEIGHT = 75;
     private static readonly NODE_WIDTH = 190;
 
     static defaultProps = {
@@ -199,11 +199,11 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
                        onAlternativeClickHandler={this.toggleNode}>
                 <>
                     <CollapseComp showInitial={false} className={''}>
-                        <h3>{normalizeComponent(data.label)}: {fixedPrec(details.score)}</h3>
+                        <h3>
+                            {normalizeComponent(data.label)}: {details.failure_message ? details.failure_message : fixedPrec(details.score)}
+                        </h3>
                         <div className={'bandit-explanation_node-details'} style={{marginTop: "-10px"}}>
                             <KeyValue key_={'Id'} value={data.id} tight={true}/>
-                            {details.failure_message &&
-                            <KeyValue key_={'Reason'} value={details.failure_message} tight={true}/>}
 
                             {Array.from(details.policy.keys()).map(k =>
                                 <KeyValue key={k} key_={k} value={fixedPrec(details.policy.get(k))} tight={true}/>
