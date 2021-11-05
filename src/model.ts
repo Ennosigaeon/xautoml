@@ -104,6 +104,18 @@ export namespace RF {
                 stateDetails.selected,
                 new Map<string, number>(Object.entries(stateDetails.policy)));
         }
+
+        isUnvisited(): boolean {
+            return this.failure_message === 'Unvisited'
+        }
+
+        isDuplicate(): boolean {
+            return !!this.failure_message && (this.failure_message.startsWith('Duplicate') || this.failure_message === 'Ineffective')
+        }
+
+        isFailure(): boolean {
+            return !!this.failure_message && !this.isUnvisited()
+        }
     }
 
     export class PolicyExplanations {

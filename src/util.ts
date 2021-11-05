@@ -1,5 +1,6 @@
 import React from "react";
 import {Jupyter} from "./jupyter";
+import {CandidateId} from "./model";
 
 // For reasons, JupyterContext can not be declared in root.tsx and imported in dataset_details.tsx...
 export const JupyterContext = React.createContext<Jupyter>(undefined)
@@ -15,6 +16,10 @@ export function catchReactWarnings() {
             return console.oldError(...args);
         }
     }
+}
+
+export function cidToSid(cid: CandidateId): string {
+    return cid.substring(0, cid.indexOf(':', 4))
 }
 
 

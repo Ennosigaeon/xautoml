@@ -3,7 +3,7 @@ import * as d3 from "d3";
 import {CandidateId, Pipeline, RF, Structure} from "../model";
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
-import {areSetInputsEqual, fixedPrec, normalizeComponent} from "../util";
+import {areSetInputsEqual, cidToSid, fixedPrec, normalizeComponent} from "../util";
 import {GraphEdge, GraphNode, HierarchicalTree} from "./tree_structure";
 import {Dag, DagNode} from "d3-dag";
 import memoizeOne from "memoize-one";
@@ -32,7 +32,7 @@ namespace CollapsibleNodeActions {
             .filter(child => child.data.shouldDisplay(key))
             .forEach(child => {
                 const details = child.data.getDetails(key)
-                if (details.failure_message === 'Unvisited' && !details.selected)
+                if (details.isUnvisited() && !details.selected)
                     hidden.push(child);
                 else
                     visible.push(child);
@@ -65,6 +65,8 @@ interface BanditExplanationsProps {
 
     selectedCandidates?: Set<CandidateId>;
     onCandidateSelection?: (cid: Set<CandidateId>) => void;
+
+    timestamp?: string
 }
 
 interface BanditExplanationsState {
@@ -90,12 +92,15 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
         // Create implicit copy of hierarchical data to prevent accidental modifications of children
         const root = d3.hierarchy(this.props.explanations, d => d.children)
         const sliderMarks: { [key: string]: string; } = {}
-        const detailKeys = new Set<string>()
-        root.descendants().map(d => Array.from(d.data.details.keys()).forEach(k => detailKeys.add(k)));
-        const detailsKeysArray = Array.from(detailKeys).sort()
+        let timestamp = this.props.timestamp
+        if (!timestamp) {
+            const detailKeys = new Set<string>()
+            root.descendants().map(d => Array.from(d.data.details.keys()).forEach(k => detailKeys.add(k)));
+            const detailsKeysArray = Array.from(detailKeys).sort()
 
-        detailsKeysArray.forEach((k, idx) => sliderMarks[idx] = k)
-        const timestamp = detailsKeysArray.slice(-1)[0]
+            detailsKeysArray.forEach((k, idx) => sliderMarks[idx] = k)
+            timestamp = detailsKeysArray.slice(-1)[0]
+        }
 
         this.state = {
             root: root,
@@ -174,13 +179,14 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
 
         const selected = details.selected ? 'selected' : ''
 
-        if (!details.failure_message)
-            return selected;
-        if (details.failure_message.startsWith('Duplicate') || details.failure_message === 'Ineffective')
+        if (details.isDuplicate())
             return `${selected} node-duplicate`;
-        if (details.failure_message === 'Unvisited')
+        else if (details.isUnvisited())
             return `${selected} node-unvisited`;
-        return 'failed-config';
+        else if (details.isFailure())
+            return 'failed-config';
+        else
+            return selected
     }
 
     renderNode(node: DagNode<CollapsibleNode>): JSX.Element {
@@ -200,7 +206,7 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
                 <>
                     <CollapseComp showInitial={false} className={''}>
                         <h3>
-                            {normalizeComponent(data.label)}: {details.failure_message ? details.failure_message : fixedPrec(details.score)}
+                            {normalizeComponent(data.label)}: {details.isFailure() ? details.failure_message : fixedPrec(details.score)}
                         </h3>
                         <div className={'bandit-explanation_node-details'} style={{marginTop: "-10px"}}>
                             <KeyValue key_={'Id'} value={data.id} tight={true}/>
@@ -247,7 +253,7 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
         const selectedPipelines = new Set()
 
         selectedCandidates.forEach(cid => {
-            const sid = cid.substring(0, cid.indexOf(':', 4))
+            const sid = cidToSid(cid)
             pipelines
                 .get(sid).steps
                 .map(([id, _]) => selectedPipelines.add(Number.parseInt(id)))

@@ -7,7 +7,7 @@ import TableRow from '@material-ui/core/TableRow';
 import TableSortLabel from '@material-ui/core/TableSortLabel';
 import Checkbox from '@material-ui/core/Checkbox';
 import {Box, IconButton, Table, TableContainer} from '@material-ui/core';
-import {Candidate, CandidateId, MetaInformation, Structure} from '../model';
+import {Candidate, CandidateId, Explanations, MetaInformation, Structure} from '../model';
 import {fixedPrec, JupyterContext} from '../util';
 import {PipelineStep, StructureGraphComponent} from './structure_graph';
 import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
@@ -99,6 +99,9 @@ interface CandidateTableRowProps {
     meta: MetaInformation
     selected: boolean
     onSelectionToggle: (id: CandidateId) => void
+
+    structures: Structure[]
+    explanations: Explanations
 }
 
 interface CandidateTableRowState {
@@ -149,7 +152,7 @@ xautoml_pipeline
     }
 
     render() {
-        const {candidate, meta, selected, onSelectionToggle} = this.props
+        const {candidate, meta, selected, onSelectionToggle, structures, explanations} = this.props
 
         return (
             <>
@@ -192,8 +195,9 @@ xautoml_pipeline
                                     candidate={candidate.candidate[1]}
                                     componentId={this.state.selectedComponent[0]}
                                     componentLabel={this.state.selectedComponent[1]}
-                                    meta={this.props.meta}
-                                />
+                                    meta={meta}
+                                    explanations={explanations}
+                                    structures={structures}/>
                             </Box>
                         </Collapse>
                     </TableCell>
@@ -207,6 +211,7 @@ interface CandidateTableProps {
     structures: Structure[];
     selectedCandidates: Set<CandidateId>;
     meta: MetaInformation;
+    explanations: Explanations;
     onCandidateSelection?: (cid: Set<CandidateId>) => void;
 }
 
@@ -303,6 +308,7 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
     }
 
     render() {
+        const {structures, explanations} = this.props
         const {rows, order, orderBy, page, rowsPerPage} = this.state
         const comp = (a: SingleCandidate, b: SingleCandidate) => {
             const sign = order === 'desc' ? 1 : -1
@@ -348,7 +354,9 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
                                                            candidate={row}
                                                            meta={this.props.meta}
                                                            selected={this.props.selectedCandidates.has(row.id)}
-                                                           onSelectionToggle={this.handleSelectionToggle}/>
+                                                           onSelectionToggle={this.handleSelectionToggle}
+                                                           structures={structures}
+                                                           explanations={explanations}/>
                                     );
                                 })}
                         </TableBody>

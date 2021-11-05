@@ -1,6 +1,6 @@
 import React from "react";
-import {Candidate, MetaInformation} from "../model";
-import {JupyterContext} from "../util";
+import {Candidate, Explanations, MetaInformation, Structure} from "../model";
+import {cidToSid, JupyterContext} from "../util";
 import {TwoColumnLayout} from "../util/layout";
 import {LimeComponent} from "./details/lime";
 import {FeatureImportanceComponent} from "./details/feature_importance";
@@ -9,12 +9,16 @@ import {DetailsModel} from "./details/model";
 import {GlobalSurrogateComponent} from "./details/global_surrogate";
 import {CollapseComp} from "../util/collapse";
 import {PerformanceComponent} from "./details/performance";
+import {BanditExplanationsComponent} from "./bandit_explanation";
 
 interface DataSetDetailsProps {
     candidate: Candidate
     componentId: string
     componentLabel: string
     meta: MetaInformation
+
+    structures: Structure[]
+    explanations: Explanations
 }
 
 interface DataSetDetailsState {
@@ -51,7 +55,7 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
     }
 
     render() {
-        const {candidate, meta, componentId, componentLabel} = this.props
+        const {candidate, meta, componentId, componentLabel, structures, explanations} = this.props
         const {selectedSample} = this.state
 
         const model = new DetailsModel(meta, candidate, componentId, componentLabel, selectedSample)
@@ -79,6 +83,13 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
                 <CollapseComp showInitial={true}>
                     <h4>Global Approximation</h4>
                     <GlobalSurrogateComponent model={model}/>
+                </CollapseComp>
+
+                <CollapseComp showInitial={true}>
+                    <h4>Search Space Overview</h4>
+                    <BanditExplanationsComponent explanations={explanations.structures}
+                                                 structures={structures}
+                                                 timestamp={cidToSid(candidate.id)}/>
                 </CollapseComp>
             </>
         )

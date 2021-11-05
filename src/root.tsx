@@ -125,6 +125,7 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
                         <CandidateTable structures={runhistory.structures}
                                         selectedCandidates={selectedCandidates}
                                         meta={runhistory.meta}
+                                        explanations={runhistory.explanations}
                                         onCandidateSelection={this.onCandidateSelection}/>
 
                         <ParallelCoordinates runhistory={runhistory}/>
