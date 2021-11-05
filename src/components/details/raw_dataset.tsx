@@ -1,6 +1,5 @@
 import React from "react";
 import {OutputDescriptionData, requestOutputComplete} from "../../handler";
-import {DataSetDetailsComponent} from "../dataset_details";
 import {LoadingIndicator} from "../loading";
 import {DetailsModel} from "./model";
 import {TwoColumnLayout} from "../../util/layout";
@@ -22,6 +21,7 @@ interface RawDatasetState {
 
 export class RawDataset extends React.Component<RawDatasetProps, RawDatasetState> {
 
+    private static selectedClassName = 'selected-config'
     static contextType = JupyterContext;
     context: React.ContextType<typeof JupyterContext>;
 
@@ -51,7 +51,7 @@ export class RawDataset extends React.Component<RawDatasetProps, RawDatasetState
                 // Highlight previously selected row
                 if (this.props.model.selectedSample !== undefined &&
                     this.props.model.selectedSample === Number.parseInt(tr.firstElementChild.textContent)) {
-                    tr.classList.add(DataSetDetailsComponent.selectedClassName)
+                    tr.classList.add(RawDataset.selectedClassName)
                 }
             })
         }
@@ -86,9 +86,9 @@ export class RawDataset extends React.Component<RawDatasetProps, RawDatasetState
             return
 
         // Highlight selected row
-        row.parentElement.querySelectorAll(`.${DataSetDetailsComponent.selectedClassName}`)
-            .forEach(el => el.classList.remove(DataSetDetailsComponent.selectedClassName))
-        row.classList.add(DataSetDetailsComponent.selectedClassName)
+        row.parentElement.querySelectorAll(`.${RawDataset.selectedClassName}`)
+            .forEach(el => el.classList.remove(RawDataset.selectedClassName))
+        row.classList.add(RawDataset.selectedClassName)
 
         this.props.onSampleClick(idx)
     }

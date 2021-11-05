@@ -26,7 +26,6 @@ interface DataSetDetailsState {
 
 export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps, DataSetDetailsState> {
 
-    static selectedClassName = 'selected-config'
     static contextType = JupyterContext;
     context: React.ContextType<typeof JupyterContext>;
 

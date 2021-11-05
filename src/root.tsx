@@ -1,7 +1,7 @@
 import React from "react";
 import {ReactWidget} from "@jupyterlab/apputils";
 import {IRenderMime} from "@jupyterlab/rendermime-interfaces";
-import {CandidateId, Pipeline, Runhistory} from "./model";
+import {CandidateId, Runhistory} from "./model";
 import MetaInformationTable from "./components/meta_information";
 import PerformanceTimeline from "./components/performance_timeline";
 import {catchReactWarnings, JupyterContext} from "./util";
@@ -25,7 +25,7 @@ const CLASS_NAME = 'mimerenderer-xautoml';
 export class JupyterWidget extends ReactWidget implements IRenderMime.IRenderer {
     private readonly _mimeType: string;
     private readonly jupyter: Jupyter;
-    private data: Runhistory = undefined;
+    private runhistory: Runhistory = undefined;
 
     constructor(options: IRenderMime.IRendererOptions, jupyter: Jupyter) {
         super();
@@ -38,7 +38,7 @@ export class JupyterWidget extends ReactWidget implements IRenderMime.IRenderer 
 
     renderModel(model: IRenderMime.IMimeModel): Promise<void> {
         try {
-            this.data = Runhistory.fromJson(model.data[this._mimeType] as unknown as Runhistory);
+            this.runhistory = Runhistory.fromJson(model.data[this._mimeType] as unknown as Runhistory);
         } catch (e) {
             console.error('Failed to parse runhistory', e)
         }
@@ -49,14 +49,14 @@ export class JupyterWidget extends ReactWidget implements IRenderMime.IRenderer 
     }
 
     protected render() {
-        if (!this.data)
+        if (!this.runhistory)
             return <p>Error loading data...</p>
-        return <ReactRoot data={this.data} jupyter={this.jupyter}/>
+        return <ReactRoot runhistory={this.runhistory} jupyter={this.jupyter}/>
     }
 }
 
 export interface ReactRootProps {
-    data: Runhistory;
+    runhistory: Runhistory;
     jupyter: Jupyter;
 }
 
@@ -90,9 +90,8 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
     }
 
     render() {
-        const {data, jupyter} = this.props
+        const {runhistory, jupyter} = this.props
         const {selectedCandidates, mounted} = this.state
-        const pipelines = new Map<CandidateId, Pipeline>(data.structures.map(s => [s.cid, s.pipeline]))
 
         if (!mounted) {
             // Render loading indicator while waiting for delayed re-rendering with mounted container
@@ -103,35 +102,35 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
             )
         }
 
-        if (!data) {
+        if (!runhistory) {
             return <p>Error loading data...</p>
         }
         return (
             <JupyterContext.Provider value={jupyter}>
                 <div style={{display: 'flex'}}>
                     <div style={{flexGrow: 1, flexShrink: 0, marginRight: '20px'}}>
-                        <MetaInformationTable meta={data.meta}/>
+                        <MetaInformationTable meta={runhistory.meta}/>
                         <CollapseComp showInitial={true}>
                             <h4>Performance Timeline</h4>
-                            <PerformanceTimeline data={data.structures} meta={data.meta}
+                            <PerformanceTimeline data={runhistory.structures} meta={runhistory.meta}
                                                  selectedCandidates={selectedCandidates}
                                                  onCandidateSelection={this.onCandidateSelection}/>
                         </CollapseComp>
                         <CollapseComp showInitial={true}>
                             <h4>ROC Curve</h4>
-                            <RocCurve selectedCandidates={selectedCandidates} meta={data.meta} height={300}/>
+                            <RocCurve selectedCandidates={selectedCandidates} meta={runhistory.meta} height={300}/>
                         </CollapseComp>
                     </div>
                     <div style={{flexGrow: 2}}>
-                        <CandidateTable structures={data.structures}
+                        <CandidateTable structures={runhistory.structures}
                                         selectedCandidates={selectedCandidates}
-                                        meta={data.meta}
+                                        meta={runhistory.meta}
                                         onCandidateSelection={this.onCandidateSelection}/>
 
-                        <ParallelCoordinates runhistory={data}/>
-                        <BanditExplanationsComponent data={data.explanations.structures} pipelines={pipelines}
+                        <ParallelCoordinates runhistory={runhistory}/>
+                        <BanditExplanationsComponent explanations={runhistory.explanations.structures}
                                                      selectedCandidates={selectedCandidates}
-                                                     structures={data.structures}
+                                                     structures={runhistory.structures}
                                                      onCandidateSelection={this.onCandidateSelection}/>
                     </div>
                 </div>

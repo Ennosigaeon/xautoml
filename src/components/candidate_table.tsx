@@ -16,7 +16,7 @@ import Collapse from '@material-ui/core/Collapse';
 import {DataSetDetailsComponent} from './dataset_details';
 import {JupyterButton} from "../util/jupyter-button";
 
-interface Data {
+interface SingleCandidate {
     id: CandidateId;
     timestamp: number;
     performance: number;
@@ -26,7 +26,7 @@ interface Data {
 type Order = 'asc' | 'desc';
 
 interface HeadCell {
-    id: keyof Data;
+    id: keyof SingleCandidate;
     label: string;
     numeric: boolean;
     sortable: boolean;
@@ -36,7 +36,7 @@ interface HeadCell {
 interface CandidateTableHeadProps {
     headCells: HeadCell[]
     numSelected: number;
-    onRequestSort: (event: React.MouseEvent<unknown>, property: keyof Data) => void;
+    onRequestSort: (event: React.MouseEvent<unknown>, property: keyof SingleCandidate) => void;
     onSelectAllClick: (event: React.ChangeEvent<HTMLInputElement>) => void;
     order: Order;
     orderBy: string;
@@ -95,7 +95,7 @@ class CandidateTableHead extends React.Component<CandidateTableHeadProps, {}> {
 
 
 interface CandidateTableRowProps {
-    data: Data
+    candidate: SingleCandidate
     meta: MetaInformation
     selected: boolean
     onSelectionToggle: (id: CandidateId) => void
@@ -142,20 +142,20 @@ class CandidateTableRow extends React.Component<CandidateTableRowProps, Candidat
 from xautoml.util import io_utils
 
 xautoml_X, xautoml_y, _ = io_utils.load_input_data('${this.props.meta.data_file}', framework='${this.props.meta.framework}')
-xautoml_pipeline = io_utils.load_pipeline('${this.props.meta.model_dir}', '${this.props.data.id}', framework='${this.props.meta.framework}')
+xautoml_pipeline = io_utils.load_pipeline('${this.props.meta.model_dir}', '${this.props.candidate.id}', framework='${this.props.meta.framework}')
 xautoml_pipeline
         `.trim())
         e.stopPropagation()
     }
 
     render() {
-        const {data, meta, selected, onSelectionToggle} = this.props
+        const {candidate, meta, selected, onSelectionToggle} = this.props
 
         return (
             <>
                 <TableRow
                     hover
-                    onClick={() => onSelectionToggle(data.id)}
+                    onClick={() => onSelectionToggle(candidate.id)}
                     role='checkbox'
                     tabIndex={-1}
                     selected={selected}
@@ -166,14 +166,14 @@ xautoml_pipeline
                             color='primary'
                         />
                     </TableCell>
-                    <TableCell component='th' id={data.id} scope='row' padding='none'>
-                        {data.id}
+                    <TableCell component='th' id={candidate.id} scope='row' padding='none'>
+                        {candidate.id}
                     </TableCell>
-                    <TableCell align='right'>{data.timestamp}</TableCell>
-                    <TableCell align='right'>{data.performance}</TableCell>
+                    <TableCell align='right'>{fixedPrec(candidate.timestamp, 2).toFixed(2)}</TableCell>
+                    <TableCell align='right'>{fixedPrec(candidate.performance, 3).toFixed(3)}</TableCell>
                     <TableCell align='right' style={{height: '50px'}} padding='none'>
-                        <StructureGraphComponent structure={data.candidate[0]}
-                                                 candidate={data.candidate[1]}
+                        <StructureGraphComponent structure={candidate.candidate[0]}
+                                                 candidate={candidate.candidate[1]}
                                                  meta={meta}
                                                  onComponentSelection={this.openComponent}/>
                     </TableCell>
@@ -189,7 +189,7 @@ xautoml_pipeline
                         <Collapse in={this.state.open} timeout='auto' unmountOnExit={false} mountOnEnter={true}>
                             <Box margin={1}>
                                 <DataSetDetailsComponent
-                                    candidate={data.candidate[1]}
+                                    candidate={candidate.candidate[1]}
                                     componentId={this.state.selectedComponent[0]}
                                     componentLabel={this.state.selectedComponent[1]}
                                     meta={this.props.meta}
@@ -211,9 +211,9 @@ interface CandidateTableProps {
 }
 
 interface CandidateTableState {
-    rows: Data[],
+    rows: SingleCandidate[],
     order: Order
-    orderBy: keyof Data
+    orderBy: keyof SingleCandidate
     page: number
     rowsPerPage: number
 }
@@ -235,7 +235,6 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
             page: 0,
             rowsPerPage: 10
         }
-        this.calculateData()
 
         this.handleRequestSort = this.handleRequestSort.bind(this)
         this.handleSelectAllClick = this.handleSelectAllClick.bind(this)
@@ -244,7 +243,7 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
         this.handleChangeRowsPerPage = this.handleChangeRowsPerPage.bind(this)
     }
 
-    private handleRequestSort(_: React.MouseEvent<unknown>, property: keyof Data): void {
+    private handleRequestSort(_: React.MouseEvent<unknown>, property: keyof SingleCandidate): void {
         const isAsc = this.state.orderBy === property && this.state.order === 'asc';
         this.setState({order: isAsc ? 'desc' : 'asc', orderBy: property})
     }
@@ -284,8 +283,8 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
         }
     }
 
-    private calculateData(): Data[] {
-        const rows: Data[] = []
+    private calculateData(): SingleCandidate[] {
+        const rows: SingleCandidate[] = []
 
         const sign = this.props.meta.metric_sign
         this.props.structures.forEach(structure => {
@@ -305,7 +304,7 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
 
     render() {
         const {rows, order, orderBy, page, rowsPerPage} = this.state
-        const comp = (a: Data, b: Data) => {
+        const comp = (a: SingleCandidate, b: SingleCandidate) => {
             const sign = order === 'desc' ? 1 : -1
             if (b[orderBy] < a[orderBy])
                 return sign * -1;
@@ -346,7 +345,7 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
                                 .map(row => {
                                     return (
                                         <CandidateTableRow key={row.id}
-                                                           data={row}
+                                                           candidate={row}
                                                            meta={this.props.meta}
                                                            selected={this.props.selectedCandidates.has(row.id)}
                                                            onSelectionToggle={this.handleSelectionToggle}/>

@@ -1,6 +1,6 @@
 import React from "react";
 import * as d3 from "d3";
-import {BanditDetails, CandidateId, HierarchicalBandit, Pipeline, Structure} from "../model";
+import {CandidateId, Pipeline, RF, Structure} from "../model";
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
 import {areSetInputsEqual, fixedPrec, normalizeComponent} from "../util";
@@ -12,7 +12,7 @@ import {KeyValue} from "../util/KeyValue";
 
 
 interface CollapsibleNode {
-    data?: HierarchicalBandit;
+    data?: RF.PolicyExplanations;
     children?: this[];
     _children?: this[];
 }
@@ -60,10 +60,10 @@ namespace CollapsibleNodeActions {
 }
 
 interface BanditExplanationsProps {
-    data: HierarchicalBandit;
-    pipelines: Map<CandidateId, Pipeline>;
+    explanations: RF.PolicyExplanations;
     structures: Structure[];
-    selectedCandidates: Set<CandidateId>;
+
+    selectedCandidates?: Set<CandidateId>;
     onCandidateSelection?: (cid: Set<CandidateId>) => void;
 }
 
@@ -79,13 +79,31 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
     private static readonly NODE_WIDTH = 190;
 
     static defaultProps = {
+        selectedCandidates: new Set<CandidateId>(),
         onCandidateSelection: (_: CandidateId[]) => {
         }
     }
 
     constructor(props: BanditExplanationsProps) {
         super(props);
-        this.state = {root: undefined, sliderMarks: {}, timestamp: undefined};
+
+        // Create implicit copy of hierarchical data to prevent accidental modifications of children
+        const root = d3.hierarchy(this.props.explanations, d => d.children)
+        const sliderMarks: { [key: string]: string; } = {}
+        const detailKeys = new Set<string>()
+        root.descendants().map(d => Array.from(d.data.details.keys()).forEach(k => detailKeys.add(k)));
+        const detailsKeysArray = Array.from(detailKeys).sort()
+
+        detailsKeysArray.forEach((k, idx) => sliderMarks[idx] = k)
+        const timestamp = detailsKeysArray.slice(-1)[0]
+
+        this.state = {
+            root: root,
+            sliderMarks: sliderMarks,
+            timestamp: timestamp
+        }
+
+        CollapsibleNodeActions.collapseNode(this.state.root, this.state.timestamp, true)
 
         this.renderNodes = this.renderNodes.bind(this)
         this.selectNode = this.selectNode.bind(this)
@@ -94,29 +112,11 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
         this.getSelectedNodes = this.getSelectedNodes.bind(this)
     }
 
-    componentDidMount() {
-        const root = d3.hierarchy(this.props.data, d => d.children);
-
-        const detailsKeysSet = new Set<string>()
-        root.descendants().map(d => Array.from(d.data.details.keys()).forEach(k => detailsKeysSet.add(k)));
-        const detailsKeysArray = Array.from(detailsKeysSet).sort()
-        const detailsKeys: { [key: string]: string; } = {}
-        detailsKeysArray.forEach((k, idx) => detailsKeys[idx] = k)
-        const timestamp = detailsKeysArray.slice(-1)[0]
-
-        CollapsibleNodeActions.collapseNode(root, timestamp, true)
-
-        this.setState({
-            root: root,
-            sliderMarks: detailsKeys,
-            timestamp: timestamp
-        });
-    }
-
     private selectNode(node: CollapsibleNode) {
+        const pipelines = new Map<CandidateId, Pipeline>(this.props.structures.map(s => [s.cid, s.pipeline]))
         const reversePipelines = new Map<number, CandidateId[]>();
         reversePipelines.set(0, [])
-        this.props.pipelines.forEach((v, k) => v.steps
+        pipelines.forEach((v, k) => v.steps
             .map(v => Number.parseInt(v[0]))
             .forEach(step => {
                 if (reversePipelines.has(step))
@@ -161,13 +161,13 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
         const timestamp = this.state.sliderMarks[v];
 
         // Convert props data to CollapsibleNodes
-        const root: CollapsibleNode = d3.hierarchy(this.props.data, d => d.children);
+        const root: CollapsibleNode = d3.hierarchy(this.props.explanations, d => d.children);
         CollapsibleNodeActions.collapseNode(root, timestamp, true)
 
         this.setState({root: root, timestamp: timestamp});
     }
 
-    private static determineNodeClass(details: BanditDetails, highlight: boolean) {
+    private static determineNodeClass(details: RF.StateDetails, highlight: boolean) {
         if (highlight) {
             return 'selected selected-config'
         }
@@ -184,7 +184,7 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
     }
 
     renderNode(node: DagNode<CollapsibleNode>): JSX.Element {
-        const data: HierarchicalBandit = node.data.data
+        const data = node.data.data
         const details = data.getDetails(this.state.timestamp)
         const highlight = this.selectedNodes(this.props.selectedCandidates).has(data.id)
 
@@ -221,7 +221,7 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
             .map(link => {
                 const key = link.source.data.data.id + '-' + link.target.data.data.id
 
-                const data: HierarchicalBandit = link.target.data.data
+                const data = link.target.data.data
                 const details = data.getDetails(this.state.timestamp)
                 const highlight = this.selectedNodes(this.props.selectedCandidates).has(data.id)
 
@@ -243,11 +243,12 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
     private selectedNodes = memoizeOne(this.getSelectedNodes, areSetInputsEqual)
 
     private getSelectedNodes(selectedCandidates: Set<CandidateId>) {
-        console.log('Calculating highlights')
+        const pipelines = new Map<CandidateId, Pipeline>(this.props.structures.map(s => [s.cid, s.pipeline]))
         const selectedPipelines = new Set()
+
         selectedCandidates.forEach(cid => {
             const sid = cid.substring(0, cid.indexOf(':', 4))
-            this.props.pipelines
+            pipelines
                 .get(sid).steps
                 .map(([id, _]) => selectedPipelines.add(Number.parseInt(id)))
         })
@@ -263,11 +264,12 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
                               data={this.state.root}
                               count={CollapsibleNodeActions.countNodes(this.state.root)}
                               render={this.renderNodes}/>
+            {/* Only display slider when data is already loaded*/}
+            {nSteps > 0 &&
             <div style={{margin: '20px'}}>
-                {/* Only display slider when actual data is already loaded*/}
-                {nSteps > 0 && <Slider min={0} max={nSteps} marks={this.state.sliderMarks} defaultValue={nSteps}
-                                       included={false} onAfterChange={this.changeTimestamp}/>}
-            </div>
+                <Slider min={0} max={nSteps} marks={this.state.sliderMarks} defaultValue={nSteps}
+                        included={false} onAfterChange={this.changeTimestamp}/>
+            </div>}
         </>
     }
 }

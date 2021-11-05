@@ -1,17 +1,15 @@
 import * as cpc from "./model";
 import * as d3 from "d3";
-import {
-    CategoricalHyperparameter,
-    Condition,
-    ConfigValue,
-    HyperParameter,
-    NumericalHyperparameter,
-    Runhistory
-} from "../../model";
 import {normalizeComponent} from "../../util";
+import {Config, ConfigValue, Runhistory} from "../../model";
 
 export namespace ParCord {
 
+
+    import HyperParameter = Config.HyperParameter;
+    import Condition = Config.Condition;
+    import CategoricalHyperparameter = Config.CategoricalHyperparameter;
+    import NumericalHyperparameter = Config.NumericalHyperparameter;
 
     export function guessMinimum(value: number): number {
         const pos = getPositionOfMostSignificantDecimal(value);
