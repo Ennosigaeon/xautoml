@@ -77,6 +77,7 @@ interface BanditExplanationsState {
 
 export class BanditExplanationsComponent extends React.Component<BanditExplanationsProps, BanditExplanationsState> {
 
+    private static readonly ROOT_ID = '0';
     private static readonly NODE_HEIGHT = 75;
     private static readonly NODE_WIDTH = 190;
 
@@ -119,10 +120,10 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
 
     private selectNode(node: CollapsibleNode) {
         const pipelines = new Map<CandidateId, Pipeline>(this.props.structures.map(s => [s.cid, s.pipeline]))
-        const reversePipelines = new Map<number, CandidateId[]>();
-        reversePipelines.set(0, [])
+        const reversePipelines = new Map<string, CandidateId[]>();
+        reversePipelines.set(BanditExplanationsComponent.ROOT_ID, [])
         pipelines.forEach((v, k) => v.steps
-            .map(v => Number.parseInt(v[0]))
+            .map(step => step.id)
             .forEach(step => {
                 if (reversePipelines.has(step))
                     reversePipelines.get(step).push(k)
@@ -130,7 +131,7 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
                     reversePipelines.set(step, [k])
 
                 // Always add to root
-                reversePipelines.get(0).push(k)
+                reversePipelines.get(BanditExplanationsComponent.ROOT_ID).push(k)
             })
         );
 
@@ -239,12 +240,12 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
             const sid = cidToSid(cid)
             pipelines
                 .get(sid).steps
-                .map(([id, _]) => selectedPipelines.add(Number.parseInt(id)))
+                .map(step => selectedPipelines.add(step.id))
         })
 
         // Also add root node if at least one candidate is selected
         if (selectedPipelines.size > 0)
-            selectedPipelines.add(0)
+            selectedPipelines.add(BanditExplanationsComponent.ROOT_ID)
 
         return selectedPipelines
     }

@@ -1,6 +1,6 @@
 import React from "react";
 import {Candidate, Config, ConfigValue, MetaInformation, Pipeline, Structure} from "../model";
-import {fixedPrec, normalizeComponent} from "../util";
+import {fixedPrec} from "../util";
 import {Table, TableBody, TableCell, TableRow, Tooltip, Typography} from "@material-ui/core";
 import {OutputDescriptionData, requestOutputDescription} from "../handler";
 import {LoadingIndicator} from "./loading";
@@ -9,8 +9,8 @@ import {GraphEdge, GraphNode, HierarchicalTree} from "./tree_structure";
 import {Dag} from "d3-dag";
 
 
-export class PipelineStep {
-    public readonly children: PipelineStep[] = []
+export class StepWithConfig {
+    public readonly children: StepWithConfig[] = []
 
     constructor(public readonly id: string,
                 public readonly label: string,
@@ -19,7 +19,7 @@ export class PipelineStep {
 }
 
 interface SingleComponentProps {
-    step: PipelineStep
+    step: StepWithConfig
 
     error: Error
     loading: boolean
@@ -112,7 +112,7 @@ interface StructureGraphProps {
     structure: Structure
     candidate: Candidate
     meta: MetaInformation
-    onComponentSelection?: (component: PipelineStep) => void
+    onComponentSelection?: (component: StepWithConfig) => void
 }
 
 interface StructureGraphState {
@@ -156,12 +156,12 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
     }
 
     // TODO wrong place, move to model.ts
-    private toPipelineStep(candidate: Candidate, pipeline: Pipeline): PipelineStep {
+    private toPipelineStep(candidate: Candidate, pipeline: Pipeline): StepWithConfig {
         // TODO Pipeline currently only supports linear pipelines
-        const root = new PipelineStep(StructureGraphComponent.SOURCE, 'Source', new Map<string, ConfigValue>())
+        const root = new StepWithConfig(StructureGraphComponent.SOURCE, 'Source', new Map<string, ConfigValue>())
         let prev = root
-        pipeline.steps.forEach(([id, label]) => {
-            const prefix = `${id}:`
+        pipeline.steps.forEach(step => {
+            const prefix = `${step.id}:`
             const subConfig = new Map<string, ConfigValue>()
             Array.from(candidate.config.keys())
                 .filter(k => k.startsWith(prefix))
@@ -169,16 +169,16 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
                     subConfig.set(key.substring(prefix.length), candidate.config.get(key))
                 })
 
-            const node = new PipelineStep(id, normalizeComponent(label), subConfig)
+            const node = new StepWithConfig(step.id, step.label, subConfig)
             prev.children.push(node)
             prev = node
         })
 
-        prev.children.push(new PipelineStep(StructureGraphComponent.SINK, 'Sink', new Map<string, ConfigValue>()))
+        prev.children.push(new StepWithConfig(StructureGraphComponent.SINK, 'Sink', new Map<string, ConfigValue>()))
         return root
     }
 
-    private onComponentSelection(step: PipelineStep, e: React.MouseEvent): void {
+    private onComponentSelection(step: StepWithConfig, e: React.MouseEvent): void {
         const {onComponentSelection} = this.props
         if (!!onComponentSelection) {
             onComponentSelection(step)
@@ -186,7 +186,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
         }
     }
 
-    private renderNodes(root: Dag<PipelineStep>): JSX.Element {
+    private renderNodes(root: Dag<StepWithConfig>): JSX.Element {
         const {outputs, loading, error} = this.state
 
         const renderedNodes = root.descendants().map(node => {

@@ -1,3 +1,5 @@
+import {normalizeComponent} from "./util";
+
 export type PolicyData = Map<string, number>
 export type CandidateId = string
 export type ConfigValue = number | string | boolean
@@ -119,7 +121,7 @@ export namespace RF {
     }
 
     export class PolicyExplanations {
-        constructor(public readonly id: number,
+        constructor(public readonly id: string,
                     public readonly label: string,
                     public readonly details: Map<string, StateDetails>,
                     public readonly children?: PolicyExplanations[]) {
@@ -209,13 +211,42 @@ export class MetaInformation {
     }
 }
 
+export class PipelineStep {
+
+    public readonly label: string
+
+    constructor(public readonly id: string, private readonly clazz: string, public readonly parentIds: string[]) {
+        this.label = normalizeComponent(this.clazz)
+    }
+}
+
 export class Pipeline {
 
-    constructor(public readonly steps: [string, string][]) {
+    constructor(public readonly steps: PipelineStep[]) {
     }
 
-    static fromJson(pipeline: Pipeline): Pipeline {
-        return new Pipeline(pipeline.steps)
+    static fromJson(pipeline: any): Pipeline {
+        const [steps, _] = this.loadSingleStep('', pipeline, [])
+        return new Pipeline(steps)
+    }
+
+
+    private static loadSingleStep(id: string, step: any, parents: string[]): [PipelineStep[], string[]] {
+        if (step.clazz.includes('Pipeline')) {
+            let parents_ = parents;
+
+            const steps = (step.args.steps as [[string, any]])
+                .map(([id, subStep]) => {
+                        const res = this.loadSingleStep(id, subStep, parents_)
+                        const parsedStep: PipelineStep = res[0][0]
+                        parents_ = res[1]
+                        return parsedStep
+                    }
+                )
+            return [steps, parents_]
+        } else {
+            return [[new PipelineStep(id, step.clazz, parents)], [id]]
+        }
     }
 }
 
@@ -229,7 +260,7 @@ export class Structure {
 
     static fromJson(structure: Structure): Structure {
         // raw pipeline data is list of tuple and not object
-        const pipeline = new Pipeline(structure.pipeline as unknown as [string, string][])
+        const pipeline = Pipeline.fromJson(structure.pipeline as any)
         const configs = structure.configs.map(c => Candidate.fromJson(c))
         const configSpace = Config.ConfigSpace.fromJson(structure.configspace as any)
         return new Structure(structure.cid, pipeline, configSpace, configs)

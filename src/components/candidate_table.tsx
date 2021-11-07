@@ -9,7 +9,7 @@ import Checkbox from '@material-ui/core/Checkbox';
 import {Box, IconButton, Table, TableContainer} from '@material-ui/core';
 import {Candidate, CandidateId, Explanations, MetaInformation, Structure} from '../model';
 import {fixedPrec, JupyterContext} from '../util';
-import {PipelineStep, StructureGraphComponent} from './structure_graph';
+import {StepWithConfig, StructureGraphComponent} from './structure_graph';
 import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@material-ui/icons/KeyboardArrowUp';
 import Collapse from '@material-ui/core/Collapse';
@@ -131,7 +131,7 @@ class CandidateTableRow extends React.Component<CandidateTableRowProps, Candidat
         e.stopPropagation()
     }
 
-    private openComponent(step: PipelineStep) {
+    private openComponent(step: StepWithConfig) {
         if (this.state.open && this.state.selectedComponent[0] === step.id) {
             // Close details when selecting the same step again
             this.setState({open: false, selectedComponent: [undefined, undefined]})

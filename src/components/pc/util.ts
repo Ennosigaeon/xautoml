@@ -1,6 +1,5 @@
 import * as cpc from "./model";
 import * as d3 from "d3";
-import {normalizeComponent} from "../../util";
 import {Config, ConfigValue, Runhistory} from "../../model";
 
 export namespace ParCord {
@@ -85,16 +84,15 @@ export namespace ParCord {
         function parseConfigSpace() {
             const components: Array<[Set<string>, Array<cpc.Choice>]> = []
             runhistory.structures.forEach(structure => {
-                structure.pipeline.steps.forEach(([id, component], idx) => {
+                structure.pipeline.steps.forEach((step, idx) => {
                     if (components.length === idx)
                         components.push([new Set<string>(), []])
 
-                    const compName = normalizeComponent(component)
-                    if (!components[idx][0].has(compName)) {
-                        const axes = structure.configspace.getHyperparameters(id)
-                            .map((hp: HyperParameter) => parseHyperparameter(idx, compName, hp, structure.configspace.conditions))
-                        components[idx][1].push(new cpc.Choice(compName, axes))
-                        components[idx][0].add(compName)
+                    if (!components[idx][0].has(step.label)) {
+                        const axes = structure.configspace.getHyperparameters(step.id)
+                            .map((hp: HyperParameter) => parseHyperparameter(idx, step.label, hp, structure.configspace.conditions))
+                        components[idx][1].push(new cpc.Choice(step.label, axes))
+                        components[idx][0].add(step.label)
                     }
                 })
             })
@@ -109,13 +107,12 @@ export namespace ParCord {
         const lines = [].concat(...runhistory.structures.map(s =>
             s.configs.map(candidate => {
                 const points = new Array<cpc.LinePoint>()
-                s.pipeline.steps.map(([id, component], idx) => {
-                    const compName = normalizeComponent(component)
-                    points.push(new cpc.LinePoint(`${idx}`, compName))
+                s.pipeline.steps.map((step, idx) => {
+                    points.push(new cpc.LinePoint(`${idx}`, step.label))
 
                     candidate.config.forEach((value: ConfigValue, key: string) => {
-                        if (key.startsWith(`${id}:`))
-                            points.push(new cpc.LinePoint(getId(idx, compName, key), value))
+                        if (key.startsWith(`${step.id}:`))
+                            points.push(new cpc.LinePoint(getId(idx, step.label, key), value))
                     })
                 })
 
