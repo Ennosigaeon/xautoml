@@ -128,6 +128,9 @@ export namespace RF {
         }
 
         static fromJson(graphNode: PolicyExplanations): PolicyExplanations {
+            if (Object.keys(graphNode).length === 0)
+                return undefined
+
             const details: Map<string, StateDetails> = new Map<string, StateDetails>();
             Object.entries<StateDetails>(graphNode.details as {})
                 .forEach(k => details.set(k[0], StateDetails.fromJson(k[1])));

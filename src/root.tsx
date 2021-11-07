@@ -129,10 +129,11 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
                                         onCandidateSelection={this.onCandidateSelection}/>
 
                         <ParallelCoordinates runhistory={runhistory}/>
+                        {runhistory.explanations.structures &&
                         <BanditExplanationsComponent explanations={runhistory.explanations.structures}
                                                      selectedCandidates={selectedCandidates}
                                                      structures={runhistory.structures}
-                                                     onCandidateSelection={this.onCandidateSelection}/>
+                                                     onCandidateSelection={this.onCandidateSelection}/>}
                     </div>
                 </div>
             </JupyterContext.Provider>

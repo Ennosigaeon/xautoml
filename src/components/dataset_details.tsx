@@ -85,12 +85,13 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
                     <GlobalSurrogateComponent model={model}/>
                 </CollapseComp>
 
+                {explanations.structures &&
                 <CollapseComp showInitial={true}>
                     <h4>Search Space Overview</h4>
                     <BanditExplanationsComponent explanations={explanations.structures}
                                                  structures={structures}
                                                  timestamp={cidToSid(candidate.id)}/>
-                </CollapseComp>
+                </CollapseComp>}
             </>
         )
     }
