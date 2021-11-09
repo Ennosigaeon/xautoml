@@ -1,5 +1,5 @@
 import React from "react";
-import {Candidate, Config, ConfigValue, MetaInformation, Pipeline, Structure} from "../model";
+import {Candidate, Config, ConfigValue, MetaInformation, Pipeline, PipelineStep, Structure} from "../model";
 import {fixedPrec} from "../util";
 import {Table, TableBody, TableCell, TableRow, Tooltip, Typography} from "@material-ui/core";
 import {OutputDescriptionData, requestOutputDescription} from "../handler";
@@ -9,12 +9,17 @@ import {GraphEdge, GraphNode, HierarchicalTree} from "./tree_structure";
 import {Dag} from "d3-dag";
 
 
-export class StepWithConfig {
-    public readonly children: StepWithConfig[] = []
+export class StepWithConfig extends PipelineStep {
 
     constructor(public readonly id: string,
-                public readonly label: string,
+                public readonly clazz: string,
+                public readonly parentIds: string[],
                 public readonly config: Config) {
+        super(id, clazz, parentIds);
+    }
+
+    static fromStep(step: PipelineStep, config: Config) {
+        return new StepWithConfig(step.id, step.clazz, [...step.parentIds], config)
     }
 }
 
@@ -126,7 +131,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
     static readonly SOURCE = 'SOURCE'
     static readonly SINK = 'SINK'
 
-    private static readonly NODE_HEIGHT = 20;
+    private static readonly NODE_HEIGHT = 26;
     private static readonly NODE_WIDTH = 100;
 
     constructor(props: StructureGraphProps) {
@@ -155,27 +160,25 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
             });
     }
 
-    // TODO wrong place, move to model.ts
-    private toPipelineStep(candidate: Candidate, pipeline: Pipeline): StepWithConfig {
-        // TODO Pipeline currently only supports linear pipelines
-        const root = new StepWithConfig(StructureGraphComponent.SOURCE, 'Source', new Map<string, ConfigValue>())
-        let prev = root
+    private toStepsWithConfig(candidate: Candidate, pipeline: Pipeline): StepWithConfig[] {
+        const source = new StepWithConfig(StructureGraphComponent.SOURCE, 'Source', [], new Map<string, ConfigValue>())
+        const nodes = [source]
         pipeline.steps.forEach(step => {
-            const prefix = `${step.id}:`
-            const subConfig = new Map<string, ConfigValue>()
-            Array.from(candidate.config.keys())
-                .filter(k => k.startsWith(prefix))
-                .forEach(key => {
-                    subConfig.set(key.substring(prefix.length), candidate.config.get(key))
-                })
+            const subConfig = candidate.subConfig(step)
+            const node = StepWithConfig.fromStep(step, subConfig)
+            if (node.parentIds.length === 0)
+                node.parentIds.push(source.id)
 
-            const node = new StepWithConfig(step.id, step.label, subConfig)
-            prev.children.push(node)
-            prev = node
+            nodes.push(node)
         })
 
-        prev.children.push(new StepWithConfig(StructureGraphComponent.SINK, 'Sink', new Map<string, ConfigValue>()))
-        return root
+        nodes.push(new StepWithConfig(
+            StructureGraphComponent.SINK,
+            'Sink',
+            pipeline.steps.slice(-1).map(step => step.id), // Pipeline can only have exactly 1 final step (the classifier)
+            new Map<string, ConfigValue>())
+        )
+        return nodes
     }
 
     private onComponentSelection(step: StepWithConfig, e: React.MouseEvent): void {
@@ -224,7 +227,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
 
     render() {
         const {structure, candidate} = this.props
-        const data = this.toPipelineStep(candidate, structure.pipeline)
+        const data = this.toStepsWithConfig(candidate, structure.pipeline)
 
         return (
             <HierarchicalTree nodeHeight={StructureGraphComponent.NODE_HEIGHT}

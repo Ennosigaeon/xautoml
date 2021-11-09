@@ -13,6 +13,7 @@ import Slider from "rc-slider";
 import {ErrorIndicator} from "../../util/error";
 import {KeyValue} from "../../util/KeyValue";
 import {Dag} from "d3-dag";
+import {AdditionalFeatureWarning} from "../../util/warning";
 
 
 interface GlobalSurrogateProps {
@@ -145,6 +146,7 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
                                         onAfterChange={this.onMaxLeavesChange}/>
                             </div>
                         </div>
+                        {data.additional_features && <AdditionalFeatureWarning/>}
                         <HierarchicalTree nodeHeight={GlobalSurrogateComponent.NODE_HEIGHT}
                                           nodeWidth={GlobalSurrogateComponent.NODE_WIDTH}
                                           data={data.root}

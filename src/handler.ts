@@ -93,7 +93,8 @@ export interface LimeResult {
     idx: number
     expl: Map<Label, LocalExplanation>
     prob: Map<Label, number>
-    label: Label
+    label: Label,
+    additional_features: boolean
 }
 
 export interface DecisionTreeNode {
@@ -105,12 +106,16 @@ export interface DecisionTreeResult {
     fidelity: number,
     n_pred: number,
     n_leaves: number,
-    root: DecisionTreeNode
+    root: DecisionTreeNode,
+    additional_features: boolean
 }
 
 export type LocalExplanation = Array<[string, number]>
 
-export type FeatureImportance = Map<string, number>
+export interface FeatureImportance {
+    data: Map<string, number>,
+    additional_features: boolean
+}
 
 export function requestRocCurve(cids: CandidateId[], data_file: string, model_dir: string): CancelablePromise<RocCurveData> {
     const promise = requestAPI<Map<string, LineSeriesPoint[]>>('roc_auc', {
@@ -243,9 +248,9 @@ export function requestFeatureImportance(cid: CandidateId, data_file: string, mo
         })
     })
     return cancelablePromise(promise.then(data => {
-        return new Map<string, number>(
-            // @ts-ignore
-            Object.entries(data).map(([key, value]) => [key, value['0']])
+        data.data = new Map<string, number>(
+            Object.entries(data.data).map(([key, value]) => [key, value['0']])
         )
+        return data
     }))
 }

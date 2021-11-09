@@ -135,7 +135,7 @@ interface HierarchicalTreeProps<Datum> {
     nodeHeight: number
     nodeWidth: number
 
-    data: Datum
+    data: Datum | Datum[]
     render: (node: Dag<Datum>) => JSX.Element
     count?: number
     containsTerminalNodes?: boolean
@@ -168,7 +168,8 @@ export class HierarchicalTree<Datum> extends React.Component<HierarchicalTreePro
     }
 
     private doLayout(width: number, height: number, count: number): any {
-        const root = d3ag.dagHierarchy()(this.props.data)
+        // @ts-ignore
+        const root = this.props.data instanceof Array ? d3ag.dagStratify()(this.props.data) : d3ag.dagHierarchy()(this.props.data)
 
         const padding = this.props.containsTerminalNodes ? 2 * (this.props.nodeWidth - this.props.nodeHeight) : 0
         const dimensions: [number, number] | null = (height && width) && (count == this.previousCount) ? [height, width + padding] : null

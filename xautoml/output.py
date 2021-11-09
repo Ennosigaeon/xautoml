@@ -3,6 +3,8 @@ from typing import Union
 
 import pandas as pd
 from mlinsights.helpers.pipeline import alter_pipeline_for_debugging, enumerate_pipeline_models
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline, FeatureUnion
 
 from xautoml.util.constants import SOURCE, SINK
 
@@ -15,6 +17,12 @@ class OutputCalculator:
 
     @staticmethod
     def load_data(d: dict, method: int, feature_labels: list[str]) -> Union[str, pd.DataFrame]:
+        if len(d) == 0:
+            if method != RAW:
+                return ''
+            else:
+                return pd.DataFrame()
+
         assert len(d) == 1
         data = next(iter(d.values()))
 
@@ -40,19 +48,28 @@ class OutputCalculator:
             alter_pipeline_for_debugging(pipeline)
             pipeline.predict(X)
 
-            step_names = ['Pipeline'] + list(pipeline.steps_.keys())
             result = {}
-            for step, data in zip(step_names, enumerate_pipeline_models(pipeline)):
-                _, model, _ = data
+            for coordinate, model, subset in enumerate_pipeline_models(pipeline):
                 output = OutputCalculator.load_data(model._debug.outputs, method, feature_labels=feature_labels)
 
-                if step == 'Pipeline':
+                if len(coordinate) == 1:
                     # Populate SINK and SOURCE instead of single step
                     input = OutputCalculator.load_data(model._debug.inputs, method, feature_labels=feature_labels)
 
                     result[SOURCE] = input
                     result[SINK] = output
                 else:
-                    result[step] = output
+                    step = pipeline
+                    for idx in coordinate[1:]:
+                        if isinstance(step, Pipeline):
+                            step_name, step = step.steps[idx]
+                        elif isinstance(step, ColumnTransformer):
+                            step_name, step, _ = step.transformers[idx]
+                        elif isinstance(step, FeatureUnion):
+                            step_name, step = step.transformer_list[idx]
+                        else:
+                            raise ValueError(f'Unknown component {step}')
+
+                    result[step_name] = output
 
             return result

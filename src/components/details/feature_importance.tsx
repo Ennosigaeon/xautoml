@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-    FlexibleXYPlot,
+    FlexibleWidthXYPlot,
     HorizontalGridLines,
     LabelSeriesPoint,
     VerticalBarSeries,
@@ -13,6 +13,7 @@ import {LoadingIndicator} from "../loading";
 import {DetailsModel} from "./model";
 import {ErrorIndicator} from "../../util/error";
 import {Colors} from "../../util";
+import {AdditionalFeatureWarning} from "../../util/warning";
 
 
 interface FeatureImportanceProps {
@@ -67,8 +68,8 @@ export class FeatureImportanceComponent extends React.Component<FeatureImportanc
         const {component} = this.props.model
 
         const bars: LabelSeriesPoint[] = []
-        let maxLabelLength = 0
-        data.get(component)?.forEach((value, key) => {
+        let maxLabelLength = 35
+        data.get(component)?.data.forEach((value, key) => {
             // @ts-ignore
             bars.push({x: key, y: value})
             maxLabelLength = Math.max(maxLabelLength, key.length * 5)
@@ -81,15 +82,17 @@ export class FeatureImportanceComponent extends React.Component<FeatureImportanc
                 <>
                     <LoadingIndicator loading={bars.length === 0}/>
                     {bars.length > 0 &&
-                    <div style={{height: `${this.props.height}px`}}>
-                        <FlexibleXYPlot xType="ordinal" margin={{bottom: maxLabelLength}}>
+                    <>
+                        {data.get(component).additional_features && <AdditionalFeatureWarning/>}
+                        <FlexibleWidthXYPlot height={this.props.height} xType="ordinal"
+                                             margin={{bottom: maxLabelLength}}>
                             <VerticalGridLines/>
                             <HorizontalGridLines/>
                             <XAxis tickLabelAngle={330}/>
                             <YAxis/>
                             <VerticalBarSeries data={bars} barWidth={0.75} color={Colors.DEFAULT}/>
-                        </FlexibleXYPlot>
-                    </div>
+                        </FlexibleWidthXYPlot>
+                    </>
                     }
                 </>
                 }

@@ -110,10 +110,10 @@ export namespace ParCord {
                 s.pipeline.steps.map((step, idx) => {
                     points.push(new cpc.LinePoint(`${idx}`, step.label))
 
-                    candidate.config.forEach((value: ConfigValue, key: string) => {
-                        if (key.startsWith(`${step.id}:`))
+                    candidate.subConfig(step)
+                        .forEach((value: ConfigValue, key: string) => {
                             points.push(new cpc.LinePoint(getId(idx, step.label, key), value))
-                    })
+                        })
                 })
 
                 // Fill missing steps in pipeline and final performance measure

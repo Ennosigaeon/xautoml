@@ -15,6 +15,7 @@ import {LoadingIndicator} from "../loading";
 import {DetailsModel} from "./model";
 import {ErrorIndicator} from "../../util/error";
 import {CollapseComp} from "../../util/collapse";
+import {AdditionalFeatureWarning} from "../../util/warning";
 
 
 interface LimeProps {
@@ -117,6 +118,7 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
 
                     {data?.expl.size > 0 &&
                     <div style={{minWidth: "200px"}}>
+                        {data.additional_features && <AdditionalFeatureWarning/>}
                         <CollapseComp showInitial={true}>
                             <h5>Predicted Class Probabilities</h5>
                             <>

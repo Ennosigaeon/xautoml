@@ -1,24 +1,18 @@
-import joblib
-from sklearn.pipeline import Pipeline
-
-from xautoml.output import OutputCalculator, RAW
+from xautoml.handlers import OutputDescriptionHandler
+from xautoml.output import OutputCalculator, DESCRIPTION
 
 
 def test_outputs():
-    with open('/scripts/run/3913.bak/dataset.pkl', 'rb') as f:
-        X, y, feature_labels = joblib.load(f)
-    #
-    with open('/scripts/run/3913.bak/models/models_0-13-1.pkl', 'rb') as f:
-        model: Pipeline = joblib.load(f)
-
-    idx = [step[0] for step in model.steps].index('323')
-    sub_pipeline = Pipeline(model.steps[idx:])
-    prev_step = model.steps[idx - 1][0]
+    X, y, feature_labels, pipeline = OutputDescriptionHandler.load_model({
+        "cids": "00:00:02",
+        "data_file": "/home/marc/phd/code/dswizard/scripts/run/59/dataset.pkl",
+        "model_dir": "/home/marc/phd/code/dswizard/scripts/run/59/models"
+    })
 
     df_handler = OutputCalculator()
-    X_int = df_handler.calculate_outputs(model, X, feature_labels, method=RAW)[prev_step]
+    steps = df_handler.calculate_outputs(pipeline, X, feature_labels, method=DESCRIPTION)
 
-    a = 0
+    print(steps)
 
 
 if __name__ == '__main__':

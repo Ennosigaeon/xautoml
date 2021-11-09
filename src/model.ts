@@ -28,9 +28,9 @@ export namespace Config {
             return new ConfigSpace(conditions, cs.forbiddens, hyperparameters, cs.json_format_version, cs.python_module_version)
         }
 
-        getHyperparameters(prefix: string): HyperParameter[] {
+        getHyperparameters(name: string): HyperParameter[] {
             return this.hyperparameters
-                .filter(hp => hp.name.startsWith(`${prefix}:`))
+                .filter(hp => hp.name.split(':').filter(t => t === name).length > 0)
                 .filter(hp => this.conditions.filter(con => con.child === hp.name).length === 0)
         }
     }
@@ -111,10 +111,6 @@ export namespace RF {
             return this.failure_message === 'Unvisited'
         }
 
-        isDuplicate(): boolean {
-            return !!this.failure_message && (this.failure_message.startsWith('Duplicate') || this.failure_message === 'Ineffective')
-        }
-
         isFailure(): boolean {
             return !!this.failure_message && !this.isUnvisited()
         }
@@ -189,6 +185,17 @@ export class Candidate {
 
         return new Candidate(candidate.id, candidate.status, candidate.budget, candidate.loss, Runtime.fromJson(candidate.runtime), config)
     }
+
+    subConfig(step: PipelineStep): Config {
+        const subConfig = new Map<string, ConfigValue>()
+        Array.from(this.config.keys())
+            .filter(k => k.split(':').filter(t => t === step.id).length > 0)
+            .forEach(key => {
+                const tokens = key.split(':')
+                subConfig.set(tokens[tokens.length - 1], this.config.get(key))
+            })
+        return subConfig
+    }
 }
 
 export class MetaInformation {
@@ -218,7 +225,7 @@ export class PipelineStep {
 
     public readonly label: string
 
-    constructor(public readonly id: string, private readonly clazz: string, public readonly parentIds: string[]) {
+    constructor(public readonly id: string, public readonly clazz: string, public readonly parentIds: string[]) {
         this.label = normalizeComponent(this.clazz)
     }
 }
@@ -237,16 +244,25 @@ export class Pipeline {
     private static loadSingleStep(id: string, step: any, parents: string[]): [PipelineStep[], string[]] {
         if (step.clazz.includes('Pipeline')) {
             let parents_ = parents;
-
-            const steps = (step.args.steps as [[string, any]])
-                .map(([id, subStep]) => {
+            const steps: PipelineStep[] = [];
+            (step.args.steps as [string, any][])
+                .forEach(([id, subStep]) => {
                         const res = this.loadSingleStep(id, subStep, parents_)
-                        const parsedStep: PipelineStep = res[0][0]
+                        steps.push(...res[0])
                         parents_ = res[1]
-                        return parsedStep
                     }
                 )
             return [steps, parents_]
+        } else if (step.clazz.includes('FeatureUnion')) {
+            const steps: PipelineStep[] = [];
+            const outParents: string[] = [];
+            (step.args.transformer_list as [string, any][])
+                .forEach(([id, subPath]) => {
+                    const res = this.loadSingleStep(id, subPath, parents)
+                    steps.push(...res[0])
+                    outParents.push(...res[1])
+                })
+            return [steps, outParents]
         } else {
             return [[new PipelineStep(id, step.clazz, parents)], [id]]
         }

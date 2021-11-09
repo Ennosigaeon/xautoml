@@ -21,12 +21,13 @@ class LimeResult:
     probabilities: dict[float, float]
     label: float
 
-    def to_dict(self):
+    def to_dict(self, additional_features: bool):
         return {
             'idx': self.idx,
             'expl': self.explanations,
             'prob': self.probabilities,
-            'label': self.label
+            'label': self.label,
+            'additional_features': additional_features
         }
 
 
@@ -37,12 +38,13 @@ class DecisionTreeResult:
     n_pred: int
     n_leaves: int
 
-    def as_dict(self):
+    def as_dict(self, additional_features: bool):
         return {
             'root': self.root.as_dict(),
             'fidelity': float(self.fidelity),
             'n_pred': int(self.n_pred),
-            'n_leaves': int(self.n_leaves)
+            'n_leaves': int(self.n_leaves),
+            'additional_features': additional_features
         }
 
 

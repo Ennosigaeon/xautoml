@@ -184,12 +184,14 @@ class LimeHandler(BaseHandler):
 
         if step == pipeline.steps[-1][0] or step == SINK:
             res = LimeResult(idx, {}, {}, y[idx].tolist())
+            additional_features = False
         else:
-            pipeline, X, feature_labels = pipeline_utils.get_subpipeline(pipeline, step, X, feature_labels)
+            pipeline, X, feature_labels, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X,
+                                                                                              feature_labels)
             details = ModelDetails()
             res = details.calculate_lime(X, y, pipeline, feature_labels, idx)
 
-        queue.put(res.to_dict())
+        queue.put(res.to_dict(additional_features))
 
 
 class ConfusionMatrixHandler(BaseHandler):
@@ -211,12 +213,14 @@ class DecisionTreeHandler(BaseHandler):
         if step == pipeline.steps[-1][0] or step == SINK:
             self.log.debug('Unable to calculate LIME on predictions')
             res = DecisionTreeResult(pipeline_utils.Node('empty', []), 0, 0, 0)
+            additional_features = False
         else:
-            pipeline, X, feature_labels = pipeline_utils.get_subpipeline(pipeline, step, X, feature_labels)
+            pipeline, X, feature_labels, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X,
+                                                                                              feature_labels)
             details = ModelDetails()
             res = details.calculate_decision_tree(X, pipeline, feature_labels, max_leaf_nodes=max_leaf_nodes)
 
-        self.finish(json.dumps(res.as_dict()))
+        self.finish(json.dumps(res.as_dict(additional_features)))
 
 
 class FeatureImportanceHandler(BaseHandler):
@@ -229,11 +233,13 @@ class FeatureImportanceHandler(BaseHandler):
 
         if step == pipeline.steps[-1][0] or step == SINK:
             res = pd.DataFrame(data={'0': {'0': 1, '1': 0}})
+            additional_features = False
         else:
-            pipeline, X, feature_labels = pipeline_utils.get_subpipeline(pipeline, step, X, feature_labels)
+            pipeline, X, feature_labels, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X,
+                                                                                              feature_labels)
             details = ModelDetails()
             res = details.calculate_feature_importance(X, y, pipeline, feature_labels)
-        queue.put(res.to_dict())
+        queue.put({'data': res.to_dict(), 'additional_features': additional_features})
 
 
 def setup_handlers(web_app):
