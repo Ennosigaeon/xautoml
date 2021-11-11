@@ -253,6 +253,16 @@ export class Pipeline {
                     }
                 )
             return [steps, parents_]
+        } else if (step.clazz.includes('ColumnTransformer')) {
+            const steps: PipelineStep[] = [];
+            const outParents: string[] = [];
+            (step.args.transformers as [string, any, any][])
+                .forEach(([id, subPath, columns]) => {
+                    const res = this.loadSingleStep(id, subPath, parents)
+                    steps.push(...res[0])
+                    outParents.push(...res[1])
+                })
+            return [steps, outParents]
         } else if (step.clazz.includes('FeatureUnion')) {
             const steps: PipelineStep[] = [];
             const outParents: string[] = [];
