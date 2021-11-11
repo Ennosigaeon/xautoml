@@ -54,10 +54,19 @@ class RocCurve:
 
         # If the decision is binary draw only ROC curve for the positive class
         if self.target_type_ is BINARY:
+            if (np.array_equal(self.classes, [0, 1]) or
+                np.array_equal(self.classes, [-1, 1]) or
+                np.array_equal(self.classes, [0]) or
+                np.array_equal(self.classes, [-1]) or
+                np.array_equal(self.classes, [1])):
+                pos_label = 1.0
+            else:
+                pos_label = self.classes[-1]
+
             # In this case predict_proba returns an array of shape (n, 2) which
             # specifies the probabilities of both the negative and positive classes.
             if len(y_pred.shape) == 2 and y_pred.shape[1] == 2:
-                self.fpr[BINARY], self.tpr[BINARY], _ = roc_curve(y, y_pred[:, 1])
+                self.fpr[BINARY], self.tpr[BINARY], _ = roc_curve(y, y_pred[:, 1], pos_label=pos_label)
             else:
                 # decision_function returns array of shape (n,), so plot it directly
                 self.fpr[BINARY], self.tpr[BINARY], _ = roc_curve(y, y_pred)

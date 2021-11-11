@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 from sklearn import metrics
-from sklearn.compose import ColumnTransformer
+from sklearn.compose import ColumnTransformer, make_column_selector
 from sklearn.inspection import permutation_importance
 from sklearn.metrics import confusion_matrix
 from sklearn.pipeline import Pipeline
@@ -70,8 +70,24 @@ class ModelDetails:
             worst_idx, _ = ModelDetails._lime_interesting_indices(y, y_probs)
             idx = worst_idx[0]
 
-        explainer = lime.lime_tabular.LimeTabularExplainer(X, feature_names=feature_labels, discretize_continuous=True)
-        explanation = explainer.explain_instance(X[idx], model.predict_proba, num_features=10,
+        df = pd.DataFrame(X, columns=feature_labels).convert_dtypes()
+        num_columns = make_column_selector(dtype_include=np.number)(df)
+        cat_columns = make_column_selector(dtype_exclude=np.number)(df)
+        pipeline = Pipeline(steps=[
+            ('imputation', DataFrameImputer()),
+            ('encoding',
+             ColumnTransformer(transformers=[('cat', OrdinalEncoder(), cat_columns)], remainder='passthrough'))])
+        df2 = pipeline.fit_transform(df)
+        encoder = pipeline.steps[1][1].transformers_[0][1]
+        categorical_features = range(0, len(cat_columns))
+        categorical_names = {idx: encoder.categories_[idx] for idx in categorical_features}
+
+        explainer = lime.lime_tabular.LimeTabularExplainer(df2,
+                                                           feature_names=cat_columns + num_columns,
+                                                           discretize_continuous=True,
+                                                           categorical_features=categorical_features,
+                                                           categorical_names=categorical_names)
+        explanation = explainer.explain_instance(df2[idx], model.predict_proba, num_features=10,
                                                  top_labels=np.unique(y).shape[0])
 
         all_explanations = {}
@@ -79,7 +95,7 @@ class ModelDetails:
             all_explanations[label.tolist()] = explanation.as_list(label)
         probabilities = dict(zip(explanation.class_names, explanation.predict_proba.tolist()))
 
-        return LimeResult(idx, all_explanations, probabilities, y[idx].tolist())
+        return LimeResult(idx, all_explanations, probabilities, getattr(y[idx], "tolist", lambda: y[idx])())
 
     @staticmethod
     def _lime_interesting_indices(y: np.ndarray, y_probs: np.ndarray, n=1) -> tuple[np.ndarray, np.ndarray]:
@@ -98,13 +114,11 @@ class ModelDetails:
     def calculate_decision_tree(X: np.ndarray, model,
                                 feature_labels: list[str],
                                 max_leaf_nodes: int = 10) -> DecisionTreeResult:
-        df = pd.DataFrame(X, columns=feature_labels)
+        df = pd.DataFrame(X, columns=feature_labels).convert_dtypes()
         y_pred = model.predict(X)
 
-        from sklearn.compose import make_column_selector
-
         num_columns = make_column_selector(dtype_include=np.number)
-        cat_columns = make_column_selector(dtype_include="category")
+        cat_columns = make_column_selector(dtype_exclude=np.number)
 
         # Use simple pipeline being able to handle categorical and missing input
         encoder = ColumnTransformer(transformers=[('cat', OrdinalEncoder(), cat_columns)], remainder='passthrough')
