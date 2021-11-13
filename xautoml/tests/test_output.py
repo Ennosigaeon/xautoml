@@ -1,5 +1,5 @@
 from xautoml.handlers import OutputDescriptionHandler
-from xautoml.output import OutputCalculator, DESCRIPTION
+from xautoml.output import OutputCalculator, RAW
 
 
 def test_outputs():
@@ -10,7 +10,7 @@ def test_outputs():
     })
 
     df_handler = OutputCalculator()
-    steps = df_handler.calculate_outputs(pipeline, X, feature_labels, method=DESCRIPTION)
+    steps = df_handler.calculate_outputs(pipeline, X, feature_labels, method=RAW)
 
     print(steps)
 
