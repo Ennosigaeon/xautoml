@@ -116,10 +116,10 @@ class BaseHandler(APIHandler):
         pipeline = models.popitem()[1]
         return X, y, feature_labels, pipeline
 
-    def _get_intermediate_output(self, X, label, model, method):
+    def _get_intermediate_output(self, X, y, label, model, method):
         df_handler = OutputCalculator()
         try:
-            steps = df_handler.calculate_outputs(model, X, label, method=method)
+            steps = df_handler.calculate_outputs(model, X, y, label, method=method)
             return steps
         except ValueError as ex:
             self.log.error('Failed to calculate intermediate dataframes', exc_info=ex)
@@ -129,7 +129,7 @@ class OutputHandler(BaseHandler):
 
     def _calculate_output(self, model, method):
         X, y, feature_labels, pipeline = self.load_model(model)
-        steps = self._get_intermediate_output(X, feature_labels, pipeline, method=method)
+        steps = self._get_intermediate_output(X, y, feature_labels, pipeline, method=method)
         self.finish(json.dumps(steps))
 
 
@@ -186,7 +186,7 @@ class LimeHandler(BaseHandler):
             res = LimeResult(idx, {}, {}, y[idx].tolist())
             additional_features = False
         else:
-            pipeline, X, feature_labels, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X,
+            pipeline, X, feature_labels, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X, y,
                                                                                               feature_labels)
             details = ModelDetails()
             res = details.calculate_lime(X, y, pipeline, feature_labels, idx)
@@ -215,7 +215,7 @@ class DecisionTreeHandler(BaseHandler):
             res = DecisionTreeResult(pipeline_utils.Node('empty', []), 0, 0, 0)
             additional_features = False
         else:
-            pipeline, X, feature_labels, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X,
+            pipeline, X, feature_labels, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X, y,
                                                                                               feature_labels)
             details = ModelDetails()
             res = details.calculate_decision_tree(X, pipeline, feature_labels, max_leaf_nodes=max_leaf_nodes)
@@ -235,7 +235,7 @@ class FeatureImportanceHandler(BaseHandler):
             res = pd.DataFrame(data={'0': {'0': 1, '1': 0}})
             additional_features = False
         else:
-            pipeline, X, feature_labels, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X,
+            pipeline, X, feature_labels, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X, y,
                                                                                               feature_labels)
             details = ModelDetails()
             res = details.calculate_feature_importance(X, y, pipeline, feature_labels)

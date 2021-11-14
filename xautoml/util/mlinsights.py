@@ -5,6 +5,7 @@
 import textwrap
 import warnings
 from types import MethodType
+from typing import Tuple
 
 from sklearn.base import TransformerMixin, ClassifierMixin, RegressorMixin, BaseEstimator
 from sklearn.compose import ColumnTransformer, TransformedTargetRegressor
@@ -217,3 +218,17 @@ def alter_pipeline_for_debugging(pipe):
             except AttributeError:  # pragma: no cover
                 warnings.warn("Unable to overwrite method '{}' for class "
                               "{}.".format(k, type(model)))
+
+
+def get_component_name(coordinate: Tuple[int], step):
+    step_name = None
+    for idx in coordinate[1:]:
+        if isinstance(step, Pipeline):
+            step_name, step = step.steps[idx]
+        elif isinstance(step, ColumnTransformer):
+            step_name, step, _ = step.transformers[idx]
+        elif isinstance(step, FeatureUnion):
+            step_name, step = step.transformer_list[idx]
+        else:
+            raise ValueError(f'Unknown component {step}')
+    return step_name

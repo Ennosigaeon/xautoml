@@ -4,35 +4,26 @@ import numpy as np
 import pandas as pd
 from mlinsights.helpers.pipeline import enumerate_pipeline_models
 from sklearn.base import TransformerMixin
-from sklearn.compose import ColumnTransformer
-from sklearn.pipeline import Pipeline, FeatureUnion
+from sklearn.pipeline import Pipeline
 from sklearn.tree import _tree
 from sklearn.tree._export import _compute_depth
 from sklearn.utils.validation import check_is_fitted
 
 from xautoml.output import OutputCalculator, RAW
 from xautoml.util.constants import SOURCE
+from xautoml.util.mlinsights import get_component_name
 
 
-def get_subpipeline(pipeline: Pipeline, start: str, X: np.ndarray, feature_labels: list[str]):
+def get_subpipeline(pipeline: Pipeline, start: str, X: np.ndarray, y: np.ndarray, feature_labels: list[str]):
     if start == SOURCE:
         return pipeline, X, feature_labels, False
     else:
         df_handler = OutputCalculator()
-        outputs = df_handler.calculate_outputs(pipeline, X, feature_labels, method=RAW)
+        outputs = df_handler.calculate_outputs(pipeline, X, y, feature_labels, method=RAW)
 
         selected_coordinate = (0,)
         for selected_coordinate, model, subset in enumerate_pipeline_models(pipeline):
-            step_name, step = '', pipeline
-            for idx in selected_coordinate[1:]:
-                if isinstance(step, Pipeline):
-                    step_name, step = step.steps[idx]
-                elif isinstance(step, ColumnTransformer):
-                    step_name, step, _ = step.transformers[idx]
-                elif isinstance(step, FeatureUnion):
-                    step_name, step = step.transformer_list[idx]
-                else:
-                    raise ValueError(f'Unknown component {step}')
+            step_name = get_component_name(selected_coordinate, pipeline)
             if step_name == start:
                 break
         else:

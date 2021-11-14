@@ -116,7 +116,7 @@ xautoml_df
 
         const outputRender = outputs.has(component) ?
             <div style={{overflowX: 'auto'}}>
-                <div className={'jp-RenderedHTMLCommon'} ref={this.dfTableRef}
+                <div className={'jp-RenderedHTMLCommon raw-dataset'} ref={this.dfTableRef}
                      dangerouslySetInnerHTML={{__html: outputs.get(component)}}/>
             </div> :
             <div>Missing</div>

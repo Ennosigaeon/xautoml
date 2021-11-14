@@ -13,7 +13,7 @@ def test_decision_tree():
     step = 'SOURCE'
     max_leaf_nodes = 10
 
-    pipeline, X, feature_labels, _ = pipeline_utils.get_subpipeline(pipeline, step, X, feature_labels)
+    pipeline, X, feature_labels, _ = pipeline_utils.get_subpipeline(pipeline, step, X, y, feature_labels)
     details = ModelDetails()
     res = details.calculate_decision_tree(X, pipeline, feature_labels, max_leaf_nodes=max_leaf_nodes)
 
@@ -30,7 +30,7 @@ def test_lime():
     step = 'SOURCE'
     idx = 3
 
-    pipeline, X, feature_labels, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X,
+    pipeline, X, feature_labels, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X, y,
                                                                                       feature_labels)
     details = ModelDetails()
     res = details.calculate_lime(X, y, pipeline, feature_labels, idx)

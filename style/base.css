@@ -151,6 +151,15 @@ div.structure-graph_tooltip {
     font-size: 12px;
 }
 
+
+/** Raw Dataset */
+.raw-dataset tr th:last-of-type,
+.raw-dataset tr td:last-of-type {
+    padding-left: 40px;
+    font-style: italic;
+}
+
+
 /** JupyterButton */
 .jupyter-button svg {
     height: 1.75em;

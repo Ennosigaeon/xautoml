@@ -10,7 +10,7 @@ def test_outputs():
     })
 
     df_handler = OutputCalculator()
-    steps = df_handler.calculate_outputs(pipeline, X, feature_labels, method=RAW)
+    steps = df_handler.calculate_outputs(pipeline, X, y, feature_labels, method=RAW)
 
     print(steps)
 
