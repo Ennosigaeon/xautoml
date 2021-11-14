@@ -36,6 +36,9 @@ tr.MuiTableRow-root.MuiTableRow-hover:hover {
     margin-bottom: 0.3rem;
 }
 
+.hyperlink {
+    color: rgb(16, 107, 163);
+}
 
 /** Flexible SVG */
 .flexible-svg-container {

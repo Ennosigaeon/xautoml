@@ -20,6 +20,7 @@ class LimeResult:
     explanations: dict[float, list[tuple[str, float]]]
     probabilities: dict[float, float]
     label: float
+    categorical_input: bool = False
 
     def to_dict(self, additional_features: bool):
         return {
@@ -27,6 +28,7 @@ class LimeResult:
             'expl': self.explanations,
             'prob': self.probabilities,
             'label': self.label,
+            'categorical_input': self.categorical_input,
             'additional_features': additional_features
         }
 

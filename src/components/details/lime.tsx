@@ -96,8 +96,7 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
             })
             .reverse()
 
-        const nrExpl = data?.expl.get(selectedLabel.toString()).length
-
+        const nrExpl = data?.expl.get(selectedLabel.toString())?.length
         const labelHeight = 23
 
         return (
@@ -112,7 +111,18 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
                     <p>Select a data set sample to calculate a local model approximation (LIME).</p>
                     }
 
-                    {data?.expl.size === 0 &&
+                    {data?.categorical_input &&
+                    <ErrorIndicator error={{
+                        name: "Calculation Failed",
+                        message: 'Calculation of LIME failed, probably due to categorical input. If the selected data frame ' +
+                            'contains any categorical features, please select a later stage in the pipeline after imputation ' +
+                            'being applied. See the <a class="hyperlink" ' +
+                            'href="https://marcotcr.github.io/lime/tutorials/Tutorial%20-%20continuous%20and%20categorical%20features.html">LIME ' +
+                            'documentation</a> for more information.'
+                    }}/>
+                    }
+
+                    {!data?.categorical_input && data?.expl.size === 0 &&
                     <p>LIME explanations are not available for the actual predictions.</p>
                     }
 

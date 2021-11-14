@@ -93,7 +93,8 @@ export interface LimeResult {
     idx: number
     expl: Map<Label, LocalExplanation>
     prob: Map<Label, number>
-    label: Label,
+    label: Label
+    categorical_input: boolean
     additional_features: boolean
 }
 

@@ -1,6 +1,8 @@
 import json
 import multiprocessing
 import os
+import sys
+import traceback
 from typing import Optional, Awaitable
 
 import joblib
@@ -16,6 +18,10 @@ from xautoml.roc_auc import RocCurve
 from xautoml.util import internal_cid_name, pipeline_utils
 from xautoml.util.async_queue import AsyncProcessQueue
 from xautoml.util.constants import SOURCE, SINK
+
+
+class ChildTaskException(Exception):
+    pass
 
 
 class BaseHandler(APIHandler):
@@ -57,8 +63,11 @@ class BaseHandler(APIHandler):
         def exception_safe(model, queue, func):
             try:
                 func(model, q)
-            except Exception as ex:
-                queue.put(ex)
+            except Exception:
+                error_type, error, tb = sys.exc_info()
+                error_lines = traceback.format_exception(error_type, error, tb)
+                error_msg = ''.join(error_lines)
+                queue.put(ChildTaskException(error_msg))
 
         q = AsyncProcessQueue()
         p = multiprocessing.Process(target=exception_safe, args=(model, q, self._process_post_async))
@@ -183,13 +192,16 @@ class LimeHandler(BaseHandler):
         step = model.get('step', SOURCE)
 
         if step == pipeline.steps[-1][0] or step == SINK:
-            res = LimeResult(idx, {}, {}, y[idx].tolist())
+            res = LimeResult(idx, {}, {}, getattr(y[idx], "tolist", lambda: y[idx])())
             additional_features = False
         else:
             pipeline, X, feature_labels, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X, y,
                                                                                               feature_labels)
             details = ModelDetails()
-            res = details.calculate_lime(X, y, pipeline, feature_labels, idx)
+            try:
+                res = details.calculate_lime(X, y, pipeline, feature_labels, idx)
+            except TypeError:
+                res = LimeResult(idx, {}, {}, getattr(y[idx], "tolist", lambda: y[idx])(), categorical_input=True)
 
         queue.put(res.to_dict(additional_features))
 

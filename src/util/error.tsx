@@ -16,7 +16,7 @@ export class ErrorIndicator extends React.PureComponent<ErrorIndicatorProps, {}>
                 {error &&
                 <Alert severity="error">
                     <AlertTitle>{error.name}</AlertTitle>
-                    {error.message}
+                    <div dangerouslySetInnerHTML={{__html: error.message}}/>
                 </Alert>
                 }
             </>

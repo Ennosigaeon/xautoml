@@ -31,7 +31,7 @@ export class KeyValue extends React.PureComponent<KeyValueProps> {
             <div style={{margin: tight ? '2px' : '4px'}}>
                 <strong>{key_}: </strong>
                 {href ?
-                    <a href={href} target={'_blank'} style={{color: 'rgb(16, 107, 163)'}}>{renderedValue}</a> :
+                    <a href={href} target={'_blank'} className={'hyperlink'}>{renderedValue}</a> :
                     <span>{renderedValue}</span>
                 }
 
