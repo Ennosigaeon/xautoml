@@ -23,7 +23,7 @@ export class PerformanceComponent extends React.Component<PerformanceComponentPr
                 <div style={{flexGrow: 1, flexShrink: 1, flexBasis: "20%"}}>
                     <h5>Metrics</h5>
                     <KeyValue key_={`Training ${model.meta.metric}`}
-                              value={model.candidate.loss[0] * model.meta.metric_sign}/>
+                              value={model.candidate.loss * model.meta.metric_sign}/>
                     {/* TODO */}
                     <KeyValue key_={`Validation ${model.meta.metric}`} value={0}/>
                     <KeyValue key_={'Training Duration'}

@@ -300,7 +300,7 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
                     {
                         id: c.id,
                         timestamp: c.runtime.timestamp,
-                        performance: sign * c.loss[0],
+                        performance: sign * c.loss,
                         budget: c.budget,
                         candidate: [structure, c]
                     }

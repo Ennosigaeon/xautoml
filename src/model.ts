@@ -173,7 +173,7 @@ export class Candidate {
     constructor(public readonly id: CandidateId,
                 public readonly status: string,
                 public readonly budget: number,
-                public readonly loss: [number, number],
+                public readonly loss: number,
                 public readonly runtime: Runtime,
                 public readonly config: Config) {
     }
