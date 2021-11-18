@@ -20,6 +20,7 @@ interface SingleCandidate {
     id: CandidateId;
     timestamp: number;
     performance: number;
+    budget: number;
     candidate: [Structure, Candidate];
 }
 
@@ -174,6 +175,7 @@ xautoml_pipeline
                     </TableCell>
                     <TableCell align='right'>{fixedPrec(candidate.timestamp, 2).toFixed(2)}</TableCell>
                     <TableCell align='right'>{fixedPrec(candidate.performance, 3).toFixed(3)}</TableCell>
+                    <TableCell align='right'>{fixedPrec(candidate.budget, 2).toFixed(2)}</TableCell>
                     <TableCell align='right' style={{height: '50px'}} padding='none'>
                         <StructureGraphComponent structure={candidate.candidate[0]}
                                                  candidate={candidate.candidate[1]}
@@ -297,8 +299,9 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
                 rows.push(
                     {
                         id: c.id,
-                        timestamp: fixedPrec(c.runtime.timestamp, 3),
-                        performance: fixedPrec(sign * c.loss[0], 3),
+                        timestamp: c.runtime.timestamp,
+                        performance: sign * c.loss[0],
+                        budget: c.budget,
                         candidate: [structure, c]
                     }
                 )
@@ -323,6 +326,7 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
             {id: 'id', numeric: false, sortable: true, label: 'Id', width: '40px'},
             {id: 'timestamp', numeric: true, sortable: true, label: 'Timestamp', width: '100px'},
             {id: 'performance', numeric: true, sortable: true, label: 'Performance', width: '110px'},
+            {id: 'budget', numeric: true, sortable: true, label: 'Budget', width: '100px'},
             {id: 'candidate', numeric: false, sortable: false, label: 'Configuration', width: 'auto'}
         ];
 
