@@ -1,5 +1,5 @@
 import React from 'react';
-import {CandidateId, MetaInformation, Structure} from "../model";
+import {Candidate, CandidateId, MetaInformation, Structure} from "../model";
 import {Colors, fixedPrec} from "../util";
 import {
     FlexibleWidthXYPlot,
@@ -58,13 +58,14 @@ export default class PerformanceTimeline extends React.Component<ConfigHistoryPr
     }
 
     private performanceTimeline(): ConfigRecord[] {
-        const sign = this.props.meta.metric_sign
-        let best = -Infinity
+        const optimFunction = this.props.meta.is_minimization ? Math.min : Math.max
+        let best = this.props.meta.is_minimization ? Infinity : -Infinity
+
         return [].concat(...this.props.data.map(s => s.configs))
-            .map(c => ({x: c.runtime.timestamp, y: sign * c.loss[0], cid: c.id}))
+            .map((c: Candidate) => ({x: c.runtime.timestamp, y: c.loss, cid: c.id}))
             .sort((a, b) => a.x - b.x)
             .map(v => {
-                best = Math.max(best, v.y)
+                best = optimFunction(best, v.y)
                 return {x: fixedPrec(v.x), y: fixedPrec(v.y), Incumbent: fixedPrec(best), cid: v.cid}
             })
     }

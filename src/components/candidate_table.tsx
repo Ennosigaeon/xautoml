@@ -237,7 +237,7 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
 
         this.state = {
             rows: this.calculateData(),
-            order: 'desc',
+            order: this.props.meta.is_minimization ? 'asc' : 'desc',
             orderBy: 'performance',
             page: 0,
             rowsPerPage: 10
@@ -293,14 +293,13 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
     private calculateData(): SingleCandidate[] {
         const rows: SingleCandidate[] = []
 
-        const sign = this.props.meta.metric_sign
         this.props.structures.forEach(structure => {
             structure.configs.forEach(c => {
                 rows.push(
                     {
                         id: c.id,
                         timestamp: c.runtime.timestamp,
-                        performance: sign * c.loss,
+                        performance: c.loss,
                         budget: c.budget,
                         candidate: [structure, c]
                     }

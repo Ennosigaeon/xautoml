@@ -203,7 +203,7 @@ export class MetaInformation {
                 public readonly start_time: number,
                 public readonly end_time: number,
                 public readonly metric: string,
-                public readonly metric_sign: number,
+                public readonly is_minimization: boolean,
                 public readonly openml_task: number,
                 public readonly openml_fold: number,
                 public readonly n_structures: number,
@@ -215,7 +215,7 @@ export class MetaInformation {
     }
 
     static fromJson(meta: MetaInformation): MetaInformation {
-        return new MetaInformation('dswizard', meta.start_time, meta.end_time, meta.metric, meta.metric_sign,
+        return new MetaInformation('dswizard', meta.start_time, meta.end_time, meta.metric, meta.is_minimization,
             meta.openml_task, meta.openml_fold, meta.n_structures, meta.n_configs, meta.iterations, meta.model_dir,
             meta.data_file, new Map<string, ConfigValue>(Object.entries(meta.config)))
     }

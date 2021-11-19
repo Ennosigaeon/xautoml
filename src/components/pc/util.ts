@@ -103,7 +103,6 @@ export namespace ParCord {
 
         const axes = parseConfigSpace()
 
-        const sign = runhistory.meta.metric_sign
         const lines = [].concat(...runhistory.structures.map(s =>
             s.configs.map(candidate => {
                 const points = new Array<cpc.LinePoint>()
@@ -118,7 +117,7 @@ export namespace ParCord {
 
                 // Fill missing steps in pipeline and final performance measure
                 axes.slice(s.pipeline.steps.length).forEach(axis => {
-                    const value = axis.id === '__performance__' ? sign * candidate.loss : undefined
+                    const value = axis.id === '__performance__' ? candidate.loss : undefined
                     points.push(new cpc.LinePoint(`${axis.id}`, value))
                 })
                 return new cpc.Line(candidate.id, points)
