@@ -40,8 +40,7 @@ export class FlexibleSvg extends React.Component<FlexibleSvgProps, FlexibleSvgSt
     }
 
     componentWillUnmount() {
-        if (this.resizeObserver)
-            this.resizeObserver.disconnect()
+        this.resizeObserver?.disconnect()
     }
 
     render() {

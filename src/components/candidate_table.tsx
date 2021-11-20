@@ -190,7 +190,7 @@ xautoml_pipeline
                     </TableCell>
                 </TableRow>
                 <TableRow>
-                    <TableCell style={{padding: 0}} colSpan={6}>
+                    <TableCell style={{padding: 0}} colSpan={7}>
                         <Collapse in={this.state.open} timeout='auto' unmountOnExit={false} mountOnEnter={true}>
                             <Box margin={1}>
                                 <DataSetDetailsComponent

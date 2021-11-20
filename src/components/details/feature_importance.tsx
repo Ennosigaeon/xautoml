@@ -1,19 +1,48 @@
 import React from 'react';
-import {
-    FlexibleWidthXYPlot,
-    HorizontalGridLines,
-    LabelSeriesPoint,
-    VerticalBarSeries,
-    VerticalGridLines,
-    XAxis,
-    YAxis
-} from 'react-vis';
 import {FeatureImportance, requestFeatureImportance} from "../../handler";
 import {LoadingIndicator} from "../loading";
 import {DetailsModel} from "./model";
 import {ErrorIndicator} from "../../util/error";
-import {Colors} from "../../util";
+import {Colors, fixedPrec} from "../../util";
 import {AdditionalFeatureWarning} from "../../util/warning";
+import {Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, TooltipProps, XAxis, YAxis} from "recharts";
+
+
+class CustomizedAxisTick extends React.PureComponent<any> {
+    render() {
+        const {x, y, payload} = this.props;
+
+        return (
+            <g transform={`translate(${x},${y})`}>
+                <text x={0} y={0} dy={16} textAnchor="end" fill="#666" transform="rotate(-35)">
+                    {payload.value}
+                </text>
+            </g>
+        );
+    }
+}
+
+
+class CustomTooltip extends React.PureComponent<TooltipProps<any, any>> {
+    render() {
+        const {active, payload} = this.props
+
+        if (active && payload && payload.length) {
+            return (
+                <div className="recharts-default-tooltip" style={{
+                    margin: '0px',
+                    padding: '10px',
+                    backgroundColor: 'rgb(255, 255, 255)',
+                    border: '1px solid rgb(204, 204, 204)',
+                    whiteSpace: 'nowrap'
+                }}>
+                    <p className="label">{fixedPrec(payload[0].value, 3).toFixed(3)}</p>
+                </div>
+            )
+        }
+        return null
+    }
+}
 
 
 interface FeatureImportanceProps {
@@ -53,9 +82,7 @@ export class FeatureImportanceComponent extends React.Component<FeatureImportanc
             return
 
         this.setState({error: undefined})
-        const promise = requestFeatureImportance(candidate.id, meta.data_file, meta.model_dir, component)
-
-        promise
+        requestFeatureImportance(candidate.id, meta.data_file, meta.model_dir, component)
             .then(data => this.setState((state) => ({data: state.data.set(component, data)})))
             .catch(error => {
                 console.error(`Failed to fetch FeatureImportance data.\n${error.name}: ${error.message}`)
@@ -67,12 +94,11 @@ export class FeatureImportanceComponent extends React.Component<FeatureImportanc
         const {data, error} = this.state
         const {component} = this.props.model
 
-        const bars: LabelSeriesPoint[] = []
+        const bars: any[] = []
         let maxLabelLength = 35
         data.get(component)?.data.forEach((value, key) => {
-            // @ts-ignore
-            bars.push({x: key, y: value})
-            maxLabelLength = Math.max(maxLabelLength, key.length * 5)
+            bars.push({feature: key, y: value})
+            maxLabelLength = Math.max(maxLabelLength, key.length * 4)
         })
 
         return (
@@ -84,14 +110,17 @@ export class FeatureImportanceComponent extends React.Component<FeatureImportanc
                     {bars.length > 0 &&
                     <>
                         {data.get(component).additional_features && <AdditionalFeatureWarning/>}
-                        <FlexibleWidthXYPlot height={this.props.height} xType="ordinal"
-                                             margin={{bottom: maxLabelLength}}>
-                            <VerticalGridLines/>
-                            <HorizontalGridLines/>
-                            <XAxis tickLabelAngle={330}/>
-                            <YAxis/>
-                            <VerticalBarSeries data={bars} barWidth={0.75} color={Colors.DEFAULT}/>
-                        </FlexibleWidthXYPlot>
+                        <div style={{height: this.props.height}}>
+                            <ResponsiveContainer>
+                                <BarChart data={bars} margin={{top: 0, right: 0, left: 0, bottom: maxLabelLength}}>
+                                    <CartesianGrid strokeDasharray="3 3"/>
+                                    <XAxis dataKey="feature" type={"category"} tick={<CustomizedAxisTick/>}/>
+                                    <YAxis/>
+                                    <Tooltip content={<CustomTooltip/>}/>
+                                    <Bar dataKey="y" fill={Colors.DEFAULT}/>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
                     </>
                     }
                 </>

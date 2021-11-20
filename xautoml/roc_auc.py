@@ -127,18 +127,16 @@ class RocCurve:
         # If it's a binary decision, plot the single ROC curve
         if self.target_type_ == BINARY:
             data.append(
-                (self.fpr[BINARY], self.tpr[BINARY], '{} (AUC = {:0.2f})'.format(cid, self.roc_auc[BINARY]))
+                (self.fpr[BINARY], self.tpr[BINARY], cid)
             )
         else:
             if self.micro:
                 data.append(
-                    (self.fpr[MICRO], self.tpr[MICRO],
-                     '{} micro-average (AUC = {:0.2f})'.format(cid, self.roc_auc[MICRO]))
+                    (self.fpr[MICRO], self.tpr[MICRO], '{} micro-average'.format(cid))
                 )
             if self.macro:
                 data.append(
-                    (self.fpr[MACRO], self.tpr[MACRO],
-                     '{} macro-average (AUC = {:0.2f})'.format(cid, self.roc_auc[MACRO]))
+                    (self.fpr[MACRO], self.tpr[MACRO], '{} macro-average'.format(cid))
                 )
 
         return data

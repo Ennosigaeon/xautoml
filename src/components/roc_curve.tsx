@@ -1,19 +1,9 @@
 import React from "react";
 import {CandidateId, MetaInformation} from "../model";
 import {CancelablePromise, CanceledPromiseError, requestRocCurve, RocCurveData} from "../handler";
-import {
-    DiscreteColorLegend,
-    FlexibleWidthXYPlot,
-    HorizontalGridLines,
-    LineSeries,
-    LineSeriesPoint,
-    VerticalGridLines,
-    XAxis,
-    YAxis
-} from "react-vis";
-import 'react-vis/dist/style.css'
 import {LoadingIndicator} from "./loading";
 import {ErrorIndicator} from "../util/error";
+import {CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, XAxis, YAxis} from "recharts";
 import {Colors} from "../util";
 
 
@@ -25,7 +15,7 @@ interface RocCurveProps {
 }
 
 interface RocCurveState {
-    data: Map<string, LineSeriesPoint[]>
+    data: Map<string, any[]>
     pendingCount: number
     pendingRequest: CancelablePromise<RocCurveData>
     error: Error
@@ -42,7 +32,7 @@ export class RocCurve extends React.Component<RocCurveProps, RocCurveState> {
         super(props)
 
         this.state = {
-            data: new Map<string, LineSeriesPoint[]>(),
+            data: new Map<string, any[]>(),
             pendingRequest: undefined,
             error: undefined,
             pendingCount: 0
@@ -74,7 +64,7 @@ export class RocCurve extends React.Component<RocCurveProps, RocCurveState> {
                 // Request for data is currently still pending. Erase complete state and load everything from scratch to
                 // prevent incoherent states
                 this.state.pendingRequest.cancel()
-                this.setState({data: new Map<string, LineSeriesPoint[]>(), pendingRequest: undefined})
+                this.setState({data: new Map<string, any[]>(), pendingRequest: undefined})
                 newCandidates = Array.from(this.props.selectedCandidates)
             }
 
@@ -119,20 +109,20 @@ export class RocCurve extends React.Component<RocCurveProps, RocCurveState> {
                 data.push(v)
             })
 
-            // @ts-ignore
-            const legend = <DiscreteColorLegend style={{position: 'absolute', right: '10px', bottom: '55px'}}
-                                                items={labels}/>
-
             content = (
-                <FlexibleWidthXYPlot height={this.props.height}>
-                    <HorizontalGridLines/>
-                    <VerticalGridLines/>
-                    <XAxis title="False Positive Rate"/>
-                    <YAxis title="True Positive Rate"/>
-
-                    {data.map((s, idx) => <LineSeries key={labels[idx]} data={s} color={Colors.getColor(idx)}/>)}
-                    {labels.length < 15 && legend}
-                </FlexibleWidthXYPlot>
+                <div style={{height: this.props.height}}>
+                    <ResponsiveContainer>
+                        <LineChart>
+                            <CartesianGrid strokeDasharray="3 3"/>
+                            <XAxis dataKey="x" label={{value: 'False Positive Rate', dy: 10}} type={'number'}
+                                   domain={[0, 1]}/>
+                            <YAxis label={{value: 'True Positive Rate', angle: -90, dx: -15}}/>
+                            {data.length <= 12 && <Legend/>}
+                            {data.map((s, idx) => <Line key={labels[idx]} name={labels[idx]} data={s} dataKey={'y'}
+                                                        stroke={Colors.getColor(idx)}/>)}
+                        </LineChart>
+                    </ResponsiveContainer>
+                </div>
             )
         } else
             content = <p>No Configuration selected</p>

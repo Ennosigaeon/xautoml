@@ -59,7 +59,6 @@ export class RawDataset extends React.Component<RawDatasetProps, RawDatasetState
                 }
             })
         }
-
     }
 
     private queryOutputs() {

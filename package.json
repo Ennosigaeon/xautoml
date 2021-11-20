@@ -61,13 +61,12 @@
     "memoize-one": "^6.0.0",
     "rc-slider": "^9.7.0",
     "react-move": "^6.5.0",
-    "react-vis": "^1.11.0"
+    "recharts": "^2.1.6"
   },
   "devDependencies": {
     "@jupyterlab/builder": "^3.1.0",
     "@types/d3": "^6.7.0",
     "@types/dagre": "^0.7.46",
-    "@types/react-vis": "^1.11.0",
     "@typescript-eslint/eslint-plugin": "^4.27.0",
     "@typescript-eslint/parser": "^4.27.0",
     "eslint": "^7.29.0",

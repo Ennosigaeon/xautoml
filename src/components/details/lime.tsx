@@ -1,14 +1,4 @@
 import React from "react";
-import {
-    ChartLabel,
-    FlexibleWidthXYPlot,
-    HorizontalBarSeries,
-    HorizontalGridLines,
-    VerticalBarSeries,
-    VerticalGridLines,
-    XAxis,
-    YAxis
-} from "react-vis";
 import {CancelablePromise, CanceledPromiseError, Label, LimeResult, requestLimeApproximation} from "../../handler";
 import {Colors} from "../../util";
 import {LoadingIndicator} from "../loading";
@@ -16,6 +6,8 @@ import {DetailsModel} from "./model";
 import {ErrorIndicator} from "../../util/error";
 import {CollapseComp} from "../../util/collapse";
 import {AdditionalFeatureWarning} from "../../util/warning";
+import {Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, XAxis, YAxis} from "recharts";
+import ResizeObserver from "resize-observer-polyfill";
 
 
 interface LimeProps {
@@ -27,6 +19,9 @@ interface LimeState {
     pendingRequest: CancelablePromise<LimeResult>
     data: LimeResult
     error: Error
+
+    x1: number
+    x2: number
 }
 
 export class LimeComponent extends React.Component<LimeProps, LimeState> {
@@ -38,9 +33,19 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
         'their proximity to the original point. Ultimately, it fits a linear regression on the dataset with ' +
         'variations using those sample weights.'
 
+    private resizeObserver: ResizeObserver
+    private readonly container = React.createRef<HTMLDivElement>()
+
     constructor(props: LimeProps) {
         super(props);
-        this.state = {selectedLabel: undefined, pendingRequest: undefined, data: undefined, error: undefined}
+        this.state = {
+            selectedLabel: undefined,
+            pendingRequest: undefined,
+            data: undefined,
+            error: undefined,
+            x1: undefined,
+            x2: undefined
+        }
 
         this.onLabelClick = this.onLabelClick.bind(this)
     }
@@ -49,6 +54,23 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
         if (prevProps.model.component !== this.props.model.component ||
             prevProps.model.selectedSample !== this.props.model.selectedSample)
             this.queryLime(this.props.model.selectedSample)
+
+        if (this.container.current && this.resizeObserver === undefined) {
+            this.resizeObserver = new ResizeObserver(entries => {
+                this.container.current.querySelectorAll<SVGLineElement>('.recharts-cartesian-axis-line')
+                    .forEach(e => {
+                        const x1 = e.x1.animVal.value
+                        const x2 = e.x2.animVal.value
+                        if (x1 !== x2)
+                            this.setState({x1: x1, x2: x2})
+                    })
+            })
+            this.resizeObserver.observe(this.container.current)
+        }
+    }
+
+    componentWillUnmount() {
+        this.resizeObserver?.disconnect()
     }
 
     private queryLime(idx: number) {
@@ -77,8 +99,7 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
     }
 
     private onLabelClick(point: any) {
-        const label = point.x
-        this.setState({selectedLabel: label})
+        this.setState({selectedLabel: point.label})
     }
 
     render() {
@@ -86,18 +107,16 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
         const {selectedLabel, data, pendingRequest, error} = this.state
 
         const probs: any[] = []
-        data?.prob.forEach((p, label) => probs.push({x: label, y: p, color: +(label == selectedLabel)}))
+        data?.prob.forEach((p, label) => probs.push({label: label, y: p}))
 
         let maxLabelLength = 0
         const expl: any[] = data?.expl.get(selectedLabel.toString())
             ?.map(([label, score]) => {
-                maxLabelLength = Math.max(maxLabelLength, label.length * 6)
-                return {x: score, y: label}
+                maxLabelLength = Math.max(maxLabelLength, label.length * 5)
+                return {x: score, label: label}
             })
             .reverse()
-
-        const nrExpl = data?.expl.get(selectedLabel.toString())?.length
-        const labelHeight = 23
+        const explHeight = data?.expl.get(selectedLabel.toString())?.length * 30
 
         return (
             <div className={'lime'} style={{height: '100%'}}>
@@ -132,56 +151,44 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
                         <CollapseComp showInitial={true}>
                             <h5>Predicted Class Probabilities</h5>
                             <>
-                                <FlexibleWidthXYPlot
-                                    xType="ordinal"
-                                    height={200}
-                                    colorRange={[Colors.DEFAULT, Colors.HIGHLIGHT]}
-                                    style={{flexGrow: 1}}
-                                >
-                                    <VerticalGridLines/>
-                                    <HorizontalGridLines/>
-                                    <XAxis/>
-                                    <YAxis/>
-                                    <VerticalBarSeries
-                                        barWidth={0.75}
-                                        data={probs}
-                                        onValueClick={this.onLabelClick}
-                                    />
-                                </FlexibleWidthXYPlot>
+                                <div style={{height: 200}}>
+                                    <ResponsiveContainer>
+                                        <BarChart data={probs}>
+                                            <CartesianGrid strokeDasharray="3 3"/>
+                                            <XAxis dataKey="label" type={"category"}/>
+                                            <YAxis/>
+                                            <Bar dataKey="y" fill={Colors.DEFAULT} onClick={this.onLabelClick}>
+                                                {probs.map((d, index) => (
+                                                    <Cell key={`cell-${index}`}
+                                                          fill={selectedLabel === d.label ? Colors.HIGHLIGHT : Colors.DEFAULT}/>
+                                                ))}
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
                                 <p>Correct Class: {data.label}</p>
                             </>
                         </CollapseComp>
 
                         <CollapseComp showInitial={true}>
                             <h5>Explanations for Class {selectedLabel}</h5>
-                            <FlexibleWidthXYPlot
-                                yType="ordinal"
-                                height={nrExpl * 30}
-                                margin={{left: maxLabelLength, top: labelHeight}}
-                            >
-                                <VerticalGridLines/>
-                                <HorizontalGridLines/>
-                                <XAxis/>
-                                <YAxis/>
-                                <HorizontalBarSeries
-                                    barWidth={0.75}
-                                    data={expl}
-                                    color={Colors.DEFAULT}
-                                />
-
-                                <ChartLabel
-                                    text={`Not ${selectedLabel}`}
-                                    includeMargin={false}
-                                    xPercent={0}
-                                    yPercent={(1.5 * labelHeight) / (nrExpl * 30)}
-                                />
-                                <ChartLabel
-                                    text={selectedLabel.toString()}
-                                    includeMargin={false}
-                                    xPercent={0.9}
-                                    yPercent={(1.5 * labelHeight) / (nrExpl * 30)}
-                                />
-                            </FlexibleWidthXYPlot>
+                            <div style={{height: explHeight}} ref={this.container}>
+                                <ResponsiveContainer>
+                                    <BarChart data={expl} layout={'vertical'}
+                                              margin={{left: maxLabelLength, top: 20, right: 0, bottom: 0}}>
+                                        <CartesianGrid strokeDasharray="3 3"/>
+                                        <XAxis type={'number'}/>
+                                        <YAxis dataKey="label" type={"category"} interval={0}
+                                               tickFormatter={(value) => value.toLocaleString().replace(/ /g, '\u00A0')}/>
+                                        <Bar dataKey="x" fill={Colors.DEFAULT}/>
+                                        {this.state.x1 &&
+                                        <text x={this.state.x1} y={15}>{`Not ${selectedLabel}`}</text>}
+                                        {this.state.x2 &&
+                                        <text x={this.state.x2} textAnchor="end"
+                                              y={15}>{selectedLabel.toString()}</text>}
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
                         </CollapseComp>
                     </div>
                     }

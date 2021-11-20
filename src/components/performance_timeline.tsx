@@ -1,18 +1,7 @@
 import React from 'react';
 import {Candidate, CandidateId, MetaInformation, Structure} from "../model";
 import {Colors, fixedPrec} from "../util";
-import {
-    FlexibleWidthXYPlot,
-    HorizontalGridLines,
-    LineSeries,
-    MarkSeries,
-    VerticalGridLines,
-    XAxis,
-    YAxis
-} from "react-vis";
-import 'react-vis/dist/style.css'
-
-import * as d3 from 'd3'
+import {CartesianGrid, Cell, ComposedChart, Line, ResponsiveContainer, Scatter, XAxis, YAxis} from "recharts";
 
 interface ConfigHistoryProps {
     data: Structure[]
@@ -23,7 +12,6 @@ interface ConfigHistoryProps {
 
 interface ConfigHistoryState {
     data: ConfigRecord[];
-    hovered: ConfigRecord;
 }
 
 
@@ -47,7 +35,7 @@ export default class PerformanceTimeline extends React.Component<ConfigHistoryPr
 
     constructor(props: ConfigHistoryProps) {
         super(props);
-        this.state = {data: [], hovered: undefined}
+        this.state = {data: []}
 
         this.onScatterClick = this.onScatterClick.bind(this)
     }
@@ -86,35 +74,25 @@ export default class PerformanceTimeline extends React.Component<ConfigHistoryPr
 
         if (data.length === 0)
             return <p>Loading...</p>
-        const dataWithColor = data.map(d => ({
-            ...d,
-            color: Number(!selectedCandidates.has(d.cid))
-        }));
-        const incumbent = data.map(d => ({x: d.x, y: d.Incumbent}))
 
-        const bc = Colors.DEFAULT
-        const hc = Colors.HIGHLIGHT
-        // Somehow, if all points are selected only the base color is used and not the highlight color. Bug in react-vis?
-        const colorRange = data.length === selectedCandidates.size ? [hc, hc] : [hc, bc]
         return (
-            <>
-                <FlexibleWidthXYPlot height={300}>
-                    <HorizontalGridLines/>
-                    <VerticalGridLines/>
-                    <XAxis title="Timestamp"/>
-                    <YAxis title="Performance"/>
+            <div style={{height: 300}}>
+                <ResponsiveContainer>
+                    <ComposedChart data={data}>
+                        <CartesianGrid strokeDasharray="3 3"/>
+                        <XAxis dataKey="x" label={{value: 'Timestamp', dy: 10}} type={'number'} unit={'sec'}/>
+                        <YAxis label={{value: 'Performance', angle: -90, dx: -25}} domain={['dataMin', 'dataMax']}/>
 
-                    <LineSeries data={incumbent} curve={d3.curveStepAfter} color={Colors.HIGHLIGHT}/>
-                    <MarkSeries data={dataWithColor} colorRange={colorRange}
-                                onValueMouseOver={value => this.setState({hovered: value as ConfigRecord})}
-                                onValueMouseOut={() => this.setState({hovered: undefined})}
-                                onValueClick={this.onScatterClick}
-                    />
-
-                    {/*TODO hint is currently broken. Does not disappear on onValueMouseOut and shows information for wrong item*/}
-                    {/*{this.state.hovered ? <Hint value={{'x': (this.state.hovered.x + 10), 'y': this.state.hovered.y}}/> : null}*/}
-                </FlexibleWidthXYPlot>
-            </>
+                        <Line dataKey={'Incumbent'} stroke={Colors.HIGHLIGHT} dot={false}/>
+                        <Scatter dataKey="y" onClick={this.onScatterClick}>
+                            {data.map((d, index) => (
+                                <Cell key={`cell-${index}`}
+                                      fill={selectedCandidates.has(d.cid) ? Colors.HIGHLIGHT : Colors.DEFAULT}/>
+                            ))}
+                        </Scatter>
+                    </ComposedChart>
+                </ResponsiveContainer>
+            </div>
         );
     }
 }

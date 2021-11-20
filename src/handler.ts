@@ -2,7 +2,6 @@ import {URLExt} from '@jupyterlab/coreutils';
 
 import {ServerConnection} from '@jupyterlab/services';
 import {CandidateId} from "./model";
-import {LineSeriesPoint} from "react-vis";
 
 export class ServerError extends Error {
 
@@ -84,8 +83,16 @@ export async function requestAPI<T>(
     return data;
 }
 
+export interface LinePoint {
+    x: number
+    y: number
+}
 
-export type RocCurveData = Map<string, LineSeriesPoint[]>
+export interface AreaPoint extends LinePoint {
+    y0: number
+}
+
+export type RocCurveData = Map<string, LinePoint[]>
 
 export type Label = number | string
 
@@ -119,13 +126,13 @@ export interface FeatureImportance {
 }
 
 export function requestRocCurve(cids: CandidateId[], data_file: string, model_dir: string): CancelablePromise<RocCurveData> {
-    const promise = requestAPI<Map<string, LineSeriesPoint[]>>('roc_auc', {
+    const promise = requestAPI<Map<string, LinePoint[]>>('roc_auc', {
         method: 'POST', body: JSON.stringify({
             'cids': cids.join(','),
             'data_file': data_file,
             'model_dir': model_dir
         })
-    }).then(data => new Map<string, LineSeriesPoint[]>(Object.entries(data)))
+    }).then(data => new Map<string, LinePoint[]>(Object.entries(data)))
     return cancelablePromise(promise)
 }
 
@@ -178,7 +185,7 @@ export function requestLimeApproximation(cid: CandidateId, idx: number, data_fil
     //         },
     //         // @ts-ignore
     //         "prob": {"0": 0.865458461894008, "1": 0.1345415381059912},
-    //         "label": 0
+    //         "label": "0"
     //     })
     // })
 
