@@ -47,7 +47,8 @@ setup_args = dict(
     install_requires=[
         "jupyterlab~=3.0",
         "mlinsights~=0.3",
-        "lime~=0.2"
+        "lime~=0.2",
+        "fanova~=2.0"
     ],
     zip_safe=False,
     include_package_data=True,

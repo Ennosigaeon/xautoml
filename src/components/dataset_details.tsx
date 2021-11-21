@@ -10,6 +10,7 @@ import {GlobalSurrogateComponent} from "./details/global_surrogate";
 import {CollapseComp} from "../util/collapse";
 import {PerformanceComponent} from "./details/performance";
 import {BanditExplanationsComponent} from "./bandit_explanation";
+import {HPImportanceComp} from "./details/hp_importance";
 
 interface DataSetDetailsProps {
     candidate: Candidate
@@ -68,6 +69,11 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
                         <RawDataset model={model} onSampleClick={this.handleSampleSelection}/>
                         <LimeComponent model={model}/>
                     </TwoColumnLayout>
+                </CollapseComp>
+
+                <CollapseComp showInitial={true} help={HPImportanceComp.HELP}>
+                    <h4>Hyperparameter Importance</h4>
+                    <HPImportanceComp model={model} height={200}/>
                 </CollapseComp>
 
                 <CollapseComp showInitial={true} help={PerformanceComponent.HELP}>
