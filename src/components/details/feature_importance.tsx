@@ -3,7 +3,7 @@ import {FeatureImportance, requestFeatureImportance} from "../../handler";
 import {LoadingIndicator} from "../loading";
 import {DetailsModel} from "./model";
 import {ErrorIndicator} from "../../util/error";
-import {Colors, fixedPrec} from "../../util";
+import {Colors, prettyPrint} from "../../util";
 import {AdditionalFeatureWarning} from "../../util/warning";
 import {Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, TooltipProps, XAxis, YAxis} from "recharts";
 
@@ -36,7 +36,7 @@ class CustomTooltip extends React.PureComponent<TooltipProps<any, any>> {
                     border: '1px solid rgb(204, 204, 204)',
                     whiteSpace: 'nowrap'
                 }}>
-                    <p className="label">{fixedPrec(payload[0].value, 3).toFixed(3)}</p>
+                    <p className="label">{prettyPrint(payload[0].value, 3)}</p>
                 </div>
             )
         }

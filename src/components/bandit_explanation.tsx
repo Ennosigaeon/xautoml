@@ -3,7 +3,7 @@ import * as d3 from "d3";
 import {CandidateId, Pipeline, RF, Structure} from "../model";
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
-import {areSetInputsEqual, cidToSid, fixedPrec, normalizeComponent} from "../util";
+import {areSetInputsEqual, cidToSid, normalizeComponent, prettyPrint} from "../util";
 import {GraphEdge, GraphNode, HierarchicalTree} from "./tree_structure";
 import {Dag, DagNode} from "d3-dag";
 import memoizeOne from "memoize-one";
@@ -190,13 +190,13 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
                 <>
                     <CollapseComp showInitial={false} className={''}>
                         <h3>
-                            {normalizeComponent(data.label)}: {details.isFailure() ? details.failure_message : fixedPrec(details.score)}
+                            {normalizeComponent(data.label)}: {details.isFailure() ? details.failure_message : prettyPrint(details.score)}
                         </h3>
                         <div className={'bandit-explanation_node-details'} style={{marginTop: "-10px"}}>
                             <KeyValue key_={'Id'} value={data.id} tight={true}/>
 
                             {Array.from(details.policy.keys()).map(k =>
-                                <KeyValue key={k} key_={k} value={fixedPrec(details.policy.get(k))} tight={true}/>
+                                <KeyValue key={k} key_={k} value={details.policy.get(k)} tight={true}/>
                             )}
                         </div>
                     </CollapseComp>

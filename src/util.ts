@@ -23,6 +23,15 @@ export function cidToSid(cid: CandidateId): string {
 }
 
 
+export function prettyPrint(value: string | number | boolean | Date, prec: number = 3): string {
+    if (typeof value === 'number')
+        return fixedPrec(value, prec).toFixed(prec)
+    else if (value instanceof Date)
+        return (value as Date).toLocaleString()
+    else
+        return String(value)
+}
+
 export function fixedPrec(number: number, prec: number = 3): number {
     return Math.round(number * Math.pow(10, prec)) / Math.pow(10, prec)
 }

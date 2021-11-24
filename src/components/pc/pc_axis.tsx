@@ -2,7 +2,7 @@ import * as d3 from "d3";
 import * as cpc from "./model";
 import React from "react";
 import {PCChoice} from "./pc_choice";
-import {fixedPrec} from "../../util";
+import {prettyPrint} from "../../util";
 import {Constants} from "./constants";
 
 interface CPCAxisProps {
@@ -86,7 +86,7 @@ export class PCAxis extends React.Component<CPCAxisProps, CPCAxisState> {
                             <text x={centeredX - Constants.TICK_LENGTH}
                                   y={v.pos}
                                   className={'pc-axis-tick'}>
-                                {fixedPrec(v.value)}
+                                {prettyPrint(v.value)}
                             </text>
                         </>
                     )}

@@ -1,7 +1,7 @@
 import React from "react";
 import {DetailsModel} from "./model";
 import {KeyValue} from "../../util/KeyValue";
-import {fixedPrec} from "../../util";
+import {prettyPrint} from "../../util";
 import {ConfusionMatrix} from "../confusion_matrix";
 import {RocCurve} from "../roc_curve";
 
@@ -27,7 +27,7 @@ export class PerformanceComponent extends React.Component<PerformanceComponentPr
                     {/* TODO */}
                     <KeyValue key_={`Validation ${model.meta.metric}`} value={0}/>
                     <KeyValue key_={'Training Duration'}
-                              value={`${fixedPrec(model.candidate.runtime.training_time)} sec`}/>
+                              value={`${prettyPrint(model.candidate.runtime.training_time)} sec`}/>
                     {/* TODO */}
                     <KeyValue key_={'Prediction Duration'} value={'0 sec'}/>
                 </div>

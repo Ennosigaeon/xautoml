@@ -1,6 +1,6 @@
 import React from "react";
 import {Candidate, Config, ConfigValue, MetaInformation, Pipeline, PipelineStep, Structure} from "../model";
-import {fixedPrec} from "../util";
+import {prettyPrint} from "../util";
 import {Table, TableBody, TableCell, TableRow, Tooltip, Typography} from "@material-ui/core";
 import {OutputDescriptionData, requestOutputDescription} from "../handler";
 import {LoadingIndicator} from "./loading";
@@ -60,15 +60,11 @@ class SingleComponent extends React.Component<SingleComponentProps, any> {
                                 <TableRow key={name}>
                                     <TableCell component="th"
                                                scope="row">{name}</TableCell>
-                                    <TableCell align="right">{
-                                        typeof value === 'number' ? fixedPrec(value, 5) : String(value)
-                                    }</TableCell>
+                                    <TableCell align="right">{prettyPrint(value, 5)}</TableCell>
 
                                     <TableCell component="th"
                                                scope="row">{name2}</TableCell>
-                                    <TableCell align="right">{
-                                        typeof value2 === 'number' ? fixedPrec(value2, 5) : String(value2)
-                                    }</TableCell>
+                                    <TableCell align="right">{prettyPrint(value2, 5)}</TableCell>
                                 </TableRow>
                             )
                         })

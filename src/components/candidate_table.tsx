@@ -8,7 +8,7 @@ import TableSortLabel from '@material-ui/core/TableSortLabel';
 import Checkbox from '@material-ui/core/Checkbox';
 import {Box, IconButton, Table, TableContainer} from '@material-ui/core';
 import {Candidate, CandidateId, Explanations, MetaInformation, Structure} from '../model';
-import {fixedPrec, JupyterContext} from '../util';
+import {JupyterContext, prettyPrint} from '../util';
 import {StepWithConfig, StructureGraphComponent} from './structure_graph';
 import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@material-ui/icons/KeyboardArrowUp';
@@ -173,9 +173,9 @@ xautoml_pipeline
                     <TableCell component='th' id={candidate.id} scope='row' padding='none'>
                         {candidate.id}
                     </TableCell>
-                    <TableCell align='right'>{fixedPrec(candidate.timestamp, 2).toFixed(2)}</TableCell>
-                    <TableCell align='right'>{fixedPrec(candidate.performance, 3).toFixed(3)}</TableCell>
-                    <TableCell align='right'>{fixedPrec(candidate.budget, 2).toFixed(2)}</TableCell>
+                    <TableCell align='right'>{prettyPrint(candidate.timestamp, 2)}</TableCell>
+                    <TableCell align='right'>{prettyPrint(candidate.performance, 3)}</TableCell>
+                    <TableCell align='right'>{prettyPrint(candidate.budget, 2)}</TableCell>
                     <TableCell align='right' style={{height: '50px'}} padding='none'>
                         <StructureGraphComponent structure={candidate.candidate[0]}
                                                  candidate={candidate.candidate[1]}

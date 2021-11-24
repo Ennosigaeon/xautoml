@@ -4,7 +4,7 @@ import {DetailsModel} from "./details/model";
 import {ErrorIndicator} from "../util/error";
 import {LoadingIndicator} from "./loading";
 import {Table, TableBody, TableCell, TableRow} from "@material-ui/core";
-import {fixedPrec} from "../util";
+import {prettyPrint} from "../util";
 
 
 interface ConfusionMatrixProps {
@@ -76,7 +76,7 @@ export class ConfusionMatrix extends React.Component<ConfusionMatrixProps, Confu
                                 <TableRow key={cm.classes[idx]}>
                                     <TableCell component="th" scope="col">{cm.classes[idx]}</TableCell>
 
-                                    {row.map(cell => <TableCell align="right">{fixedPrec(cell, 5)}</TableCell>)}
+                                    {row.map(cell => <TableCell align="right">{prettyPrint(cell, 5)}</TableCell>)}
                                 </TableRow>
                             ))}
                         </TableBody>
