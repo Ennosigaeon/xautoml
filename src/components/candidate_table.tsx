@@ -174,7 +174,7 @@ xautoml_pipeline
                         {candidate.id}
                     </TableCell>
                     <TableCell align='right'>{prettyPrint(candidate.timestamp, 2)}</TableCell>
-                    <TableCell align='right'>{prettyPrint(candidate.performance, 3)}</TableCell>
+                    <TableCell align='right'>{prettyPrint(candidate.performance, 4)}</TableCell>
                     <TableCell align='right'>{prettyPrint(candidate.budget, 2)}</TableCell>
                     <TableCell align='right' style={{height: '50px'}} padding='none'>
                         <StructureGraphComponent structure={candidate.candidate[0]}
@@ -194,6 +194,7 @@ xautoml_pipeline
                         <Collapse in={this.state.open} timeout='auto' unmountOnExit={false} mountOnEnter={true}>
                             <Box margin={1}>
                                 <DataSetDetailsComponent
+                                    structure={candidate.candidate[0]}
                                     candidate={candidate.candidate[1]}
                                     componentId={this.state.selectedComponent[0]}
                                     componentLabel={this.state.selectedComponent[1]}

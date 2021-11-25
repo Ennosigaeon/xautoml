@@ -1,7 +1,8 @@
 import {URLExt} from '@jupyterlab/coreutils';
 
 import {ServerConnection} from '@jupyterlab/services';
-import {CandidateId} from "./model";
+import {CandidateId, Config} from "./model";
+import ConfigSpace = Config.ConfigSpace;
 
 export class ServerError extends Error {
 
@@ -69,11 +70,7 @@ export async function requestAPI<T>(
     let data: any = await response.text();
 
     if (data.length > 0) {
-        try {
-            data = JSON.parse(data);
-        } catch (error) {
-            console.log('Not a JSON response body.', response);
-        }
+        data = JSON.parse(data);
     }
 
     if (!response.ok) {
@@ -261,149 +258,30 @@ export function requestFeatureImportance(cid: CandidateId, data_file: string, mo
 
 export type ContinuousHPImportance = { "x": number, "y": number, "area": [number, number] }[]
 
-export interface HPImportance {
+export interface HPImportanceDetails {
     name: string[]
     mode: 'discrete' | 'continuous' | 'heatmap'
     data: any[] | any
 }
 
-export function requestFANOVAOverview(cid: CandidateId, step: string): Promise<any> {
-    const promise = new Promise<any>(((resolve, reject) => {
-        resolve(
-            {
-                "hyperparameters": ["1:1.1:add_indicator", "1:1.1:strategy", "1:1.2:1.2.2:add_indicator", "1:1.2:1.2.2:strategy", "2:criterion", "2:max_depth_factor", "2:min_samples_leaf_factor", "2:min_samples_split_factor"],
-                "importance": {
-                    "2:min_samples_leaf_factor___2:min_samples_split_factor": 1.0,
-                    "2:max_depth_factor___2:min_samples_leaf_factor": 0.9827009060844569,
-                    "1:1.2:1.2.2:add_indicator___2:min_samples_leaf_factor": 0.9783818642491183,
-                    "2:criterion___2:min_samples_leaf_factor": 0.972633544087044,
-                    "1:1.2:1.2.2:strategy___2:min_samples_leaf_factor": 0.9721969648909152,
-                    "1:1.1:strategy___2:min_samples_leaf_factor": 0.9721472783613292,
-                    "1:1.1:add_indicator___2:min_samples_leaf_factor": 0.9714614852853692,
-                    "2:min_samples_leaf_factor": 0.9712655111152928,
-                    "2:max_depth_factor___2:min_samples_split_factor": 0.015083182512246916,
-                    "1:1.2:1.2.2:add_indicator___2:min_samples_split_factor": 0.013100897918394111,
-                    "1:1.2:1.2.2:strategy___2:min_samples_split_factor": 0.01295408274986387,
-                    "1:1.1:strategy___2:min_samples_split_factor": 0.011861424210412403,
-                    "2:criterion___2:min_samples_split_factor": 0.011696768679721505,
-                    "1:1.1:add_indicator___2:min_samples_split_factor": 0.011341843854596988,
-                    "2:min_samples_split_factor": 0.011229480542764826,
-                    "1:1.2:1.2.2:add_indicator___2:max_depth_factor": 0.005342590518449394,
-                    "1:1.1:strategy___2:max_depth_factor": 0.002651530619699719,
-                    "1:1.2:1.2.2:strategy___2:max_depth_factor": 0.0025592384233578415,
-                    "2:criterion___2:max_depth_factor": 0.00231288058484904,
-                    "1:1.1:add_indicator___2:max_depth_factor": 0.0022037121601876206,
-                    "1:1.2:1.2.2:add_indicator___1:1.2:1.2.2:strategy": 0.0020996358726088522,
-                    "2:max_depth_factor": 0.002051418637297774,
-                    "1:1.1:strategy___1:1.2:1.2.2:add_indicator": 0.0020016598030304492,
-                    "1:1.1:add_indicator___1:1.2:1.2.2:add_indicator": 0.0018310564592453652,
-                    "1:1.2:1.2.2:add_indicator___2:criterion": 0.0017888410919606407,
-                    "1:1.2:1.2.2:add_indicator": 0.001695649329002862,
-                    "1:1.1:strategy___1:1.2:1.2.2:strategy": 0.0005438800779758796,
-                    "1:1.1:add_indicator___1:1.1:strategy": 0.0003926989064698032,
-                    "1:1.2:1.2.2:strategy___2:criterion": 0.0003366794319511791,
-                    "1:1.1:add_indicator___1:1.2:1.2.2:strategy": 0.0003300963851902298,
-                    "1:1.1:strategy___2:criterion": 0.0003190081158677089,
-                    "1:1.2:1.2.2:strategy": 0.00024053853567248005,
-                    "1:1.1:strategy": 0.00021349886484311087,
-                    "1:1.1:add_indicator___2:criterion": 9.321623231584502e-05,
-                    "2:criterion": 3.7891722182266998e-06,
-                    "1:1.1:add_indicator": 0.0
-                },
-                "std": {
-                    "2:min_samples_leaf_factor___2:min_samples_split_factor": 0.04591092987504182,
-                    "2:max_depth_factor___2:min_samples_leaf_factor": 0.04333560438925979,
-                    "1:1.2:1.2.2:add_indicator___2:min_samples_leaf_factor": 0.03623833821169296,
-                    "2:criterion___2:min_samples_leaf_factor": 0.0508046850085868,
-                    "1:1.2:1.2.2:strategy___2:min_samples_leaf_factor": 0.04995669226063303,
-                    "1:1.1:strategy___2:min_samples_leaf_factor": 0.05039356307266139,
-                    "1:1.1:add_indicator___2:min_samples_leaf_factor": 0.050230275690056655,
-                    "2:min_samples_leaf_factor": 0.050323768141948506,
-                    "2:max_depth_factor___2:min_samples_split_factor": 0.012393810256314752,
-                    "1:1.2:1.2.2:add_indicator___2:min_samples_split_factor": 0.0133963221451614,
-                    "1:1.2:1.2.2:strategy___2:min_samples_split_factor": 0.013872185685952644,
-                    "1:1.1:strategy___2:min_samples_split_factor": 0.01269569251844798,
-                    "2:criterion___2:min_samples_split_factor": 0.012246835194645327,
-                    "1:1.1:add_indicator___2:min_samples_split_factor": 0.012335235520344726,
-                    "2:min_samples_split_factor": 0.012401612151680903,
-                    "1:1.2:1.2.2:add_indicator___2:max_depth_factor": 0.01013388600338646,
-                    "1:1.1:strategy___2:max_depth_factor": 0.0029605512248976,
-                    "1:1.2:1.2.2:strategy___2:max_depth_factor": 0.00296053454919686,
-                    "2:criterion___2:max_depth_factor": 0.0029488688165896487,
-                    "1:1.1:add_indicator___2:max_depth_factor": 0.0030086503945940916,
-                    "1:1.2:1.2.2:add_indicator___1:1.2:1.2.2:strategy": 0.004677344552157955,
-                    "2:max_depth_factor": 0.0028879037256801265,
-                    "1:1.1:strategy___1:1.2:1.2.2:add_indicator": 0.004333148531783201,
-                    "1:1.1:add_indicator___1:1.2:1.2.2:add_indicator": 0.004513844851251373,
-                    "1:1.2:1.2.2:add_indicator___2:criterion": 0.004345726765427604,
-                    "1:1.2:1.2.2:add_indicator": 0.0043785932915637715,
-                    "1:1.1:strategy___1:1.2:1.2.2:strategy": 0.0004967633305921048,
-                    "1:1.1:add_indicator___1:1.1:strategy": 0.0008799809252033376,
-                    "1:1.2:1.2.2:strategy___2:criterion": 0.00034684503633069364,
-                    "1:1.1:add_indicator___1:1.2:1.2.2:strategy": 0.0003105437672760652,
-                    "1:1.1:strategy___2:criterion": 0.0005371763513051318,
-                    "1:1.2:1.2.2:strategy": 0.0003160287088109523,
-                    "1:1.1:strategy": 0.0005188948129518112,
-                    "1:1.1:add_indicator___2:criterion": 0.00017013092354492082,
-                    "2:criterion": 5.601071021655069e-05,
-                    "1:1.1:add_indicator": 0.00013993611658954006
-                }
-            }
-        )
-    }))
-
-    return promise
+export interface HPImportance {
+    hyperparameters: string[]
+    keys: number[][]
+    importance: any[]
 }
 
-export function requestFANOVADetails(cid: CandidateId, step: string): Promise<HPImportance[]> {
-    // Fake data for faster development
-    const promise = new Promise<HPImportance[]>(((resolve, reject) => {
-        resolve([
-                {
-                    "name": ["1:1.1:add_indicator"],
-                    "mode": "discrete",
-                    "data": {
-                        "true": [0.9890371389750009, 0.9894838053091545],
-                        "false": [0.9890800907380859, 0.9895627141327983]
-                    }
-                },
-                {
-                    "name": ["2:min_samples_leaf_factor"],
-                    "mode": "continuous",
-                    "data": [
-                        {"x": 1e-07, "y": 0.9930357610515442, "area": [0.9943632009104826, 0.9917083211926059]},
-                        {"x": 0.062500075, "y": 0.9970865876729753, "area": [0.9974310619953092, 0.9967421133506414]},
-                        {"x": 0.12500005, "y": 0.984586331591529, "area": [0.9899095375869649, 0.9792631255960931]},
-                        {"x": 0.18750002500, "y": 0.9821125911435755, "area": [0.9826414445549955, 0.9815837377321556]},
-                        {"x": 0.25, "y": 0.9818033014070633, "area": [0.9820840631071402, 0.9815225397069863]}]
-                },
-                {
-                    "name": ["1:1.1:add_indicator", "2:min_samples_leaf_factor"],
-                    "mode": "continuous",
-                    "data": [
-                        {"x": 1e-07, "true": 0.9930269891255136, "false": 0.993044532977575},
-                        {"x": 0.062500075, "true": 0.9970763884596203, "false": 0.9970967868863303},
-                        {"x": 0.12500005, "true": 0.9845324086379921, "false": 0.9846402545450658},
-                        {"x": 0.18750002500000001, "true": 0.9820596563381794, "false": 0.9821655259489718},
-                        {"x": 0.25, "true": 0.9817503666016669, "false": 0.9818562362124593}]
-                },
-                {
-                    "name": ["1:1.1:add_indicator", "1:1.1:strategy"],
-                    "mode": "heatmap",
-                    "data": {
-                        "mean": {"true": 0.9892690218266527, "false": 0.9893491122235408},
-                        "median": {"true": 0.989619348233015, "false": 0.9896940056493079},
-                        "most_frequent": {"true": 0.9892793446828742, "false": 0.9893437738811252}
-                    }
-                }
-            ]
-        )
-    }))
+export interface FANOVAResponse {
+    overview: HPImportance,
+    details?: HPImportanceDetails[][]
+}
 
-    return promise.then(data => data.map(d => {
-            if (d.mode === 'discrete')
-                d.data = new Map<string, [number, number]>(Object.entries(d.data))
-            return d
-        }
-    ))
+export function requestFANOVA(cs: ConfigSpace, configs: Config[], loss: number[], step?: string): Promise<FANOVAResponse> {
+    return requestAPI<FANOVAResponse>('hyperparameters/fanova', {
+        method: 'POST', body: JSON.stringify({
+            'configspace': JSON.parse(cs.json),
+            'configs': configs,
+            'loss': loss,
+            'step': step
+        })
+    })
 }

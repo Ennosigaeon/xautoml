@@ -11,7 +11,8 @@ export namespace Config {
                     public readonly forbiddens: any[],
                     public readonly hyperparameters: HyperParameter[],
                     public readonly json_format_version: string,
-                    public readonly python_module_version: string) {
+                    public readonly python_module_version: string,
+                    public readonly json: string) {
 
             this.conditions.forEach(con => {
                 const parent = this.hyperparameters.filter(hp => hp.name === con.parent)[0]
@@ -25,7 +26,7 @@ export namespace Config {
             const hyperparameters = (cs.hyperparameters as HyperParameter[]).map(hp => HyperParameter.fromJSON(hp))
             const conditions = (cs.conditions as Condition[]).map(con => Condition.fromJSON(con))
 
-            return new ConfigSpace(conditions, cs.forbiddens, hyperparameters, cs.json_format_version, cs.python_module_version)
+            return new ConfigSpace(conditions, cs.forbiddens, hyperparameters, cs.json_format_version, cs.python_module_version, configSpace)
         }
 
         getHyperparameters(name: string): HyperParameter[] {

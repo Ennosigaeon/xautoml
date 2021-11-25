@@ -12,6 +12,7 @@ import tornado.web
 from jupyter_server.base.handlers import APIHandler
 from jupyter_server.utils import url_path_join
 
+from xautoml.hp_importance import HPImportance
 from xautoml.model_details import ModelDetails, LimeResult, DecisionTreeResult
 from xautoml.output import OutputCalculator, DESCRIPTION, COMPLETE
 from xautoml.roc_auc import RocCurve
@@ -254,6 +255,18 @@ class FeatureImportanceHandler(BaseHandler):
         queue.put({'data': res.to_dict(), 'additional_features': additional_features})
 
 
+class FANOVAHandler(BaseHandler):
+
+    def _process_post(self, model):
+        step = model.get('step', None)
+        f, X = HPImportance.load_model(model)
+
+        overview = HPImportance.calculate_fanova_overview(f, X, step=step)
+        details = HPImportance.calculate_fanova_details(f, X) if step is None else None
+
+        self.finish(json.dumps({'overview': overview, 'details': details}))
+
+
 def setup_handlers(web_app):
     host_pattern = ".*$"
 
@@ -266,5 +279,6 @@ def setup_handlers(web_app):
         (url_path_join(base_url, 'xautoml', 'explanations/lime'), LimeHandler),
         (url_path_join(base_url, 'xautoml', 'explanations/feature_importance'), FeatureImportanceHandler),
         (url_path_join(base_url, 'xautoml', 'explanations/dt'), DecisionTreeHandler),
+        (url_path_join(base_url, 'xautoml', 'hyperparameters/fanova'), FANOVAHandler),
     ]
     web_app.add_handlers(host_pattern, handlers)

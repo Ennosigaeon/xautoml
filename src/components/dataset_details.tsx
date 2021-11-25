@@ -14,6 +14,7 @@ import {HPImportanceComp} from "./details/hp_importance";
 
 interface DataSetDetailsProps {
     candidate: Candidate
+    structure: Structure
     componentId: string
     componentLabel: string
     meta: MetaInformation
@@ -56,7 +57,7 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
     }
 
     render() {
-        const {candidate, meta, componentId, componentLabel, structures, explanations} = this.props
+        const {candidate, structure, meta, componentId, componentLabel, structures, explanations} = this.props
         const {selectedSample} = this.state
 
         const model = new DetailsModel(meta, candidate, componentId, componentLabel, selectedSample)
@@ -73,7 +74,7 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
 
                 <CollapseComp showInitial={true} help={HPImportanceComp.HELP}>
                     <h4>Hyperparameter Importance</h4>
-                    <HPImportanceComp model={model} height={200}/>
+                    <HPImportanceComp structure={structure} component={componentId}/>
                 </CollapseComp>
 
                 <CollapseComp showInitial={true} help={PerformanceComponent.HELP}>
