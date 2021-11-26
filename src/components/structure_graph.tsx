@@ -1,6 +1,6 @@
 import React from "react";
 import {Candidate, Config, ConfigValue, MetaInformation, Pipeline, PipelineStep, Structure} from "../model";
-import {prettyPrint} from "../util";
+import {Components, prettyPrint} from "../util";
 import {Table, TableBody, TableCell, TableRow, Tooltip, Typography} from "@material-ui/core";
 import {OutputDescriptionData, requestOutputDescription} from "../handler";
 import {LoadingIndicator} from "./loading";
@@ -100,7 +100,7 @@ class SingleComponent extends React.Component<SingleComponentProps, any> {
                      leaveDelay={500}
                      interactive={true}
                      onOpen={onHover}>
-                {isPipEnd(step.id) ?
+                {Components.isPipEnd(step.id) ?
                     <p className={'structure-graph_end-node'}/> :
                     <p>{step.label}</p>
                 }
@@ -123,9 +123,6 @@ interface StructureGraphState {
 }
 
 export class StructureGraphComponent extends React.Component<StructureGraphProps, StructureGraphState> {
-
-    static readonly SOURCE = 'SOURCE'
-    static readonly SINK = 'SINK'
 
     private static readonly NODE_HEIGHT = 26;
     private static readonly NODE_WIDTH = 100;
@@ -157,7 +154,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
     }
 
     private toStepsWithConfig(candidate: Candidate, pipeline: Pipeline): StepWithConfig[] {
-        const source = new StepWithConfig(StructureGraphComponent.SOURCE, 'Source', [], new Map<string, ConfigValue>())
+        const source = new StepWithConfig(Components.SOURCE, 'Source', [], new Map<string, ConfigValue>())
         const nodes = [source]
         pipeline.steps.forEach(step => {
             const subConfig = candidate.subConfig(step)
@@ -169,7 +166,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
         })
 
         nodes.push(new StepWithConfig(
-            StructureGraphComponent.SINK,
+            Components.SINK,
             'Sink',
             pipeline.steps.slice(-1).map(step => step.id), // Pipeline can only have exactly 1 final step (the classifier)
             new Map<string, ConfigValue>())
@@ -192,8 +189,8 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
             return (
                 <GraphNode key={node.data.label}
                            node={node}
-                           isRoot={node.data.id === StructureGraphComponent.SOURCE}
-                           isTerminal={node.data.id === StructureGraphComponent.SINK}
+                           isRoot={node.data.id === Components.SOURCE}
+                           isTerminal={node.data.id === Components.SINK}
                            nodeWidth={StructureGraphComponent.NODE_WIDTH}
                            nodeHeight={StructureGraphComponent.NODE_HEIGHT}
                            onClickHandler={this.onComponentSelection}>
@@ -236,6 +233,3 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
 
 }
 
-function isPipEnd(id: string): boolean {
-    return id === StructureGraphComponent.SOURCE || id === StructureGraphComponent.SINK
-}

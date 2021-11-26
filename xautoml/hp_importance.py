@@ -1,7 +1,7 @@
 import itertools as it
 import json
 import tempfile
-from typing import Optional
+from collections import defaultdict
 
 import numpy as np
 import pandas as pd
@@ -10,13 +10,13 @@ from ConfigSpace.hyperparameters import OrdinalHyperparameter, NumericalHyperpar
 from ConfigSpace.read_and_write import json as config_json
 from fanova import fANOVA, visualizer
 
-from xautoml.util.constants import NUMBER_PRECISION
+from xautoml.util.constants import NUMBER_PRECISION, SOURCE, SINK
 
 
 class HPImportance:
 
     @staticmethod
-    def calculate_fanova_overview(f: fANOVA, X: pd.DataFrame, step: str = None):
+    def calculate_fanova_overview(f: fANOVA, X: pd.DataFrame, step: str = None, n_head: int = 14):
         res = {}
         for i, j in it.combinations(range(len(X.columns)), 2):
             d = f.quantify_importance((i, j))
@@ -45,6 +45,16 @@ class HPImportance:
         df = df.sort_values('importance', ascending=False)
         df['idx'] = range(0, df.shape[0])
 
+        if step is not None and step not in (SOURCE, SINK):
+            # Move all rows with hyperparameters from the selected step to top of DataFrame
+            active_columns = [i for i, col in enumerate(X.columns) if step in col.split(':')]
+            top_rows = df.index.map(lambda t: t[0] in active_columns or t[1] in active_columns) \
+                .astype(float).to_series().reset_index(drop=True)
+            df = df.iloc[top_rows.sort_values(ascending=False, kind='stable').index, :]
+            df = df.head(int(top_rows.sum()))
+        else:
+            df = df.head(n_head)
+
         return {
             'hyperparameters': X.columns.tolist(),
             'keys': df.index.tolist(),
@@ -52,19 +62,21 @@ class HPImportance:
         }
 
     @staticmethod
-    def calculate_fanova_details(f: fANOVA, X: pd.DataFrame, resolution: int = 10):
+    def calculate_fanova_details(f: fANOVA, X: pd.DataFrame, resolution: int = 10, keys: list[tuple[int, int]] = None):
         with tempfile.TemporaryDirectory() as tmp:
             vis = visualizer.Visualizer(f, f.cs, tmp)
 
-            res: list[list[Optional[dict]]] = []
+            if keys is None:
+                keys = list(zip(range(len(X.columns)), range(len(X.columns)))) + \
+                       list(it.combinations(range(len(X.columns)), 2))
 
-            for i in range(len(X.columns)):
-                res.append([None] * len(X.columns))
-                res[i][i] = HPImportance._get_plot_data(vis, i, resolution=resolution)
-            for i, j in it.combinations(range(len(X.columns)), 2):
-                res[i][j] = HPImportance._get_pairwise_plot_data(vis, (i, j), resolution=resolution)
-                res[j][i] = res[i][j]
-
+            res: dict[int, dict[int, dict]] = defaultdict(dict)
+            for i, j in keys:
+                if i == j:
+                    res[i][j] = HPImportance._get_plot_data(vis, i, resolution=resolution)
+                else:
+                    res[i][j] = HPImportance._get_pairwise_plot_data(vis, (i, j), resolution=resolution)
+                    res[j][i] = res[i][j]
             return res
 
     @staticmethod

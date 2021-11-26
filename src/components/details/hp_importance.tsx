@@ -178,7 +178,7 @@ interface HPImportanceProps {
 
 interface HPImportanceState {
     overview: HPImportance
-    details: HPImportanceDetails[][]
+    details: Map<number, Map<number, HPImportanceDetails>>
     error: Error
     selectedRow: number
 }
@@ -188,7 +188,9 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
 
     static HELP = 'Visualizes the impact of each hyperparameter (pair) on the marginal performance. This allows ' +
         'the identification of hyperparameters with a large impact on the performance of the pipeline. ' +
-        'Additionally, hyperparameter regions having a high correlation with a good performance can be identified.'
+        'Additionally, hyperparameter regions having a high correlation with a good performance can be identified. ' +
+        'By selecting a single step, only the hyperparameters of the selected step are shown. To view the overall ' +
+        'most important hyperparameters, select either the pipeline source or sink.'
 
     constructor(props: HPImportanceProps) {
         super(props);
@@ -201,8 +203,13 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
         this.queryHPImportance()
     }
 
+    componentDidUpdate(prevProps: Readonly<HPImportanceProps>, prevState: Readonly<HPImportanceState>, snapshot?: any) {
+        if (prevProps.component !== this.props.component)
+            this.queryHPImportance()
+    }
+
     private queryHPImportance() {
-        const {structure} = this.props;
+        const {structure, component} = this.props;
         this.setState({error: undefined});
 
         const cs = structure.configspace
@@ -213,7 +220,7 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
         })
         const loss = structure.configs.map(c => c.loss)
 
-        requestFANOVA(cs, configs, loss)
+        requestFANOVA(cs, configs, loss, component)
             .then(resp => {
                 if (resp.details)
                     this.setState({overview: resp.overview, details: resp.details})
@@ -237,6 +244,7 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
         const keys = this.state.overview.keys[selectedRow]
         if (isNaN(keys[1]))
             keys[1] = keys[0]
+        // @ts-ignore
         return this.state.details[keys[0]][keys[1]]
     }
 
@@ -325,7 +333,8 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
                 {!error &&
                 <div style={{display: 'flex'}}>
                     <LoadingIndicator loading={overview === undefined}/>
-                    {overview !== undefined &&
+                    {overview?.keys.length === 0 && <p>The selected component does not have any hyperparameters. </p>}
+                    {overview?.keys.length > 0 &&
                     <>
                         {this.renderOverview(maxLabelLength)}
                         <div style={{marginTop: maxLabelLength, marginLeft: '20px', flexGrow: 1, flexShrink: 1}}>

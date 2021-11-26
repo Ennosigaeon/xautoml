@@ -8,7 +8,7 @@ import TableSortLabel from '@material-ui/core/TableSortLabel';
 import Checkbox from '@material-ui/core/Checkbox';
 import {Box, IconButton, Table, TableContainer} from '@material-ui/core';
 import {Candidate, CandidateId, Explanations, MetaInformation, Structure} from '../model';
-import {JupyterContext, prettyPrint} from '../util';
+import {Components, JupyterContext, prettyPrint} from '../util';
 import {StepWithConfig, StructureGraphComponent} from './structure_graph';
 import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@material-ui/icons/KeyboardArrowUp';
@@ -127,7 +127,7 @@ class CandidateTableRow extends React.Component<CandidateTableRowProps, Candidat
     private toggleOpen(e: React.MouseEvent) {
         this.setState({
             open: !this.state.open,
-            selectedComponent: [StructureGraphComponent.SOURCE, StructureGraphComponent.SOURCE]
+            selectedComponent: [Components.SOURCE, Components.SOURCE]
         })
         e.stopPropagation()
     }

@@ -1,6 +1,6 @@
 import React from "react";
 import {Candidate, Explanations, MetaInformation, Structure} from "../model";
-import {cidToSid, JupyterContext} from "../util";
+import {cidToSid, Components, JupyterContext} from "../util";
 import {TwoColumnLayout} from "../util/layout";
 import {LimeComponent} from "./details/lime";
 import {FeatureImportanceComponent} from "./details/feature_importance";
@@ -73,7 +73,8 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
                 </CollapseComp>
 
                 <CollapseComp showInitial={true} help={HPImportanceComp.HELP}>
-                    <h4>Hyperparameter Importance</h4>
+                    <h4>Hyperparameter Importance of {Components.isPipEnd(model.component) ? <>All Components</> :
+                        <i>{model.algorithm} ({model.component})</i>}</h4>
                     <HPImportanceComp structure={structure} component={componentId}/>
                 </CollapseComp>
 

@@ -11,6 +11,14 @@ def test_overview():
     overview_js = json.dumps(overview)
 
 
+def test_for_step():
+    f, X = HPImportance.load_file('/home/marc/phd/code/dswizard/scripts/run/168746/runhistory.json')
+    overview = HPImportance.calculate_fanova_overview(f, X, '1.1')
+    overview_js = json.dumps(overview)
+
+    details = HPImportance.calculate_fanova_details(f, X, keys=overview['keys'])
+    details_js = json.dumps(details)
+
 def test_details():
     f, X = HPImportance.load_file('/home/marc/phd/code/dswizard/scripts/run/168746/runhistory.json')
     details = HPImportance.calculate_fanova_details(f, X)

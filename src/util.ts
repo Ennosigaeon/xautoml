@@ -88,3 +88,14 @@ export namespace Colors {
         return EXTENDED_DISCRETE_COLOR_RANGE[idx % EXTENDED_DISCRETE_COLOR_RANGE.length]
     }
 }
+
+
+export namespace Components {
+
+    export const SOURCE: string = 'SOURCE'
+    export const SINK: string = 'SINK'
+
+    export function isPipEnd(id: string): boolean {
+        return id === Components.SOURCE || id === Components.SINK
+    }
+}

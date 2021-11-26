@@ -262,7 +262,7 @@ class FANOVAHandler(BaseHandler):
         f, X = HPImportance.load_model(model)
 
         overview = HPImportance.calculate_fanova_overview(f, X, step=step)
-        details = HPImportance.calculate_fanova_details(f, X) if step is None else None
+        details = HPImportance.calculate_fanova_details(f, X)
 
         self.finish(json.dumps({'overview': overview, 'details': details}))
 
