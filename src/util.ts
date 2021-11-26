@@ -25,7 +25,7 @@ export function cidToSid(cid: CandidateId): string {
 
 export function prettyPrint(value: string | number | boolean | Date, prec: number = 3): string {
     if (typeof value === 'number')
-        return fixedPrec(value, prec).toFixed(prec)
+        return fixedPrec(value, prec).toString()
     else if (value instanceof Date)
         return (value as Date).toLocaleString()
     else
