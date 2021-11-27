@@ -6,6 +6,7 @@ import {TwoColumnLayout} from "../../util/layout";
 import {JupyterButton} from "../../util/jupyter-button";
 import {JupyterContext} from "../../util";
 import {ErrorIndicator} from "../../util/error";
+import { ID } from "../../jupyter";
 
 
 interface RawDatasetProps {
@@ -101,11 +102,11 @@ export class RawDataset extends React.Component<RawDatasetProps, RawDatasetState
         this.context.createCell(`
 from xautoml.util import io_utils
 
-xautoml_X, _, xautoml_feature_labels = io_utils.load_input_data('${meta.data_file}', framework='${meta.framework}')
-xautoml_pipeline = io_utils.load_pipeline('${meta.model_dir}', '${candidate.id}', framework='${meta.framework}')
+${ID}_X, _, ${ID}_feature_labels = io_utils.load_input_data('${meta.data_file}', framework='${meta.framework}')
+${ID}_pipeline = io_utils.load_pipeline('${meta.model_dir}', '${candidate.id}', framework='${meta.framework}')
 
-xautoml_df = io_utils.load_output_dataframe(xautoml_pipeline, '${component}', xautoml_X, xautoml_feature_labels)
-xautoml_df
+${ID}_df = io_utils.load_output_dataframe(${ID}_pipeline, '${component}', ${ID}_X, ${ID}_feature_labels)
+${ID}_df
         `.trim())
     }
 

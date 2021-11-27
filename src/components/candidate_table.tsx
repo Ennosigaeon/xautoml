@@ -15,6 +15,7 @@ import KeyboardArrowUpIcon from '@material-ui/icons/KeyboardArrowUp';
 import Collapse from '@material-ui/core/Collapse';
 import {DataSetDetailsComponent} from './dataset_details';
 import {JupyterButton} from "../util/jupyter-button";
+import {ID} from "../jupyter";
 
 interface SingleCandidate {
     id: CandidateId;
@@ -145,9 +146,9 @@ class CandidateTableRow extends React.Component<CandidateTableRowProps, Candidat
         this.context.createCell(`
 from xautoml.util import io_utils
 
-xautoml_X, xautoml_y, _ = io_utils.load_input_data('${this.props.meta.data_file}', framework='${this.props.meta.framework}')
-xautoml_pipeline = io_utils.load_pipeline('${this.props.meta.model_dir}', '${this.props.candidate.id}', framework='${this.props.meta.framework}')
-xautoml_pipeline
+${ID}_X, ${ID}_y, _ = io_utils.load_input_data('${this.props.meta.data_file}', framework='${this.props.meta.framework}')
+${ID}_pipeline = io_utils.load_pipeline('${this.props.meta.model_dir}', '${this.props.candidate.id}', framework='${this.props.meta.framework}')
+${ID}_pipeline
         `.trim())
         e.stopPropagation()
     }

@@ -14,6 +14,9 @@ import {ErrorIndicator} from "../../util/error";
 import {KeyValue} from "../../util/KeyValue";
 import {Dag} from "d3-dag";
 import {AdditionalFeatureWarning} from "../../util/warning";
+import {JupyterButton} from "../../util/jupyter-button";
+import {JupyterContext} from "../../util";
+import {ID} from "../../jupyter";
 
 
 interface GlobalSurrogateProps {
@@ -35,6 +38,9 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
         'leaves in the decision tree, the fidelity of the approximation can be weighted against the simplicity of the ' +
         'explanation.'
 
+    static contextType = JupyterContext;
+    context: React.ContextType<typeof JupyterContext>;
+
     private static readonly NODE_HEIGHT = 56;
     private static readonly NODE_WIDTH = 100;
 
@@ -45,19 +51,21 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
         this.state = {pendingRequest: undefined, data: undefined, maxLeafNodes: undefined, error: undefined}
 
         this.onMaxLeavesChange = this.onMaxLeavesChange.bind(this)
+        this.exportTree = this.exportTree.bind(this)
     }
 
     componentDidMount() {
-        this.queryDT()
+        this.queryDT(this.state.maxLeafNodes)
     }
 
     componentDidUpdate(prevProps: Readonly<GlobalSurrogateProps>, prevState: Readonly<GlobalSurrogateState>, snapshot?: any) {
-        if (prevProps.model.component !== this.props.model.component ||
-            prevState.maxLeafNodes !== this.state.maxLeafNodes)
-            this.queryDT()
+        if (prevState.maxLeafNodes !== this.state.maxLeafNodes)
+            this.queryDT(this.state.maxLeafNodes)
+        if (prevProps.model.component !== this.props.model.component)
+            this.queryDT(undefined)
     }
 
-    private queryDT() {
+    private queryDT(maxLeafNodes: number) {
         if (this.state.pendingRequest !== undefined) {
             // Request for data is currently still pending. Cancel previous request.
             this.state.pendingRequest.cancel()
@@ -67,12 +75,12 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
         if (component === undefined)
             return
 
-        const promise = requestGlobalSurrogate(candidate.id, meta.data_file, meta.model_dir, component, this.state.maxLeafNodes)
+        const promise = requestGlobalSurrogate(candidate.id, meta.data_file, meta.model_dir, component, maxLeafNodes)
         this.setState({pendingRequest: promise, data: undefined, error: undefined})
 
         promise
             .then(data => {
-                this.setState({data: data, pendingRequest: undefined})
+                this.setState({data: data, pendingRequest: undefined, maxLeafNodes: data.max_leaf_nodes})
             })
             .catch(error => {
                 if (!(error instanceof CanceledPromiseError)) {
@@ -107,8 +115,25 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
         )
     }
 
-    onMaxLeavesChange(idx: number) {
+    private onMaxLeavesChange(idx: number) {
         this.setState({maxLeafNodes: this.ticks[idx]})
+    }
+
+    private exportTree() {
+        const {meta, candidate, component} = this.props.model
+        const {maxLeafNodes} = this.state
+
+        this.context.createCell(`
+from xautoml.util import io_utils, pipeline_utils
+import pandas as pd
+
+${ID}_X, ${ID}_y, ${ID}_feature_labels = io_utils.load_input_data('${meta.data_file}', framework='${meta.framework}')
+${ID}_pipeline = io_utils.load_pipeline('${meta.model_dir}', '${candidate.id}', framework='${meta.framework}')
+${ID}_pipeline, ${ID}_X, ${ID}_feature_labels, _ = pipeline_utils.get_subpipeline(${ID}_pipeline, '${component}', ${ID}_X, ${ID}_y, ${ID}_feature_labels)
+
+${ID}_dt = pipeline_utils.fit_decision_tree(pd.DataFrame(${ID}_X, columns=${ID}_feature_labels).convert_dtypes(), ${ID}_pipeline.predict(${ID}_X), max_leaf_nodes=${maxLeafNodes})
+${ID}_dt
+        `.trim())
     }
 
     render() {
@@ -144,6 +169,9 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
                                         defaultValue={this.ticks.indexOf(data.max_leaf_nodes)}
                                         step={null} marks={marks}
                                         onAfterChange={this.onMaxLeavesChange}/>
+                            </div>
+                            <div style={{flexGrow: 1, alignSelf: "center"}}>
+                                <JupyterButton style={{float: "right"}} onClickHandler={this.exportTree}/>
                             </div>
                         </div>
                         {data.additional_features && <AdditionalFeatureWarning/>}

@@ -4,8 +4,10 @@ import numpy as np
 import pandas as pd
 from mlinsights.helpers.pipeline import enumerate_pipeline_models
 from sklearn.base import TransformerMixin
+from sklearn.compose import make_column_selector, ColumnTransformer
 from sklearn.pipeline import Pipeline
-from sklearn.tree import _tree
+from sklearn.preprocessing import OrdinalEncoder
+from sklearn.tree import _tree, DecisionTreeClassifier
 from sklearn.tree._export import _compute_depth
 from sklearn.utils.validation import check_is_fitted
 
@@ -145,3 +147,18 @@ def export_tree(ordinal_encoder, decision_tree, cat_features, num_names, max_dep
 
     root = export_tree_recurse(0, 1)
     return root
+
+
+def fit_decision_tree(df: pd.DataFrame, y: np.ndarray, **dt_kwargs):
+    cat_columns = make_column_selector(dtype_exclude=np.number)
+
+    # Use simple pipeline being able to handle categorical and missing input
+    encoder = ColumnTransformer(transformers=[('cat', OrdinalEncoder(), cat_columns)], remainder='passthrough')
+    dt = DecisionTreeClassifier(**dt_kwargs)
+    clf = Pipeline(steps=[
+        ('imputation', DataFrameImputer()),
+        ('encoding', encoder),
+        ('classifier', dt)])
+
+    clf.fit(df, y)
+    return clf

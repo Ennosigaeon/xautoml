@@ -33,3 +33,6 @@ export class Jupyter {
         localStorage.setItem(this.LOCAL_STORAGE_CONTENT, content)
     }
 }
+
+// Prefix used in python to prevent accidental name clashes
+export const ID = 'xautoml'
