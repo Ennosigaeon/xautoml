@@ -20,6 +20,22 @@ def test_decision_tree():
     print(res)
 
 
+def test_decision_tree_without_max_leaf_nodes():
+    X, y, feature_labels, pipeline = BaseHandler.load_model({
+        "cids": "00:00:00",
+        "data_file": "/home/marc/phd/code/dswizard/scripts/run/168746/dataset.pkl",
+        "model_dir": "/home/marc/phd/code/dswizard/scripts/run/168746/models"
+    })
+
+    step = 'SOURCE'
+
+    pipeline, X, feature_labels, _ = pipeline_utils.get_subpipeline(pipeline, step, X, y, feature_labels)
+    details = ModelDetails()
+    res = details.calculate_decision_tree(X, pipeline, feature_labels, max_leaf_nodes=None)
+
+    print(res)
+
+
 def test_lime():
     X, y, feature_labels, pipeline = BaseHandler.load_model({
         "cids": "00:00:00",

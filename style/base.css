@@ -74,6 +74,8 @@ tr.MuiTableRow-root.MuiTableRow-hover:hover {
     overflow: hidden;
     text-align: center;
     text-overflow: ellipsis;
+    max-height: 100%;
+    box-sizing: border-box;
 }
 
 .hierarchical-tree_node-content-round {

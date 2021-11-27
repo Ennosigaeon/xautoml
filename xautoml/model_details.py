@@ -39,6 +39,7 @@ class DecisionTreeResult:
     fidelity: float
     n_pred: int
     n_leaves: int
+    max_leaf_nodes: int
 
     def as_dict(self, additional_features: bool):
         return {
@@ -46,6 +47,7 @@ class DecisionTreeResult:
             'fidelity': float(self.fidelity),
             'n_pred': int(self.n_pred),
             'n_leaves': int(self.n_leaves),
+            'max_leaf_nodes': int(self.max_leaf_nodes),
             'additional_features': additional_features
         }
 
@@ -115,10 +117,30 @@ class ModelDetails:
     @staticmethod
     def calculate_decision_tree(X: np.ndarray, model,
                                 feature_labels: list[str],
-                                max_leaf_nodes: int = 10) -> DecisionTreeResult:
+                                max_leaf_nodes: int = None) -> DecisionTreeResult:
         df = pd.DataFrame(X, columns=feature_labels).convert_dtypes()
         y_pred = model.predict(X)
 
+        if max_leaf_nodes is not None:
+            return ModelDetails._fit_single_dt(df, y_pred, max_leaf_nodes)
+        else:
+            # Heuristic to select good value for max_leaf_numbers based on
+            # https://www.datasciencecentral.com/profiles/blogs/how-to-automatically-determine-the-number-of-clusters-in-your-dat
+            max_leaf_node_candidates = [2, 3, 5, 7, 10, 15, 25]
+            strength = -1 * np.ones((len(max_leaf_node_candidates), 3))
+            candidates = []
+            for idx, candidate in enumerate(max_leaf_node_candidates):
+                res = ModelDetails._fit_single_dt(df, y_pred, candidate)
+                candidates.append(res)
+                strength[idx, 0] = res.fidelity
+
+            strength[1:, 1] = np.diff(strength[:, 0])
+            strength[1:, 2] = np.diff(strength[:, 1])
+
+            return candidates[np.argmax(strength[:, 2])]
+
+    @staticmethod
+    def _fit_single_dt(df: pd.DataFrame, y_pred: np.ndarray, max_leaf_nodes: int):
         num_columns = make_column_selector(dtype_include=np.number)
         cat_columns = make_column_selector(dtype_exclude=np.number)
 
@@ -139,7 +161,8 @@ class ModelDetails:
             export_tree(encoder.named_transformers_['cat'], dt, cat_columns(df), num_columns(df)),
             score,
             dt.tree_.node_count - dt.tree_.n_leaves,
-            dt.get_n_leaves()
+            dt.get_n_leaves(),
+            max_leaf_nodes
         )
 
     @staticmethod

@@ -108,6 +108,7 @@ export interface DecisionTreeResult {
     n_pred: number,
     n_leaves: number,
     root: DecisionTreeNode,
+    max_leaf_nodes: number,
     additional_features: boolean
 }
 
@@ -198,7 +199,7 @@ export function requestLimeApproximation(cid: CandidateId, idx: number, data_fil
     }))
 }
 
-export function requestGlobalSurrogate(cid: CandidateId, data_file: string, model_dir: string, step: string, max_leaf_nodes: number = 10): CancelablePromise<DecisionTreeResult> {
+export function requestGlobalSurrogate(cid: CandidateId, data_file: string, model_dir: string, step: string, max_leaf_nodes: number = undefined): CancelablePromise<DecisionTreeResult> {
     const promise = requestAPI<DecisionTreeResult>('explanations/dt', {
         method: 'POST', body: JSON.stringify({
             'cids': cid,

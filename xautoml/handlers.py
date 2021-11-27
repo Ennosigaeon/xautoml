@@ -221,11 +221,11 @@ class DecisionTreeHandler(BaseHandler):
     def _process_post(self, model):
         X, y, feature_labels, pipeline = self.load_model(model)
         step = model.get('step', SOURCE)
-        max_leaf_nodes = model.get('max_leaf_nodes', 10)
+        max_leaf_nodes = model.get('max_leaf_nodes', None)
 
         if step == pipeline.steps[-1][0] or step == SINK:
             self.log.debug('Unable to calculate LIME on predictions')
-            res = DecisionTreeResult(pipeline_utils.Node('empty', []), 0, 0, 0)
+            res = DecisionTreeResult(pipeline_utils.Node('empty', []), 0, 0, 0, 2)
             additional_features = False
         else:
             pipeline, X, feature_labels, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X, y,

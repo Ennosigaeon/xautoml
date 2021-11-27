@@ -23,7 +23,7 @@ interface GlobalSurrogateProps {
 interface GlobalSurrogateState {
     pendingRequest: CancelablePromise<DecisionTreeResult>
     data: DecisionTreeResult
-    maxLeaves: number
+    maxLeafNodes: number
     error: Error
 }
 
@@ -35,14 +35,14 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
         'leaves in the decision tree, the fidelity of the approximation can be weighted against the simplicity of the ' +
         'explanation.'
 
-    private static readonly NODE_HEIGHT = 45;
+    private static readonly NODE_HEIGHT = 56;
     private static readonly NODE_WIDTH = 100;
 
     private readonly ticks = [2, 3, 5, 7, 10, 15, 25, 50, 100]
 
     constructor(props: GlobalSurrogateProps) {
         super(props);
-        this.state = {pendingRequest: undefined, data: undefined, maxLeaves: 10, error: undefined}
+        this.state = {pendingRequest: undefined, data: undefined, maxLeafNodes: undefined, error: undefined}
 
         this.onMaxLeavesChange = this.onMaxLeavesChange.bind(this)
     }
@@ -53,7 +53,7 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
 
     componentDidUpdate(prevProps: Readonly<GlobalSurrogateProps>, prevState: Readonly<GlobalSurrogateState>, snapshot?: any) {
         if (prevProps.model.component !== this.props.model.component ||
-            prevState.maxLeaves !== this.state.maxLeaves)
+            prevState.maxLeafNodes !== this.state.maxLeafNodes)
             this.queryDT()
     }
 
@@ -67,7 +67,7 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
         if (component === undefined)
             return
 
-        const promise = requestGlobalSurrogate(candidate.id, meta.data_file, meta.model_dir, component, this.state.maxLeaves)
+        const promise = requestGlobalSurrogate(candidate.id, meta.data_file, meta.model_dir, component, this.state.maxLeafNodes)
         this.setState({pendingRequest: promise, data: undefined, error: undefined})
 
         promise
@@ -90,7 +90,7 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
                        node={node}
                        nodeWidth={GlobalSurrogateComponent.NODE_WIDTH}
                        nodeHeight={GlobalSurrogateComponent.NODE_HEIGHT}>
-                <p>{node.data.label}</p>
+                <p title={node.data.label}>{node.data.label}</p>
             </GraphNode>
         )
         const renderedEdges = root.links().map(link =>
@@ -108,11 +108,11 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
     }
 
     onMaxLeavesChange(idx: number) {
-        this.setState({maxLeaves: this.ticks[idx]})
+        this.setState({maxLeafNodes: this.ticks[idx]})
     }
 
     render() {
-        const {data, pendingRequest, maxLeaves, error} = this.state
+        const {data, pendingRequest, error} = this.state
 
         const marks: any = {}
         this.ticks.forEach((v, idx) => marks[idx] = v)
@@ -141,7 +141,7 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
                             <div style={{padding: '0 10px 1em', flexGrow: 2}}>
                                 <span>Max. Leaf Nodes</span>
                                 <Slider min={0} max={this.ticks.length - 1}
-                                        defaultValue={this.ticks.indexOf(maxLeaves)}
+                                        defaultValue={this.ticks.indexOf(data.max_leaf_nodes)}
                                         step={null} marks={marks}
                                         onAfterChange={this.onMaxLeavesChange}/>
                             </div>
