@@ -1,11 +1,11 @@
 import React from "react";
-import {Candidate, Config, ConfigValue, MetaInformation, Pipeline, PipelineStep, Structure} from "../model";
-import {Components, prettyPrint} from "../util";
+import {Candidate, Config, ConfigValue, MetaInformation, Pipeline, PipelineStep, Structure} from "../../model";
+import {Components, prettyPrint} from "../../util";
 import {Table, TableBody, TableCell, TableRow, Tooltip, Typography} from "@material-ui/core";
-import {OutputDescriptionData, requestOutputDescription} from "../handler";
-import {LoadingIndicator} from "./loading";
-import {ErrorIndicator} from "../util/error";
-import {GraphEdge, GraphNode, HierarchicalTree} from "./tree_structure";
+import {OutputDescriptionData, requestOutputDescription} from "../../handler";
+import {LoadingIndicator} from "../loading";
+import {ErrorIndicator} from "../../util/error";
+import {GraphEdge, GraphNode, HierarchicalTree} from "../tree_structure";
 import {Dag} from "d3-dag";
 
 

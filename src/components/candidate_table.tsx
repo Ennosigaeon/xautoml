@@ -9,7 +9,7 @@ import Checkbox from '@material-ui/core/Checkbox';
 import {Box, IconButton, Table, TableContainer} from '@material-ui/core';
 import {Candidate, CandidateId, Explanations, MetaInformation, Structure} from '../model';
 import {Components, JupyterContext, prettyPrint} from '../util';
-import {StepWithConfig, StructureGraphComponent} from './structure_graph';
+import {StepWithConfig, StructureGraphComponent} from './details/structure_graph';
 import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@material-ui/icons/KeyboardArrowUp';
 import Collapse from '@material-ui/core/Collapse';
