@@ -104,6 +104,7 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
         const renderedEdges = root.links().map(link =>
             <GraphEdge key={link.source.data.label + '-' + link.target.data.label}
                        link={link}
+                       label={link.target.data.label === link.source.data.children[0].label}
                        nodeWidth={GlobalSurrogateComponent.NODE_WIDTH}
                        nodeHeight={GlobalSurrogateComponent.NODE_HEIGHT}/>
         )

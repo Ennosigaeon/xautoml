@@ -1,10 +1,10 @@
 import React from "react";
-import {prettyPrint} from "../util";
+import {prettyPrint, Primitive} from "../util";
 
 
 interface KeyValueProps {
     key_: string
-    value: any
+    value: Primitive
     href?: string
     tight?: boolean
 }

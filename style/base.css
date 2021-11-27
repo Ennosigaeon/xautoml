@@ -100,6 +100,11 @@ tr.MuiTableRow-root.MuiTableRow-hover:hover {
     stroke-width: 4px;
 }
 
+.hierarchical-tree_link-label {
+    font: 10px sans-serif;
+    stroke-width: 1px;
+}
+
 /** Bandit Explanation */
 .bandit-explanation .hierarchical-tree_node-content {
     font-size: 8px;

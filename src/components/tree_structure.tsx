@@ -5,7 +5,9 @@ import * as d3ag from "d3-dag";
 import {Dag, DagLink, DagNode} from "d3-dag";
 import {FlexibleSvg} from "../util/flexible-svg";
 import {linkHorizontal} from "d3";
+import {v4 as uuidv4} from 'uuid';
 import memoize from "memoize-one";
+import {prettyPrint, Primitive} from "../util";
 
 interface GraphElementProps {
     nodeWidth: number
@@ -84,7 +86,8 @@ export class GraphNode<Datum> extends React.Component<GraphNodeProps<Datum>, {}>
 
 
 interface GraphEdgeProps<Datum> extends GraphElementProps {
-    link: DagLink<Datum>;
+    link: DagLink<Datum>
+    label: Primitive
     highlight?: boolean
 }
 
@@ -92,11 +95,12 @@ export class GraphEdge<Datum> extends React.Component<GraphEdgeProps<Datum>, any
 
     static defaultProps = {
         className: '',
-        highlight: false
+        highlight: false,
+        label: (undefined as Primitive)
     }
 
     render() {
-        const {link, className, nodeWidth, highlight} = this.props;
+        const {link, label, className, nodeWidth, highlight} = this.props;
 
         // noinspection JSSuspiciousNameCombination
         return (
@@ -115,15 +119,29 @@ export class GraphEdge<Datum> extends React.Component<GraphEdgeProps<Datum>, any
                     target: {x: [link.target.y], y: [link.target.x]},
                     timing: {duration: 750, ease: easeExpInOut}
                 }}
-            >{({source: source, target: target}) =>
-                <path
-                    transform={`translate(${-nodeWidth / 2}, 0)`}
-                    className={`hierarchical-tree_link ${className} ${highlight ? 'selected' : ''}`}
-                    d={
-                        linkHorizontal().x(d => d[0]).y(d => d[1])({
-                            source: [source.x, source.y],
-                            target: [target.x, target.y]
-                        })}/>
+            >{({source: source, target: target}) => {
+                const id = `edge-${uuidv4()}`
+                const labelSpace = target.x - source.x
+                return <>
+                    <path
+                        id={id}
+                        transform={`translate(${-nodeWidth / 2}, 0)`}
+                        className={`hierarchical-tree_link ${className} ${highlight ? 'selected' : ''}`}
+                        d={
+                            linkHorizontal().x(d => d[0]).y(d => d[1])({
+                                source: [source.x, source.y],
+                                target: [target.x, target.y]
+                            })}/>
+                    {(label !== undefined && (labelSpace > 10)) &&
+                    <text className={'hierarchical-tree_link-label'} dy={source.y < target.y ? 10 : -5}>
+                        <textPath xlinkHref={`#${id}`} startOffset={'60%'} textAnchor={'middle'}>
+                            {labelSpace > 40 ? prettyPrint(label): '[...]'}
+                            <title>{prettyPrint(label)}</title>
+                        </textPath>
+                    </text>
+                    }
+                </>
+            }
             }
             </Animate>
         )

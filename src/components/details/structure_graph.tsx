@@ -19,7 +19,16 @@ export class StepWithConfig extends PipelineStep {
     }
 
     static fromStep(step: PipelineStep, config: Config) {
-        return new StepWithConfig(step.id, step.clazz, [...step.parentIds], config)
+        const copy = new StepWithConfig(step.id, step.clazz, [...step.parentIds], config)
+        step.edgeLabels.forEach((v, k) => copy.edgeLabels.set(k, v))
+        return copy
+    }
+
+    getLabel(parent: string): string {
+        // parent id may have been changed to omit "transparent" steps like pipeline or column transformer.
+        if (this.edgeLabels.size === 1)
+            return this.edgeLabels.values().next().value
+        return this.edgeLabels.get(parent)
     }
 }
 
@@ -154,13 +163,13 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
     }
 
     private toStepsWithConfig(candidate: Candidate, pipeline: Pipeline): StepWithConfig[] {
-        const source = new StepWithConfig(Components.SOURCE, 'Source', [], new Map<string, ConfigValue>())
-        const nodes = [source]
+        const root = new StepWithConfig(Components.SOURCE, 'Source', [], new Map<string, ConfigValue>())
+        const nodes = [root]
         pipeline.steps.forEach(step => {
             const subConfig = candidate.subConfig(step)
             const node = StepWithConfig.fromStep(step, subConfig)
             if (node.parentIds.length === 0)
-                node.parentIds.push(source.id)
+                node.parentIds.push(root.id)
 
             nodes.push(node)
         })
@@ -206,6 +215,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
         const renderedEdges = root.links().map(link =>
             <GraphEdge key={link.source.data.label + '-' + link.target.data.label}
                        link={link}
+                       label={link.target.data.getLabel(link.source.data.id)}
                        nodeWidth={StructureGraphComponent.NODE_WIDTH}
                        nodeHeight={StructureGraphComponent.NODE_HEIGHT}/>
         )

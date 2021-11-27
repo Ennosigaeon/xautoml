@@ -225,9 +225,11 @@ export class MetaInformation {
 export class PipelineStep {
 
     public readonly label: string
+    public readonly edgeLabels: Map<string, string>
 
     constructor(public readonly id: string, public readonly clazz: string, public readonly parentIds: string[]) {
         this.label = normalizeComponent(this.clazz)
+        this.edgeLabels = new Map<string, string>()
     }
 }
 
@@ -237,14 +239,14 @@ export class Pipeline {
     }
 
     static fromJson(pipeline: any): Pipeline {
-        const [steps, _] = this.loadSingleStep('', pipeline, [])
+        const [steps] = this.loadSingleStep('', pipeline, [])
         return new Pipeline(steps)
     }
 
 
     private static loadSingleStep(id: string, step: any, parents: string[]): [PipelineStep[], string[]] {
         if (step.clazz.includes('Pipeline')) {
-            let parents_ = parents;
+            let parents_: string[] = parents;
             const steps: PipelineStep[] = [];
             (step.args.steps as [string, any][])
                 .forEach(([id, subStep]) => {
@@ -259,9 +261,10 @@ export class Pipeline {
             const outParents: string[] = [];
             (step.args.transformers as [string, any, any][])
                 .forEach(([id, subPath, columns]) => {
-                    const res = this.loadSingleStep(id, subPath, parents)
-                    steps.push(...res[0])
-                    outParents.push(...res[1])
+                    const [childSteps, newParents] = this.loadSingleStep(id, subPath, parents)
+                    childSteps[0].edgeLabels.set(id, columns.toString()) // At least one child always have to be present
+                    steps.push(...childSteps)
+                    outParents.push(...newParents)
                 })
             return [steps, outParents]
         } else if (step.clazz.includes('FeatureUnion')) {
@@ -269,9 +272,10 @@ export class Pipeline {
             const outParents: string[] = [];
             (step.args.transformer_list as [string, any][])
                 .forEach(([id, subPath]) => {
-                    const res = this.loadSingleStep(id, subPath, parents)
-                    steps.push(...res[0])
-                    outParents.push(...res[1])
+                    const [childSteps, newParents] = this.loadSingleStep(id, subPath, parents)
+                    childSteps[0].edgeLabels.set(id, 'all') // At least one child always have to be present
+                    steps.push(...childSteps)
+                    outParents.push(...newParents)
                 })
             return [steps, outParents]
         } else {

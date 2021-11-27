@@ -2,6 +2,8 @@ import React from "react";
 import {Jupyter} from "./jupyter";
 import {CandidateId} from "./model";
 
+export type Primitive = string | number | boolean | Date
+
 // For reasons, JupyterContext can not be declared in root.tsx and imported in dataset_details.tsx...
 export const JupyterContext = React.createContext<Jupyter>(undefined)
 
@@ -23,7 +25,7 @@ export function cidToSid(cid: CandidateId): string {
 }
 
 
-export function prettyPrint(value: string | number | boolean | Date, prec: number = 3): string {
+export function prettyPrint(value: Primitive, prec: number = 3): string {
     if (typeof value === 'number')
         return fixedPrec(value, prec).toString()
     else if (value instanceof Date)
