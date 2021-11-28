@@ -112,7 +112,7 @@ export class FeatureImportanceComponent extends React.Component<FeatureImportanc
                         {data.get(component).additional_features && <AdditionalFeatureWarning/>}
                         <div style={{height: this.props.height}}>
                             <ResponsiveContainer>
-                                <BarChart data={bars} margin={{top: 0, right: 0, left: 0, bottom: maxLabelLength}}>
+                                <BarChart data={bars} margin={{bottom: maxLabelLength}}>
                                     <CartesianGrid strokeDasharray="3 3"/>
                                     <XAxis dataKey="feature" type={"category"} tick={<CustomizedAxisTick/>}/>
                                     <YAxis/>

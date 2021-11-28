@@ -97,7 +97,12 @@ export namespace ParCord {
                 })
             })
             const axes = components.map((c, idx) => cpc.Axis.Categorical(`${idx}`, `Component ${idx}`, c[1]))
-            axes.push(cpc.Axis.Numerical('__performance__', runhistory.meta.metric, new cpc.Domain(0, 1, false)))
+
+            const lowerPerf = Math.min(runhistory.worstPerformance, runhistory.bestPerformance)
+            const upperPerf = Math.max(runhistory.worstPerformance, runhistory.bestPerformance)
+            const padding = (upperPerf - lowerPerf) * 0.05
+            axes.push(cpc.Axis.Numerical('__performance__', runhistory.meta.metric,
+                new cpc.Domain(lowerPerf - padding, upperPerf + padding, false)))
             return axes
         }
 

@@ -63,7 +63,7 @@ export namespace Colors {
 
 
     export const EXTENDED_DISCRETE_COLOR_RANGE = [
-        Colors.DEFAULT,
+        Colors.HIGHLIGHT,
         '#DDB27C',
         '#88572C',
         '#FF991F',

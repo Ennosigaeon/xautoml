@@ -122,6 +122,7 @@ interface StructureGraphProps {
     structure: Structure
     candidate: Candidate
     meta: MetaInformation
+    selectedComponent: string
     onComponentSelection?: (component: StepWithConfig) => void
 }
 
@@ -192,12 +193,14 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
     }
 
     private renderNodes(root: Dag<StepWithConfig>): JSX.Element {
+        const {selectedComponent} = this.props
         const {outputs, loading, error} = this.state
 
         const renderedNodes = root.descendants().map(node => {
             return (
                 <GraphNode key={node.data.label}
                            node={node}
+                           highlight={node.data.id === selectedComponent}
                            isRoot={node.data.id === Components.SOURCE}
                            isTerminal={node.data.id === Components.SINK}
                            nodeWidth={StructureGraphComponent.NODE_WIDTH}

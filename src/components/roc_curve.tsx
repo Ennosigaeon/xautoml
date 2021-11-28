@@ -118,8 +118,10 @@ export class RocCurve extends React.Component<RocCurveProps, RocCurveState> {
                                    domain={[0, 1]}/>
                             <YAxis label={{value: 'True Positive Rate', angle: -90, dx: -15}}/>
                             {data.length <= 12 && <Legend/>}
-                            {data.map((s, idx) => <Line key={labels[idx]} name={labels[idx]} data={s} dataKey={'y'}
-                                                        stroke={Colors.getColor(idx)}/>)}
+                            {data.map((s, idx) => (
+                                <Line key={labels[idx]} name={labels[idx]} data={s} dataKey={'y'}
+                                      stroke={Colors.getColor(idx)} strokeWidth={2}/>
+                            ))}
                         </LineChart>
                     </ResponsiveContainer>
                 </div>

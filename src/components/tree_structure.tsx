@@ -20,6 +20,7 @@ interface GraphNodeProps<Datum> extends GraphElementProps {
 
     isRoot?: boolean
     isTerminal?: boolean
+    highlight?: boolean
 
     onClickHandler?: (d: Datum, e?: React.MouseEvent) => void;
     onAlternativeClickHandler?: (d: Datum, e?: React.MouseEvent) => void;
@@ -32,6 +33,7 @@ export class GraphNode<Datum> extends React.Component<GraphNodeProps<Datum>, {}>
 
         isRoot: false,
         isTerminal: false,
+        highlight: false,
 
         onClickHandler: () => {
         },
@@ -54,20 +56,20 @@ export class GraphNode<Datum> extends React.Component<GraphNodeProps<Datum>, {}>
     }
 
     render() {
-        const {node, className, nodeWidth, nodeHeight, isRoot, isTerminal} = this.props;
+        const {node, className, nodeWidth, nodeHeight, isRoot, isTerminal, highlight} = this.props;
         const parent = node
 
         const round = isRoot || isTerminal
         const offset = isRoot ? nodeWidth / 2 - nodeHeight : -nodeWidth / 2
         const size = round ? [nodeHeight, nodeHeight] : [nodeWidth, nodeHeight]
-
         return (
             <Animate
                 start={{x: parent.x, y: parent.y}}
                 update={{x: [node.x], y: [node.y], timing: {duration: 750, ease: easeExpInOut}}}
                 enter={{x: [node.x], y: [node.y], timing: {duration: 750, ease: easeExpInOut}}}
             >{({x: x, y: y}) =>
-                <g className={`hierarchical-tree_node ${className}`} transform={`translate(${y}, ${x})`}
+                <g className={`hierarchical-tree_node ${className} ${highlight ? 'selected' : ''}`}
+                   transform={`translate(${y}, ${x})`}
                    onClick={this.handleClick}>
                     <foreignObject x={offset} y={-nodeHeight / 2} width={size[0]} height={size[1]}>
                         <div className={`hierarchical-tree_node-container`}>
@@ -133,9 +135,9 @@ export class GraphEdge<Datum> extends React.Component<GraphEdgeProps<Datum>, any
                                 target: [target.x, target.y]
                             })}/>
                     {(label !== undefined && (labelSpace > 10)) &&
-                    <text className={'hierarchical-tree_link-label'} dy={source.y < target.y ? 10 : -5}>
+                    <text className={'hierarchical-tree_link-label'} dy={source.y < target.y ? 10 : -5} fill={'black'}>
                         <textPath xlinkHref={`#${id}`} startOffset={'60%'} textAnchor={'middle'}>
-                            {labelSpace > 40 ? prettyPrint(label): '[...]'}
+                            {labelSpace > 40 ? prettyPrint(label) : '[...]'}
                             <title>{prettyPrint(label)}</title>
                         </textPath>
                     </text>

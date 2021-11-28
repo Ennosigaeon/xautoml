@@ -80,14 +80,15 @@ export default class PerformanceTimeline extends React.Component<ConfigHistoryPr
                 <ResponsiveContainer>
                     <ComposedChart data={data}>
                         <CartesianGrid strokeDasharray="3 3"/>
-                        <XAxis dataKey="x" label={{value: 'Timestamp', dy: 10}} type={'number'} unit={'sec'}/>
+                        <XAxis dataKey="x" label={{value: 'Timestamp', dy: 10}} type={'number'} unit={'s'}/>
                         <YAxis label={{value: 'Performance', angle: -90, dx: -25}} domain={['dataMin', 'dataMax']}/>
 
                         <Line dataKey={'Incumbent'} stroke={Colors.HIGHLIGHT} dot={false}/>
                         <Scatter dataKey="y" onClick={this.onScatterClick}>
                             {data.map((d, index) => (
                                 <Cell key={`cell-${index}`}
-                                      fill={selectedCandidates.has(d.cid) ? Colors.HIGHLIGHT : Colors.DEFAULT}/>
+                                      fill={selectedCandidates.has(d.cid) ? Colors.HIGHLIGHT : Colors.DEFAULT}
+                                      cursor={'pointer'}/>
                             ))}
                         </Scatter>
                     </ComposedChart>

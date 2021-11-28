@@ -9,8 +9,7 @@
 }
 
 .selected-config,
-.Mui-selected,
-.selected .hierarchical-tree_node-content {
+.Mui-selected {
     background-color: var(--jp-brand-color1) !important;
     fill: var(--jp-brand-color1) !important;
 }
@@ -76,6 +75,12 @@ tr.MuiTableRow-root.MuiTableRow-hover:hover {
     text-overflow: ellipsis;
     max-height: 100%;
     box-sizing: border-box;
+}
+
+
+.selected .hierarchical-tree_node-content {
+    background-color: #abe2fb;
+    border-width: 2px;
 }
 
 .hierarchical-tree_node-content-round {

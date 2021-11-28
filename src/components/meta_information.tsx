@@ -1,16 +1,16 @@
 import React from "react";
-import {ConfigValue, MetaInformation} from "../model";
+import {ConfigValue, Runhistory} from "../model";
 import {CollapseComp} from "../util/collapse";
 import {KeyValue} from "../util/KeyValue";
 
 interface MetaInformationProps {
-    meta: MetaInformation
+    rh: Runhistory
 }
 
 export default class MetaInformationTable extends React.Component<MetaInformationProps, {}> {
 
     render() {
-        const meta = this.props.meta
+        const {meta} = this.props.rh
         const start = new Date(0)
         start.setUTCSeconds(meta.start_time)
         const end = new Date(0)
@@ -30,8 +30,7 @@ export default class MetaInformationTable extends React.Component<MetaInformatio
                         <KeyValue key_={'Start Time'} value={start}/>
                         <KeyValue key_={'End Time'} value={end}/>
                         <KeyValue key_={'Metric'} value={meta.metric}/>
-                        {/* TODO */}
-                        <KeyValue key_={'Best Performance'} value={'TODO'}/>
+                        <KeyValue key_={'Best Performance'} prec={4} value={this.props.rh.bestPerformance}/>
                         <KeyValue key_={'Total Nr. Configs.'} value={meta.n_configs}/>
                         <KeyValue key_={'Unique Structures'} value={meta.n_structures}/>
                     </>

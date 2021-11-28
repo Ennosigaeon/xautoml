@@ -302,9 +302,16 @@ export class Structure {
 }
 
 export class Runhistory {
+
+    public readonly bestPerformance: number
+    public readonly worstPerformance: number
+
     constructor(public readonly meta: MetaInformation,
                 public readonly structures: Structure[],
                 public readonly explanations: Explanations) {
+        const losses = [].concat(...structures.map(s => s.configs.map(c => c.loss)))
+        this.bestPerformance = meta.is_minimization ? Math.min(...losses) : Math.max(...losses)
+        this.worstPerformance = meta.is_minimization ? Math.max(...losses) : Math.min(...losses)
     }
 
     static fromJson(runhistory: Runhistory): Runhistory {

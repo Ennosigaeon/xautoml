@@ -155,6 +155,7 @@ ${ID}_pipeline
 
     render() {
         const {candidate, meta, selected, onSelectionToggle, structures, explanations} = this.props
+        const {selectedComponent} = this.state
 
         return (
             <>
@@ -180,6 +181,7 @@ ${ID}_pipeline
                     <TableCell align='right' style={{height: '50px'}} padding='none'>
                         <StructureGraphComponent structure={candidate.candidate[0]}
                                                  candidate={candidate.candidate[1]}
+                                                 selectedComponent={selectedComponent[0]}
                                                  meta={meta}
                                                  onComponentSelection={this.openComponent}/>
                     </TableCell>
