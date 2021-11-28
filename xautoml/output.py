@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 from xautoml.util.constants import SOURCE, SINK
-from xautoml.util.mlinsights import alter_pipeline_for_debugging, enumerate_pipeline_models, get_component_name
+from xautoml.util.mlinsights import alter_pipeline_for_debugging, enumerate_pipeline_models, get_component
 
 COMPLETE = 0
 DESCRIPTION = 1
@@ -38,25 +38,30 @@ class OutputCalculator:
             raise ValueError('Unknown method {}'.format(method))
 
     @staticmethod
-    def calculate_outputs(pipeline, X, y, feature_labels, method: int = RAW) -> dict[str, Union[str, pd.DataFrame]]:
+    def calculate_outputs(pipeline, X, y, feature_labels, method: int = RAW) -> \
+        tuple[dict[str, Union[str, pd.DataFrame]], dict[str, Union[str, pd.DataFrame]]]:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", UserWarning)
             alter_pipeline_for_debugging(pipeline)
             pipeline.predict(X)
             pipeline.get_feature_names_out(feature_labels)
 
-            result = {}
+            inputs = {}
+            outputs = {}
             for coordinate, model, subset in enumerate_pipeline_models(pipeline):
+                input = OutputCalculator.load_data(model._debug.inputs, y, method)
                 output = OutputCalculator.load_data(model._debug.outputs, y, method)
 
                 if len(coordinate) == 1:
                     # Populate SINK and SOURCE instead of single step
-                    input = OutputCalculator.load_data(model._debug.inputs, y, method)
+                    inputs[SOURCE] = input
+                    outputs[SOURCE] = input
 
-                    result[SOURCE] = input
-                    result[SINK] = output
+                    inputs[SINK] = output
+                    outputs[SINK] = output
                 else:
-                    step_name = get_component_name(coordinate, pipeline)
-                    result[step_name] = output
+                    step_name, _ = get_component(coordinate, pipeline)
+                    inputs[step_name] = input
+                    outputs[step_name] = output
 
-            return result
+            return inputs, outputs

@@ -14,7 +14,7 @@ from xautoml.util.constants import DSWIZARD
 
 def load_output_dataframe(pipeline: Pipeline, step: str, X: np.ndarray, feature_labels: list[str]):
     with warnings.catch_warnings(record=True) as w:
-        outputs = OutputCalculator.calculate_outputs(pipeline, X, None, feature_labels, RAW)
+        inputs, outputs = OutputCalculator.calculate_outputs(pipeline, X, None, feature_labels, RAW)
         if step in outputs:
             return outputs[step]
         else:

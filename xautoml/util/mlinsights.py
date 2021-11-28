@@ -220,15 +220,15 @@ def alter_pipeline_for_debugging(pipe):
                               "{}.".format(k, type(model)))
 
 
-def get_component_name(coordinate: Tuple[int], step):
+def get_component(coordinate: Tuple[int], step):
     step_name = None
     for idx in coordinate[1:]:
         if isinstance(step, Pipeline):
             step_name, step = step.steps[idx]
         elif isinstance(step, ColumnTransformer):
-            step_name, step, _ = step.transformers[idx]
+            step_name, step, _ = step.transformers_[idx]
         elif isinstance(step, FeatureUnion):
             step_name, step = step.transformer_list[idx]
         else:
             raise ValueError(f'Unknown component {step}')
-    return step_name
+    return step_name, step

@@ -52,6 +52,7 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
 
         this.onMaxLeavesChange = this.onMaxLeavesChange.bind(this)
         this.exportTree = this.exportTree.bind(this)
+        this.renderNodes = this.renderNodes.bind(this)
     }
 
     componentDidMount() {
@@ -93,9 +94,13 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
     }
 
     private renderNodes(root: Dag<DecisionTreeNode>): JSX.Element {
+        const {additional_features} = this.state.data
+
         const renderedNodes = root.descendants().map(node =>
             <GraphNode key={node.data.label}
                        node={node}
+                       className={additional_features.filter(a => node.data.label.startsWith(a))
+                           .length > 0 ? 'global-surrogate_additional-feature' : ''}
                        nodeWidth={GlobalSurrogateComponent.NODE_WIDTH}
                        nodeHeight={GlobalSurrogateComponent.NODE_HEIGHT}>
                 <p title={node.data.label}>{node.data.label}</p>
@@ -175,7 +180,7 @@ ${ID}_dt
                                 <JupyterButton style={{float: "right"}} onClickHandler={this.exportTree}/>
                             </div>
                         </div>
-                        {data.additional_features && <AdditionalFeatureWarning/>}
+                        {data.additional_features.length > 0 && <AdditionalFeatureWarning/>}
                         <HierarchicalTree nodeHeight={GlobalSurrogateComponent.NODE_HEIGHT}
                                           nodeWidth={GlobalSurrogateComponent.NODE_WIDTH}
                                           data={data.root}

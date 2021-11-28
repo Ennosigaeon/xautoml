@@ -9,6 +9,21 @@ import {AdditionalFeatureWarning} from "../../util/warning";
 import {Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, XAxis, YAxis} from "recharts";
 import ResizeObserver from "resize-observer-polyfill";
 
+class CustomizedTick extends React.PureComponent<any> {
+    render() {
+        const {x, y, payload, additionalFeatures} = this.props;
+        console.log(payload.value)
+        const isAdditional = additionalFeatures.filter((a: string) => payload.value.startsWith(a)).length > 0 ||
+            additionalFeatures.filter((a: string) => payload.value.includes(` ${a} `)).length > 0
+
+        return (
+            <text x={x} y={y} dy={0} textAnchor="end" fill={isAdditional ? '#AAA' : '#444'}>
+                {payload.value.toLocaleString().replace(/ /g, '\u00A0')}
+            </text>
+        );
+    }
+}
+
 
 interface LimeProps {
     model: DetailsModel
@@ -147,11 +162,11 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
 
                     {data?.expl.size > 0 &&
                     <div style={{minWidth: "200px"}}>
-                        {data.additional_features && <AdditionalFeatureWarning/>}
+                        {data.additional_features.length > 0 && <AdditionalFeatureWarning/>}
                         <CollapseComp showInitial={true}>
                             <h5>Predicted Class Probabilities</h5>
                             <>
-                                <div style={{height: 200}}>
+                                <div style={{height: 400}}>
                                     <ResponsiveContainer>
                                         <BarChart data={probs}>
                                             <CartesianGrid strokeDasharray="3 3"/>
@@ -179,7 +194,7 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
                                         <CartesianGrid strokeDasharray="3 3"/>
                                         <XAxis type={'number'}/>
                                         <YAxis dataKey="label" type={"category"} interval={0}
-                                               tickFormatter={(value) => value.toLocaleString().replace(/ /g, '\u00A0')}/>
+                                               tick={<CustomizedTick additionalFeatures={data.additional_features}/>}/>
                                         <Bar dataKey="x" fill={Colors.DEFAULT}/>
                                         {this.state.x1 &&
                                         <text x={this.state.x1} y={15}>{`Not ${selectedLabel}`}</text>}

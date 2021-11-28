@@ -10,11 +10,12 @@ import {Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, TooltipProps
 
 class CustomizedAxisTick extends React.PureComponent<any> {
     render() {
-        const {x, y, payload} = this.props;
+        const {x, y, payload, additionalFeatures} = this.props;
+        const isAdditional = additionalFeatures.includes(payload.value)
 
         return (
             <g transform={`translate(${x},${y})`}>
-                <text x={0} y={0} dy={16} textAnchor="end" fill="#666" transform="rotate(-35)">
+                <text x={0} y={0} dy={16} textAnchor="end" fill={isAdditional ? '#aaa' : '#444'} transform="rotate(-35)">
                     {payload.value}
                 </text>
             </g>
@@ -100,6 +101,7 @@ export class FeatureImportanceComponent extends React.Component<FeatureImportanc
             bars.push({feature: key, y: value})
             maxLabelLength = Math.max(maxLabelLength, key.length * 4)
         })
+        const additionalFeatures = data.has(component) ? data.get(component).additional_features : []
 
         return (
             <>
@@ -109,12 +111,13 @@ export class FeatureImportanceComponent extends React.Component<FeatureImportanc
                     <LoadingIndicator loading={bars.length === 0}/>
                     {bars.length > 0 &&
                     <>
-                        {data.get(component).additional_features && <AdditionalFeatureWarning/>}
+                        {additionalFeatures.length > 0 && <AdditionalFeatureWarning/>}
                         <div style={{height: this.props.height}}>
                             <ResponsiveContainer>
                                 <BarChart data={bars} margin={{bottom: maxLabelLength}}>
                                     <CartesianGrid strokeDasharray="3 3"/>
-                                    <XAxis dataKey="feature" type={"category"} tick={<CustomizedAxisTick/>}/>
+                                    <XAxis dataKey="feature" type={"category"} interval={0}
+                                           tick={<CustomizedAxisTick additionalFeatures={additionalFeatures}/>}/>
                                     <YAxis/>
                                     <Tooltip content={<CustomTooltip/>}/>
                                     <Bar dataKey="y" fill={Colors.DEFAULT}/>

@@ -15,7 +15,7 @@ export class WarningIndicator extends React.PureComponent<WarningIndicatorProps,
         return (
             <>
                 {title &&
-                <Alert severity="warning">
+                <Alert severity="warning" style={{margin: '5px'}}>
                     <AlertTitle>{title}</AlertTitle>
                     {message}
                 </Alert>
@@ -32,6 +32,6 @@ export class AdditionalFeatureWarning extends React.PureComponent {
             title={'Additional Features'}
             message={'You have selected a component inside either a FeatureUnion or ColumnTransformer. ' +
             'In order to still have a functional pipeline, the output of the corresponding sibling components has to be passed to all subsequent components. ' +
-            'This may affect the displayed results.'}/>
+            'Additional features are displayed in lighter colors.'}/>
     }
 }

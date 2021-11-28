@@ -22,7 +22,7 @@ class LimeResult:
     label: float
     categorical_input: bool = False
 
-    def to_dict(self, additional_features: bool):
+    def to_dict(self, additional_features: list[str]):
         return {
             'idx': self.idx,
             'expl': self.explanations,
@@ -41,7 +41,7 @@ class DecisionTreeResult:
     n_leaves: int
     max_leaf_nodes: int
 
-    def as_dict(self, additional_features: bool):
+    def as_dict(self, additional_features: list[str]):
         return {
             'root': self.root.as_dict(),
             'fidelity': float(self.fidelity),

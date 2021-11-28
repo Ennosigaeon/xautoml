@@ -181,6 +181,7 @@ div.structure-graph_tooltip {
     vertical-align: bottom;
 }
 
+
 /** LIME */
 .lime .rv-xy-plot__axis__title text {
     font-size: larger;
@@ -191,6 +192,13 @@ div.structure-graph_tooltip {
 .selected-header {
     font-weight: bold;
 }
+
+
+/** Global Surrogate */
+.global-surrogate_additional-feature .hierarchical-tree_node-content {
+    color: #aaa;
+}
+
 
 /** Parallel Coordinates */
 .pc-choice > rect {

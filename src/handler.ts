@@ -95,7 +95,7 @@ export interface LimeResult {
     prob: Map<Label, number>
     label: Label
     categorical_input: boolean
-    additional_features: boolean
+    additional_features: string[]
 }
 
 export interface DecisionTreeNode {
@@ -109,14 +109,14 @@ export interface DecisionTreeResult {
     n_leaves: number,
     root: DecisionTreeNode,
     max_leaf_nodes: number,
-    additional_features: boolean
+    additional_features: string[]
 }
 
 export type LocalExplanation = Array<[string, number]>
 
 export interface FeatureImportance {
     data: Map<string, number>,
-    additional_features: boolean
+    additional_features: string[]
 }
 
 export function requestRocCurve(cids: CandidateId[], data_file: string, model_dir: string): CancelablePromise<RocCurveData> {

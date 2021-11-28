@@ -129,8 +129,8 @@ class BaseHandler(APIHandler):
     def _get_intermediate_output(self, X, y, label, model, method):
         df_handler = OutputCalculator()
         try:
-            steps = df_handler.calculate_outputs(model, X, y, label, method=method)
-            return steps
+            _, outputs = df_handler.calculate_outputs(model, X, y, label, method=method)
+            return outputs
         except ValueError as ex:
             self.log.error('Failed to calculate intermediate dataframes', exc_info=ex)
 
@@ -224,7 +224,7 @@ class DecisionTreeHandler(BaseHandler):
         max_leaf_nodes = model.get('max_leaf_nodes', None)
 
         if step == pipeline.steps[-1][0] or step == SINK:
-            self.log.debug('Unable to calculate LIME on predictions')
+            self.log.debug('Unable to calculate decision tree on predictions')
             res = DecisionTreeResult(pipeline_utils.Node('empty', []), 0, 0, 0, 2)
             additional_features = False
         else:
@@ -246,7 +246,7 @@ class FeatureImportanceHandler(BaseHandler):
 
         if step == pipeline.steps[-1][0] or step == SINK:
             res = pd.DataFrame(data={'0': {'0': 1, '1': 0}})
-            additional_features = False
+            additional_features = []
         else:
             pipeline, X, feature_labels, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X, y,
                                                                                               feature_labels)
