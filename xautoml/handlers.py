@@ -189,7 +189,7 @@ class LimeHandler(BaseHandler):
     @staticmethod
     def _process_post_async(model, queue):
         X, y, feature_labels, pipeline = BaseHandler.load_model(model)
-        idx = model.get('idx', None)
+        idx = model.get('idx', 0)
         step = model.get('step', SOURCE)
 
         if step == pipeline.steps[-1][0] or step == SINK:

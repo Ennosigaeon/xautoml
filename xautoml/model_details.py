@@ -62,17 +62,11 @@ class ModelDetails:
         return pd.DataFrame(cm, columns=labels, index=labels)
 
     @staticmethod
-    def calculate_lime(X: np.ndarray, y: np.ndarray, model, feature_labels: list[str], idx: int = None) -> LimeResult:
+    def calculate_lime(X: np.ndarray, y: np.ndarray, model, feature_labels: list[str], idx: int) -> LimeResult:
         try:
             import lime.lime_tabular
         except ImportError:
             raise ValueError('Local explanations not possible. Please install LIME first.')
-
-        if idx is None:
-            # TODO only works for y \in [0, ..., n]
-            y_probs = model.predict_proba(X)
-            worst_idx, _ = ModelDetails._lime_interesting_indices(y, y_probs)
-            idx = worst_idx[0]
 
         df = pd.DataFrame(X, columns=feature_labels).convert_dtypes()
         num_columns = make_column_selector(dtype_include=np.number)(df)
@@ -100,19 +94,6 @@ class ModelDetails:
         probabilities = dict(zip(explanation.class_names, explanation.predict_proba.tolist()))
 
         return LimeResult(idx, all_explanations, probabilities, getattr(y[idx], "tolist", lambda: y[idx])())
-
-    @staticmethod
-    def _lime_interesting_indices(y: np.ndarray, y_probs: np.ndarray, n=1) -> tuple[np.ndarray, np.ndarray]:
-        idx = np.arange(0, y_probs.shape[0] * y_probs.shape[1], step=y_probs.shape[1]) + y
-        flat_probs = y_probs.flatten()
-
-        actual_probs = flat_probs[idx]
-        sorted_actual_probs = np.argsort(actual_probs)
-
-        best_idx = sorted_actual_probs[-n:]
-        worst_idx = sorted_actual_probs[:n]
-
-        return worst_idx, best_idx
 
     @staticmethod
     def calculate_decision_tree(X: np.ndarray, model,
