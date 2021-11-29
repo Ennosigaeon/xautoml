@@ -9,7 +9,7 @@
 }
 
 .selected-config,
-.Mui-selected {
+.MuiTableRow-root.Mui-selected {
     background-color: var(--jp-brand-color1) !important;
     fill: var(--jp-brand-color1) !important;
 }
