@@ -1,7 +1,7 @@
 import * as cpc from "./model";
 import React from "react";
 import * as d3 from "d3";
-import {Runhistory} from "../../model";
+import {MetaInformation, Structure} from "../../model";
 import {ParCord} from "./util";
 import {PCChoice} from "./pc_choice";
 import {PCLine} from "./pc_line";
@@ -9,7 +9,8 @@ import {FlexibleSvg} from "../../util/flexible-svg";
 
 
 interface PCProps {
-    runhistory: Runhistory
+    structures: Structure[]
+    meta: MetaInformation
 }
 
 interface PCState {
@@ -26,7 +27,7 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
     constructor(props: PCProps) {
         super(props)
         this.state = {
-            model: ParCord.parseRunhistory(this.props.runhistory),
+            model: ParCord.parseRunhistory(this.props.structures, this.props.meta),
             highlightedLines: new Set<string>(),
             container: undefined
         }

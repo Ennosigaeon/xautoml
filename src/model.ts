@@ -212,13 +212,18 @@ export class MetaInformation {
                 public readonly iterations: {},
                 public readonly model_dir: string,
                 public readonly data_file: string,
+                public readonly bestPerformance: number,
+                public readonly worstPerformance: number,
                 public readonly config: Map<string, ConfigValue>) {
     }
 
-    static fromJson(meta: MetaInformation): MetaInformation {
+    static fromJson(meta: MetaInformation, losses: number[]): MetaInformation {
+        const bestPerformance = meta.is_minimization ? Math.min(...losses) : Math.max(...losses)
+        const worstPerformance = meta.is_minimization ? Math.max(...losses) : Math.min(...losses)
+
         return new MetaInformation('dswizard', meta.start_time, meta.end_time, meta.metric, meta.is_minimization,
             meta.openml_task, meta.openml_fold, meta.n_structures, meta.n_configs, meta.iterations, meta.model_dir,
-            meta.data_file, new Map<string, ConfigValue>(Object.entries(meta.config)))
+            meta.data_file, bestPerformance, worstPerformance, new Map<string, ConfigValue>(Object.entries(meta.config)))
     }
 }
 
@@ -303,21 +308,16 @@ export class Structure {
 
 export class Runhistory {
 
-    public readonly bestPerformance: number
-    public readonly worstPerformance: number
-
     constructor(public readonly meta: MetaInformation,
                 public readonly structures: Structure[],
                 public readonly explanations: Explanations) {
-        const losses = [].concat(...structures.map(s => s.configs.map(c => c.loss)))
-        this.bestPerformance = meta.is_minimization ? Math.min(...losses) : Math.max(...losses)
-        this.worstPerformance = meta.is_minimization ? Math.max(...losses) : Math.min(...losses)
     }
 
     static fromJson(runhistory: Runhistory): Runhistory {
         const structures = runhistory.structures.map(s => Structure.fromJson(s))
+        const losses = [].concat(...structures.map(s => s.configs.map(c => c.loss)))
 
-        return new Runhistory(MetaInformation.fromJson(runhistory.meta),
+        return new Runhistory(MetaInformation.fromJson(runhistory.meta, losses),
             structures,
             Explanations.fromJson(runhistory.explanations))
     }

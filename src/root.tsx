@@ -118,7 +118,7 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
             <JupyterContext.Provider value={jupyter}>
                 <div style={{display: 'flex'}}>
                     <div style={{flexGrow: 0, flexShrink: 0, flexBasis: '350px', marginRight: '20px'}}>
-                        <MetaInformationTable rh={runhistory}/>
+                        <MetaInformationTable meta={runhistory.meta}/>
                         <CollapseComp showInitial={true} help={PerformanceTimeline.HELP}>
                             <h4>Performance Timeline</h4>
                             <PerformanceTimeline data={runhistory.structures} meta={runhistory.meta}
@@ -150,7 +150,8 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
                                                 onCandidateSelection={this.onCandidateSelection}/>
                             </TabPanel>
                             <TabPanel value={'2'}>
-                                <ParallelCoordinates runhistory={runhistory}/>
+                                <ParallelCoordinates structures={runhistory.structures}
+                                                     meta={runhistory.meta}/>
                                 {runhistory.explanations.structures &&
                                 <BanditExplanationsComponent explanations={runhistory.explanations.structures}
                                                              selectedCandidates={selectedCandidates}

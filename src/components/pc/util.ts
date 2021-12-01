@@ -1,6 +1,6 @@
 import * as cpc from "./model";
 import * as d3 from "d3";
-import {Config, ConfigValue, Runhistory} from "../../model";
+import {Config, ConfigValue, MetaInformation, Structure} from "../../model";
 
 export namespace ParCord {
 
@@ -56,7 +56,7 @@ export namespace ParCord {
         return d3.scaleBand(ids, range)
     }
 
-    export function parseRunhistory(runhistory: Runhistory): cpc.Model {
+    export function parseRunhistory(structures: Structure[], meta: MetaInformation): cpc.Model {
         function getId(step: number, component: string, hp: string): string {
             const name = hp.split(':')
             return `${step}:${component}:${name[name.length - 1]}`
@@ -83,7 +83,7 @@ export namespace ParCord {
 
         function parseConfigSpace() {
             const components: Array<[Set<string>, Array<cpc.Choice>]> = []
-            runhistory.structures.forEach(structure => {
+            structures.forEach(structure => {
                 structure.pipeline.steps.forEach((step, idx) => {
                     if (components.length === idx)
                         components.push([new Set<string>(), []])
@@ -98,17 +98,17 @@ export namespace ParCord {
             })
             const axes = components.map((c, idx) => cpc.Axis.Categorical(`${idx}`, `Component ${idx}`, c[1]))
 
-            const lowerPerf = Math.min(runhistory.worstPerformance, runhistory.bestPerformance)
-            const upperPerf = Math.max(runhistory.worstPerformance, runhistory.bestPerformance)
+            const lowerPerf = Math.min(meta.worstPerformance, meta.bestPerformance)
+            const upperPerf = Math.max(meta.worstPerformance, meta.bestPerformance)
             const padding = (upperPerf - lowerPerf) * 0.05
-            axes.push(cpc.Axis.Numerical('__performance__', runhistory.meta.metric,
+            axes.push(cpc.Axis.Numerical('__performance__', meta.metric,
                 new cpc.Domain(lowerPerf - padding, upperPerf + padding, false)))
             return axes
         }
 
         const axes = parseConfigSpace()
 
-        const lines = [].concat(...runhistory.structures.map(s =>
+        const lines = [].concat(...structures.map(s =>
             s.configs.map(candidate => {
                 const points = new Array<cpc.LinePoint>()
                 s.pipeline.steps.map((step, idx) => {
