@@ -262,20 +262,28 @@ text.pc-axis-tick {
     stroke-dasharray: 4;
 }
 
-.pc-highlighted path {
+.pc-fat-line {
+    opacity: 0;
+    stroke-width: 7px;
+    fill: none;
+    cursor: pointer;
+    stroke: black;
+}
+
+.pc-highlighted .pc-line {
     stroke-opacity: 1;
     stroke-width: 2px;
-    cursor: pointer;
     stroke: var(--jp-brand-color1);
 }
 
 .pc-tooltip {
+    font-family: var(--jp-content-font-family);
     display: none;
     background-color: black;
     color: white;
-    padding: 1px 2px;
+    padding: 2px 6px;
     margin: auto;
-    border-radius: 2px;
+    border-radius: 5px;
     font-size: 11px;
 }
 

@@ -2,6 +2,7 @@ import {ConfigValue} from "../../model";
 import {ParCord} from "./util";
 import * as d3 from "d3";
 import {Constants} from "./constants";
+import {prettyPrint} from "../../util";
 
 export class Model {
 
@@ -33,7 +34,7 @@ export class Axis {
 
     private layout_: Layout
 
-    constructor(
+    private constructor(
         public readonly id: string,
         public readonly label: string,
         public readonly type: Type,
@@ -56,8 +57,14 @@ export class Axis {
         return new Axis(id, label, Type.NUMERICAL, domain)
     }
 
-    static Categorical(id: string, label: string, choices: Array<Choice>): Axis {
-        return new Axis(id, label, Type.CATEGORICAL, undefined, choices)
+    static Categorical(id: string, name: string, choices: Array<Choice>, explanations?: Config.Explanation): Axis {
+        let name_ = name
+        if (choices.length === 1) {
+            choices[0].expand()
+            name_ = prettyPrint(choices[0].label)
+        }
+        const tokens = name_.split(':')
+        return new Axis(id, tokens[tokens.length - 1], Type.CATEGORICAL, explanations?.get(name), undefined, choices)
     }
 
     isNumerical(): boolean {
@@ -117,10 +124,14 @@ export class Choice {
         this.collapsed = collapsible
     }
 
-    setCollapsed(collapsed: boolean) {
-        if (this.collapsible) {
-            this.collapsed = collapsed
-        }
+    collapse() {
+        if (this.collapsible)
+            this.collapsed = true
+    }
+
+    expand() {
+        if (this.isExpandable())
+            this.collapsed = false
     }
 
     isCollapsed() {

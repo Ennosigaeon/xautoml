@@ -12,10 +12,7 @@ interface CPCPChoiceProps {
     onChoiceHover: (axis: cpc.Axis, choice: cpc.Choice) => void
 }
 
-interface CPCChoiceState {
-}
-
-export class PCChoice extends React.Component<CPCPChoiceProps, CPCChoiceState> {
+export class PCChoice extends React.Component<CPCPChoiceProps, {}> {
 
     constructor(props: CPCPChoiceProps) {
         super(props);

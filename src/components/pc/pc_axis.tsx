@@ -1,9 +1,11 @@
 import * as d3 from "d3";
+import {linkHorizontal, linkVertical} from "d3";
 import * as cpc from "./model";
 import React from "react";
 import {PCChoice} from "./pc_choice";
 import {prettyPrint} from "../../util";
 import {Constants} from "./constants";
+import {v4 as uuidv4} from "uuid";
 
 interface CPCAxisProps {
     axis: cpc.Axis
@@ -52,13 +54,8 @@ export class PCAxis extends React.Component<CPCAxisProps, CPCAxisState> {
 
     render() {
         const {axis, onExpand, onCollapse, onChoiceHover} = this.props
-        const {y, height, yScale} = axis.getLayout()
+        const {x, y, width, height, yScale} = axis.getLayout()
         const centeredX = axis.getLayout().centeredX()
-
-        const path = d3.path();
-        path.moveTo(centeredX, y);
-        path.lineTo(centeredX, y + height);
-        path.closePath();
 
         const choices = axis.choices.map(c => <PCChoice choice={c} parent={axis}
                                                         onExpand={onExpand}
@@ -74,11 +71,15 @@ export class PCAxis extends React.Component<CPCAxisProps, CPCAxisState> {
                     pos: v
                 }
             }) : []
+        const id = `path-${uuidv4()}`
 
         return (
             <>
                 <g id={`axis-${axis.id}`} className={'pc-axis'} onClick={this.collapse}>
-                    <path d={path.toString()}/>
+                    <path d={linkVertical().x(d => d[0]).y(d => d[1])({
+                        source: [centeredX, y],
+                        target: [centeredX, y + height]
+                    })}/>
 
                     {ticks.map(v =>
                         <>
@@ -91,7 +92,18 @@ export class PCAxis extends React.Component<CPCAxisProps, CPCAxisState> {
                         </>
                     )}
 
-                    <text x={centeredX} y={y - 0.5 * Constants.TEXT_HEIGHT} textAnchor={'middle'}>{axis.label}</text>
+                    <text>
+                        <path id={id} d={
+                            linkHorizontal().x(d => d[0]).y(d => d[1])({
+                                source: [x, y - 0.5 * Constants.TEXT_HEIGHT],
+                                target: [x + width, y - 0.5 * Constants.TEXT_HEIGHT]
+                            })}/>
+                        <textPath xlinkHref={`#${id}`} startOffset={'50%'} textAnchor={'middle'}>
+                            {axis.label}
+                            <title>{axis.label}</title>
+                        </textPath>
+                    </text>
+
                     {choices}
                 </g>
             </>

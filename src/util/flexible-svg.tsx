@@ -60,7 +60,7 @@ export class FlexibleSvg extends React.Component<FlexibleSvgProps, FlexibleSvgSt
             <div className={'flexible-svg-container'} ref={this.container}
                  style={{paddingBottom: `${(height / width) * 100}%`}}>
                 <svg className={`flexible-svg`} preserveAspectRatio={"xMinYMin meet"}
-                     viewBox={`0 0 ${width} ${height + 1}`}>
+                     viewBox={`0 0 ${width} ${height + 1}`} style={{overflow: "visible"}}>
                     {children}
                 </svg>
             </div>

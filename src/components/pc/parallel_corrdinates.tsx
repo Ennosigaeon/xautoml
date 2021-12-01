@@ -50,12 +50,12 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
     }
 
     private onCollapse(choice: cpc.Choice) {
-        choice.setCollapsed(true)
+        choice.collapse()
         this.setState({model: this.state.model})
     }
 
     private onExpand(choice: cpc.Choice) {
-        choice.setCollapsed(false)
+        choice.expand()
         this.setState({model: this.state.model})
     }
 
