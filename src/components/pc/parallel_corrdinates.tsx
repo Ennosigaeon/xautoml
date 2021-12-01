@@ -1,7 +1,7 @@
 import * as cpc from "./model";
 import React from "react";
 import * as d3 from "d3";
-import {MetaInformation, Structure} from "../../model";
+import {Candidate, MetaInformation, Structure} from "../../model";
 import {ParCord} from "./util";
 import {PCChoice} from "./pc_choice";
 import {PCLine} from "./pc_line";
@@ -9,8 +9,9 @@ import {FlexibleSvg} from "../../util/flexible-svg";
 
 
 interface PCProps {
-    structures: Structure[]
     meta: MetaInformation
+    structures: Structure[]
+    candidates?: [Candidate, Structure][]
 }
 
 interface PCState {
@@ -24,10 +25,17 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
     private readonly NODE_HEIGHT = 65
     private readonly root: cpc.Choice;
 
+    static defaultProps = {
+        candidates: (undefined as [Candidate, Structure][])
+    }
+
     constructor(props: PCProps) {
         super(props)
+
+        const candidates: [Candidate, Structure][] = this.props.candidates !== undefined ?
+            this.props.candidates : [].concat(...this.props.structures.map(s => s.configs.map(c => [c, s])))
         this.state = {
-            model: ParCord.parseRunhistory(this.props.structures, this.props.meta),
+            model: ParCord.parseRunhistory(this.props.meta, this.props.structures, candidates),
             highlightedLines: new Set<string>(),
             container: undefined
         }

@@ -1,6 +1,6 @@
 import * as cpc from "./model";
 import * as d3 from "d3";
-import {Config, ConfigValue, MetaInformation, Structure} from "../../model";
+import {Candidate, Config, ConfigValue, MetaInformation, Structure} from "../../model";
 
 export namespace ParCord {
 
@@ -56,7 +56,7 @@ export namespace ParCord {
         return d3.scaleBand(ids, range)
     }
 
-    export function parseRunhistory(structures: Structure[], meta: MetaInformation): cpc.Model {
+    export function parseRunhistory(meta: MetaInformation, structures: Structure[], candidates: [Candidate, Structure][]): cpc.Model {
         function getId(step: number, component: string, hp: string): string {
             const name = hp.split(':')
             return `${step}:${component}:${name[name.length - 1]}`
@@ -108,10 +108,9 @@ export namespace ParCord {
 
         const axes = parseConfigSpace()
 
-        const lines = [].concat(...structures.map(s =>
-            s.configs.map(candidate => {
+        const lines = candidates.map(([candidate, structure]) => {
                 const points = new Array<cpc.LinePoint>()
-                s.pipeline.steps.map((step, idx) => {
+                structure.pipeline.steps.map((step, idx) => {
                     points.push(new cpc.LinePoint(`${idx}`, step.label))
 
                     candidate.subConfig(step)
@@ -121,13 +120,12 @@ export namespace ParCord {
                 })
 
                 // Fill missing steps in pipeline and final performance measure
-                axes.slice(s.pipeline.steps.length).forEach(axis => {
+                axes.slice(structure.pipeline.steps.length).forEach(axis => {
                     const value = axis.id === '__performance__' ? candidate.loss : undefined
                     points.push(new cpc.LinePoint(`${axis.id}`, value))
                 })
                 return new cpc.Line(candidate.id, points)
             })
-        ))
 
         return new cpc.Model(axes, lines)
     }

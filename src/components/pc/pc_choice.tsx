@@ -81,7 +81,7 @@ export class PCChoice extends React.Component<CPCPChoiceProps, CPCChoiceState> {
                       transform={`rotate(${Constants.TEXT_ROTATION}, ${centeredX}, ${centeredY})`}>{choice.label.toString()}</text>
 
                 {!choice.isCollapsed() && <>
-                    <rect x={x} y={y} width={width} height={height} onClick={this.collapse}/>
+                    <rect x={x} y={y} width={width} height={height} onClick={this.collapse} className={'pc-border'}/>
                     {choice.axes.map(a => <PCAxis key={a.id}
                                                   axis={a}
                                                   parent={choice}

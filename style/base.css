@@ -201,14 +201,14 @@ div.structure-graph_tooltip {
 
 
 /** Parallel Coordinates */
-.pc-choice > rect {
+.pc-border {
     fill: rgba(255, 255, 255, 0.85);
     stroke: #DFE3E6;
     stroke-width: 1px;
     pointer-events: all;
 }
 
-.pc-choice > rect:hover {
+.pc-choice > .pc-border:hover {
     stroke: var(--jp-brand-color1) !important;
     fill: rgba(255, 255, 255, 0.4);
     stroke-width: 1px;
