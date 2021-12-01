@@ -31,6 +31,8 @@ export class Jupyter {
         notebook.activeCell.model.value.text = content
         this.previousCellContent = content
         localStorage.setItem(this.LOCAL_STORAGE_CONTENT, content)
+
+        notebook.activeCell.editor.focus()
     }
 }
 

@@ -3,9 +3,11 @@ import {FeatureImportance, requestFeatureImportance} from "../../handler";
 import {LoadingIndicator} from "../loading";
 import {DetailsModel} from "./model";
 import {ErrorIndicator} from "../../util/error";
-import {Colors, prettyPrint} from "../../util";
+import {Colors, JupyterContext, prettyPrint} from "../../util";
 import {AdditionalFeatureWarning} from "../../util/warning";
 import {Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, TooltipProps, XAxis, YAxis} from "recharts";
+import {JupyterButton} from "../../util/jupyter-button";
+import {ID} from "../../jupyter";
 
 
 class CustomizedAxisTick extends React.PureComponent<any> {
@@ -15,7 +17,8 @@ class CustomizedAxisTick extends React.PureComponent<any> {
 
         return (
             <g transform={`translate(${x},${y})`}>
-                <text x={0} y={0} dy={16} textAnchor="end" fill={isAdditional ? '#aaa' : '#444'} transform="rotate(-35)">
+                <text x={0} y={0} dy={16} textAnchor="end" fill={isAdditional ? '#aaa' : '#444'}
+                      transform="rotate(-35)">
                     {payload.value}
                 </text>
             </g>
@@ -62,10 +65,14 @@ export class FeatureImportanceComponent extends React.Component<FeatureImportanc
         'feature value is randomly shuffled. This procedure breaks the relationship between the feature and the ' +
         'target, thus the drop in the model score is indicative of how much the model depends on the feature.'
 
+    static contextType = JupyterContext;
+    context: React.ContextType<typeof JupyterContext>;
+
     constructor(props: FeatureImportanceProps) {
         super(props);
-
         this.state = {data: new Map<string, FeatureImportance>(), error: undefined}
+
+        this.exportDataFrame = this.exportDataFrame.bind(this)
     }
 
     componentDidMount() {
@@ -91,6 +98,34 @@ export class FeatureImportanceComponent extends React.Component<FeatureImportanc
             });
     }
 
+    private exportDataFrame() {
+        function pythonBool(bool: boolean) {
+            const string = bool.toString()
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+
+        const {component} = this.props.model
+        const {data} = this.state
+        const additionalFeatures = data.get(component).additional_features
+
+        const entries: string[] = []
+        const index: string[] = []
+        const columns: string[] = ['\'importance\'', '\'additional_feature\'']
+        data.get(component).data.forEach((value, key) => {
+            entries.push(`[${value}, ${pythonBool(additionalFeatures.includes(key))}]`)
+            index.push(`'${key}'`)
+        })
+
+        this.context.createCell(`
+import pandas as pd
+
+${ID}_feature_importance = pd.DataFrame([${entries}],
+  index=[${index}],
+  columns=[${columns}])
+${ID}_feature_importance
+        `.trim())
+    }
+
     render() {
         const {data, error} = this.state
         const {component} = this.props.model
@@ -111,6 +146,10 @@ export class FeatureImportanceComponent extends React.Component<FeatureImportanc
                     <LoadingIndicator loading={bars.length === 0}/>
                     {bars.length > 0 &&
                     <>
+                        <div style={{display: "flex", flexDirection: "row-reverse"}}>
+                            <JupyterButton onClickHandler={this.exportDataFrame}    />
+                        </div>
+
                         {additionalFeatures.length > 0 && <AdditionalFeatureWarning/>}
                         <div style={{height: this.props.height}}>
                             <ResponsiveContainer>
