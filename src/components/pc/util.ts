@@ -56,16 +56,20 @@ export namespace ParCord {
         return d3.scaleBand(ids, range)
     }
 
-    export function parseRunhistory(meta: MetaInformation, structures: Structure[], candidates: [Candidate, Structure][]): cpc.Model {
+    export function parseRunhistory(meta: MetaInformation,
+                                    structures: Structure[],
+                                    candidates: [Candidate, Structure][],
+                                    explanation: Config.Explanation): cpc.Model {
         function getId(step: number, component: string, hp: string): string {
             const name = hp.split(':')
             return `${step}:${component}:${name[name.length - 1]}`
         }
 
         function parseHyperparameter(step: number, component: string, hp: HyperParameter, conditions: Condition[]): cpc.Axis {
-            const name = hp.name.split(':')
+            const id = getId(step, component, hp.name)
             if (hp instanceof NumericalHyperparameter) {
-                return cpc.Axis.Numerical(getId(step, component, hp.name), name[name.length - 1], new cpc.Domain(hp.lower, hp.upper, hp.log))
+                const domain = new cpc.Domain(hp.lower, hp.upper, hp.log)
+                return cpc.Axis.Numerical(id, hp.name, domain, explanation)
             } else {
                 const choices = (hp as CategoricalHyperparameter).choices
                     .map(choice => new cpc.Choice(choice as ConfigValue, []))
@@ -77,7 +81,7 @@ export namespace ParCord {
                                 .forEach(c => c.axes.push(parseHyperparameter(step, component, child, conditions)))
                         )
                 })
-                return cpc.Axis.Categorical(getId(step, component, hp.name), name[name.length - 1], choices)
+                return cpc.Axis.Categorical(id, hp.name, choices, explanation)
             }
         }
 
@@ -96,7 +100,7 @@ export namespace ParCord {
                     }
                 })
             })
-            const axes = components.map((c, idx) => cpc.Axis.Categorical(`${idx}`, `Component ${idx}`, c[1]))
+            const axes = components.map(([_, choices], idx) => cpc.Axis.Categorical(`${idx}`, `Component ${idx}`, choices, explanation))
 
             const lowerPerf = Math.min(meta.worstPerformance, meta.bestPerformance)
             const upperPerf = Math.max(meta.worstPerformance, meta.bestPerformance)
@@ -109,23 +113,23 @@ export namespace ParCord {
         const axes = parseConfigSpace()
 
         const lines = candidates.map(([candidate, structure]) => {
-                const points = new Array<cpc.LinePoint>()
-                structure.pipeline.steps.map((step, idx) => {
-                    points.push(new cpc.LinePoint(`${idx}`, step.label))
+            const points = new Array<cpc.LinePoint>()
+            structure.pipeline.steps.map((step, idx) => {
+                points.push(new cpc.LinePoint(`${idx}`, step.label))
 
-                    candidate.subConfig(step)
-                        .forEach((value: ConfigValue, key: string) => {
-                            points.push(new cpc.LinePoint(getId(idx, step.label, key), value))
-                        })
-                })
-
-                // Fill missing steps in pipeline and final performance measure
-                axes.slice(structure.pipeline.steps.length).forEach(axis => {
-                    const value = axis.id === '__performance__' ? candidate.loss : undefined
-                    points.push(new cpc.LinePoint(`${axis.id}`, value))
-                })
-                return new cpc.Line(candidate.id, points)
+                candidate.subConfig(step)
+                    .forEach((value: ConfigValue, key: string) => {
+                        points.push(new cpc.LinePoint(getId(idx, step.label, key), value))
+                    })
             })
+
+            // Fill missing steps in pipeline and final performance measure
+            axes.slice(structure.pipeline.steps.length).forEach(axis => {
+                const value = axis.id === '__performance__' ? candidate.loss : undefined
+                points.push(new cpc.LinePoint(`${axis.id}`, value))
+            })
+            return new cpc.Line(candidate.id, points)
+        })
 
         return new cpc.Model(axes, lines)
     }

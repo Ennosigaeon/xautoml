@@ -1,4 +1,4 @@
-import {ConfigValue} from "../../model";
+import {Config, ConfigValue} from "../../model";
 import {ParCord} from "./util";
 import * as d3 from "d3";
 import {Constants} from "./constants";
@@ -38,6 +38,7 @@ export class Axis {
         public readonly id: string,
         public readonly label: string,
         public readonly type: Type,
+        public readonly explanation?: [number, number][],
         domain?: Domain,
         choices?: Array<Choice>) {
         if (this.isNumerical()) {
@@ -53,8 +54,9 @@ export class Axis {
         this.choices = choices
     }
 
-    static Numerical(id: string, label: string, domain: Domain): Axis {
-        return new Axis(id, label, Type.NUMERICAL, domain)
+    static Numerical(id: string, name: string, domain: Domain, explanations?: Config.Explanation): Axis {
+        const tokens = name.split(':')
+        return new Axis(id, tokens[tokens.length - 1], Type.NUMERICAL, explanations?.get(name), domain)
     }
 
     static Categorical(id: string, name: string, choices: Array<Choice>, explanations?: Config.Explanation): Axis {
@@ -86,7 +88,7 @@ export class Axis {
     layout(xScale: d3.ScaleBand<string>, yRange: [number, number]) {
         const adjustedYRange: [number, number] = [
             yRange[0] + 1.5 * Constants.TEXT_HEIGHT,
-            yRange[1] - 0.5 * Constants.TEXT_HEIGHT
+            yRange[1] - 1.5 * Constants.TEXT_HEIGHT
         ]
         const yScale = this.isNumerical() ?
             this.domain.asScale(adjustedYRange) :
@@ -97,7 +99,7 @@ export class Axis {
         const width = this.getWidthWeight() * xScale.bandwidth()
         const height = yScale.range()[1] - yScale.range()[0]
 
-        this.layout_ = new Layout(x, y, width, height, xScale, yScale)
+        this.layout_ = new Layout(x, y, width, height, yScale)
         this.choices.forEach(c => c.layout([x, x + width], yScale as d3.ScaleBand<string>))
     }
 
@@ -166,7 +168,7 @@ export class Choice {
 
         const y = yScale(this.label.toString())
         const height = this.getHeightWeight() * yScale.bandwidth()
-        this.layout_ = new Layout(x, y, width, height, xScale, yScale)
+        this.layout_ = new Layout(x, y, width, height, yScale)
 
         if (!this.isCollapsed()) {
             this.axes.forEach(a => a.layout(xScale, [y, y + height]))
@@ -210,7 +212,6 @@ export class Layout {
                 public readonly y: number,
                 public readonly width: number,
                 public readonly height: number,
-                public readonly xScale: d3.ScaleBand<string>,
                 public readonly yScale: Scale) {
     }
 
@@ -220,6 +221,15 @@ export class Layout {
 
     centeredY() {
         return this.y + this.height / 2
+    }
+
+    perfEstScale(domain: [number, number][] = [[0, 1]]): d3.ScaleLinear<number, number> {
+        const values = domain.map(([_, v]) => v)
+        const min = Math.min(...values)
+        const max = Math.max(...values)
+        const padding = (max - min) * 0.1
+
+        return d3.scaleLinear([min - padding, max + padding], [0, this.width / 2])
     }
 }
 

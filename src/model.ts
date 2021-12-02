@@ -87,6 +87,18 @@ export namespace Config {
             return new NumericalHyperparameter(hp.name, hp.lower, hp.upper, hp.log)
         }
     }
+
+    export class Explanation {
+
+        constructor(public readonly performances: Map<string, [number, number][]>) {
+        }
+
+        get(id: string): [number, number][] | undefined {
+            return this.performances.get(id)
+        }
+    }
+
+    export type Explanations = Map<CandidateId, Config.Explanation>
 }
 
 
@@ -150,11 +162,15 @@ export namespace RF {
 }
 
 export class Explanations {
-    constructor(public readonly structures: RF.PolicyExplanations) {
+    constructor(public readonly structures: RF.PolicyExplanations,
+                public readonly configs: Config.Explanations) {
     }
 
     static fromJson(xai: Explanations) {
-        return new Explanations(RF.PolicyExplanations.fromJson(xai.structures))
+        // TODO load real structure explanations once available
+        const configs = new Map<CandidateId, Config.Explanation>()
+
+        return new Explanations(RF.PolicyExplanations.fromJson(xai.structures), configs)
     }
 }
 

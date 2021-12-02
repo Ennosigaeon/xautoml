@@ -2,7 +2,6 @@ import {URLExt} from '@jupyterlab/coreutils';
 
 import {ServerConnection} from '@jupyterlab/services';
 import {CandidateId, Config} from "./model";
-import ConfigSpace = Config.ConfigSpace;
 
 export class ServerError extends Error {
 
@@ -276,7 +275,7 @@ export interface FANOVAResponse {
     details?: Map<number, Map<number, HPImportanceDetails>>
 }
 
-export function requestFANOVA(cs: ConfigSpace, configs: Config[], loss: number[], step?: string): Promise<FANOVAResponse> {
+export function requestFANOVA(cs: Config.ConfigSpace, configs: Config[], loss: number[], step?: string): Promise<FANOVAResponse> {
     return requestAPI<FANOVAResponse>('hyperparameters/fanova', {
         method: 'POST', body: JSON.stringify({
             'configspace': JSON.parse(cs.json),
@@ -285,4 +284,14 @@ export function requestFANOVA(cs: ConfigSpace, configs: Config[], loss: number[]
             'step': step
         })
     })
+}
+
+export function requestSimulatedSurrogate(cs: Config.ConfigSpace, configs: Config[], loss: number[]): Promise<Config.Explanation> {
+    return requestAPI<Config.Explanation>('surrogate/simulate', {
+        method: 'POST', body: JSON.stringify({
+            'configspace': JSON.parse(cs.json),
+            'configs': configs,
+            'loss': loss
+        })
+    }).then(data => new Config.Explanation(new Map<string, [number, number][]>(Object.entries(data))))
 }

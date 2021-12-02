@@ -19,6 +19,7 @@ def test_for_step():
     details = HPImportance.calculate_fanova_details(f, X, keys=overview['keys'])
     details_js = json.dumps(details)
 
+
 def test_details():
     f, X = HPImportance.load_file('/home/marc/phd/code/dswizard/scripts/run/168746/runhistory.json')
     details = HPImportance.calculate_fanova_details(f, X)
@@ -37,6 +38,12 @@ def test_details():
     js2 = json.dumps(continuous)
     js3 = json.dumps(disc_cont)
     js4 = json.dumps(disc_disc)
+
+
+def test_expected_performance_simulation():
+    f, X = HPImportance.load_file('/home/marc/phd/code/dswizard/scripts/run/168746/runhistory.json', before=0)
+    details = HPImportance.simulate_surrogate(f, X)
+    details_js = json.dumps(details)
 
 
 def test_fanova():

@@ -245,10 +245,17 @@ div.structure-graph_tooltip {
 
 text.pc-axis-tick {
     font-size: 11px;
+    fill: #b8b8b8;
+}
+
+text.pc-axis-y-tick {
     dominant-baseline: middle;
     text-anchor: end;
-    fill: #b8b8b8;
-    pointer-events: none;
+}
+
+text.pc-axis-x-tick {
+    dominant-baseline: hanging;
+    text-anchor: middle;
 }
 
 .pc-line {

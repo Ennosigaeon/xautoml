@@ -267,6 +267,17 @@ class FANOVAHandler(BaseHandler):
         self.finish(json.dumps({'overview': overview, 'details': details}))
 
 
+class SimulatedSurrogate(BaseHandler):
+
+    def _process_post(self, model):
+        try:
+            f, X = HPImportance.load_model(model)
+            explanations = HPImportance.simulate_surrogate(f, X)
+            self.finish(json.dumps(explanations))
+        except IndexError:
+            raise ValueError('Unable to simulate surrogate model without trainings data')
+
+
 def setup_handlers(web_app):
     host_pattern = ".*$"
 
@@ -280,5 +291,6 @@ def setup_handlers(web_app):
         (url_path_join(base_url, 'xautoml', 'explanations/feature_importance'), FeatureImportanceHandler),
         (url_path_join(base_url, 'xautoml', 'explanations/dt'), DecisionTreeHandler),
         (url_path_join(base_url, 'xautoml', 'hyperparameters/fanova'), FANOVAHandler),
+        (url_path_join(base_url, 'xautoml', 'surrogate/simulate'), SimulatedSurrogate),
     ]
     web_app.add_handlers(host_pattern, handlers)

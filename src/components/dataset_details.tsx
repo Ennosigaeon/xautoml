@@ -11,6 +11,7 @@ import {CollapseComp} from "../util/collapse";
 import {PerformanceComponent} from "./details/performance";
 import {BanditExplanationsComponent} from "./bandit_explanation";
 import {HPImportanceComp} from "./details/hp_importance";
+import {SurrogateExplanation} from "./surrogate_explanation";
 
 interface DataSetDetailsProps {
     candidate: Candidate
@@ -64,6 +65,17 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
 
         return (
             <>
+                <CollapseComp showInitial={true}>
+                    <h4>Search Space Overview</h4>
+                    {explanations.structures &&
+                        <BanditExplanationsComponent explanations={explanations.structures}
+                                                     structures={structures}
+                                                     timestamp={cidToSid(candidate.id)}/>
+                    }
+                    <SurrogateExplanation meta={meta} structure={structure} candidate={candidate}
+                                          explanation={explanations.configs.get(candidate.id)}/>
+                </CollapseComp>
+
                 <CollapseComp showInitial={true} help={RawDataset.HELP + '\n\n' + LimeComponent.HELP}>
                     <h4>Data Set Preview</h4>
                     <TwoColumnLayout widthRight={'15%'}>
@@ -92,14 +104,6 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
                     <h4>Global Approximation</h4>
                     <GlobalSurrogateComponent model={model}/>
                 </CollapseComp>
-
-                {explanations.structures &&
-                <CollapseComp showInitial={true}>
-                    <h4>Search Space Overview</h4>
-                    <BanditExplanationsComponent explanations={explanations.structures}
-                                                 structures={structures}
-                                                 timestamp={cidToSid(candidate.id)}/>
-                </CollapseComp>}
             </>
         )
     }

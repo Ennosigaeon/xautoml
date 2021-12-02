@@ -1,7 +1,7 @@
 import * as cpc from "./model";
 import React from "react";
 import * as d3 from "d3";
-import {Candidate, MetaInformation, Structure} from "../../model";
+import {Candidate, Config, MetaInformation, Structure} from "../../model";
 import {ParCord} from "./util";
 import {PCChoice} from "./pc_choice";
 import {PCLine} from "./pc_line";
@@ -12,6 +12,7 @@ interface PCProps {
     meta: MetaInformation
     structures: Structure[]
     candidates?: [Candidate, Structure][]
+    explanation?: Config.Explanation
 }
 
 interface PCState {
@@ -26,7 +27,8 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
     private readonly root: cpc.Choice;
 
     static defaultProps = {
-        candidates: (undefined as [Candidate, Structure][])
+        candidates: (undefined as [Candidate, Structure][]),
+        explanation: (undefined as Config.Explanation)
     }
 
     constructor(props: PCProps) {
@@ -35,7 +37,7 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
         const candidates: [Candidate, Structure][] = this.props.candidates !== undefined ?
             this.props.candidates : [].concat(...this.props.structures.map(s => s.configs.map(c => [c, s])))
         this.state = {
-            model: ParCord.parseRunhistory(this.props.meta, this.props.structures, candidates),
+            model: ParCord.parseRunhistory(this.props.meta, this.props.structures, candidates, this.props.explanation),
             highlightedLines: new Set<string>(),
             container: undefined
         }

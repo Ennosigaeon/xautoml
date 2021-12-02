@@ -80,6 +80,25 @@ class HPImportance:
             return res
 
     @staticmethod
+    def simulate_surrogate(f: fANOVA, X: pd.DataFrame, resolution: int = 10) -> dict:
+        with tempfile.TemporaryDirectory() as tmp:
+            vis = visualizer.Visualizer(f, f.cs, tmp)
+
+            res = {}
+            for i in range(len(X.columns)):
+                data = HPImportance._get_plot_data(vis, i, resolution=resolution)
+                name, mode, data = data['name'][0], data['mode'], data['data']
+
+                if mode == 'continuous':
+                    res[name] = [[d['x'], d['y']] for d in data]
+                elif mode == 'discrete':
+                    res[name] = [[i, d[0]] for i, d in enumerate(data.values())]
+                else:
+                    raise ValueError('Unknown mode {}'.format(mode))
+
+            return res
+
+    @staticmethod
     def _get_plot_data(vis: visualizer.Visualizer,
                        idx: int,
                        resolution: int = 10) -> dict:
@@ -162,12 +181,13 @@ class HPImportance:
         return HPImportance._construct_fanova(config_space, model['configs'], model['loss'])
 
     @staticmethod
-    def load_file(runhistory_file: str):
-        model = json.load(open(runhistory_file))['structures'][0]
-        cs = config_json.read(model['configspace'])
+    def load_file(runhistory_file: str, before: float = np.Infinity):
+        with open(runhistory_file) as f:
+            model = json.load(f)['structures'][0]
+            cs = config_json.read(model['configspace'])
 
-        configs = [c['config'] for c in model['configs']]
-        performances = [c['loss'] for c in model['configs']]
+            configs = [c['config'] for c in model['configs'] if c['runtime']['timestamp'] < before]
+            performances = [c['loss'] for c in model['configs'] if c['runtime']['timestamp'] < before]
 
         return HPImportance._construct_fanova(cs, configs, performances)
 
