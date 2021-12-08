@@ -126,9 +126,11 @@ class CandidateTableRow extends React.Component<CandidateTableRowProps, Candidat
     }
 
     private toggleOpen(e: React.MouseEvent) {
-        this.setState({
-            open: !this.state.open,
-            selectedComponent: [Components.SOURCE, Components.SOURCE]
+        this.setState(state => {
+            if (state.open)
+                return {open: false, selectedComponent: [undefined, undefined]}
+            else
+                return {open: true, selectedComponent: [Components.SOURCE, Components.SOURCE]}
         })
         e.stopPropagation()
     }
