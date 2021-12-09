@@ -150,15 +150,17 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
                                                 onCandidateSelection={this.onCandidateSelection}/>
                             </TabPanel>
                             <TabPanel value={'2'}>
-                                <ParallelCoordinates structures={runhistory.structures}
-                                                         meta={runhistory.meta}
+                                <CollapseComp showInitial={true} help={ParallelCoordinates.HELP}>
+                                    <h4>Bayesian Optimization</h4>
+                                    <ParallelCoordinates structures={runhistory.structures} meta={runhistory.meta}
                                                          selectedCandidates={selectedCandidates}
                                                          onCandidateSelection={this.onCandidateSelection}/>
+                                </CollapseComp>
                                 {runhistory.explanations.structures &&
-                                <BanditExplanationsComponent explanations={runhistory.explanations.structures}
-                                                             selectedCandidates={selectedCandidates}
-                                                             structures={runhistory.structures}
-                                                             onCandidateSelection={this.onCandidateSelection}/>}
+                                    <BanditExplanationsComponent explanations={runhistory.explanations.structures}
+                                                                 selectedCandidates={selectedCandidates}
+                                                                 structures={runhistory.structures}
+                                                                 onCandidateSelection={this.onCandidateSelection}/>}
                             </TabPanel>
                             <TabPanel value={'3'}>
                                 <p>TODO: missing</p>

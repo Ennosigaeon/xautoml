@@ -65,7 +65,7 @@ export class PCChoice extends React.Component<CPCPChoiceProps, {}> {
     }
 
     render() {
-        const {choice, onCollapse, onExpand, onHighlight, svg} = this.props
+        const {choice, parent, onCollapse, onExpand, onHighlight, svg} = this.props
         const {x, y, width, height} = choice.getLayout()
         const centeredX = choice.getLayout().centeredX()
         const centeredY = choice.getLayout().centeredY()
@@ -83,7 +83,8 @@ export class PCChoice extends React.Component<CPCPChoiceProps, {}> {
                       transform={`rotate(${Constants.TEXT_ROTATION}, ${centeredX}, ${centeredY})`}>{choice.label.toString()}</text>
 
                 {!choice.isCollapsed() && <>
-                    <rect x={x} y={y} width={width} height={height} onClick={this.collapse} className={'pc-border'}/>
+                    {parent && <rect x={x} y={y} width={width} height={height} onClick={this.collapse}
+                                     className={'pc-border'}/>}
                     {choice.axes.map(a => <PCAxis key={a.id}
                                                   axis={a}
                                                   parent={choice}
