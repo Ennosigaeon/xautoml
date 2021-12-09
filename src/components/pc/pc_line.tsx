@@ -107,7 +107,6 @@ export class PCLine extends React.Component<PCLineProps, PCLineStats> {
     render() {
         const [path, missingPath, tooltips] = this.renderPath()
         const tooltipHeight = 20
-        const tooltipOffset = 2
 
         return (
             <g className={this.state.highlight || this.props.highlight ? 'pc-highlighted' : ''}>
@@ -122,15 +121,10 @@ export class PCLine extends React.Component<PCLineProps, PCLineStats> {
                       onMouseEnter={this.onMouseEnter}
                       onMouseLeave={this.onMouseLeave}/>
                 {tooltips.map(t =>
-                    <>
-                        <foreignObject x={t.x + tooltipOffset}
-                                       y={t.y - (tooltipHeight + tooltipOffset)}
-                                       width={100}
-                                       height={tooltipHeight}
-                                       style={{pointerEvents: 'none'}}>
-                            <span className={'pc-tooltip'}>{t.text}</span>
-                        </foreignObject>
-                    </>
+                    <foreignObject x={t.x - 20} y={t.y - (tooltipHeight + 2)}
+                                   width={100} height={tooltipHeight} style={{pointerEvents: 'none'}}>
+                        <span className={'pc-tooltip'}>{t.text}</span>
+                    </foreignObject>
                 )}
             </g>
         )

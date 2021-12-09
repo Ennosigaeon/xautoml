@@ -43,7 +43,7 @@ export class CollapseComp extends React.Component<CollapseProps, CollapseState> 
                     </div>
                     {this.props.help &&
                     <Tooltip title={
-                        <div style={{whiteSpace: 'pre-line', textAlign: 'justify'}}>{this.props.help}</div>
+                        <div className={'collapse-tooltip'}>{this.props.help}</div>
                     }>
                         <SvgIcon>
                             <path fill={'rgba(0, 0, 0, 0.54)'}

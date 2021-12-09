@@ -39,6 +39,13 @@ tr.MuiTableRow-root.MuiTableRow-hover:hover {
     color: rgb(16, 107, 163);
 }
 
+.collapse-tooltip {
+    white-space: pre-line;
+    text-align: justify;
+    font-size: 11pt;
+    font-weight: normal;
+}
+
 /** Flexible SVG */
 .flexible-svg-container {
     display: inline-block;
