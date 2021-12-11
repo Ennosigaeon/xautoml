@@ -118,12 +118,12 @@ export interface FeatureImportance {
     additional_features: string[]
 }
 
-export function requestRocCurve(cids: CandidateId[], data_file: string, model_dir: string): CancelablePromise<RocCurveData> {
+export function requestRocCurve(cids: CandidateId[], model_files: string[], data_file: string): CancelablePromise<RocCurveData> {
     const promise = requestAPI<Map<string, LinePoint[]>>('roc_auc', {
         method: 'POST', body: JSON.stringify({
             'cids': cids.join(','),
             'data_file': data_file,
-            'model_dir': model_dir
+            'model_files': model_files.join(',')
         })
     }).then(data => new Map<string, LinePoint[]>(Object.entries(data)))
     return cancelablePromise(promise)
@@ -131,20 +131,19 @@ export function requestRocCurve(cids: CandidateId[], data_file: string, model_di
 
 export type OutputDescriptionData = Map<string, string>
 
-export async function requestOutputComplete(cid: CandidateId, data_file: string, model_dir: string): Promise<OutputDescriptionData> {
-    return requestOutput(cid, data_file, model_dir, 'complete')
+export async function requestOutputComplete(model_file: string, data_file: string): Promise<OutputDescriptionData> {
+    return requestOutput(model_file, data_file, 'complete')
 }
 
-export async function requestOutputDescription(cid: CandidateId, data_file: string, model_dir: string): Promise<OutputDescriptionData> {
-    return requestOutput(cid, data_file, model_dir, 'description')
+export async function requestOutputDescription(model_file: string, data_file: string): Promise<OutputDescriptionData> {
+    return requestOutput(model_file, data_file, 'description')
 }
 
-async function requestOutput(cid: CandidateId, data_file: string, model_dir: string, method: string): Promise<OutputDescriptionData> {
+async function requestOutput(model_file: string, data_file: string, method: string): Promise<OutputDescriptionData> {
     return requestAPI<Map<string, Map<string, string>>>(`output/${method}`, {
         method: 'POST', body: JSON.stringify({
-            'cids': cid,
             'data_file': data_file,
-            'model_dir': model_dir
+            'model_files': model_file
         })
     }).then(data => {
         return new Map<string, string>(Object.entries(data))
@@ -156,17 +155,16 @@ export interface ConfusionMatrixData {
     values: number[][]
 }
 
-export async function requestConfusionMatrix(cid: CandidateId, data_file: string, model_dir: string): Promise<ConfusionMatrixData> {
+export async function requestConfusionMatrix(model_file: string, data_file: string): Promise<ConfusionMatrixData> {
     return requestAPI<ConfusionMatrixData>(`confusion_matrix`, {
         method: 'POST', body: JSON.stringify({
-            'cids': cid,
             'data_file': data_file,
-            'model_dir': model_dir
+            'model_files': model_file
         })
     })
 }
 
-export function requestLimeApproximation(cid: CandidateId, idx: number, data_file: string, model_dir: string, step: string): CancelablePromise<LimeResult> {
+export function requestLimeApproximation(model_file: string, idx: number, data_file: string, step: string): CancelablePromise<LimeResult> {
     // Fake data for faster development
     // const promise = new Promise<LimeResult>((resolve, reject) => {
     //     resolve({
@@ -184,10 +182,9 @@ export function requestLimeApproximation(cid: CandidateId, idx: number, data_fil
 
     const promise = requestAPI<LimeResult>('explanations/lime', {
         method: 'POST', body: JSON.stringify({
-            'cids': cid,
             'idx': idx,
             'data_file': data_file,
-            'model_dir': model_dir,
+            'model_files': model_file,
             'step': step
         })
     })
@@ -198,12 +195,11 @@ export function requestLimeApproximation(cid: CandidateId, idx: number, data_fil
     }))
 }
 
-export function requestGlobalSurrogate(cid: CandidateId, data_file: string, model_dir: string, step: string, max_leaf_nodes: number = undefined): CancelablePromise<DecisionTreeResult> {
+export function requestGlobalSurrogate(model_file: string, data_file: string, step: string, max_leaf_nodes: number = undefined): CancelablePromise<DecisionTreeResult> {
     const promise = requestAPI<DecisionTreeResult>('explanations/dt', {
         method: 'POST', body: JSON.stringify({
-            'cids': cid,
             'data_file': data_file,
-            'model_dir': model_dir,
+            'model_files': model_file,
             'step': step,
             'max_leaf_nodes': max_leaf_nodes
         })
@@ -211,7 +207,7 @@ export function requestGlobalSurrogate(cid: CandidateId, data_file: string, mode
     return cancelablePromise(promise)
 }
 
-export function requestFeatureImportance(cid: CandidateId, data_file: string, model_dir: string, step: string): CancelablePromise<FeatureImportance> {
+export function requestFeatureImportance(model_file: string, data_file: string, step: string): CancelablePromise<FeatureImportance> {
     // Fake data for faster development
     // const promise = new Promise<any>((resolve, reject) => {
     //     resolve({
@@ -242,9 +238,8 @@ export function requestFeatureImportance(cid: CandidateId, data_file: string, mo
 
     const promise = requestAPI<FeatureImportance>('explanations/feature_importance', {
         method: 'POST', body: JSON.stringify({
-            'cids': cid,
             'data_file': data_file,
-            'model_dir': model_dir,
+            'model_files': model_file,
             'step': step
         })
     })

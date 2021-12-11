@@ -149,7 +149,7 @@ class CandidateTableRow extends React.Component<CandidateTableRowProps, Candidat
 from xautoml.util import io_utils
 
 ${ID}_X, ${ID}_y, _ = io_utils.load_input_data('${this.props.meta.data_file}', framework='${this.props.meta.framework}')
-${ID}_pipeline = io_utils.load_pipeline('${this.props.meta.model_dir}', '${this.props.candidate.id}', framework='${this.props.meta.framework}')
+${ID}_pipeline = io_utils.load_pipeline('${this.props.candidate.candidate[1].model_file}', framework='${this.props.meta.framework}')
 ${ID}_pipeline
         `.trim())
         e.stopPropagation()

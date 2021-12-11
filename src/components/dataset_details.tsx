@@ -92,7 +92,7 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
 
                 <CollapseComp showInitial={true} help={PerformanceComponent.HELP}>
                     <h4>Performance Details</h4>
-                    <PerformanceComponent model={model}/>
+                    <PerformanceComponent model={model} candidateMap={new Map(structure.configs.map(c => [c.id, c]))}/>
                 </CollapseComp>
 
                 <CollapseComp showInitial={true} help={FeatureImportanceComponent.HELP}>

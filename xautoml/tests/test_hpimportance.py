@@ -41,7 +41,7 @@ def test_details():
 
 
 def test_expected_performance_simulation():
-    f, X = HPImportance.load_file('/home/marc/phd/code/dswizard/scripts/run/168746/runhistory.json', before=0)
+    f, X = HPImportance.load_file('/home/marc/phd/code/dswizard/scripts/run/168746/runhistory.json')
     details = HPImportance.simulate_surrogate(f, X)
     details_js = json.dumps(details)
 

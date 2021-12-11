@@ -6,8 +6,7 @@ def test_load_dataframe():
         '/home/marc/phd/code/dswizard/scripts/run/168746/dataset.pkl',
         framework='dswizard')
     xautoml_pipeline = io_utils.load_pipeline(
-        '/home/marc/phd/code/dswizard/scripts/run/168746/models',
-        '00:00:00',
+        '/home/marc/phd/code/dswizard/scripts/run/168746/models/models_0-0-0.pkl',
         framework='dswizard')
 
     xautoml_df = io_utils.load_output_dataframe(xautoml_pipeline, '2', xautoml_X, xautoml_feature_labels)

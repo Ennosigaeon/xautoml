@@ -155,7 +155,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
             return
 
         this.setState({loading: true})
-        requestOutputDescription(this.props.candidate.id, this.props.meta.data_file, this.props.meta.model_dir)
+        requestOutputDescription(this.props.candidate.model_file, this.props.meta.data_file)
             .then(data => this.setState({outputs: data, loading: false}))
             .catch(error => {
                 console.error(`Failed to fetch output data.\n${error.name}: ${error.message}`);
