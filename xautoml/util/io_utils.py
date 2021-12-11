@@ -1,8 +1,4 @@
-import glob
-import os
-import re
 import warnings
-from typing import Union
 
 import joblib
 import numpy as np
@@ -30,26 +26,10 @@ def load_input_data(data_file: str, framework: str = DSWIZARD) -> tuple[np.ndarr
         raise ValueError('Unsupported framework {}'.format(framework))
 
 
-def load_pipeline(model_dir: str,
-                  pipeline: str = None,
-                  framework: str = DSWIZARD) -> Union[Pipeline, dict[str, Pipeline]]:
+def load_pipeline(model_file: str, framework: str = DSWIZARD) -> Pipeline:
     if framework == DSWIZARD:
-        if pipeline is None:
-            model_files = glob.glob('{}/*.pkl'.format(model_dir))
-        else:
-            model_files = [
-                os.path.join(model_dir, 'models_{}.pkl'.format(re.sub(r'0(\d)', r'\1', pipeline).replace(':', '-')))
-            ]
-
-        models: dict[str, Pipeline] = {}
-        for model_file in model_files:
-            cid = model_file.split('/')[-1].split('.')[0].replace('-', ':')
-            with open(model_file, 'rb') as f:
-                model = joblib.load(f)
-                if pipeline is not None:
-                    return model
-                else:
-                    models[cid] = model
-        return models
+        with open(model_file, 'rb') as f:
+            model = joblib.load(f)
+            return model
     else:
         raise ValueError('Unsupported framework {}'.format(framework))

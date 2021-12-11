@@ -11,9 +11,8 @@ def test_subpipeline():
         print(step)
 
         X, y, feature_labels, pipeline = BaseHandler.load_model({
-            "cids": "00:00:00",
             "data_file": "/home/marc/phd/code/dswizard/scripts/run/168746/dataset.pkl",
-            "model_dir": "/home/marc/phd/code/dswizard/scripts/run/168746/models"
+            "model_files": "/home/marc/phd/code/dswizard/scripts/run/168746/models/models_0-0-0.pkl"
         })
 
         sub_pipeline, sub_X, sub_feature_labels, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X,
@@ -26,9 +25,8 @@ def test_subpipeline():
 
 def test_decision_tree():
     X, y, feature_labels, pipeline = BaseHandler.load_model({
-        "cids": "00:00:06",
         "data_file": "/home/marc/phd/code/dswizard/scripts/run/168746/dataset.pkl",
-        "model_dir": "/home/marc/phd/code/dswizard/scripts/run/168746/models"
+        "model_files": "/home/marc/phd/code/dswizard/scripts/run/168746/models/models_0-0-6.pkl"
     })
 
     step = '1.2.2'
@@ -41,9 +39,8 @@ def test_decision_tree():
 
 def test_decision_tree_without_max_leaf_nodes():
     X, y, feature_labels, pipeline = BaseHandler.load_model({
-        "cids": "00:00:00",
         "data_file": "/home/marc/phd/code/dswizard/scripts/run/168746/dataset.pkl",
-        "model_dir": "/home/marc/phd/code/dswizard/scripts/run/168746/models"
+        "model_files": "/home/marc/phd/code/dswizard/scripts/run/168746/models/models_0-0-0.pkl"
     })
 
     step = 'SOURCE'
@@ -57,9 +54,8 @@ def test_decision_tree_without_max_leaf_nodes():
 
 def test_lime():
     X, y, feature_labels, pipeline = BaseHandler.load_model({
-        "cids": "00:00:00",
         "data_file": "/home/marc/phd/code/dswizard/scripts/run/168746/dataset.pkl",
-        "model_dir": "/home/marc/phd/code/dswizard/scripts/run/168746/models"
+        "model_files": "/home/marc/phd/code/dswizard/scripts/run/168746/models/models_0-0-0.pkl"
     })
 
     step = '1.2'

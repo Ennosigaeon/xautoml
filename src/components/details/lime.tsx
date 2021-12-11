@@ -98,7 +98,7 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
         if (component === undefined || idx === undefined)
             return
 
-        const promise = requestLimeApproximation(candidate.id, idx, meta.data_file, meta.model_dir, component)
+        const promise = requestLimeApproximation(candidate.model_file, idx, meta.data_file, component)
         this.setState({pendingRequest: promise, data: undefined, selectedLabel: undefined, error: undefined})
 
         promise

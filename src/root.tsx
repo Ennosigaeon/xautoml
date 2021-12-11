@@ -127,7 +127,10 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
                         </CollapseComp>
                         <CollapseComp showInitial={true} help={RocCurve.HELP}>
                             <h4>ROC Curve</h4>
-                            <RocCurve selectedCandidates={selectedCandidates} meta={runhistory.meta} height={300}/>
+                            <RocCurve selectedCandidates={selectedCandidates}
+                                      candidateMap={runhistory.candidateMap}
+                                      meta={runhistory.meta}
+                                      height={300}/>
                         </CollapseComp>
                     </div>
                     <div style={{flexGrow: 2}}>

@@ -72,7 +72,7 @@ export class RawDataset extends React.Component<RawDatasetProps, RawDatasetState
 
             // Outputs not cached yet
             this.setState({loadingDf: true})
-            requestOutputComplete(candidate.id, meta.data_file, meta.model_dir)
+            requestOutputComplete(candidate.model_file, meta.data_file)
                 .then(data => this.setState({outputs: data, loadingDf: false}))
                 .catch(error => {
                     console.error(`Failed to fetch output data: \n${error.name}: ${error.message}`);
@@ -103,7 +103,7 @@ export class RawDataset extends React.Component<RawDatasetProps, RawDatasetState
 from xautoml.util import io_utils
 
 ${ID}_X, _, ${ID}_feature_labels = io_utils.load_input_data('${meta.data_file}', framework='${meta.framework}')
-${ID}_pipeline = io_utils.load_pipeline('${meta.model_dir}', '${candidate.id}', framework='${meta.framework}')
+${ID}_pipeline = io_utils.load_pipeline('${candidate.model_file}', framework='${meta.framework}')
 
 ${ID}_df = io_utils.load_output_dataframe(${ID}_pipeline, '${component}', ${ID}_X, ${ID}_feature_labels)
 ${ID}_df

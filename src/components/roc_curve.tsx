@@ -1,5 +1,5 @@
 import React from "react";
-import {CandidateId, MetaInformation} from "../model";
+import {Candidate, CandidateId, MetaInformation} from "../model";
 import {CancelablePromise, CanceledPromiseError, requestRocCurve, RocCurveData} from "../handler";
 import {LoadingIndicator} from "./loading";
 import {ErrorIndicator} from "../util/error";
@@ -10,6 +10,7 @@ import {Colors} from "../util";
 interface RocCurveProps {
     selectedCandidates: Set<CandidateId>
     meta: MetaInformation
+    candidateMap: Map<CandidateId, Candidate>
 
     height: number
 }
@@ -40,8 +41,10 @@ export class RocCurve extends React.Component<RocCurveProps, RocCurveState> {
     }
 
     componentDidMount() {
-        if (this.props.selectedCandidates.size > 0)
-            this.queryROCCurve(Array.from(this.props.selectedCandidates))
+        if (this.props.selectedCandidates.size > 0) {
+            const cids = Array.from(this.props.selectedCandidates)
+            this.queryROCCurve(cids, cids.map(cid => this.props.candidateMap.get(cid).model_file))
+        }
     }
 
     componentDidUpdate(prevProps: Readonly<RocCurveProps>, prevState: Readonly<RocCurveState>, snapshot?: any) {
@@ -70,13 +73,13 @@ export class RocCurve extends React.Component<RocCurveProps, RocCurveState> {
 
             // Fetch new selected candidates
             if (newCandidates.length > 0) {
-                this.queryROCCurve(newCandidates)
+                this.queryROCCurve(newCandidates, newCandidates.map(cid => this.props.candidateMap.get(cid).model_file))
             }
         }
     }
 
-    private queryROCCurve(candidates: CandidateId[]) {
-        const promise = requestRocCurve(candidates, this.props.meta.data_file, this.props.meta.model_dir)
+    private queryROCCurve(candidates: CandidateId[], model_files: string[]) {
+        const promise = requestRocCurve(candidates, model_files, this.props.meta.data_file)
         this.setState({pendingRequest: promise, error: undefined, pendingCount: candidates.length})
 
         promise

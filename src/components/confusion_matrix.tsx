@@ -36,7 +36,7 @@ export class ConfusionMatrix extends React.Component<ConfusionMatrixProps, Confu
 
         const {model} = this.props
         this.setState({loadingCM: true})
-        requestConfusionMatrix(model.candidate.id, model.meta.data_file, model.meta.model_dir)
+        requestConfusionMatrix(model.candidate.model_file, model.meta.data_file)
             .then(data => this.setState({cm: data, loadingCM: false}))
             .catch(error => {
                 console.error(`Failed to fetch confusion matrix: \n${error.name}: ${error.message}`);

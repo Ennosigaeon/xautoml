@@ -192,7 +192,8 @@ export class Candidate {
                 public readonly budget: number,
                 public readonly loss: number,
                 public readonly runtime: Runtime,
-                public readonly config: Config) {
+                public readonly config: Config,
+                public readonly model_file: string) {
     }
 
     public static fromJson(candidate: Candidate): Candidate {
@@ -200,7 +201,7 @@ export class Candidate {
         Object.entries<string | number>(candidate.config as {})
             .forEach(k => config.set(k[0], k[1]));
 
-        return new Candidate(candidate.id, candidate.status, candidate.budget, candidate.loss, Runtime.fromJson(candidate.runtime), config)
+        return new Candidate(candidate.id, candidate.status, candidate.budget, candidate.loss, Runtime.fromJson(candidate.runtime), config, candidate.model_file)
     }
 
     subConfig(step: PipelineStep): Config {
@@ -226,7 +227,6 @@ export class MetaInformation {
                 public readonly n_structures: number,
                 public readonly n_configs: number,
                 public readonly iterations: {},
-                public readonly model_dir: string,
                 public readonly data_file: string,
                 public readonly bestPerformance: number,
                 public readonly worstPerformance: number,
@@ -238,7 +238,7 @@ export class MetaInformation {
         const worstPerformance = meta.is_minimization ? Math.max(...losses) : Math.min(...losses)
 
         return new MetaInformation('dswizard', meta.start_time, meta.end_time, meta.metric, meta.is_minimization,
-            meta.openml_task, meta.openml_fold, meta.n_structures, meta.n_configs, meta.iterations, meta.model_dir,
+            meta.openml_task, meta.openml_fold, meta.n_structures, meta.n_configs, meta.iterations,
             meta.data_file, bestPerformance, worstPerformance, new Map<string, ConfigValue>(Object.entries(meta.config)))
     }
 }
@@ -324,9 +324,12 @@ export class Structure {
 
 export class Runhistory {
 
+    public readonly candidateMap = new Map<CandidateId, Candidate>()
+
     constructor(public readonly meta: MetaInformation,
                 public readonly structures: Structure[],
                 public readonly explanations: Explanations) {
+        structures.map(s => s.configs.forEach(c => this.candidateMap.set(c.id, c)))
     }
 
     static fromJson(runhistory: Runhistory): Runhistory {

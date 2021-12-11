@@ -4,9 +4,8 @@ from xautoml.output import OutputCalculator, RAW
 
 def test_outputs():
     X, y, feature_labels, pipeline = OutputDescriptionHandler.load_model({
-        "cids": "00:00:00",
         "data_file": "/home/marc/phd/code/dswizard/scripts/run/168746/dataset.pkl",
-        "model_dir": "/home/marc/phd/code/dswizard/scripts/run/168746/models"
+        "model_files": "/home/marc/phd/code/dswizard/scripts/run/168746/models/models_0-0-0.pkl"
     })
 
     df_handler = OutputCalculator()

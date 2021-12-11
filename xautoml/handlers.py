@@ -1,6 +1,5 @@
 import json
 import multiprocessing
-import os
 import sys
 import traceback
 from typing import Optional, Awaitable
@@ -11,12 +10,13 @@ import pandas as pd
 import tornado.web
 from jupyter_server.base.handlers import APIHandler
 from jupyter_server.utils import url_path_join
+from sklearn.pipeline import Pipeline
 
 from xautoml.hp_importance import HPImportance
 from xautoml.model_details import ModelDetails, LimeResult, DecisionTreeResult
 from xautoml.output import OutputCalculator, DESCRIPTION, COMPLETE
 from xautoml.roc_auc import RocCurve
-from xautoml.util import internal_cid_name, pipeline_utils
+from xautoml.util import pipeline_utils
 from xautoml.util.async_queue import AsyncProcessQueue
 from xautoml.util.constants import SOURCE, SINK
 
@@ -97,22 +97,18 @@ class BaseHandler(APIHandler):
         return wrapper
 
     @staticmethod
-    def load_models(model) -> tuple[np.ndarray, np.ndarray, list[str], dict[str, any]]:
-        cids: list[str] = model.get('cids').split(',')
+    def load_models(model) -> tuple[np.ndarray, np.ndarray, list[str], list[Pipeline]]:
         data_file = model.get('data_file')
-        model_dir = model.get('model_dir')
+        model_files = model.get('model_files').split(',')
 
         with open(data_file, 'rb') as f:
             X, y, feature_labels = joblib.load(f)
 
-            model_names = map(lambda cid: os.path.join(model_dir, 'models_{}.pkl'.format(
-                internal_cid_name(cid).replace(":", "-"))), cids)
-
-        models = {}
-        for model_file, cid in zip(model_names, cids):
+        models = []
+        for model_file in model_files:
             try:
                 with open(model_file, 'rb') as f:
-                    models[cid] = joblib.load(f)
+                    models.append(joblib.load(f))
             except FileNotFoundError:
                 # Failed configurations do not have a model file
                 pass
@@ -123,7 +119,7 @@ class BaseHandler(APIHandler):
     def load_model(model):
         X, y, feature_labels, models = BaseHandler.load_models(model)
         assert len(models) == 1, 'Expected exactly 1 model, got {}'.format(len(models))
-        pipeline = models.popitem()[1]
+        pipeline = models[0]
         return X, y, feature_labels, pipeline
 
     def _get_intermediate_output(self, X, y, label, model, method):
@@ -164,10 +160,11 @@ class RocCurveHandler(BaseHandler):
     def _process_post(self, model):
         micro = model.get('micro', False)
         macro = model.get('macro', True)
+        cids = model.get('cids').split(',')
         X, y, _, models = self.load_models(model)
 
         result = {}
-        for cid, pipeline in models.items():
+        for cid, pipeline in zip(cids, models):
             try:
                 roc = RocCurve(micro=micro, macro=macro)
                 roc.score(pipeline, X, y, json=True)

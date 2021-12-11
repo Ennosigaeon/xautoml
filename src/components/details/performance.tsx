@@ -4,10 +4,12 @@ import {KeyValue} from "../../util/KeyValue";
 import {prettyPrint} from "../../util";
 import {ConfusionMatrix} from "../confusion_matrix";
 import {RocCurve} from "../roc_curve";
+import {Candidate, CandidateId} from "../../model";
 
 
 interface PerformanceComponentProps {
     model: DetailsModel
+    candidateMap: Map<CandidateId, Candidate>
 }
 
 export class PerformanceComponent extends React.Component<PerformanceComponentProps, {}> {
@@ -16,7 +18,7 @@ export class PerformanceComponent extends React.Component<PerformanceComponentPr
         'matrix for all classes is computed. Finally, the ROC curve for this candidate is displayed.'
 
     render() {
-        const {model} = this.props
+        const {model, candidateMap} = this.props
 
         return (
             <div style={{display: "flex"}}>
@@ -39,7 +41,10 @@ export class PerformanceComponent extends React.Component<PerformanceComponentPr
 
                 <div style={{flexGrow: 1, flexBasis: "40%"}}>
                     <h5>Receiver Operating Characteristic (ROC) Curve</h5>
-                    <RocCurve selectedCandidates={new Set([model.candidate.id])} meta={model.meta} height={200}/>
+                    <RocCurve selectedCandidates={new Set([model.candidate.id])}
+                              meta={model.meta}
+                              candidateMap={candidateMap}
+                              height={200}/>
                 </div>
             </div>
         )
