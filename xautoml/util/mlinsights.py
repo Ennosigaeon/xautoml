@@ -166,27 +166,27 @@ def alter_pipeline_for_debugging(pipe):
     """
 
     def transform(self, X, *args, **kwargs):
-        self._debug.inputs['transform'] = X
+        self._debug.inputs['transform'] = X.copy()
         y = self._debug.methods['transform'](self, X, *args, **kwargs)
-        self._debug.outputs['transform'] = y
+        self._debug.outputs['transform'] = y.copy()
         return y
 
     def predict(self, X, *args, **kwargs):
-        self._debug.inputs['predict'] = X
+        self._debug.inputs['predict'] = X.copy()
         y = self._debug.methods['predict'](self, X, *args, **kwargs)
-        self._debug.outputs['predict'] = y
+        self._debug.outputs['predict'] = y.copy()
         return y
 
     def predict_proba(self, X, *args, **kwargs):
-        self._debug.inputs['predict_proba'] = X
+        self._debug.inputs['predict_proba'] = X.copy()
         y = self._debug.methods['predict_proba'](self, X, *args, **kwargs)
-        self._debug.outputs['predict_proba'] = y
+        self._debug.outputs['predict_proba'] = y.copy()
         return y
 
     def decision_function(self, X, *args, **kwargs):
-        self._debug.inputs['decision_function'] = X
+        self._debug.inputs['decision_function'] = X.copy()
         y = self._debug.methods['decision_function'](self, X, *args, **kwargs)
-        self._debug.outputs['decision_function'] = y
+        self._debug.outputs['decision_function'] = y.copy()
         return y
 
     def get_feature_names_out(self, feature_names, *args, **kwargs):
