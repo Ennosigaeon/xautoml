@@ -33,7 +33,7 @@ export class SurrogateExplanation extends React.Component<SurrogateExplanationPr
         const {candidate, structure} = this.props
 
         const cs = structure.configspace
-        const relevantConfigs = structure.configs.filter(c => c.runtime.timestamp < candidate.runtime.timestamp)
+        const relevantConfigs = structure.equivalentConfigs.filter(c => c.runtime.timestamp < candidate.runtime.timestamp)
 
         const configs = relevantConfigs.map(c => {
             const obj: any = {}

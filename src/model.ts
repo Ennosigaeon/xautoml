@@ -314,10 +314,23 @@ export class Pipeline {
 
 export class Structure {
 
+    // auto-sklearn can produce different structures that, in reality, have all an identical config space.
+    // Aggregate candidates from those structures in this array
+    private allConfigs_: Candidate[]
+
     constructor(public readonly cid: CandidateId,
                 public readonly pipeline: Pipeline,
                 public readonly configspace: Config.ConfigSpace,
                 public readonly configs: Candidate[]) {
+        this.allConfigs_ = [...configs]
+    }
+
+    public get equivalentConfigs() {
+        return this.allConfigs_
+    }
+
+    public set equivalentConfigs(configs: Candidate[]) {
+        this.allConfigs_ = configs
     }
 
     static fromJson(structure: Structure, defaultConfigSpace: Config.ConfigSpace): Structure {
@@ -350,6 +363,10 @@ export class Runhistory {
             Config.ConfigSpace.fromJson(runhistory.default_configspace as any) : undefined
 
         const structures = runhistory.structures.map(s => Structure.fromJson(s, default_configspace))
+        const equivalentStructures = structures.filter(s => s.configspace === default_configspace)
+        const extendedCandidates = [].concat(...equivalentStructures.map(s => s.configs))
+        equivalentStructures.forEach(s => s.equivalentConfigs = extendedCandidates)
+
         const losses = [].concat(...structures.map(s => s.configs.map(c => c.loss)))
 
         return new Runhistory(MetaInformation.fromJson(runhistory.meta, losses),
