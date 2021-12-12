@@ -51,7 +51,7 @@ export namespace ParCord {
 
     export function yScale(choices: Array<cpc.Choice>, range: [number, number]): d3.ScaleBand<string> {
         const weights = choices.map(c => c.getHeightWeight() - 1)
-        const ids = [].concat(...choices.map((c, i) => [c.label, ...Array(...Array(weights[i])).map((_, j) => `_${c.label}_${j}_`)]))
+        const ids = [].concat(...choices.map((c, i) => [c.value, ...Array(...Array(weights[i])).map((_, j) => `_${c.value}_${j}_`)]))
 
         return d3.scaleBand(ids, range)
     }
@@ -77,7 +77,7 @@ export namespace ParCord {
                 hp.subParameters.forEach(child => {
                     conditions.filter(con => con.parent === hp.name && con.child === child.name)[0].values
                         .forEach(v =>
-                            choices.filter(c => c.label === v)
+                            choices.filter(c => c.value === v)
                                 .forEach(c => c.axes.push(parseHyperparameter(step, component, child, conditions)))
                         )
                 })

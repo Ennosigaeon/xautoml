@@ -120,10 +120,13 @@ export class Choice {
     private collapsed: boolean
 
     constructor(
-        public readonly label: ConfigValue,
+        public readonly value: ConfigValue,
         public readonly axes: Array<Axis> = new Array<Axis>(),
-        public readonly collapsible: boolean = true) {
+        public readonly collapsible: boolean = true,
+        public readonly label?: ConfigValue) {
         this.collapsed = collapsible
+        if (!label)
+            this.label = value
     }
 
     collapse() {
@@ -166,7 +169,7 @@ export class Choice {
         const x = xRange[0]
         const width = xRange[1] - xRange[0]
 
-        const y = yScale(this.label.toString())
+        const y = yScale(this.value.toString())
         const height = this.getHeightWeight() * yScale.bandwidth()
         this.layout_ = new Layout(x, y, width, height, yScale)
 
@@ -251,7 +254,7 @@ export class Line {
 
     intersects(axis: Axis, filter: Choice | [number, number]): boolean {
         if (filter instanceof Choice)
-            return this.choices.has(`${axis.id}_${filter.label}`)
+            return this.choices.has(`${axis.id}_${filter.value}`)
         else {
             const value = this.pointMap.get(axis.id) as number
             return filter[0] <= value && value < filter[1]

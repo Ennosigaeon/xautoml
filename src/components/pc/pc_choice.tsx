@@ -2,6 +2,7 @@ import * as cpc from "./model";
 import React from "react";
 import {PCAxis} from "./pc_axis";
 import {Constants} from "./constants";
+import {prettyPrint} from "../../util";
 
 interface CPCPChoiceProps {
     choice: cpc.Choice
@@ -80,7 +81,7 @@ export class PCChoice extends React.Component<CPCPChoiceProps, {}> {
                                                  r={Constants.CIRCLE_SIZE}/>}
                 <text x={centeredX}
                       y={centeredY}
-                      transform={`rotate(${Constants.TEXT_ROTATION}, ${centeredX}, ${centeredY})`}>{choice.label.toString()}</text>
+                      transform={`rotate(${Constants.TEXT_ROTATION}, ${centeredX}, ${centeredY})`}>{prettyPrint(choice.label)}</text>
 
                 {!choice.isCollapsed() && <>
                     {parent && <rect x={x} y={y} width={width} height={height} onClick={this.collapse}

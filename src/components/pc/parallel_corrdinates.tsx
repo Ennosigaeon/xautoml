@@ -134,7 +134,7 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
         // Estimate height based on maximum number of choices in all coordinates
         const maxNodes = Math.max(...this.root.axes.map(a => a.getHeightWeight()))
         const height = this.NODE_HEIGHT * maxNodes
-        const yScale = d3.scaleBand([this.root.label.toString()], [0, height / this.root.getHeightWeight()])
+        const yScale = d3.scaleBand([this.root.value.toString()], [0, height / this.root.getHeightWeight()])
         this.root.layout([0, width], yScale)
 
         return (
