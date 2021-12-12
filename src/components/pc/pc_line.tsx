@@ -61,6 +61,12 @@ export class PCLine extends React.Component<PCLineProps, PCLineStats> {
 
         line.points.map(point => {
             const axis = model.getAxis(point.axis)
+            if (axis === undefined) {
+                // Should not happen. Maybe rendering different structures at once
+                console.log(`Failed to find axis ${point.axis} in line ${line.id}. Skipping this point.`)
+                return
+            }
+
             const layout = axis.getLayout()
             if (!layout)
                 // Don't render axis that are not visible

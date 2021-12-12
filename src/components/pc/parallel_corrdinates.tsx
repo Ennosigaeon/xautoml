@@ -34,7 +34,7 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
         'represents a single selected configuration. Configurations can be selected via brushing numerical axes, ' +
         'hovering categorical values or clicking/hovering single lines.'
 
-    private readonly NODE_HEIGHT = 65
+    private readonly NODE_HEIGHT = 55
     private readonly root: cpc.Choice;
 
     private svg: React.RefObject<SVGSVGElement> = React.createRef<SVGSVGElement>()
