@@ -2,6 +2,7 @@ import React from "react";
 import {ConfigValue, MetaInformation, Runhistory} from "../model";
 import {CollapseComp} from "../util/collapse";
 import {KeyValue} from "../util/KeyValue";
+import {prettyPrint} from "../util";
 
 interface MetaInformationProps {
     meta: MetaInformation
@@ -41,7 +42,7 @@ export default class MetaInformationTable extends React.Component<MetaInformatio
                     <>
                         {configValues.map(([key, value]) =>
                             <div className={'overview-row'} key={key}>
-                                {key}: {value.toString()}
+                                {key}: {prettyPrint(value)}
                             </div>
                         )}
                     </>
