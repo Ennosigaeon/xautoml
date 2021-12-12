@@ -12,6 +12,33 @@ from sklearn.compose import ColumnTransformer, TransformedTargetRegressor
 from sklearn.pipeline import Pipeline, FeatureUnion
 
 
+class AutoSklearnUtils:
+
+    @staticmethod
+    def isFeatTypeSplit(pipe):
+        try:
+            from autosklearn.pipeline.components.data_preprocessing.feature_type import FeatTypeSplit
+            return isinstance(pipe, FeatTypeSplit)
+        except ImportError:
+            return False
+
+    @staticmethod
+    def isChoice(pipe):
+        try:
+            from autosklearn.pipeline.components.base import AutoSklearnChoice
+            return isinstance(pipe, AutoSklearnChoice)
+        except ImportError:
+            return False
+
+    @staticmethod
+    def isDataPreprocessorChoice(pipe):
+        try:
+            from autosklearn.pipeline.components.data_preprocessing import DataPreprocessorChoice
+            return isinstance(pipe, DataPreprocessorChoice)
+        except ImportError:
+            return False
+
+
 def enumerate_pipeline_models(pipe, coor=None, vs=None):
     """
     Enumerates all the models within a pipeline.
@@ -63,6 +90,14 @@ def enumerate_pipeline_models(pipe, coor=None, vs=None):
         elif isinstance(pipe, FeatureUnion):
             for i, (_, model) in enumerate(pipe.transformer_list):
                 for couple in enumerate_pipeline_models(model, coor + (i,)):
+                    yield couple
+        elif AutoSklearnUtils.isChoice(pipe):
+            for choice in enumerate_pipeline_models(pipe.choice, coor + (0,)):
+                yield choice
+        elif AutoSklearnUtils.isFeatTypeSplit(pipe):
+            for i, (_, fitted_transformer, column) in enumerate(pipe.column_transformer.transformers_):
+                for couple in enumerate_pipeline_models(
+                    fitted_transformer, coor + (i,), column):
                     yield couple
         elif isinstance(pipe, TransformedTargetRegressor):
             raise NotImplementedError(  # pragma: no cover
@@ -234,6 +269,13 @@ def get_component(coordinate: Tuple[int], step):
             step_name = update_name(n)
         elif isinstance(step, FeatureUnion):
             n, step = step.transformer_list[idx]
+            step_name = update_name(n)
+        elif AutoSklearnUtils.isChoice(step):
+            if AutoSklearnUtils.isDataPreprocessorChoice(step):
+                step_name = update_name(step.choice.__class__.__module__.split('.')[-1])
+            step = step.choice
+        elif AutoSklearnUtils.isFeatTypeSplit(step):
+            n, step, _ = step.column_transformer.transformers_[idx]
             step_name = update_name(n)
         else:
             raise ValueError(f'Unknown component {step}')

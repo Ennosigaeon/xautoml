@@ -23,7 +23,7 @@ class OutputCalculator:
                 return pd.DataFrame()
 
         data = d['predict'] if 'predict' in d else d['transform']
-        feature_names = d['get_feature_names_out']
+        feature_names = d.get('get_feature_names_out', None)
 
         df = pd.DataFrame(data, columns=feature_names)
         if method == COMPLETE:
@@ -44,7 +44,10 @@ class OutputCalculator:
             warnings.simplefilter("ignore", UserWarning)
             alter_pipeline_for_debugging(pipeline)
             pipeline.predict(X)
-            pipeline.get_feature_names_out(feature_labels)
+            try:
+                pipeline.get_feature_names_out(feature_labels)
+            except AttributeError:
+                pass
 
             inputs = {}
             outputs = {}

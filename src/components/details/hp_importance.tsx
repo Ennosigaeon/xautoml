@@ -213,12 +213,12 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
         this.setState({error: undefined});
 
         const cs = structure.configspace
-        const configs = structure.equivalentConfigs.map(c => {
+        const configs = structure.configs.map(c => {
             const obj: any = {}
             c.config.forEach((v, k) => obj[k] = v)
             return obj
         })
-        const loss = structure.equivalentConfigs.map(c => c.loss)
+        const loss = structure.configs.map(c => c.loss)
 
         requestFANOVA(cs, configs, loss, component)
             .then(resp => {

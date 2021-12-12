@@ -65,6 +65,7 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
 
         return (
             <>
+                {/* TODO samples not correctly assembled for auto-sklearn*/}
                 <CollapseComp showInitial={true}>
                     <h4>Search Space Overview</h4>
                     {explanations.structures &&
@@ -84,6 +85,7 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
                     </TwoColumnLayout>
                 </CollapseComp>
 
+                {/* TODO: breaks for auto-sklearn*/}
                 <CollapseComp showInitial={true} help={HPImportanceComp.HELP}>
                     <h4>Hyperparameter Importance of {Components.isPipEnd(model.component) ? <>All Components</> :
                         <i>{model.algorithm} ({model.component})</i>}</h4>
