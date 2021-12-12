@@ -313,11 +313,16 @@ export class Structure {
                 public readonly configs: Candidate[]) {
     }
 
-    static fromJson(structure: Structure): Structure {
+    static fromJson(structure: Structure, defaultConfigSpace: Config.ConfigSpace): Structure {
         // raw pipeline data is list of tuple and not object
         const pipeline = Pipeline.fromJson(structure.pipeline as any)
         const configs = structure.configs.map(c => Candidate.fromJson(c))
-        const configSpace = Config.ConfigSpace.fromJson(structure.configspace as any)
+        const configSpace = structure.configspace ?
+            Config.ConfigSpace.fromJson(structure.configspace as any) : defaultConfigSpace
+
+        if (!configSpace)
+            throw new Error(`Neither configspace nor default_configspace provided for structure ${structure.cid}`)
+
         return new Structure(structure.cid, pipeline, configSpace, configs)
     }
 }
@@ -328,16 +333,21 @@ export class Runhistory {
 
     constructor(public readonly meta: MetaInformation,
                 public readonly structures: Structure[],
-                public readonly explanations: Explanations) {
+                public readonly explanations: Explanations,
+                private readonly default_configspace: Config.ConfigSpace) {
         structures.map(s => s.configs.forEach(c => this.candidateMap.set(c.id, c)))
     }
 
     static fromJson(runhistory: Runhistory): Runhistory {
-        const structures = runhistory.structures.map(s => Structure.fromJson(s))
+        const default_configspace = runhistory.default_configspace ?
+            Config.ConfigSpace.fromJson(runhistory.default_configspace as any) : undefined
+
+        const structures = runhistory.structures.map(s => Structure.fromJson(s, default_configspace))
         const losses = [].concat(...structures.map(s => s.configs.map(c => c.loss)))
 
         return new Runhistory(MetaInformation.fromJson(runhistory.meta, losses),
             structures,
-            Explanations.fromJson(runhistory.explanations))
+            Explanations.fromJson(runhistory.explanations),
+            default_configspace)
     }
 }
