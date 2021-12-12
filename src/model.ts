@@ -30,9 +30,12 @@ export namespace Config {
         }
 
         getHyperparameters(name: string): HyperParameter[] {
-            return this.hyperparameters
-                .filter(hp => hp.name.split(':').filter(t => t === name).length > 0)
-                .filter(hp => this.conditions.filter(con => con.child === hp.name).length === 0)
+            const candidates = this.hyperparameters
+                .filter(hp => hp.name.startsWith(name))
+            const names = new Set<string>(candidates.map(c => c.name))
+
+            return candidates
+                .filter(hp => this.conditions.filter(con => con.child === hp.name && names.has(con.parent)).length === 0)
         }
     }
 
@@ -245,12 +248,16 @@ export class MetaInformation {
 
 export class PipelineStep {
 
+    public readonly name: string
     public readonly label: string
     public readonly edgeLabels: Map<string, string>
 
     constructor(public readonly id: string, public readonly clazz: string, public readonly parentIds: string[]) {
         this.label = normalizeComponent(this.clazz)
         this.edgeLabels = new Map<string, string>()
+
+        const tokens = this.id.split(':')
+        this.name = tokens[tokens.length - 1]
     }
 }
 
@@ -260,7 +267,7 @@ export class Pipeline {
     }
 
     static fromJson(pipeline: any): Pipeline {
-        const [steps] = this.loadSingleStep('', pipeline, [])
+        const [steps] = this.loadSingleStep(undefined, pipeline, [])
         return new Pipeline(steps)
     }
 
@@ -270,8 +277,8 @@ export class Pipeline {
             let parents_: string[] = parents;
             const steps: PipelineStep[] = [];
             (step.args.steps as [string, any][])
-                .forEach(([id, subStep]) => {
-                        const res = this.loadSingleStep(id, subStep, parents_)
+                .forEach(([subId, subStep]) => {
+                        const res = this.loadSingleStep(id ? `${id}:${subId}` : subId, subStep, parents_)
                         steps.push(...res[0])
                         parents_ = res[1]
                     }
@@ -281,9 +288,9 @@ export class Pipeline {
             const steps: PipelineStep[] = [];
             const outParents: string[] = [];
             (step.args.transformers as [string, any, any][])
-                .forEach(([id, subPath, columns]) => {
-                    const [childSteps, newParents] = this.loadSingleStep(id, subPath, parents)
-                    childSteps[0].edgeLabels.set(id, columns.toString()) // At least one child always have to be present
+                .forEach(([subId, subPath, columns]) => {
+                    const [childSteps, newParents] = this.loadSingleStep(`${id}:${subId}`, subPath, parents)
+                    childSteps[0].edgeLabels.set(subId, columns.toString()) // At least one child always have to be present
                     steps.push(...childSteps)
                     outParents.push(...newParents)
                 })
@@ -292,15 +299,15 @@ export class Pipeline {
             const steps: PipelineStep[] = [];
             const outParents: string[] = [];
             (step.args.transformer_list as [string, any][])
-                .forEach(([id, subPath]) => {
-                    const [childSteps, newParents] = this.loadSingleStep(id, subPath, parents)
-                    childSteps[0].edgeLabels.set(id, 'all') // At least one child always have to be present
+                .forEach(([subId, subPath]) => {
+                    const [childSteps, newParents] = this.loadSingleStep(`${id}:${subId}`, subPath, parents)
+                    childSteps[0].edgeLabels.set(subId, 'all') // At least one child always have to be present
                     steps.push(...childSteps)
                     outParents.push(...newParents)
                 })
             return [steps, outParents]
         } else {
-            return [[new PipelineStep(id, step.clazz, parents)], [id]]
+            return [[new PipelineStep(id ? id : '', step.clazz, parents)], [id]]
         }
     }
 }

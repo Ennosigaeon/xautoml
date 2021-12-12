@@ -221,14 +221,20 @@ def alter_pipeline_for_debugging(pipe):
 
 
 def get_component(coordinate: Tuple[int], step):
+    def update_name(name):
+        return name if step_name is None else '{}:{}'.format(step_name, name)
+
     step_name = None
     for idx in coordinate[1:]:
         if isinstance(step, Pipeline):
-            step_name, step = step.steps[idx]
+            n, step = step.steps[idx]
+            step_name = update_name(n)
         elif isinstance(step, ColumnTransformer):
-            step_name, step, _ = step.transformers_[idx]
+            n, step, _ = step.transformers_[idx]
+            step_name = update_name(n)
         elif isinstance(step, FeatureUnion):
-            step_name, step = step.transformer_list[idx]
+            n, step = step.transformer_list[idx]
+            step_name = update_name(n)
         else:
             raise ValueError(f'Unknown component {step}')
     return step_name, step
