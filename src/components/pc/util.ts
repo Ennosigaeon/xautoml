@@ -117,7 +117,7 @@ export namespace ParCord {
             structure.pipeline.steps.map((step, idx) => {
                 points.push(new cpc.LinePoint(`${idx}`, step.label))
 
-                candidate.subConfig(step)
+                candidate.subConfig(step, false)
                     .forEach((value: ConfigValue, key: string) => {
                         points.push(new cpc.LinePoint(getId(idx, step.label, key), value))
                     })

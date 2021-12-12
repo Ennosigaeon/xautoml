@@ -204,13 +204,13 @@ export class Candidate {
         return new Candidate(candidate.id, candidate.status, candidate.budget, candidate.loss, Runtime.fromJson(candidate.runtime), config, candidate.model_file)
     }
 
-    subConfig(step: PipelineStep): Config {
+    subConfig(step: PipelineStep, prune: boolean): Config {
         const subConfig = new Map<string, ConfigValue>()
         Array.from(this.config.keys())
-            .filter(k => k.split(':').filter(t => t === step.id).length > 0)
+            .filter(k => k.startsWith(step.id))
             .forEach(key => {
                 const tokens = key.split(':')
-                subConfig.set(tokens[tokens.length - 1], this.config.get(key))
+                subConfig.set(prune ? tokens[tokens.length - 1] : key, this.config.get(key))
             })
         return subConfig
     }

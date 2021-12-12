@@ -167,7 +167,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
         const root = new StepWithConfig(Components.SOURCE, 'Source', [], new Map<string, ConfigValue>())
         const nodes = [root]
         pipeline.steps.forEach(step => {
-            const subConfig = candidate.subConfig(step)
+            const subConfig = candidate.subConfig(step, true)
             const node = StepWithConfig.fromStep(step, subConfig)
             if (node.parentIds.length === 0)
                 node.parentIds.push(root.id)
