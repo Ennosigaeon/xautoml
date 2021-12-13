@@ -28,9 +28,8 @@ export class PCChoice extends React.Component<CPCPChoiceProps, {}> {
 
     private expand(e: React.MouseEvent) {
         const {choice, onExpand} = this.props
-        if (choice.isExpandable()) {
+        if (choice.isExpandable())
             onExpand(choice)
-        }
 
         e.preventDefault()
         e.stopPropagation()
@@ -48,21 +47,12 @@ export class PCChoice extends React.Component<CPCPChoiceProps, {}> {
         e.stopPropagation()
     }
 
-    private highlightLines(e: React.MouseEvent) {
-        this.processHighlight(e, this.props.parent, this.props.choice)
+    private highlightLines() {
+        this.props.onHighlight(this.props.parent, this.props.choice)
     }
 
-    private hideHighlightLines(e: React.MouseEvent) {
-        this.processHighlight(e, this.props.parent, undefined)
-    }
-
-    private processHighlight(e: React.MouseEvent, axis: cpc.Axis, choice: cpc.Choice) {
-        if (axis !== undefined) {
-            this.props.onHighlight(axis, choice)
-
-            e.stopPropagation()
-            e.preventDefault()
-        }
+    private hideHighlightLines() {
+        this.props.onHighlight(this.props.parent, undefined)
     }
 
     render() {

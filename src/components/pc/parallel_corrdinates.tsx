@@ -19,8 +19,7 @@ interface PCProps {
 
 interface PCState {
     model: cpc.Model
-    normalLines: cpc.Line[]
-    highlightedLines: cpc.Line[]
+    highlightedLines: Set<string>
     container: React.RefObject<any>
     filter: Map<cpc.Axis, cpc.Choice | [number, number]>
 }
@@ -55,11 +54,10 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
 
         const model = ParCord.parseRunhistory(this.props.meta, this.props.structures, candidates, this.props.explanation)
         const filter = new Map<cpc.Axis, cpc.Choice | [number, number]>()
-        const [highlights, normal] = this.calculateHighlightedLines(model.lines, filter)
+        const highlights = this.calculateHighlightedLines(model.lines, filter)
         this.state = {
             model: model,
             highlightedLines: highlights,
-            normalLines: normal,
             container: undefined,
             filter: filter
         }
@@ -76,8 +74,8 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
 
     componentDidUpdate(prevProps: Readonly<PCProps>, prevState: Readonly<PCState>, snapshot?: any) {
         if (prevProps.selectedCandidates.size !== this.props.selectedCandidates.size) {
-            const [highlights, normal] = this.calculateHighlightedLines(this.state.model.lines, this.state.filter)
-            this.setState({highlightedLines: highlights, normalLines: normal})
+            const highlights = this.calculateHighlightedLines(this.state.model.lines, this.state.filter)
+            this.setState({highlightedLines: highlights})
         }
     }
 
@@ -99,8 +97,8 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
         else
             this.state.filter.set(axis, filter)
 
-        const [highlights, normal] = this.calculateHighlightedLines(this.state.model.lines, this.state.filter)
-        this.setState({highlightedLines: highlights, normalLines: normal, filter: this.state.filter})
+        const highlights = this.calculateHighlightedLines(this.state.model.lines, this.state.filter)
+        this.setState({highlightedLines: highlights, filter: this.state.filter})
     }
 
     private calculateHighlightedLines(lines: cpc.Line[], filter: Map<cpc.Axis, cpc.Choice | [number, number]>) {
@@ -111,7 +109,7 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
             filter.forEach((value, key) => matches = (matches || matches === undefined) && l.intersects(key, value));
             (matches !== undefined && matches) || this.props.selectedCandidates.has(l.id) ? highlights.push(l) : normal.push(l)
         })
-        return [highlights, normal]
+        return new Set(highlights.map(l => l.id))
     }
 
     private updateContainer(container: React.RefObject<HTMLDivElement>) {
@@ -128,7 +126,7 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
     }
 
     public render() {
-        const {model, highlightedLines, normalLines, container} = this.state
+        const {model, highlightedLines, container} = this.state
         const width = (container && container.current) ? container.current.clientWidth : 0
 
         // Estimate height based on maximum number of choices in all coordinates
@@ -144,10 +142,9 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
                           onCollapse={this.onCollapse}
                           onExpand={this.onExpand}
                           onHighlight={this.highlightLines}/>
-                {normalLines.map(line => <PCLine key={line.id} model={model} line={line} highlight={false}
-                                                 onClick={this.onClickLine}/>)}
-                {highlightedLines.map(line => <PCLine key={line.id} model={model} line={line} highlight={true}
-                                                      onClick={this.onClickLine}/>)}
+                {this.state.model.lines.map(line => <PCLine key={line.id} model={model} line={line}
+                                                            highlight={highlightedLines.has(line.id)}
+                                                            onClick={this.onClickLine}/>)}
             </RefableFlexibleSvg>
         )
     }
