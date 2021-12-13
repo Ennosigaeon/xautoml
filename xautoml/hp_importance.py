@@ -5,9 +5,10 @@ from collections import defaultdict
 
 import numpy as np
 import pandas as pd
-from ConfigSpace import CategoricalHyperparameter, ConfigurationSpace
+from ConfigSpace import CategoricalHyperparameter, ConfigurationSpace, Configuration, Constant
 from ConfigSpace.hyperparameters import OrdinalHyperparameter, NumericalHyperparameter
 from ConfigSpace.read_and_write import json as config_json
+from ConfigSpace.util import impute_inactive_values
 from fanova import fANOVA, visualizer
 
 from xautoml.util.constants import NUMBER_PRECISION, SOURCE, SINK
@@ -18,7 +19,12 @@ class HPImportance:
     @staticmethod
     def calculate_fanova_overview(f: fANOVA, X: pd.DataFrame, step: str = None, n_head: int = 14):
         res = {}
-        for i, j in it.combinations(range(len(X.columns)), 2):
+
+        keys = list(zip(range(len(X.columns)), range(len(X.columns))))
+        if len(keys) < 20:
+            keys = keys + list(it.combinations(range(len(X.columns)), 2))
+
+        for i, j in keys:
             d = f.quantify_importance((i, j))
             res[(i, i)] = {
                 'importance': d[(i,)]['individual importance'],
@@ -56,7 +62,10 @@ class HPImportance:
             df = df.head(n_head)
 
         return {
-            'hyperparameters': X.columns.tolist(),
+            'hyperparameters': list(
+                map(lambda n: n.replace('data_preprocessor:feature_type:numerical_transformer:', ''),
+                    X.columns.tolist())
+            ),
             'keys': df.index.tolist(),
             'importance': df[['importance', 'std', 'idx']].to_dict('records'),
         }
@@ -67,8 +76,9 @@ class HPImportance:
             vis = visualizer.Visualizer(f, f.cs, tmp)
 
             if keys is None:
-                keys = list(zip(range(len(X.columns)), range(len(X.columns)))) + \
-                       list(it.combinations(range(len(X.columns)), 2))
+                keys = list(zip(range(len(X.columns)), range(len(X.columns))))
+                if len(keys) < 20:
+                    keys = keys + list(it.combinations(range(len(X.columns)), 2))
 
             res: dict[int, dict[int, dict]] = defaultdict(dict)
             for i, j in keys:
@@ -161,24 +171,24 @@ class HPImportance:
     def load_model(model):
         cs = model['configspace']
 
+        constants = set()
+
         if 'name' in cs:
             config_space = ConfigurationSpace(name=cs['name'])
         else:
             config_space = ConfigurationSpace()
         for hyperparameter in cs['hyperparameters']:
-            config_space.add_hyperparameter(config_json._construct_hyperparameter(
-                hyperparameter,
-            ))
+            hp = config_json._construct_hyperparameter(hyperparameter)
+            if isinstance(hp, Constant):
+                constants.add(hp.name)
+            else:
+                config_space.add_hyperparameter(hp)
         for condition in cs['conditions']:
-            config_space.add_condition(config_json._construct_condition(
-                condition, config_space,
-            ))
-        for forbidden in cs['forbiddens']:
-            config_space.add_forbidden_clause(config_json._construct_forbidden(
-                forbidden, config_space,
-            ))
+            if condition['child'] in constants or condition['parent'] in constants:
+                continue
+            config_space.add_condition(config_json._construct_condition(condition, config_space))
 
-        return HPImportance._construct_fanova(config_space, model['configs'], model['loss'])
+        return HPImportance._construct_fanova(config_space, model['configs'], model['loss'], constants)
 
     @staticmethod
     def load_file(runhistory_file: str, before: float = np.Infinity):
@@ -189,16 +199,36 @@ class HPImportance:
             configs = [c['config'] for c in model['configs'] if c['runtime']['timestamp'] < before]
             performances = [c['loss'] for c in model['configs'] if c['runtime']['timestamp'] < before]
 
-        return HPImportance._construct_fanova(cs, configs, performances)
+        return HPImportance._construct_fanova(cs, configs, performances, set())
 
     @staticmethod
-    def _construct_fanova(cs: ConfigurationSpace, configs: list[dict], performances: list[float]):
-        X = pd.DataFrame(configs, columns=cs.get_hyperparameter_names())
+    def _construct_fanova(cs: ConfigurationSpace, configs: list[dict], performances: list[float], constants: set[str]):
+        def prep_config(c: dict):
+            c = {key: value for key, value in c.items() if key not in constants}
+            conf = impute_inactive_values(Configuration(cs, c))
+            return conf.get_dictionary()
+
+        configs_ = [prep_config(c) for c in configs]
+
+        X = pd.DataFrame(configs_, columns=cs.get_hyperparameter_names())
         y = np.array(performances)
 
-        cat_hp = [hp for hp in cs.get_hyperparameters() if isinstance(hp, CategoricalHyperparameter)]
-        for hp in cat_hp:
-            X[hp.name] = X[hp.name].map(hp._inverse_transform)
+        pruned_cs = ConfigurationSpace()
+        for hp in cs.get_hyperparameters():
+            if isinstance(hp, CategoricalHyperparameter):
+                X[hp.name] = X[hp.name].map(hp._inverse_transform)
 
-        f = fANOVA(X, y, config_space=cs)
+            if X[hp.name].nunique() == 1:
+                X.drop(hp.name, axis=1, inplace=True)
+            else:
+                pruned_cs.add_hyperparameter(hp)
+
+        for condition in cs.get_conditions():
+            try:
+                pruned_cs.add_condition(condition)
+            except ValueError:
+                # Either parent or child hp was pruned from cs
+                pass
+
+        f = fANOVA(X, y, config_space=pruned_cs)
         return f, X

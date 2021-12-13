@@ -30,9 +30,12 @@ export namespace Config {
         }
 
         getHyperparameters(name: string): HyperParameter[] {
-            return this.hyperparameters
-                .filter(hp => hp.name.split(':').filter(t => t === name).length > 0)
-                .filter(hp => this.conditions.filter(con => con.child === hp.name).length === 0)
+            const candidates = this.hyperparameters
+                .filter(hp => hp.name.startsWith(name))
+            const names = new Set<string>(candidates.map(c => c.name))
+
+            return candidates
+                .filter(hp => this.conditions.filter(con => con.child === hp.name && names.has(con.parent)).length === 0)
         }
     }
 
@@ -204,13 +207,13 @@ export class Candidate {
         return new Candidate(candidate.id, candidate.status, candidate.budget, candidate.loss, Runtime.fromJson(candidate.runtime), config, candidate.model_file)
     }
 
-    subConfig(step: PipelineStep): Config {
+    subConfig(step: PipelineStep, prune: boolean): Config {
         const subConfig = new Map<string, ConfigValue>()
         Array.from(this.config.keys())
-            .filter(k => k.split(':').filter(t => t === step.id).length > 0)
+            .filter(k => k.startsWith(step.id))
             .forEach(key => {
                 const tokens = key.split(':')
-                subConfig.set(tokens[tokens.length - 1], this.config.get(key))
+                subConfig.set(prune ? tokens[tokens.length - 1] : key, this.config.get(key))
             })
         return subConfig
     }
@@ -245,12 +248,16 @@ export class MetaInformation {
 
 export class PipelineStep {
 
+    public readonly name: string
     public readonly label: string
     public readonly edgeLabels: Map<string, string>
 
     constructor(public readonly id: string, public readonly clazz: string, public readonly parentIds: string[]) {
         this.label = normalizeComponent(this.clazz)
         this.edgeLabels = new Map<string, string>()
+
+        const tokens = this.id.split(':')
+        this.name = tokens[tokens.length - 1]
     }
 }
 
@@ -260,7 +267,7 @@ export class Pipeline {
     }
 
     static fromJson(pipeline: any): Pipeline {
-        const [steps] = this.loadSingleStep('', pipeline, [])
+        const [steps] = this.loadSingleStep(undefined, pipeline, [])
         return new Pipeline(steps)
     }
 
@@ -270,8 +277,8 @@ export class Pipeline {
             let parents_: string[] = parents;
             const steps: PipelineStep[] = [];
             (step.args.steps as [string, any][])
-                .forEach(([id, subStep]) => {
-                        const res = this.loadSingleStep(id, subStep, parents_)
+                .forEach(([subId, subStep]) => {
+                        const res = this.loadSingleStep(id ? `${id}:${subId}` : subId, subStep, parents_)
                         steps.push(...res[0])
                         parents_ = res[1]
                     }
@@ -281,9 +288,9 @@ export class Pipeline {
             const steps: PipelineStep[] = [];
             const outParents: string[] = [];
             (step.args.transformers as [string, any, any][])
-                .forEach(([id, subPath, columns]) => {
-                    const [childSteps, newParents] = this.loadSingleStep(id, subPath, parents)
-                    childSteps[0].edgeLabels.set(id, columns.toString()) // At least one child always have to be present
+                .forEach(([subId, subPath, columns]) => {
+                    const [childSteps, newParents] = this.loadSingleStep(`${id}:${subId}`, subPath, parents)
+                    childSteps[0].edgeLabels.set(subId, columns.toString()) // At least one child always have to be present
                     steps.push(...childSteps)
                     outParents.push(...newParents)
                 })
@@ -292,32 +299,50 @@ export class Pipeline {
             const steps: PipelineStep[] = [];
             const outParents: string[] = [];
             (step.args.transformer_list as [string, any][])
-                .forEach(([id, subPath]) => {
-                    const [childSteps, newParents] = this.loadSingleStep(id, subPath, parents)
-                    childSteps[0].edgeLabels.set(id, 'all') // At least one child always have to be present
+                .forEach(([subId, subPath]) => {
+                    const [childSteps, newParents] = this.loadSingleStep(`${id}:${subId}`, subPath, parents)
+                    childSteps[0].edgeLabels.set(subId, 'all') // At least one child always have to be present
                     steps.push(...childSteps)
                     outParents.push(...newParents)
                 })
             return [steps, outParents]
         } else {
-            return [[new PipelineStep(id, step.clazz, parents)], [id]]
+            return [[new PipelineStep(id ? id : '', step.clazz, parents)], [id]]
         }
     }
 }
 
 export class Structure {
 
+    // auto-sklearn can produce different structures that, in reality, have all an identical config space.
+    // Aggregate candidates from those structures in this array
+    private allConfigs_: Candidate[]
+
     constructor(public readonly cid: CandidateId,
                 public readonly pipeline: Pipeline,
                 public readonly configspace: Config.ConfigSpace,
                 public readonly configs: Candidate[]) {
+        this.allConfigs_ = [...configs]
     }
 
-    static fromJson(structure: Structure): Structure {
+    public get equivalentConfigs() {
+        return this.allConfigs_
+    }
+
+    public set equivalentConfigs(configs: Candidate[]) {
+        this.allConfigs_ = configs
+    }
+
+    static fromJson(structure: Structure, defaultConfigSpace: Config.ConfigSpace): Structure {
         // raw pipeline data is list of tuple and not object
         const pipeline = Pipeline.fromJson(structure.pipeline as any)
         const configs = structure.configs.map(c => Candidate.fromJson(c))
-        const configSpace = Config.ConfigSpace.fromJson(structure.configspace as any)
+        const configSpace = structure.configspace ?
+            Config.ConfigSpace.fromJson(structure.configspace as any) : defaultConfigSpace
+
+        if (!configSpace)
+            throw new Error(`Neither configspace nor default_configspace provided for structure ${structure.cid}`)
+
         return new Structure(structure.cid, pipeline, configSpace, configs)
     }
 }
@@ -328,16 +353,25 @@ export class Runhistory {
 
     constructor(public readonly meta: MetaInformation,
                 public readonly structures: Structure[],
-                public readonly explanations: Explanations) {
+                public readonly explanations: Explanations,
+                private readonly default_configspace: Config.ConfigSpace) {
         structures.map(s => s.configs.forEach(c => this.candidateMap.set(c.id, c)))
     }
 
     static fromJson(runhistory: Runhistory): Runhistory {
-        const structures = runhistory.structures.map(s => Structure.fromJson(s))
+        const default_configspace = runhistory.default_configspace ?
+            Config.ConfigSpace.fromJson(runhistory.default_configspace as any) : undefined
+
+        const structures = runhistory.structures.map(s => Structure.fromJson(s, default_configspace))
+        const equivalentStructures = structures.filter(s => s.configspace === default_configspace)
+        const extendedCandidates = [].concat(...equivalentStructures.map(s => s.configs))
+        equivalentStructures.forEach(s => s.equivalentConfigs = extendedCandidates)
+
         const losses = [].concat(...structures.map(s => s.configs.map(c => c.loss)))
 
         return new Runhistory(MetaInformation.fromJson(runhistory.meta, losses),
             structures,
-            Explanations.fromJson(runhistory.explanations))
+            Explanations.fromJson(runhistory.explanations),
+            default_configspace)
     }
 }

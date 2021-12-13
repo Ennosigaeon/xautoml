@@ -4,7 +4,7 @@ import {IRenderMime} from "@jupyterlab/rendermime-interfaces";
 import {CandidateId, Runhistory} from "./model";
 import MetaInformationTable from "./components/meta_information";
 import PerformanceTimeline from "./components/performance_timeline";
-import {catchReactWarnings, Colors, JupyterContext} from "./util";
+import {Colors, JupyterContext} from "./util";
 import {RocCurve} from "./components/roc_curve";
 import {BanditExplanationsComponent} from "./components/bandit_explanation";
 import {CandidateTable} from "./components/candidate_table";
@@ -36,7 +36,6 @@ export class JupyterWidget extends ReactWidget implements IRenderMime.IRenderer 
         this.jupyter = jupyter
 
         this.addClass(CLASS_NAME);
-        catchReactWarnings()
     }
 
     renderModel(model: IRenderMime.IMimeModel): Promise<void> {

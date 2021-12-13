@@ -61,6 +61,12 @@ export class PCLine extends React.Component<PCLineProps, PCLineStats> {
 
         line.points.map(point => {
             const axis = model.getAxis(point.axis)
+            if (axis === undefined) {
+                // Should not happen. Maybe rendering different structures at once
+                console.log(`Failed to find axis ${point.axis} in line ${line.id}. Skipping this point.`)
+                return
+            }
+
             const layout = axis.getLayout()
             if (!layout)
                 // Don't render axis that are not visible
@@ -75,7 +81,7 @@ export class PCLine extends React.Component<PCLineProps, PCLineStats> {
                 if (axis.isNumerical()) {
                     y = (yScale as d3.ScaleContinuousNumeric<number, number>)(point.value as number)
                 } else {
-                    const choice = axis.choices.filter(c => c.label == point.value).pop()
+                    const choice = axis.choices.filter(c => c.value == point.value).pop()
                     if (!choice.isCollapsed())
                         // Don't render axis that are expanded
                         return

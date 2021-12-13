@@ -34,7 +34,7 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
         'represents a single selected configuration. Configurations can be selected via brushing numerical axes, ' +
         'hovering categorical values or clicking/hovering single lines.'
 
-    private readonly NODE_HEIGHT = 65
+    private readonly NODE_HEIGHT = 55
     private readonly root: cpc.Choice;
 
     private svg: React.RefObject<SVGSVGElement> = React.createRef<SVGSVGElement>()
@@ -134,7 +134,7 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
         // Estimate height based on maximum number of choices in all coordinates
         const maxNodes = Math.max(...this.root.axes.map(a => a.getHeightWeight()))
         const height = this.NODE_HEIGHT * maxNodes
-        const yScale = d3.scaleBand([this.root.label.toString()], [0, height / this.root.getHeightWeight()])
+        const yScale = d3.scaleBand([this.root.value.toString()], [0, height / this.root.getHeightWeight()])
         this.root.layout([0, width], yScale)
 
         return (

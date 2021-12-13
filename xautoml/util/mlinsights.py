@@ -12,6 +12,33 @@ from sklearn.compose import ColumnTransformer, TransformedTargetRegressor
 from sklearn.pipeline import Pipeline, FeatureUnion
 
 
+class AutoSklearnUtils:
+
+    @staticmethod
+    def isFeatTypeSplit(pipe):
+        try:
+            from autosklearn.pipeline.components.data_preprocessing.feature_type import FeatTypeSplit
+            return isinstance(pipe, FeatTypeSplit)
+        except ImportError:
+            return False
+
+    @staticmethod
+    def isChoice(pipe):
+        try:
+            from autosklearn.pipeline.components.base import AutoSklearnChoice
+            return isinstance(pipe, AutoSklearnChoice)
+        except ImportError:
+            return False
+
+    @staticmethod
+    def isDataPreprocessorChoice(pipe):
+        try:
+            from autosklearn.pipeline.components.data_preprocessing import DataPreprocessorChoice
+            return isinstance(pipe, DataPreprocessorChoice)
+        except ImportError:
+            return False
+
+
 def enumerate_pipeline_models(pipe, coor=None, vs=None):
     """
     Enumerates all the models within a pipeline.
@@ -63,6 +90,14 @@ def enumerate_pipeline_models(pipe, coor=None, vs=None):
         elif isinstance(pipe, FeatureUnion):
             for i, (_, model) in enumerate(pipe.transformer_list):
                 for couple in enumerate_pipeline_models(model, coor + (i,)):
+                    yield couple
+        elif AutoSklearnUtils.isChoice(pipe):
+            for choice in enumerate_pipeline_models(pipe.choice, coor + (0,)):
+                yield choice
+        elif AutoSklearnUtils.isFeatTypeSplit(pipe):
+            for i, (_, fitted_transformer, column) in enumerate(pipe.column_transformer.transformers_):
+                for couple in enumerate_pipeline_models(
+                    fitted_transformer, coor + (i,), column):
                     yield couple
         elif isinstance(pipe, TransformedTargetRegressor):
             raise NotImplementedError(  # pragma: no cover
@@ -166,27 +201,27 @@ def alter_pipeline_for_debugging(pipe):
     """
 
     def transform(self, X, *args, **kwargs):
-        self._debug.inputs['transform'] = X
+        self._debug.inputs['transform'] = X.copy()
         y = self._debug.methods['transform'](self, X, *args, **kwargs)
-        self._debug.outputs['transform'] = y
+        self._debug.outputs['transform'] = y.copy()
         return y
 
     def predict(self, X, *args, **kwargs):
-        self._debug.inputs['predict'] = X
+        self._debug.inputs['predict'] = X.copy()
         y = self._debug.methods['predict'](self, X, *args, **kwargs)
-        self._debug.outputs['predict'] = y
+        self._debug.outputs['predict'] = y.copy()
         return y
 
     def predict_proba(self, X, *args, **kwargs):
-        self._debug.inputs['predict_proba'] = X
+        self._debug.inputs['predict_proba'] = X.copy()
         y = self._debug.methods['predict_proba'](self, X, *args, **kwargs)
-        self._debug.outputs['predict_proba'] = y
+        self._debug.outputs['predict_proba'] = y.copy()
         return y
 
     def decision_function(self, X, *args, **kwargs):
-        self._debug.inputs['decision_function'] = X
+        self._debug.inputs['decision_function'] = X.copy()
         y = self._debug.methods['decision_function'](self, X, *args, **kwargs)
-        self._debug.outputs['decision_function'] = y
+        self._debug.outputs['decision_function'] = y.copy()
         return y
 
     def get_feature_names_out(self, feature_names, *args, **kwargs):
@@ -221,14 +256,27 @@ def alter_pipeline_for_debugging(pipe):
 
 
 def get_component(coordinate: Tuple[int], step):
+    def update_name(name):
+        return name if step_name is None else '{}:{}'.format(step_name, name)
+
     step_name = None
     for idx in coordinate[1:]:
         if isinstance(step, Pipeline):
-            step_name, step = step.steps[idx]
+            n, step = step.steps[idx]
+            step_name = update_name(n)
         elif isinstance(step, ColumnTransformer):
-            step_name, step, _ = step.transformers_[idx]
+            n, step, _ = step.transformers_[idx]
+            step_name = update_name(n)
         elif isinstance(step, FeatureUnion):
-            step_name, step = step.transformer_list[idx]
+            n, step = step.transformer_list[idx]
+            step_name = update_name(n)
+        elif AutoSklearnUtils.isChoice(step):
+            if AutoSklearnUtils.isDataPreprocessorChoice(step):
+                step_name = update_name(step.choice.__class__.__module__.split('.')[-1])
+            step = step.choice
+        elif AutoSklearnUtils.isFeatTypeSplit(step):
+            n, step, _ = step.column_transformer.transformers_[idx]
+            step_name = update_name(n)
         else:
             raise ValueError(f'Unknown component {step}')
     return step_name, step

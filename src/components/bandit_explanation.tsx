@@ -136,7 +136,7 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
         );
 
         const candidates = reversePipelines.get(node.data.id)
-            .map(id => this.props.structures.filter(s => s.cid === id).pop().configs)
+            .map(id => this.props.structures.filter(s => s.cid === id).pop().equivalentConfigs)
             .reduce((acc, val) => acc.concat(val), [])
             .map(c => c.id);
         const intersection = candidates.filter(c => this.props.selectedCandidates.has(c));
