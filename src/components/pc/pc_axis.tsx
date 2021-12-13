@@ -194,30 +194,20 @@ export class PCAxis extends React.Component<CPCAxisProps, CPCAxisState> {
     private collapse(e: React.MouseEvent) {
         const {parent, onCollapse} = this.props
 
-        if (!parent.isCollapsed()) {
+        if (!parent.isCollapsed())
             onCollapse(parent)
-        }
 
         e.preventDefault()
         e.stopPropagation()
     }
 
     private onBrushEnd(event: BrushEvent) {
-        let yRange: [number, number] = undefined
-        if (event.selection !== undefined) {
-            const lower = event.selection.y
-            const upper = lower + event.selection.height
-
-            const scale = (this.props.axis.getLayout().yScale as d3.ScaleContinuousNumeric<number, number>)
-            yRange = [scale.invert(upper), scale.invert(lower)]
-        }
-
-        this.props.onHighlight(this.props.axis, yRange)
+        this.props.onHighlight(this.props.axis, event.selection)
     }
 
     render() {
         const {axis, onExpand, onCollapse, onHighlight, svg} = this.props
-        const {x, y, width, height, yScale} = axis.getLayout()
+        const {x, y, width, yScale} = axis.getLayout()
         const xScale = axis.getLayout().perfEstScale(axis.explanation)
 
         const choices = axis.choices.map(c => <PCChoice choice={c} parent={axis} svg={svg}
@@ -243,7 +233,7 @@ export class PCAxis extends React.Component<CPCAxisProps, CPCAxisState> {
                     </>}
 
                     {this.isNumerical() && <SVGBrush svg={svg}
-                                                     extent={[[x, y], [x + width, y + height]]}
+                                                     layout={axis.getLayout()}
                                                      onBrushEnd={this.onBrushEnd}
                     />}
 

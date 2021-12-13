@@ -1,7 +1,9 @@
 import React from 'react';
+import {Layout} from "./model";
+import * as d3 from "d3";
 
 interface SVGBrushProps {
-    extent: [[number, number], [number, number]]
+    layout: Layout
     svg: React.RefObject<SVGSVGElement>
 
     onBrushStart: (event: BrushEvent) => void
@@ -10,12 +12,12 @@ interface SVGBrushProps {
 }
 
 interface SVGBrushState {
-    selection: DOMRect
+    selection: [number, number]
 }
 
 export interface BrushEvent {
     type: 'start' | 'brush' | 'end',
-    selection: DOMRect,
+    selection: [number, number],
     sourceEvent: React.MouseEvent
 }
 
@@ -49,11 +51,12 @@ export class SVGBrush extends React.Component<SVGBrushProps, SVGBrushState> {
         if (this.point === undefined)
             this.point = this.props.svg.current.createSVGPoint();
 
+        const scale = (this.props.layout.yScale as d3.ScaleContinuousNumeric<number, number>);
         (e.target as Element).setPointerCapture(e.pointerId);
-        this.initialPosition = this.getPosition(e);
+        this.initialPosition = scale.invert(this.getPosition(e));
         this.props.onBrushStart({
             type: 'start',
-            selection: this.state.selection,
+            selection: [this.initialPosition, this.initialPosition],
             sourceEvent: e
         });
 
@@ -63,13 +66,14 @@ export class SVGBrush extends React.Component<SVGBrushProps, SVGBrushState> {
 
     private handleBrushMove(e: React.PointerEvent<SVGRectElement>) {
         if (this.initialPosition) {
-            const {extent: [[x0, y0], [x1, y1]]} = this.props;
+            const scale = (this.props.layout.yScale as d3.ScaleContinuousNumeric<number, number>)
 
             const y = this.getPosition(e);
-            const minY = Math.max(Math.min(this.initialPosition, y), y0)
-            const maxY = Math.min(Math.max(this.initialPosition, y), y1)
+            const capped = Math.max(Math.min(y, scale.range()[1]), scale.range()[0])
+            const minY = Math.min(this.initialPosition, scale.invert(capped))
+            const maxY = Math.max(this.initialPosition, scale.invert(capped))
 
-            const selection: DOMRect = new DOMRect(x0, minY, x1 - x0, maxY - minY)
+            const selection: [number, number] = [minY, maxY]
 
             this.setState({selection});
             this.props.onBrush({
@@ -81,11 +85,12 @@ export class SVGBrush extends React.Component<SVGBrushProps, SVGBrushState> {
     }
 
     private handleBrushEnd(e: React.MouseEvent) {
+        const scale = (this.props.layout.yScale as d3.ScaleContinuousNumeric<number, number>)
         const move = this.getPosition(e);
         let selection = this.state.selection
-        if (this.initialPosition && Math.abs(this.initialPosition - move) < 10) {
+        if (this.initialPosition && Math.abs(scale(this.initialPosition) - move) < 10) {
             // Delete selection from previous brushing
-            if (this.state.selection?.height > 10)
+            if (scale(selection[0]) - scale(selection[1]) > 10)
                 SVGBrush.preventClick()
             this.setState({selection: undefined})
             selection = undefined
@@ -113,25 +118,26 @@ export class SVGBrush extends React.Component<SVGBrushProps, SVGBrushState> {
     }
 
     render() {
-        const {extent: [[x0, y0], [x1, y1]], svg} = this.props;
+        const {layout, svg} = this.props;
         const {selection} = this.state;
+        const scale = layout.yScale as d3.ScaleContinuousNumeric<number, number>
 
         return (
             <>
                 {svg !== undefined &&
                     <g className="brush" ref={this.container}>
                         <rect className="pc-brush-overlay"
-                              x={x0} y={y0}
-                              width={x1 - x0} height={y1 - y0}
+                              x={layout.x} y={layout.y}
+                              width={layout.width} height={layout.height}
                               onPointerDown={this.handleBrushStart}
                               onPointerMove={this.handleBrushMove}
                               onPointerUp={this.handleBrushEnd}
                         />
 
                         {selection && <rect className="pc-brush-selection"
-                                            x={selection.x} y={selection.y}
-                                            width={selection.width} height={selection.height}
-                        />}
+                                            x={layout.x} y={scale(selection[1])}
+                                            width={layout.width} height={scale(selection[0]) - scale(selection[1])}/>
+                        }
                     </g>
                 }
             </>
