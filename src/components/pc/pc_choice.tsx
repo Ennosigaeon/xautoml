@@ -20,13 +20,13 @@ export class PCChoice extends React.Component<CPCPChoiceProps, {}> {
     constructor(props: CPCPChoiceProps) {
         super(props);
 
-        this.expand = this.expand.bind(this)
+        this.onClick = this.onClick.bind(this)
         this.collapse = this.collapse.bind(this)
         this.highlightLines = this.highlightLines.bind(this)
         this.hideHighlightLines = this.hideHighlightLines.bind(this)
     }
 
-    private expand(e: React.MouseEvent) {
+    private onClick(e: React.MouseEvent) {
         const {choice, onExpand} = this.props
         if (choice.isExpandable())
             onExpand(choice)
@@ -63,7 +63,7 @@ export class PCChoice extends React.Component<CPCPChoiceProps, {}> {
 
         return (
             <g className={`pc-choice ${choice.isExpandable() ? 'pc-choice-expandable' : ''}`}
-               onClick={this.expand}
+               onClick={this.onClick}
                onMouseOver={this.highlightLines}
                onMouseOut={this.hideHighlightLines}>
                 {choice.isCollapsed() && <circle cx={centeredX}
