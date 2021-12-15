@@ -7,6 +7,7 @@ import {CandidateId} from "../../model";
 interface PCLineProps {
     model: cpc.Model
     line: cpc.Line
+    selected: boolean
     highlight: boolean
     onClick?: (id: CandidateId) => void
 }
@@ -115,7 +116,7 @@ export class PCLine extends React.Component<PCLineProps, PCLineStats> {
         const tooltipHeight = 20
 
         return (
-            <g className={this.state.highlight || this.props.highlight ? 'pc-highlighted' : ''}>
+            <g className={`${this.state.highlight || this.props.highlight ? 'pc-highlighted' : ''} ${this.props.selected ? 'pc-selected' : ''}`}>
                 <path className={'pc-line'} d={path.toString()}/>
                 <path className={'pc-line pc-missing-line'} d={missingPath.toString()}/>
 

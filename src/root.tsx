@@ -6,15 +6,14 @@ import MetaInformationTable from "./components/meta_information";
 import PerformanceTimeline from "./components/performance_timeline";
 import {Colors, JupyterContext} from "./util";
 import {RocCurve} from "./components/roc_curve";
-import {BanditExplanationsComponent} from "./components/bandit_explanation";
 import {CandidateTable} from "./components/candidate_table";
 import {Jupyter} from "./jupyter";
-import {ParallelCoordinates} from "./components/pc/parallel_corrdinates";
 import {LoadingIndicator} from "./components/loading";
 import {CollapseComp} from "./util/collapse";
 import {Box, Tab, Tabs} from "@material-ui/core";
 import {TabContext} from "@material-ui/lab";
 import {TabPanel} from "./util/tabpanel";
+import {SearchSpace} from "./components/search_space";
 
 
 /**
@@ -152,17 +151,9 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
                                                 onCandidateSelection={this.onCandidateSelection}/>
                             </TabPanel>
                             <TabPanel value={'2'}>
-                                <CollapseComp showInitial={true} help={ParallelCoordinates.HELP}>
-                                    <h4>Bayesian Optimization</h4>
-                                    <ParallelCoordinates structures={runhistory.structures} meta={runhistory.meta}
-                                                         selectedCandidates={selectedCandidates}
-                                                         onCandidateSelection={this.onCandidateSelection}/>
-                                </CollapseComp>
-                                {runhistory.explanations.structures &&
-                                    <BanditExplanationsComponent explanations={runhistory.explanations.structures}
-                                                                 selectedCandidates={selectedCandidates}
-                                                                 structures={runhistory.structures}
-                                                                 onCandidateSelection={this.onCandidateSelection}/>}
+                                <SearchSpace runhistory={runhistory}
+                                             selectedCandidates={selectedCandidates}
+                                             onCandidateSelection={this.onCandidateSelection}/>
                             </TabPanel>
                             <TabPanel value={'3'}>
                                 <p>TODO: missing</p>

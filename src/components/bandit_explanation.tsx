@@ -1,7 +1,6 @@
 import React from "react";
 import * as d3 from "d3";
 import {CandidateId, Pipeline, RF, Structure} from "../model";
-import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
 import {areSetInputsEqual, cidToSid, normalizeComponent, prettyPrint} from "../util";
 import {GraphEdge, GraphNode, HierarchicalTree} from "./tree_structure";
@@ -66,16 +65,18 @@ interface BanditExplanationsProps {
     selectedCandidates?: Set<CandidateId>;
     onCandidateSelection?: (cid: Set<CandidateId>) => void;
 
-    timestamp?: string
+    timestamp: string
 }
 
 interface BanditExplanationsState {
-    root: CollapsibleNode;
-    sliderMarks: { [key: string]: string; };
-    timestamp: string;
+    root: CollapsibleNode
+    timestamp: string
 }
 
 export class BanditExplanationsComponent extends React.Component<BanditExplanationsProps, BanditExplanationsState> {
+
+    static HELP = "Visualizes the search procedure of a Monte-Carlo tree search. Each node contains the current " +
+        "reward computed by MCTS. Additional details how the score is computed is available via reward decomposition."
 
     private static readonly ROOT_ID = '0';
     private static readonly NODE_HEIGHT = 75;
@@ -92,30 +93,24 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
 
         // Create implicit copy of hierarchical data to prevent accidental modifications of children
         const root = d3.hierarchy(this.props.explanations, d => d.children)
-        const sliderMarks: { [key: string]: string; } = {}
-        let timestamp = this.props.timestamp
-        if (!timestamp) {
-            const detailKeys = new Set<string>()
-            root.descendants().map(d => Array.from(d.data.details.keys()).forEach(k => detailKeys.add(k)));
-            const detailsKeysArray = Array.from(detailKeys).sort()
+        this.state = {root: root, timestamp: this.props.timestamp}
 
-            detailsKeysArray.forEach((k, idx) => sliderMarks[idx] = k)
-            timestamp = detailsKeysArray.slice(-1)[0]
-        }
+        CollapsibleNodeActions.collapseNode(this.state.root, this.props.timestamp, true)
 
-        this.state = {
-            root: root,
-            sliderMarks: sliderMarks,
-            timestamp: timestamp
-        }
-
-        CollapsibleNodeActions.collapseNode(this.state.root, this.state.timestamp, true)
-
-        this.renderNodes = this.renderNodes.bind(this)
+        this.renderTree = this.renderTree.bind(this)
         this.selectNode = this.selectNode.bind(this)
         this.toggleNode = this.toggleNode.bind(this)
-        this.changeTimestamp = this.changeTimestamp.bind(this)
         this.getSelectedNodes = this.getSelectedNodes.bind(this)
+    }
+
+    static getDerivedStateFromProps(props: BanditExplanationsProps, state: BanditExplanationsState) {
+        if (props.timestamp !== state.timestamp) {
+            const root: CollapsibleNode = d3.hierarchy(props.explanations, d => d.children);
+            CollapsibleNodeActions.collapseNode(root, props.timestamp, true)
+
+            return {root: root, timestamp: props.timestamp}
+        }
+        return null
     }
 
     private selectNode(node: CollapsibleNode) {
@@ -155,7 +150,7 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
             // No children
             return;
         } else if (node._children?.length === 0) {
-            CollapsibleNodeActions.collapseNode(node, this.state.timestamp)
+            CollapsibleNodeActions.collapseNode(node, this.props.timestamp)
         } else {
             CollapsibleNodeActions.expandNode(node)
         }
@@ -163,26 +158,15 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
         this.setState({root: this.state.root});
     }
 
-    private changeTimestamp(v: number) {
-        const timestamp = this.state.sliderMarks[v];
-
-        // Convert props data to CollapsibleNodes
-        const root: CollapsibleNode = d3.hierarchy(this.props.explanations, d => d.children);
-        CollapsibleNodeActions.collapseNode(root, timestamp, true)
-
-        this.setState({root: root, timestamp: timestamp});
-    }
-
     renderNode(node: DagNode<CollapsibleNode>): JSX.Element {
         const data = node.data.data
-        const details = data.getDetails(this.state.timestamp)
+        const details = data.getDetails(this.props.timestamp)
         const highlight = this.selectedNodes(this.props.selectedCandidates).has(data.id)
 
-        const nodeClass = highlight || details.selected ? 'selected' : ''
         return (
             <GraphNode key={data.id}
                        node={node}
-                       className={`bandit-explanation ${nodeClass}`}
+                       className={`bandit-explanation ${details.selected ? 'selected' : ''} ${highlight ? 'highlight' : ''}`}
                        nodeWidth={BanditExplanationsComponent.NODE_WIDTH}
                        nodeHeight={BanditExplanationsComponent.NODE_HEIGHT}
                        onClickHandler={this.selectNode}
@@ -205,14 +189,14 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
         )
     }
 
-    private renderNodes(root: Dag<CollapsibleNode>): JSX.Element {
+    private renderTree(root: Dag<CollapsibleNode>): JSX.Element {
         const renderedNodes = root.descendants().map(node => this.renderNode(node))
         const renderedEdges = root.links()
             .map(link => {
                 const key = link.source.data.data.id + '-' + link.target.data.data.id
 
                 const data = link.target.data.data
-                const details = data.getDetails(this.state.timestamp)
+                const details = data.getDetails(this.props.timestamp)
                 const highlight = this.selectedNodes(this.props.selectedCandidates).has(data.id)
 
                 return <GraphEdge key={key}
@@ -251,20 +235,12 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
     }
 
     render() {
-        const nSteps = Object.keys(this.state.sliderMarks).length - 1;
-
-        return <>
+        return (
             <HierarchicalTree nodeHeight={BanditExplanationsComponent.NODE_HEIGHT}
                               nodeWidth={BanditExplanationsComponent.NODE_WIDTH}
                               data={this.state.root}
                               count={CollapsibleNodeActions.countNodes(this.state.root)}
-                              render={this.renderNodes}/>
-            {/* Only display slider when data is already loaded*/}
-            {nSteps > 0 &&
-            <div style={{margin: '20px'}}>
-                <Slider min={0} max={nSteps} marks={this.state.sliderMarks} defaultValue={nSteps}
-                        included={false} onAfterChange={this.changeTimestamp}/>
-            </div>}
-        </>
+                              render={this.renderTree}/>
+        )
     }
 }

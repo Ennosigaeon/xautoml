@@ -90,6 +90,11 @@ tr.MuiTableRow-root.MuiTableRow-hover:hover {
     border-width: 2px;
 }
 
+.highlight .hierarchical-tree_node-content {
+    background-color: #2196f3;
+    border-width: 2px;
+}
+
 .hierarchical-tree_node-content-round {
     border-radius: 50%;
     height: 100%;
@@ -289,6 +294,12 @@ text.pc-axis-x-tick {
     fill: none;
     cursor: pointer;
     stroke: black;
+}
+
+.pc-selected .pc-line {
+    stroke-opacity: 1;
+    stroke-width: 3px;
+    stroke: #abe2fb;
 }
 
 .pc-highlighted .pc-line {

@@ -15,6 +15,8 @@ interface PCProps {
     explanation?: Config.Explanation
     selectedCandidates?: Set<CandidateId>
     onCandidateSelection?: (cid: Set<CandidateId>) => void
+
+    timestamp?: number
 }
 
 interface PCState {
@@ -140,9 +142,12 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
                           onCollapse={this.onCollapse}
                           onExpand={this.onExpand}
                           onHighlight={this.highlightLines}/>
-                {this.state.model.lines.map(line => <PCLine key={line.id} model={model} line={line}
-                                                            highlight={highlightedLines.has(line.id)}
-                                                            onClick={this.onClickLine}/>)}
+                {this.state.model.lines
+                    .slice(0, this.props.timestamp + 1)
+                    .map((line, idx) => <PCLine key={line.id} model={model} line={line}
+                                                selected={idx == this.props.timestamp}
+                                                highlight={highlightedLines.has(line.id)}
+                                                onClick={this.onClickLine}/>)}
             </RefableFlexibleSvg>
         )
     }
