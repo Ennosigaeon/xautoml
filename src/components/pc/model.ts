@@ -112,12 +112,17 @@ export class Axis {
         return this.layout_
     }
 
+    resetSelection(choice: Choice | undefined) {
+        this.choices.filter(c => choice?.value !== c.value).forEach(c => c.resetSelected())
+    }
+
 }
 
 export class Choice {
 
     private layout_: Layout
     private collapsed: boolean
+    private selected: boolean
 
     constructor(
         public readonly value: ConfigValue,
@@ -127,6 +132,7 @@ export class Choice {
         this.collapsed = collapsible
         if (!label)
             this.label = value
+        this.selected = false
     }
 
     collapse() {
@@ -145,6 +151,19 @@ export class Choice {
 
     isExpandable() {
         return this.collapsed && this.axes.length > 0
+    }
+
+    toggleSelected() {
+        this.selected = !this.selected
+        return this.selected
+    }
+
+    getSelected() {
+        return this.selected ? this : undefined
+    }
+
+    resetSelected() {
+        this.selected = false
     }
 
     getWidthWeight(): number {

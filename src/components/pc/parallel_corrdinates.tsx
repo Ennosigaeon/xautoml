@@ -54,10 +54,9 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
 
         const model = ParCord.parseRunhistory(this.props.meta, this.props.structures, candidates, this.props.explanation)
         const filter = new Map<cpc.Axis, cpc.Choice | [number, number]>()
-        const highlights = this.calculateHighlightedLines(model.lines, filter)
         this.state = {
             model: model,
-            highlightedLines: highlights,
+            highlightedLines: this.props.selectedCandidates,
             container: undefined,
             filter: filter
         }
@@ -73,10 +72,8 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
     }
 
     componentDidUpdate(prevProps: Readonly<PCProps>, prevState: Readonly<PCState>, snapshot?: any) {
-        if (prevProps.selectedCandidates.size !== this.props.selectedCandidates.size) {
-            const highlights = this.calculateHighlightedLines(this.state.model.lines, this.state.filter)
-            this.setState({highlightedLines: highlights})
-        }
+        if (prevProps.selectedCandidates.size !== this.props.selectedCandidates.size)
+            this.setState({highlightedLines: this.props.selectedCandidates})
     }
 
     private onCollapse(choice: cpc.Choice) {
@@ -99,6 +96,7 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
 
         const highlights = this.calculateHighlightedLines(this.state.model.lines, this.state.filter)
         this.setState({highlightedLines: highlights, filter: this.state.filter})
+        this.props.onCandidateSelection(highlights)
     }
 
     private calculateHighlightedLines(lines: cpc.Line[], filter: Map<cpc.Axis, cpc.Choice | [number, number]>) {
@@ -107,7 +105,7 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
         lines.forEach(l => {
             let matches: boolean = undefined
             filter.forEach((value, key) => matches = (matches || matches === undefined) && l.intersects(key, value));
-            (matches !== undefined && matches) || this.props.selectedCandidates.has(l.id) ? highlights.push(l) : normal.push(l)
+            (matches !== undefined && matches) ? highlights.push(l) : normal.push(l)
         })
         return new Set(highlights.map(l => l.id))
     }

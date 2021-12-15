@@ -229,6 +229,12 @@ div.structure-graph_tooltip {
     pointer-events: all;
 }
 
+.pc-choice.selected > circle {
+    fill: #777;
+    fill-opacity: 0.3;
+    stroke-width: 2px;
+}
+
 .pc-choice > text {
     font-size: 11px;
     dominant-baseline: middle;

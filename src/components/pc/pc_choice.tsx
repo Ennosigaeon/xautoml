@@ -22,13 +22,15 @@ export class PCChoice extends React.Component<CPCPChoiceProps, {}> {
 
         this.onClick = this.onClick.bind(this)
         this.collapse = this.collapse.bind(this)
-        this.highlightLines = this.highlightLines.bind(this)
-        this.hideHighlightLines = this.hideHighlightLines.bind(this)
     }
 
     private onClick(e: React.MouseEvent) {
         const {choice, onExpand} = this.props
-        if (choice.isExpandable())
+        if (e.ctrlKey) {
+            this.props.choice.toggleSelected()
+            this.props.parent.resetSelection(this.props.choice.getSelected())
+            this.props.onHighlight(this.props.parent, this.props.choice.getSelected())
+        } else if (choice.isExpandable())
             onExpand(choice)
 
         e.preventDefault()
@@ -47,14 +49,6 @@ export class PCChoice extends React.Component<CPCPChoiceProps, {}> {
         e.stopPropagation()
     }
 
-    private highlightLines() {
-        this.props.onHighlight(this.props.parent, this.props.choice)
-    }
-
-    private hideHighlightLines() {
-        this.props.onHighlight(this.props.parent, undefined)
-    }
-
     render() {
         const {choice, parent, onCollapse, onExpand, onHighlight, svg} = this.props
         const {x, y, width, height} = choice.getLayout()
@@ -62,10 +56,8 @@ export class PCChoice extends React.Component<CPCPChoiceProps, {}> {
         const centeredY = choice.getLayout().centeredY()
 
         return (
-            <g className={`pc-choice ${choice.isExpandable() ? 'pc-choice-expandable' : ''}`}
-               onClick={this.onClick}
-               onMouseOver={this.highlightLines}
-               onMouseOut={this.hideHighlightLines}>
+            <g className={`pc-choice ${choice.isExpandable() ? 'pc-choice-expandable' : ''} ${choice.getSelected() ? 'selected' : ''}`}
+               onClick={this.onClick}>
                 {choice.isCollapsed() && <circle cx={centeredX}
                                                  cy={centeredY}
                                                  r={Constants.CIRCLE_SIZE}/>}
