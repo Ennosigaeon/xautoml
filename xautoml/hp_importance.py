@@ -25,7 +25,11 @@ class HPImportance:
             keys = keys + list(it.combinations(range(len(X.columns)), 2))
 
         for i, j in keys:
-            d = f.quantify_importance((i, j))
+            try:
+                d = f.quantify_importance((i, j))
+            except RuntimeError:
+                imp = {'individual importance': 0.5, 'individual std': 0, 'total importance': 0.5, 'total std': 0}
+                d = {(i,): imp, (j,): imp, (i, j): imp}
             res[(i, i)] = {
                 'importance': d[(i,)]['individual importance'],
                 'std': d[(i,)]['individual std']
@@ -63,7 +67,8 @@ class HPImportance:
 
         return {
             'hyperparameters': list(
-                map(lambda n: n.replace('data_preprocessor:feature_type:numerical_transformer:', ''),
+                map(lambda n: n.replace('data_preprocessor:feature_type:numerical_transformer:', '').replace(
+                    'data_preprocessor:feature_type:categorical_transformer:', ''),
                     X.columns.tolist())
             ),
             'keys': df.index.tolist(),
@@ -211,14 +216,14 @@ class HPImportance:
         configs_ = [prep_config(c) for c in configs]
 
         X = pd.DataFrame(configs_, columns=cs.get_hyperparameter_names())
-        y = np.array(performances)
+        y = np.array(performances, dtype=float)
 
         pruned_cs = ConfigurationSpace()
         for hp in cs.get_hyperparameters():
             if isinstance(hp, CategoricalHyperparameter):
                 X[hp.name] = X[hp.name].map(hp._inverse_transform)
 
-            if X[hp.name].nunique() == 1:
+            if X[hp.name].nunique() == 1 and X.shape[0] > 1:
                 X.drop(hp.name, axis=1, inplace=True)
             else:
                 pruned_cs.add_hyperparameter(hp)

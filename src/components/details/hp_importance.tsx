@@ -222,7 +222,9 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
 
         requestFANOVA(cs, configs, loss, component)
             .then(resp => {
-                if (resp.details)
+                if (resp.error)
+                    this.setState({error: new Error(resp.error)})
+                else if (resp.details)
                     this.setState({overview: resp.overview, details: resp.details})
                 else
                     this.setState({overview: resp.overview})

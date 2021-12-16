@@ -80,17 +80,20 @@ class ModelDetails:
         categorical_features = range(0, len(cat_columns))
         categorical_names = {idx: encoder.categories_[idx] for idx in categorical_features}
 
+        class_names = np.unique(y)
+
         explainer = lime.lime_tabular.LimeTabularExplainer(df2,
                                                            feature_names=cat_columns + num_columns,
                                                            discretize_continuous=True,
                                                            categorical_features=categorical_features,
-                                                           categorical_names=categorical_names)
+                                                           categorical_names=categorical_names,
+                                                           class_names=class_names)
         explanation = explainer.explain_instance(df2[idx], model.predict_proba, num_features=10,
                                                  top_labels=np.unique(y).shape[0])
 
         all_explanations = {}
         for label in explanation.available_labels():
-            all_explanations[label.tolist()] = explanation.as_list(label)
+            all_explanations[class_names[label.tolist()]] = explanation.as_list(label)
         probabilities = dict(zip(explanation.class_names, explanation.predict_proba.tolist()))
 
         return LimeResult(idx, all_explanations, probabilities, getattr(y[idx], "tolist", lambda: y[idx])())

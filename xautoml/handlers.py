@@ -118,6 +118,9 @@ class BaseHandler(APIHandler):
     @staticmethod
     def load_model(model):
         X, y, feature_labels, models = BaseHandler.load_models(model)
+        if len(models) == 0:
+            raise ValueError('Unable to use failed pipeline to evaluate model.')
+
         assert len(models) == 1, 'Expected exactly 1 model, got {}'.format(len(models))
         pipeline = models[0]
         return X, y, feature_labels, pipeline
@@ -181,10 +184,9 @@ class RocCurveHandler(BaseHandler):
 
 
 class LimeHandler(BaseHandler):
-    is_async = True
+    # TODO should be async
 
-    @staticmethod
-    def _process_post_async(model, queue):
+    def _process_post(self, model):
         X, y, feature_labels, pipeline = BaseHandler.load_model(model)
         idx = model.get('idx', 0)
         step = model.get('step', SOURCE)
@@ -201,7 +203,7 @@ class LimeHandler(BaseHandler):
             except TypeError:
                 res = LimeResult(idx, {}, {}, getattr(y[idx], "tolist", lambda: y[idx])(), categorical_input=True)
 
-        queue.put(res.to_dict(additional_features))
+        self.finish(json.dumps(res.to_dict(additional_features)))
 
 
 class ConfusionMatrixHandler(BaseHandler):
@@ -234,10 +236,9 @@ class DecisionTreeHandler(BaseHandler):
 
 
 class FeatureImportanceHandler(BaseHandler):
-    is_async = True
+    # TODO should be async
 
-    @staticmethod
-    def _process_post_async(model, queue):
+    def _process_post(self, model):
         X, y, feature_labels, pipeline = FeatureImportanceHandler.load_model(model)
         step = model.get('step', SOURCE)
 
@@ -249,7 +250,7 @@ class FeatureImportanceHandler(BaseHandler):
                                                                                               feature_labels)
             details = ModelDetails()
             res = details.calculate_feature_importance(X, y, pipeline, feature_labels)
-        queue.put({'data': res.to_dict(), 'additional_features': additional_features})
+        self.finish(json.dumps({'data': res.to_dict(), 'additional_features': additional_features}))
 
 
 class FANOVAHandler(BaseHandler):
@@ -257,6 +258,12 @@ class FANOVAHandler(BaseHandler):
     def _process_post(self, model):
         step = model.get('step', None)
         f, X = HPImportance.load_model(model)
+
+        if X.shape[0] < 2:
+            self.finish(json.dumps({
+                'error': 'Not enough evaluated configurations to calculate hyperparameter importance.'
+            }))
+            return
 
         overview = HPImportance.calculate_fanova_overview(f, X, step=step)
         details = HPImportance.calculate_fanova_details(f, X)

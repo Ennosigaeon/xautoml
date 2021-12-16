@@ -210,7 +210,7 @@ export class Candidate {
     subConfig(step: PipelineStep, prune: boolean): Config {
         const subConfig = new Map<string, ConfigValue>()
         Array.from(this.config.keys())
-            .filter(k => k.startsWith(step.id))
+            .filter(k => k.startsWith(step.id + ':'))
             .forEach(key => {
                 const tokens = key.split(':')
                 subConfig.set(prune ? tokens[tokens.length - 1] : key, this.config.get(key))

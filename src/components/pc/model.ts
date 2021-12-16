@@ -62,8 +62,10 @@ export class Axis {
     static Categorical(id: string, name: string, choices: Array<Choice>, explanations?: Config.Explanation): Axis {
         let name_ = name
         if (choices.length === 1) {
-            choices[0].expand()
             name_ = prettyPrint(choices[0].label)
+
+            if (choices[0].axes.length == 1)
+                choices[0].expand()
         }
         const tokens = name_.split(':')
         return new Axis(id, tokens[tokens.length - 1], Type.CATEGORICAL, explanations?.get(name), undefined, choices)

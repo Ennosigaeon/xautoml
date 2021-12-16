@@ -17,11 +17,11 @@ from xautoml.util.mlinsights import get_component, enumerate_pipeline_models
 
 
 def get_subpipeline(pipeline: Pipeline,
-                    start: str,
+                    start_after: str,
                     X: np.ndarray,
                     y: np.ndarray,
                     feature_labels: list[str]) -> tuple[Pipeline, np.ndarray, list[str], list[str]]:
-    if start == SOURCE or start == SINK or start == pipeline.steps[-1][0]:
+    if start_after == SOURCE or start_after == SINK or start_after == pipeline.steps[-1][0]:
         return pipeline, X, feature_labels, []
     else:
         df_handler = OutputCalculator()
@@ -29,10 +29,10 @@ def get_subpipeline(pipeline: Pipeline,
 
         for selected_coordinate, model, subset in enumerate_pipeline_models(pipeline):
             initial_step_name, initial_step = get_component(selected_coordinate, pipeline)
-            if initial_step_name == start:
+            if initial_step_name == start_after:
                 break
         else:
-            raise ValueError(f'Unknown step name {start}')
+            raise ValueError(f'Unknown step name {start_after}')
 
         current_step = initial_step
         current_step_name = initial_step_name
@@ -58,7 +58,7 @@ def get_subpipeline(pipeline: Pipeline,
                 modified_transformers = []
                 for name, transformer, columns in step.transformers_:
                     named_columns = inputs[step_name].columns[columns]
-                    if name == current_step_name:
+                    if current_step_name.endswith(name):
                         for col in new_input:
                             modified_input['_{}'.format(col)] = new_input[col]
                         named_columns = new_input.columns.map(lambda col: '_{}'.format(col))

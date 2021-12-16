@@ -38,12 +38,10 @@ export class PCChoice extends React.Component<CPCPChoiceProps, {}> {
     }
 
     private collapse(e: React.MouseEvent) {
-        const {choice, onCollapse, onHighlight} = this.props
+        const {choice, onCollapse} = this.props
 
-        if (!choice.isCollapsed()) {
+        if (!choice.isCollapsed())
             onCollapse(choice)
-            onHighlight(this.props.parent, undefined)
-        }
 
         e.preventDefault()
         e.stopPropagation()

@@ -88,14 +88,18 @@ export namespace ParCord {
                         components.push(new Map<string, cpc.Choice>())
 
                     if (!components[idx].has(step.id)) {
-                        const axis = structure.configspace.getHyperparameters(step.id)
+                        const axes = structure.configspace.getHyperparameters(step.id)
                             .map((hp: HyperParameter) => parseHyperparameter(hp, structure.configspace.conditions))
-                        components[idx].set(step.id, new cpc.Choice(step.name, axis, true, step.label))
+
+                        const label = !Number.isNaN(Number.parseInt(step.name)) || !step.name ? step.label : undefined
+                        components[idx].set(step.id, new cpc.Choice(step.name, axes, true, label))
                     }
                 })
             })
-            const axes = components.map((steps, idx) =>
-                cpc.Axis.Categorical(`${idx}`, `Component ${idx}`, [...steps.values()], explanation))
+            const axes = components.map((steps, idx) => {
+                const name = steps.size === 1 ? steps.keys().next().value : `Component ${idx}`
+                return cpc.Axis.Categorical(`${idx}`, name, [...steps.values()], explanation)
+            })
 
             const lowerPerf = Math.min(meta.worstPerformance, meta.bestPerformance)
             const upperPerf = Math.max(meta.worstPerformance, meta.bestPerformance)

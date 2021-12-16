@@ -268,6 +268,7 @@ export interface HPImportance {
 export interface FANOVAResponse {
     overview: HPImportance,
     details?: Map<number, Map<number, HPImportanceDetails>>
+    error?: string
 }
 
 export function requestFANOVA(cs: Config.ConfigSpace, configs: Config[], loss: number[], step?: string): Promise<FANOVAResponse> {

@@ -183,10 +183,6 @@ export class PCAxis extends React.Component<CPCAxisProps, CPCAxisState> {
         this.onBrushEnd = this.onBrushEnd.bind(this)
     }
 
-    componentWillUnmount() {
-        this.props.onHighlight(this.props.axis, undefined)
-    }
-
     private isNumerical(): boolean {
         return this.props.axis.type == cpc.Type.NUMERICAL;
     }

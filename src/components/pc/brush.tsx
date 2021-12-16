@@ -88,21 +88,22 @@ export class SVGBrush extends React.Component<SVGBrushProps, SVGBrushState> {
         const scale = (this.props.layout.yScale as d3.ScaleContinuousNumeric<number, number>)
         const move = this.getPosition(e);
         let selection = this.state.selection
-        if (selection == undefined || (this.initialPosition && Math.abs(scale(this.initialPosition) - move) < 10)) {
-            // Delete selection from previous brushing
-            if (scale(selection[0]) - scale(selection[1]) > 10)
-                SVGBrush.preventClick()
-            this.setState({selection: undefined})
-            selection = undefined
-        } else
-            SVGBrush.preventClick()
 
+        if (selection != undefined) {
+            // Delete selection from previous brushing if only click
+            if (Math.abs(scale(this.initialPosition) - move) < 10)
+                selection = undefined
+
+            this.setState({selection: selection})
+            SVGBrush.preventClick()
+            this.props.onBrushEnd({
+                type: 'end',
+                selection: selection,
+                sourceEvent: e
+            })
+
+        }
         this.initialPosition = undefined;
-        this.props.onBrushEnd({
-            type: 'end',
-            selection: selection,
-            sourceEvent: e
-        })
     }
 
     private static preventClick() {
