@@ -180,7 +180,7 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
                             <KeyValue key_={'Id'} value={data.id} tight={true}/>
 
                             {Array.from(details.policy.keys()).map(k =>
-                                <KeyValue key={k} key_={k} value={details.policy.get(k)} tight={true}/>
+                                <KeyValue key={k} key_={k} value={details.policy.get(k)} tight={true} prec={2}/>
                             )}
                         </div>
                     </CollapseComp>

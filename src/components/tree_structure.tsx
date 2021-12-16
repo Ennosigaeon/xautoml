@@ -65,8 +65,8 @@ export class GraphNode<Datum> extends React.Component<GraphNodeProps<Datum>, {}>
         return (
             <Animate
                 start={{x: parent.x, y: parent.y}}
-                update={{x: [node.x], y: [node.y], timing: {duration: 750, ease: easeExpInOut}}}
-                enter={{x: [node.x], y: [node.y], timing: {duration: 750, ease: easeExpInOut}}}
+                update={{x: [node.x], y: [node.y], timing: {duration: 500, ease: easeExpInOut}}}
+                enter={{x: [node.x], y: [node.y], timing: {duration: 500, ease: easeExpInOut}}}
             >{({x: x, y: y}) =>
                 <g className={`hierarchical-tree_node ${className} ${highlight ? 'selected' : ''}`}
                    transform={`translate(${y}, ${x})`}
@@ -114,12 +114,12 @@ export class GraphEdge<Datum> extends React.Component<GraphEdgeProps<Datum>, any
                 update={{
                     source: {x: [link.source.y + nodeWidth], y: [link.source.x]},
                     target: {x: [link.target.y], y: [link.target.x]},
-                    timing: {duration: 750, ease: easeExpInOut}
+                    timing: {duration: 500, ease: easeExpInOut}
                 }}
                 enter={{
                     source: {x: [link.source.y + nodeWidth], y: [link.source.x]},
                     target: {x: [link.target.y], y: [link.target.x]},
-                    timing: {duration: 750, ease: easeExpInOut}
+                    timing: {duration: 500, ease: easeExpInOut}
                 }}
             >{({source: source, target: target}) => {
                 const id = `edge-${uuidv4()}`
@@ -164,7 +164,6 @@ interface HierarchicalTreeProps<Datum> {
 
 interface HierarchicalTreeState {
     width: number
-    height: number
 }
 
 export class HierarchicalTree<Datum> extends React.Component<HierarchicalTreeProps<Datum>, HierarchicalTreeState> {
@@ -173,7 +172,7 @@ export class HierarchicalTree<Datum> extends React.Component<HierarchicalTreePro
 
     constructor(props: HierarchicalTreeProps<Datum>) {
         super(props);
-        this.state = {width: null, height: null}
+        this.state = {width: null}
 
         this.updateContainer = this.updateContainer.bind(this)
         this.doLayout = this.doLayout.bind(this)
@@ -185,10 +184,11 @@ export class HierarchicalTree<Datum> extends React.Component<HierarchicalTreePro
     }
 
     private updateContainer(container: React.RefObject<any>) {
+        container.current.style.overflow = 'hidden'
         this.setState({width: container.current.clientWidth})
     }
 
-    private doLayout(width: number, height: number, count: number): any {
+    private doLayout(width: number, _: number): any {
         // @ts-ignore
         const root = this.props.data instanceof Array ? d3ag.dagStratify()(this.props.data) : d3ag.dagHierarchy()(this.props.data)
 
@@ -217,13 +217,11 @@ export class HierarchicalTree<Datum> extends React.Component<HierarchicalTreePro
             return <></>
 
         // Pass number of nodes to force recalculation if data has changed
-        const [root, layout] = this.layout(this.state.width, this.state.height, this.props.count)
+        const [root, layout] = this.layout(this.state.width, this.props.count)
         this.previousCount = this.props.count
 
         // noinspection JSSuspiciousNameCombination
         const height = layout(root).width;
-        if (this.state.height !== height)
-            this.setState({height: height})
 
         return (
             <FlexibleSvg height={height} onContainerChange={this.updateContainer}>

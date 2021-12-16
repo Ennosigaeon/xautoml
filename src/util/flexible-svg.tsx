@@ -62,7 +62,7 @@ export class FlexibleSvg extends React.Component<FlexibleSvgProps, FlexibleSvgSt
             <div className={'flexible-svg-container'} ref={this.container}
                  style={{paddingBottom: `${(height / width) * 100}%`}}>
                 <svg className={`flexible-svg`} preserveAspectRatio={"xMinYMin meet"} xmlns="http://www.w3.org/2000/svg"
-                     viewBox={`0 0 ${width} ${height + 1}`} style={{overflow: "visible"}} ref={_svg}>
+                     viewBox={`0 0 ${width} ${height + 1}`} ref={_svg}>
                     {children}
                 </svg>
             </div>
@@ -75,6 +75,5 @@ interface RefableFlexibleSvgProps extends FlexibleSvgProps {
 }
 
 export const RefableFlexibleSvg = React.forwardRef<SVGSVGElement, RefableFlexibleSvgProps>((props, ref) =>
-    <FlexibleSvg
-        _svg={ref} {...props}/>
+    <FlexibleSvg _svg={ref} {...props}/>
 )

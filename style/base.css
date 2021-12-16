@@ -57,6 +57,7 @@ tr.MuiTableRow-root.MuiTableRow-hover:hover {
 .flexible-svg {
     display: block;
     position: absolute;
+    overflow: visible;
     top: 0;
     left: 0;
 }
@@ -130,7 +131,7 @@ tr.MuiTableRow-root.MuiTableRow-hover:hover {
 .bandit-explanation_node-details {
     display: grid;
     text-align: left;
-    grid-template-columns: 50% 50%;
+    grid-template-columns: 40% 60%;
 }
 
 
