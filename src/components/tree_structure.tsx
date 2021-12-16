@@ -135,12 +135,13 @@ export class GraphEdge<Datum> extends React.Component<GraphEdgeProps<Datum>, any
                                 target: [target.x, target.y]
                             })}/>
                     {(label !== undefined && (labelSpace > 10)) &&
-                    <text className={'hierarchical-tree_link-label'} dy={source.y < target.y ? 10 : -5} fill={'black'}>
-                        <textPath xlinkHref={`#${id}`} startOffset={'60%'} textAnchor={'middle'}>
-                            {labelSpace > 40 ? prettyPrint(label) : '[...]'}
-                            <title>{prettyPrint(label)}</title>
-                        </textPath>
-                    </text>
+                        <text className={'hierarchical-tree_link-label'} dy={source.y < target.y ? 10 : -5}
+                              fill={'black'}>
+                            <textPath xlinkHref={`#${id}`} startOffset={'60%'} textAnchor={'middle'}>
+                                {labelSpace > 40 ? prettyPrint(label) : '[...]'}
+                                <title>{prettyPrint(label)}</title>
+                            </textPath>
+                        </text>
                     }
                 </>
             }
@@ -191,14 +192,22 @@ export class HierarchicalTree<Datum> extends React.Component<HierarchicalTreePro
         // @ts-ignore
         const root = this.props.data instanceof Array ? d3ag.dagStratify()(this.props.data) : d3ag.dagHierarchy()(this.props.data)
 
-        const padding = this.props.containsTerminalNodes ? 2 * (this.props.nodeWidth - this.props.nodeHeight) : 0
-        const dimensions: [number, number] | null = (height && width) && (count == this.previousCount) ? [height, width + padding] : null
+        // Layout without size first to calculate new height
         const layout = d3ag
             .sugiyama()
             .coord(d3ag.coordCenter())
-            .size(dimensions)
+            .size(null)
             .nodeSize(() => [this.props.nodeHeight, this.props.nodeWidth])
-        return [root, layout]
+
+        if (width) {
+            // @ts-ignore
+            // noinspection JSSuspiciousNameCombination
+            const newHeight = layout(root).width
+            const padding = this.props.containsTerminalNodes ? 2 * (this.props.nodeWidth - this.props.nodeHeight) : 0
+            // Adjust layout to actual width and new height
+            return [root, layout.size([newHeight, width + padding])]
+        } else
+            return [root, layout]
     }
 
     private layout = memoize(this.doLayout);
