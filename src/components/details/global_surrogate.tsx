@@ -177,7 +177,7 @@ ${ID}_dt
                                         onAfterChange={this.onMaxLeavesChange}/>
                             </div>
                             <div style={{flexGrow: 1, alignSelf: "center"}}>
-                                <JupyterButton style={{float: "right"}} onClickHandler={this.exportTree}/>
+                                <JupyterButton style={{float: "right"}} onClick={this.exportTree}/>
                             </div>
                         </div>
                         {data.additional_features.length > 0 && <AdditionalFeatureWarning/>}

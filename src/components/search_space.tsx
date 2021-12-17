@@ -8,7 +8,7 @@ import Slider from "rc-slider";
 interface SearchSpaceProps {
     runhistory: Runhistory
     selectedCandidates: Set<CandidateId>
-    onCandidateSelection?: (cid: Set<CandidateId>) => void
+    onCandidateSelection?: (cid: Set<CandidateId>, show?: boolean) => void
 }
 
 interface SearchSpaceState {

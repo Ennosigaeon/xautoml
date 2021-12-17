@@ -14,7 +14,7 @@ interface PCProps {
     candidates?: [Candidate, Structure][]
     explanation?: Config.Explanation
     selectedCandidates?: Set<CandidateId>
-    onCandidateSelection?: (cid: Set<CandidateId>) => void
+    onCandidateSelection?: (cid: Set<CandidateId>, show?: boolean) => void
 
     timestamp?: number
 }
@@ -70,7 +70,8 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
         this.onExpand = this.onExpand.bind(this)
         this.highlightLines = this.highlightLines.bind(this)
         this.updateContainer = this.updateContainer.bind(this)
-        this.onClickLine = this.onClickLine.bind(this)
+        this.onSelectLine = this.onSelectLine.bind(this)
+        this.onShowCandidate = this.onShowCandidate.bind(this)
     }
 
     componentDidUpdate(prevProps: Readonly<PCProps>, prevState: Readonly<PCState>, snapshot?: any) {
@@ -116,13 +117,17 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
         this.setState({container: container})
     }
 
-    private onClickLine(cid: CandidateId) {
+    private onSelectLine(cid: CandidateId) {
         const selected = new Set(this.props.selectedCandidates)
         if (this.props.selectedCandidates.has(cid))
             selected.delete(cid)
         else
             selected.add(cid)
         this.props.onCandidateSelection(selected)
+    }
+
+    private onShowCandidate(cid: CandidateId) {
+        this.props.onCandidateSelection(new Set<CandidateId>([cid]), true)
     }
 
     public render() {
@@ -147,7 +152,8 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
                     .map((line, idx) => <PCLine key={line.id} model={model} line={line}
                                                 selected={idx == this.props.timestamp}
                                                 highlight={highlightedLines.has(line.id)}
-                                                onClick={this.onClickLine}/>)}
+                                                onClick={this.onShowCandidate}
+                                                onAlternativeClick={this.onSelectLine}/>)}
             </RefableFlexibleSvg>
         )
     }

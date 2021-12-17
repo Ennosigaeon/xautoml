@@ -22,8 +22,8 @@ interface GraphNodeProps<Datum> extends GraphElementProps {
     isTerminal?: boolean
     highlight?: boolean
 
-    onClickHandler?: (d: Datum, e?: React.MouseEvent) => void;
-    onAlternativeClickHandler?: (d: Datum, e?: React.MouseEvent) => void;
+    onClick?: (d: Datum, e?: React.MouseEvent) => void;
+    onAlternativeClick?: (d: Datum, e?: React.MouseEvent) => void;
 }
 
 export class GraphNode<Datum> extends React.Component<GraphNodeProps<Datum>, {}> {
@@ -35,9 +35,9 @@ export class GraphNode<Datum> extends React.Component<GraphNodeProps<Datum>, {}>
         isTerminal: false,
         highlight: false,
 
-        onClickHandler: () => {
+        onClick: () => {
         },
-        onAlternativeClickHandler: () => {
+        onAlternativeClick: () => {
         }
     }
 
@@ -48,10 +48,10 @@ export class GraphNode<Datum> extends React.Component<GraphNodeProps<Datum>, {}>
 
     private handleClick(e: React.MouseEvent) {
         const {node} = this.props
-        if (e.ctrlKey && this.props.onAlternativeClickHandler) {
-            this.props.onAlternativeClickHandler(node.data, e);
-        } else if (this.props.onClickHandler) {
-            this.props.onClickHandler(node.data, e);
+        if (e.ctrlKey) {
+            this.props.onAlternativeClick(node.data, e);
+        } else if (this.props.onClick) {
+            this.props.onClick(node.data, e);
         }
     }
 

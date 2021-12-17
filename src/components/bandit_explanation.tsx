@@ -169,8 +169,8 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
                        className={`bandit-explanation ${details.selected ? 'selected' : ''} ${highlight ? 'highlight' : ''}`}
                        nodeWidth={BanditExplanationsComponent.NODE_WIDTH}
                        nodeHeight={BanditExplanationsComponent.NODE_HEIGHT}
-                       onClickHandler={this.toggleNode}
-                       onAlternativeClickHandler={this.selectNode}>
+                       onClick={this.toggleNode}
+                       onAlternativeClick={this.selectNode}>
                 <>
                     <CollapseComp showInitial={false} className={''}>
                         <h3>

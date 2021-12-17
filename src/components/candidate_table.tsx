@@ -104,6 +104,8 @@ interface CandidateTableRowProps {
 
     structures: Structure[]
     explanations: Explanations
+
+    open: boolean
 }
 
 interface CandidateTableRowState {
@@ -118,11 +120,16 @@ class CandidateTableRow extends React.Component<CandidateTableRowProps, Candidat
 
     constructor(props: CandidateTableRowProps) {
         super(props);
-        this.state = {open: false, selectedComponent: [undefined, undefined]}
+        this.state = {open: this.props.open, selectedComponent: [undefined, undefined]}
 
         this.toggleOpen = this.toggleOpen.bind(this)
         this.openComponent = this.openComponent.bind(this)
         this.openCandidateInJupyter = this.openCandidateInJupyter.bind(this)
+    }
+
+    componentDidUpdate(prevProps: Readonly<CandidateTableRowProps>, prevState: Readonly<CandidateTableRowState>, snapshot?: any) {
+        if (!prevProps.open && this.props.open)
+            this.setState({open: true})
     }
 
     private toggleOpen(e: React.MouseEvent) {
@@ -188,7 +195,7 @@ ${ID}_pipeline
                                                  onComponentSelection={this.openComponent}/>
                     </TableCell>
                     <TableCell>
-                        <JupyterButton onClickHandler={this.openCandidateInJupyter}/>
+                        <JupyterButton onClick={this.openCandidateInJupyter}/>
                         <IconButton aria-label='expand row' size='small' onClick={this.toggleOpen}>
                             {this.state.open ? <KeyboardArrowUpIcon/> : <KeyboardArrowDownIcon/>}
                         </IconButton>
@@ -218,6 +225,7 @@ ${ID}_pipeline
 interface CandidateTableProps {
     structures: Structure[];
     selectedCandidates: Set<CandidateId>;
+    showCandidate: CandidateId;
     meta: MetaInformation;
     explanations: Explanations;
     onCandidateSelection?: (cid: Set<CandidateId>) => void;
@@ -294,6 +302,12 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
             const rows = this.calculateData()
             this.setState({rows: rows})
         }
+
+        if (prevProps.showCandidate !== this.props.showCandidate && this.props.showCandidate !== undefined) {
+            const idx = this.state.rows.map(c => c.id).indexOf(this.props.showCandidate)
+            const page = Math.trunc(idx / this.state.rowsPerPage)
+            this.setState({page: page})
+        }
     }
 
     private calculateData(): SingleCandidate[] {
@@ -365,7 +379,8 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
                                                            selected={this.props.selectedCandidates.has(row.id)}
                                                            onSelectionToggle={this.handleSelectionToggle}
                                                            structures={structures}
-                                                           explanations={explanations}/>
+                                                           explanations={explanations}
+                                                           open={row.id === this.props.showCandidate}/>
                                     );
                                 })}
                         </TableBody>

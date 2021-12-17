@@ -147,7 +147,7 @@ ${ID}_feature_importance
                     {bars.length > 0 &&
                     <>
                         <div style={{display: "flex", flexDirection: "row-reverse"}}>
-                            <JupyterButton onClickHandler={this.exportDataFrame}    />
+                            <JupyterButton onClick={this.exportDataFrame}    />
                         </div>
 
                         {additionalFeatures.length > 0 && <AdditionalFeatureWarning/>}

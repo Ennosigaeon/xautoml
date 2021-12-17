@@ -63,6 +63,7 @@ interface ReactRootProps {
 
 interface ReactRootState {
     selectedCandidates: Set<CandidateId>
+    showCandidate: CandidateId
     openTab: string
     mounted: boolean
 }
@@ -73,14 +74,20 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
 
     constructor(props: ReactRootProps) {
         super(props);
-        this.state = {selectedCandidates: new Set<CandidateId>(), mounted: false, openTab: '1'}
+        this.state = {selectedCandidates: new Set<CandidateId>(), mounted: false, openTab: '1', showCandidate: undefined}
 
         this.onCandidateSelection = this.onCandidateSelection.bind(this)
         this.switchTab = this.switchTab.bind(this)
     }
 
-    private onCandidateSelection(cids: Set<CandidateId>) {
-        this.setState({selectedCandidates: cids})
+    private onCandidateSelection(cids: Set<CandidateId>, show: boolean = false) {
+        if (show && cids.size === 1) {
+            const cid = cids.values().next().value
+            this.setState({showCandidate: cid, openTab: '1'})
+        }
+        else {
+            this.setState({selectedCandidates: cids})
+        }
     }
 
     componentDidMount() {
@@ -98,7 +105,7 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
 
     render() {
         const {runhistory, jupyter} = this.props
-        const {selectedCandidates, mounted, openTab} = this.state
+        const {selectedCandidates, showCandidate, mounted, openTab} = this.state
 
         if (!mounted) {
             // Render loading indicator while waiting for delayed re-rendering with mounted container
@@ -148,6 +155,7 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
                                                 selectedCandidates={selectedCandidates}
                                                 meta={runhistory.meta}
                                                 explanations={runhistory.explanations}
+                                                showCandidate={showCandidate}
                                                 onCandidateSelection={this.onCandidateSelection}/>
                             </TabPanel>
                             <TabPanel value={'2'}>

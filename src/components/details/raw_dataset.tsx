@@ -127,7 +127,7 @@ ${ID}_df
                     <h4>Output of <i>{algorithm} ({component})</i></h4>
                     {(!loadingDf && outputs.has(component)) &&
                     <JupyterButton style={{marginTop: '14px', float: 'right'}}
-                                   onClickHandler={this.handleLoadDataframe}/>
+                                   onClick={this.handleLoadDataframe}/>
                     }
                 </TwoColumnLayout>
                 <ErrorIndicator error={error}/>

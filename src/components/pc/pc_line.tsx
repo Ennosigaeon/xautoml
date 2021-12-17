@@ -9,7 +9,8 @@ interface PCLineProps {
     line: cpc.Line
     selected: boolean
     highlight: boolean
-    onClick?: (id: CandidateId) => void
+    onClick?: (id: CandidateId) => void,
+    onAlternativeClick?: (id: CandidateId) => void
 }
 
 interface PCLineStats {
@@ -26,6 +27,8 @@ export class PCLine extends React.Component<PCLineProps, PCLineStats> {
 
     static defaultProps = {
         onClick: () => {
+        },
+        onAlternativeClick: () => {
         }
     }
 
@@ -47,7 +50,10 @@ export class PCLine extends React.Component<PCLineProps, PCLineStats> {
     }
 
     private onClick(e: React.MouseEvent) {
-        this.props.onClick(this.props.line.id)
+        if (e.ctrlKey)
+            this.props.onAlternativeClick(this.props.line.id)
+        else
+            this.props.onClick(this.props.line.id)
         e.stopPropagation()
     }
 

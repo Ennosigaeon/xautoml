@@ -5,18 +5,18 @@ import {Button} from "@material-ui/core";
 import JupyterLogo from '../../style/jupyter.svg';
 
 interface JupyterButtonProps {
-    onClickHandler: (event: React.MouseEvent) => void
+    onClick: (event: React.MouseEvent) => void
     style?: CSSProperties | undefined
 }
 
 export class JupyterButton extends React.Component<JupyterButtonProps, {}> {
 
     render() {
-        const {onClickHandler, style} = this.props
+        const {onClick, style} = this.props
 
         return (
             <Button className={'jupyter-button'}
-                    onClick={onClickHandler}
+                    onClick={onClick}
                     style={style}>
                 Continue in <div dangerouslySetInnerHTML={{__html: JupyterLogo}}/>
             </Button>
