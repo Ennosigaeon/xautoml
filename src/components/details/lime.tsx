@@ -161,7 +161,7 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
                     }
 
                     {data?.expl.size > 0 &&
-                    <div style={{minWidth: "200px"}}>
+                    <div style={{minWidth: "350px"}}>
                         {data.additional_features.length > 0 && <AdditionalFeatureWarning/>}
                         <CollapseComp showInitial={true}>
                             <h5>Predicted Class Probabilities</h5>

@@ -65,21 +65,9 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
 
         return (
             <>
-                {/* TODO samples not correctly assembled for auto-sklearn*/}
-                <CollapseComp showInitial={true}>
-                    <h4>Search Space Overview</h4>
-                    {explanations.structures &&
-                        <BanditExplanationsComponent explanations={explanations.structures}
-                                                     structures={structures}
-                                                     timestamp={cidToSid(candidate.id)}/>
-                    }
-                    <SurrogateExplanation meta={meta} structure={structure} candidate={candidate}
-                                          explanation={explanations.configs.get(candidate.id)}/>
-                </CollapseComp>
-
                 <CollapseComp showInitial={true} help={RawDataset.HELP + '\n\n' + LimeComponent.HELP}>
                     <h4>Data Set Preview</h4>
-                    <TwoColumnLayout widthRight={'15%'}>
+                    <TwoColumnLayout widthRight={'25%'}>
                         <RawDataset model={model} onSampleClick={this.handleSampleSelection}/>
                         <LimeComponent model={model}/>
                     </TwoColumnLayout>
@@ -92,11 +80,6 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
                     <HPImportanceComp structure={structure} component={componentId}/>
                 </CollapseComp>
 
-                <CollapseComp showInitial={true} help={PerformanceComponent.HELP}>
-                    <h4>Performance Details</h4>
-                    <PerformanceComponent model={model} candidateMap={new Map(structure.configs.map(c => [c.id, c]))}/>
-                </CollapseComp>
-
                 <CollapseComp showInitial={true} help={FeatureImportanceComponent.HELP}>
                     <h4>Feature Importance</h4>
                     <FeatureImportanceComponent model={model} height={200}/>
@@ -105,6 +88,25 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
                 <CollapseComp showInitial={true} help={GlobalSurrogateComponent.HELP}>
                     <h4>Global Approximation</h4>
                     <GlobalSurrogateComponent model={model}/>
+                </CollapseComp>
+
+                <hr/>
+
+                <CollapseComp showInitial={true} help={PerformanceComponent.HELP}>
+                    <h4>Performance Details</h4>
+                    <PerformanceComponent model={model} candidateMap={new Map(structure.configs.map(c => [c.id, c]))}/>
+                </CollapseComp>
+
+                {/* TODO samples not correctly assembled for auto-sklearn*/}
+                <CollapseComp showInitial={true}>
+                    <h4>Search Space Overview</h4>
+                    {explanations.structures &&
+                        <BanditExplanationsComponent explanations={explanations.structures}
+                                                     structures={structures}
+                                                     timestamp={cidToSid(candidate.id)}/>
+                    }
+                    <SurrogateExplanation meta={meta} structure={structure} candidate={candidate}
+                                          explanation={explanations.configs.get(candidate.id)}/>
                 </CollapseComp>
             </>
         )
