@@ -21,7 +21,6 @@ interface SingleCandidate {
     id: CandidateId;
     timestamp: number;
     performance: number;
-    budget: number;
     candidate: [Structure, Candidate];
 }
 
@@ -186,7 +185,6 @@ ${ID}_pipeline
                     </TableCell>
                     <TableCell align='right'>{prettyPrint(candidate.timestamp, 2)}</TableCell>
                     <TableCell align='right'>{prettyPrint(candidate.performance, 4)}</TableCell>
-                    <TableCell align='right'>{prettyPrint(candidate.budget, 2)}</TableCell>
                     <TableCell align='right' style={{height: '50px'}} padding='none'>
                         <StructureGraphComponent structure={candidate.candidate[0]}
                                                  candidate={candidate.candidate[1]}
@@ -202,7 +200,7 @@ ${ID}_pipeline
                     </TableCell>
                 </TableRow>
                 <TableRow>
-                    <TableCell style={{padding: 0}} colSpan={7}>
+                    <TableCell style={{padding: 0}} colSpan={6}>
                         <Collapse in={this.state.open} timeout='auto' unmountOnExit={false} mountOnEnter={true}>
                             <Box margin={1}>
                                 <DataSetDetailsComponent
@@ -320,7 +318,6 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
                         id: c.id,
                         timestamp: c.runtime.timestamp,
                         performance: c.loss,
-                        budget: c.budget,
                         candidate: [structure, c]
                     }
                 )
@@ -345,7 +342,6 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
             {id: 'id', numeric: false, sortable: true, label: 'Id', width: '40px'},
             {id: 'timestamp', numeric: true, sortable: true, label: 'Timestamp', width: '100px'},
             {id: 'performance', numeric: true, sortable: true, label: 'Performance', width: '110px'},
-            {id: 'budget', numeric: true, sortable: true, label: 'Budget', width: '100px'},
             {id: 'candidate', numeric: false, sortable: false, label: 'Configuration', width: 'auto'}
         ];
 
