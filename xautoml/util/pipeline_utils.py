@@ -51,9 +51,15 @@ def get_subpipeline(pipeline: Pipeline,
                 if len(steps) == 0:
                     steps = [(current_step_name, FunctionTransformer())]
 
+                steps = AutoSklearnUtils.patchCategoricalPreprocessing(steps)
+
                 current_step = Pipeline(steps)
                 new_input = new_input
-            elif isinstance(step, ColumnTransformer):
+            elif isinstance(step, ColumnTransformer) or AutoSklearnUtils.isFeatTypeSplit(step):
+                if AutoSklearnUtils.isFeatTypeSplit(step):
+                    # noinspection PyUnresolvedReferences
+                    step = step.column_transformer
+
                 modified_input = {}
                 modified_transformers = []
                 for name, transformer, columns in step.transformers_:
