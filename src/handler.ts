@@ -129,7 +129,7 @@ export interface FeatureImportance {
 export function requestRocCurve(cids: CandidateId[], model_files: string[], data_file: string): CancelablePromise<RocCurveData> {
     const promise = memRequestAPI<Map<string, LinePoint[]>>('roc_auc', {
         method: 'POST', body: JSON.stringify({
-            'cids': cids.join(','),
+            'cids': cids.slice(0, 50).join(','), // Truncate to at most 50 ids due to performance reasons
             'data_file': data_file,
             'model_files': model_files.join(',')
         })

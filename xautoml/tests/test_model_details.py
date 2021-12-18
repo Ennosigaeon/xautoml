@@ -66,5 +66,17 @@ def test_lime_string_class():
     print(res)
 
 
+def test_confusion_matrix():
+    X, y, feature_labels, pipeline = BaseHandler.load_model({
+        "data_file": "/home/marc/phd/code/dswizard/scripts/run/autosklearn_catgeorical/input/autosklearn_classification_example_tmp/dataset.pkl",
+        "model_files": "/home/marc/phd/code/dswizard/scripts/run/autosklearn_catgeorical/input/autosklearn_classification_example_tmp/.auto-sklearn/runs/1_12_0.0/1.12.0.0.model"
+    })
+
+    details = ModelDetails()
+    cm = details.calculate_confusion_matrix(X, y, pipeline)
+
+    print(cm)
+
+
 if __name__ == '__main__':
     test_decision_tree()

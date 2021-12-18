@@ -163,6 +163,7 @@ class RocCurveHandler(BaseHandler):
     def _process_post(self, model):
         micro = model.get('micro', False)
         macro = model.get('macro', True)
+        max_samples = model.get('sample_rate', 50)
         cids = model.get('cids').split(',')
         X, y, _, models = self.load_models(model)
 
@@ -170,12 +171,14 @@ class RocCurveHandler(BaseHandler):
         for cid, pipeline in zip(cids, models):
             try:
                 roc = RocCurve(micro=micro, macro=macro)
-                roc.score(pipeline, X, y, json=True)
+                roc.score(pipeline, X, y)
 
                 # Transform into format suited for recharts
                 for fpr, tpr, label in roc.get_data(cid):
                     ls = []
-                    for f, t in zip(fpr, tpr):
+
+                    sample_rate = max(1, len(fpr) // max_samples)
+                    for f, t in zip(fpr[::sample_rate], tpr[::sample_rate]):
                         ls.append({'x': f, 'y': t})
                     result[label] = ls
             except ValueError as ex:
