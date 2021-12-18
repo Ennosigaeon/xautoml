@@ -10,12 +10,11 @@ def test_source():
     }
     step = 'SOURCE'
 
-    X, y, feature_labels, pipeline = FeatureImportanceHandler.load_model(model)
+    X, y, pipeline = FeatureImportanceHandler.load_model(model)
 
-    pipeline, X, feature_labels, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X, y,
-                                                                                      feature_labels)
+    pipeline, X, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X, y)
     details = ModelDetails()
-    res = details.calculate_feature_importance(X, y, pipeline, feature_labels)
+    res = details.calculate_feature_importance(X, y, pipeline)
     print(res)
 
 
@@ -26,10 +25,9 @@ def test_step():
     }
     step = "data_preprocessing:categorical:imputation"
 
-    X, y, feature_labels, pipeline = FeatureImportanceHandler.load_model(model)
+    X, y, pipeline = FeatureImportanceHandler.load_model(model)
 
-    pipeline, X, feature_labels, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X, y,
-                                                                                      feature_labels)
+    pipeline, X, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X, y)
     details = ModelDetails()
-    res = details.calculate_feature_importance(X, y, pipeline, feature_labels)
+    res = details.calculate_feature_importance(X, y, pipeline)
     print(res)

@@ -12,20 +12,20 @@ from sklearn.tree._export import _compute_depth
 from sklearn.utils.validation import check_is_fitted
 
 from xautoml.output import OutputCalculator, RAW
+from xautoml.util.auto_sklearn import AutoSklearnUtils
 from xautoml.util.constants import SOURCE, SINK
 from xautoml.util.mlinsights import get_component, enumerate_pipeline_models
 
 
 def get_subpipeline(pipeline: Pipeline,
                     start_after: str,
-                    X: np.ndarray,
-                    y: np.ndarray,
-                    feature_labels: list[str]) -> tuple[Pipeline, np.ndarray, list[str], list[str]]:
+                    X: pd.DataFrame,
+                    y: pd.Series) -> tuple[Pipeline, pd.DataFrame, list[str]]:
     if start_after == SOURCE or start_after == SINK or start_after == pipeline.steps[-1][0]:
-        return pipeline, X, feature_labels, []
+        additional_features = []
     else:
         df_handler = OutputCalculator()
-        inputs, outputs = df_handler.calculate_outputs(pipeline, X, y, feature_labels, method=RAW)
+        inputs, outputs = df_handler.calculate_outputs(pipeline, X, y, method=RAW)
 
         for selected_coordinate, model, subset in enumerate_pipeline_models(pipeline):
             initial_step_name, initial_step = get_component(selected_coordinate, pipeline)
@@ -107,8 +107,7 @@ def get_subpipeline(pipeline: Pipeline,
                                 outputs[initial_step_name].add_prefix('_').columns.tolist()
         return (
             current_step,
-            new_input.to_numpy(),
-            new_input.columns.tolist(),
+            new_input,
             list(set(new_input.columns) - set(initial_feature_names))
         )
 
@@ -125,13 +124,14 @@ class DataFrameImputer(TransformerMixin):
 
         """
 
-    def fit(self, X, y=None):
+    def fit(self, X: pd.DataFrame, y=None):
         fill = []
         for c in X:
             if X[c].dtype.name in ['category', 'object', 'string']:
                 fill.append(X[c].value_counts().index[0])
             else:
-                fill.append(X[c].mean().astype(X[c].dtype.numpy_dtype))
+                correct_type = X[c].dtype.numpy_dtype if hasattr(X[c].dtype, 'numpy_dtype') else X[c].dtype
+                fill.append(X[c].mean().astype(correct_type))
 
         self.fill = pd.Series(fill, index=X.columns)
         return self

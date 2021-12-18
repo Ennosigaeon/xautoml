@@ -55,40 +55,41 @@ class DecisionTreeResult:
 class ModelDetails:
 
     @staticmethod
-    def calculate_confusion_matrix(X: np.ndarray, y: np.ndarray, model):
+    def calculate_confusion_matrix(X: pd.DataFrame, y: pd.Series, model):
         y_pred = model.predict(X)
         cm = confusion_matrix(y, y_pred)
         labels = unique_labels(y, y_pred)
         return pd.DataFrame(cm, columns=labels, index=labels)
 
     @staticmethod
-    def calculate_lime(X: np.ndarray, y: np.ndarray, model, feature_labels: list[str], idx: int) -> LimeResult:
+    def calculate_lime(df: pd.DataFrame, y: pd.Series, model, idx: int) -> LimeResult:
         try:
             import lime.lime_tabular
         except ImportError:
             raise ValueError('Local explanations not possible. Please install LIME first.')
 
-        df = pd.DataFrame(X, columns=feature_labels).convert_dtypes()
+        # TODO check if this preprocessing pipeline is really useful. Maybe just abort for categorical input
         num_columns = make_column_selector(dtype_include=np.number)(df)
         cat_columns = make_column_selector(dtype_exclude=np.number)(df)
         pipeline = Pipeline(steps=[
             ('imputation', DataFrameImputer()),
             ('encoding',
              ColumnTransformer(transformers=[('cat', OrdinalEncoder(), cat_columns)], remainder='passthrough'))])
-        df2 = pipeline.fit_transform(df)
+        X = pipeline.fit_transform(df)
+
         encoder = pipeline.steps[1][1].transformers_[0][1]
         categorical_features = range(0, len(cat_columns))
         categorical_names = {idx: encoder.categories_[idx] for idx in categorical_features}
 
         class_names = np.unique(y)
 
-        explainer = lime.lime_tabular.LimeTabularExplainer(df2,
+        explainer = lime.lime_tabular.LimeTabularExplainer(X,
                                                            feature_names=cat_columns + num_columns,
                                                            discretize_continuous=True,
                                                            categorical_features=categorical_features,
                                                            categorical_names=categorical_names,
                                                            class_names=class_names)
-        explanation = explainer.explain_instance(df2[idx], model.predict_proba, num_features=10,
+        explanation = explainer.explain_instance(X[idx], model.predict_proba, num_features=10,
                                                  top_labels=np.unique(y).shape[0])
 
         all_explanations = {}
@@ -99,11 +100,8 @@ class ModelDetails:
         return LimeResult(idx, all_explanations, probabilities, getattr(y[idx], "tolist", lambda: y[idx])())
 
     @staticmethod
-    def calculate_decision_tree(X: np.ndarray, model,
-                                feature_labels: list[str],
-                                max_leaf_nodes: int = None) -> DecisionTreeResult:
-        df = pd.DataFrame(X, columns=feature_labels).convert_dtypes()
-        y_pred = model.predict(X)
+    def calculate_decision_tree(df: pd.DataFrame, model, max_leaf_nodes: int = None) -> DecisionTreeResult:
+        y_pred = model.predict(df)
 
         if max_leaf_nodes is not None:
             return ModelDetails._fit_single_dt(df, y_pred, max_leaf_nodes)
@@ -150,7 +148,6 @@ class ModelDetails:
         )
 
     @staticmethod
-    def calculate_feature_importance(X: np.ndarray, y: np.ndarray, model, feature_labels: list[str]):
+    def calculate_feature_importance(X: pd.DataFrame, y: pd.Series, model):
         result = permutation_importance(model, X, y, scoring='f1_weighted', random_state=0)
-        return pd.DataFrame(np.stack((result.importances_mean, result.importances_std)),
-                            columns=feature_labels)
+        return pd.DataFrame(np.stack((result.importances_mean, result.importances_std)), columns=X.columns)

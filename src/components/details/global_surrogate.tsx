@@ -133,11 +133,11 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
 from xautoml.util import io_utils, pipeline_utils
 import pandas as pd
 
-${ID}_X, ${ID}_y, ${ID}_feature_labels = io_utils.load_input_data('${meta.data_file}', framework='${meta.framework}')
+${ID}_X, ${ID}_y = io_utils.load_input_data('${meta.data_file}', framework='${meta.framework}')
 ${ID}_pipeline = io_utils.load_pipeline('${candidate.model_file}', framework='${meta.framework}')
-${ID}_pipeline, ${ID}_X, ${ID}_feature_labels, _ = pipeline_utils.get_subpipeline(${ID}_pipeline, '${component}', ${ID}_X, ${ID}_y, ${ID}_feature_labels)
+${ID}_pipeline, ${ID}_X, _ = pipeline_utils.get_subpipeline(${ID}_pipeline, '${component}', ${ID}_X, ${ID}_y)
 
-${ID}_dt = pipeline_utils.fit_decision_tree(pd.DataFrame(${ID}_X, columns=${ID}_feature_labels).convert_dtypes(), ${ID}_pipeline.predict(${ID}_X), max_leaf_nodes=${maxLeafNodes})
+${ID}_dt = pipeline_utils.fit_decision_tree(${ID}_X, ${ID}_pipeline.predict(${ID}_X), max_leaf_nodes=${maxLeafNodes})
 ${ID}_dt
         `.trim())
     }

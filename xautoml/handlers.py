@@ -5,7 +5,6 @@ import traceback
 from typing import Optional, Awaitable
 
 import joblib
-import numpy as np
 import pandas as pd
 import tornado.web
 from jupyter_server.base.handlers import APIHandler
@@ -97,7 +96,7 @@ class BaseHandler(APIHandler):
         return wrapper
 
     @staticmethod
-    def load_models(model) -> tuple[np.ndarray, np.ndarray, list[str], list[Pipeline]]:
+    def load_models(model) -> tuple[pd.DataFrame, pd.Series, list[Pipeline]]:
         data_file = model.get('data_file')
         model_files = model.get('model_files').split(',')
 
@@ -113,22 +112,22 @@ class BaseHandler(APIHandler):
                 # Failed configurations do not have a model file
                 pass
 
-        return X, y, feature_labels, models
+        return pd.DataFrame(X, columns=feature_labels).convert_dtypes(), pd.Series(y), models
 
     @staticmethod
-    def load_model(model):
-        X, y, feature_labels, models = BaseHandler.load_models(model)
+    def load_model(model) -> tuple[pd.DataFrame, pd.Series, Pipeline]:
+        X, y, models = BaseHandler.load_models(model)
         if len(models) == 0:
             raise ValueError('Unable to use failed pipeline to evaluate model.')
 
         assert len(models) == 1, 'Expected exactly 1 model, got {}'.format(len(models))
         pipeline = models[0]
-        return X, y, feature_labels, pipeline
+        return X, y, pipeline
 
-    def _get_intermediate_output(self, X, y, label, model, method):
+    def _get_intermediate_output(self, X, y, model, method):
         df_handler = OutputCalculator()
         try:
-            _, outputs = df_handler.calculate_outputs(model, X, y, label, method=method)
+            _, outputs = df_handler.calculate_outputs(model, X, y, method=method)
             return outputs
         except ValueError as ex:
             self.log.error('Failed to calculate intermediate dataframes', exc_info=ex)
@@ -137,8 +136,8 @@ class BaseHandler(APIHandler):
 class OutputHandler(BaseHandler):
 
     def _calculate_output(self, model, method):
-        X, y, feature_labels, pipeline = self.load_model(model)
-        steps = self._get_intermediate_output(X, y, feature_labels, pipeline, method=method)
+        X, y, pipeline = self.load_model(model)
+        steps = self._get_intermediate_output(X, y, pipeline, method=method)
         self.finish(json.dumps(steps))
 
 
@@ -165,7 +164,7 @@ class RocCurveHandler(BaseHandler):
         macro = model.get('macro', True)
         max_samples = model.get('sample_rate', 50)
         cids = model.get('cids').split(',')
-        X, y, _, models = self.load_models(model)
+        X, y, models = self.load_models(model)
 
         result = {}
         for cid, pipeline in zip(cids, models):
@@ -190,7 +189,7 @@ class LimeHandler(BaseHandler):
     # TODO should be async
 
     def _process_post(self, model):
-        X, y, feature_labels, pipeline = BaseHandler.load_model(model)
+        X, y, pipeline = BaseHandler.load_model(model)
         idx = model.get('idx', 0)
         step = model.get('step', SOURCE)
 
@@ -198,11 +197,10 @@ class LimeHandler(BaseHandler):
             res = LimeResult(idx, {}, {}, getattr(y[idx], "tolist", lambda: y[idx])())
             additional_features = False
         else:
-            pipeline, X, feature_labels, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X, y,
-                                                                                              feature_labels)
+            pipeline, X, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X, y)
             details = ModelDetails()
             try:
-                res = details.calculate_lime(X, y, pipeline, feature_labels, idx)
+                res = details.calculate_lime(X, y, pipeline, idx)
             except TypeError:
                 res = LimeResult(idx, {}, {}, getattr(y[idx], "tolist", lambda: y[idx])(), categorical_input=True)
 
@@ -212,7 +210,7 @@ class LimeHandler(BaseHandler):
 class ConfusionMatrixHandler(BaseHandler):
 
     def _process_post(self, model):
-        X, y, feature_labels, pipeline = self.load_model(model)
+        X, y, pipeline = self.load_model(model)
         details = ModelDetails()
         cm = details.calculate_confusion_matrix(X, y, pipeline)
         self.finish(json.dumps({"classes": cm.columns.to_list(), "values": cm.values.tolist()}))
@@ -221,7 +219,7 @@ class ConfusionMatrixHandler(BaseHandler):
 class DecisionTreeHandler(BaseHandler):
 
     def _process_post(self, model):
-        X, y, feature_labels, pipeline = self.load_model(model)
+        X, y, pipeline = self.load_model(model)
         step = model.get('step', SOURCE)
         max_leaf_nodes = model.get('max_leaf_nodes', None)
 
@@ -230,10 +228,9 @@ class DecisionTreeHandler(BaseHandler):
             res = DecisionTreeResult(pipeline_utils.Node('empty', []), 0, 0, 0, 2)
             additional_features = False
         else:
-            pipeline, X, feature_labels, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X, y,
-                                                                                              feature_labels)
+            pipeline, X, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X, y)
             details = ModelDetails()
-            res = details.calculate_decision_tree(X, pipeline, feature_labels, max_leaf_nodes=max_leaf_nodes)
+            res = details.calculate_decision_tree(X, pipeline, max_leaf_nodes=max_leaf_nodes)
 
         self.finish(json.dumps(res.as_dict(additional_features)))
 
@@ -242,17 +239,16 @@ class FeatureImportanceHandler(BaseHandler):
     # TODO should be async
 
     def _process_post(self, model):
-        X, y, feature_labels, pipeline = FeatureImportanceHandler.load_model(model)
+        X, y, pipeline = FeatureImportanceHandler.load_model(model)
         step = model.get('step', SOURCE)
 
         if step == pipeline.steps[-1][0] or step == SINK:
             res = pd.DataFrame(data={'0': {'0': 1, '1': 0}})
             additional_features = []
         else:
-            pipeline, X, feature_labels, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X, y,
-                                                                                              feature_labels)
+            pipeline, X, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X, y)
             details = ModelDetails()
-            res = details.calculate_feature_importance(X, y, pipeline, feature_labels)
+            res = details.calculate_feature_importance(X, y, pipeline)
         self.finish(json.dumps({'data': res.to_dict(), 'additional_features': additional_features}))
 
 

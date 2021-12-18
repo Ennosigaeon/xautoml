@@ -11,32 +11,7 @@ from sklearn.base import TransformerMixin, ClassifierMixin, RegressorMixin, Base
 from sklearn.compose import ColumnTransformer, TransformedTargetRegressor
 from sklearn.pipeline import Pipeline, FeatureUnion
 
-
-class AutoSklearnUtils:
-
-    @staticmethod
-    def isFeatTypeSplit(pipe):
-        try:
-            from autosklearn.pipeline.components.data_preprocessing.feature_type import FeatTypeSplit
-            return isinstance(pipe, FeatTypeSplit)
-        except ImportError:
-            return False
-
-    @staticmethod
-    def isChoice(pipe):
-        try:
-            from autosklearn.pipeline.components.base import AutoSklearnChoice
-            return isinstance(pipe, AutoSklearnChoice)
-        except ImportError:
-            return False
-
-    @staticmethod
-    def isDataPreprocessorChoice(pipe):
-        try:
-            from autosklearn.pipeline.components.data_preprocessing import DataPreprocessorChoice
-            return isinstance(pipe, DataPreprocessorChoice)
-        except ImportError:
-            return False
+from xautoml.util.auto_sklearn import AutoSklearnUtils
 
 
 def enumerate_pipeline_models(pipe, coor=None, vs=None):

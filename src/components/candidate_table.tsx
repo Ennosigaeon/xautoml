@@ -154,7 +154,7 @@ class CandidateTableRow extends React.Component<CandidateTableRowProps, Candidat
         this.context.createCell(`
 from xautoml.util import io_utils
 
-${ID}_X, ${ID}_y, _ = io_utils.load_input_data('${this.props.meta.data_file}', framework='${this.props.meta.framework}')
+${ID}_X, ${ID}_y = io_utils.load_input_data('${this.props.meta.data_file}', framework='${this.props.meta.framework}')
 ${ID}_pipeline = io_utils.load_pipeline('${this.props.candidate.candidate[1].model_file}', framework='${this.props.meta.framework}')
 ${ID}_pipeline
         `.trim())

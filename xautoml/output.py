@@ -1,7 +1,6 @@
 import warnings
 from typing import Union
 
-import numpy as np
 import pandas as pd
 
 from xautoml.util.constants import SOURCE, SINK
@@ -15,7 +14,7 @@ RAW = 2
 class OutputCalculator:
 
     @staticmethod
-    def load_data(d: dict, y: np.ndarray, method: int) -> Union[str, pd.DataFrame]:
+    def load_data(d: dict, y: pd.Series, method: int) -> Union[str, pd.DataFrame]:
         if len(d) == 0:
             if method != RAW:
                 return ''
@@ -38,14 +37,14 @@ class OutputCalculator:
             raise ValueError('Unknown method {}'.format(method))
 
     @staticmethod
-    def calculate_outputs(pipeline, X, y, feature_labels, method: int = RAW) -> \
+    def calculate_outputs(pipeline, X: pd.DataFrame, y: pd.Series, method: int = RAW) -> \
         tuple[dict[str, Union[str, pd.DataFrame]], dict[str, Union[str, pd.DataFrame]]]:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", UserWarning)
             alter_pipeline_for_debugging(pipeline)
             pipeline.predict(X)
             try:
-                pipeline.get_feature_names_out(feature_labels)
+                pipeline.get_feature_names_out(X.columns)
             except AttributeError:
                 pass
 

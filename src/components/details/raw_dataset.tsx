@@ -102,10 +102,10 @@ export class RawDataset extends React.Component<RawDatasetProps, RawDatasetState
         this.context.createCell(`
 from xautoml.util import io_utils
 
-${ID}_X, _, ${ID}_feature_labels = io_utils.load_input_data('${meta.data_file}', framework='${meta.framework}')
+${ID}_X, _ = io_utils.load_input_data('${meta.data_file}', framework='${meta.framework}')
 ${ID}_pipeline = io_utils.load_pipeline('${candidate.model_file}', framework='${meta.framework}')
 
-${ID}_df = io_utils.load_output_dataframe(${ID}_pipeline, '${component}', ${ID}_X, ${ID}_feature_labels)
+${ID}_df = io_utils.load_output_dataframe(${ID}_pipeline, '${component}', ${ID}_X)
 ${ID}_df
         `.trim())
     }
