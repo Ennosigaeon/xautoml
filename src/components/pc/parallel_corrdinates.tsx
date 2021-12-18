@@ -45,7 +45,8 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
         explanation: (undefined as Config.Explanation),
         selectedCandidates: new Set<CandidateId>(),
         onCandidateSelection: () => {
-        }
+        },
+        timestamp: Infinity
     }
 
     constructor(props: PCProps) {

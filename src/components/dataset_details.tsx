@@ -72,7 +72,6 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
                     </TwoColumnLayout>
                 </CollapseComp>
 
-                {/* TODO: breaks for auto-sklearn*/}
                 <CollapseComp showInitial={true} help={HPImportanceComp.HELP}>
                     <h4>Hyperparameter Importance of {Components.isPipEnd(model.component) ? <>All Components</> :
                         <i>{model.algorithm} ({model.component})</i>}</h4>
@@ -96,7 +95,6 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
                     <PerformanceComponent model={model} candidateMap={new Map(structure.configs.map(c => [c.id, c]))}/>
                 </CollapseComp>
 
-                {/* TODO samples not correctly assembled for auto-sklearn*/}
                 <CollapseComp showInitial={true}>
                     <h4>Configuration Origin</h4>
                     <ConfigOriginComp candidate={candidate}
