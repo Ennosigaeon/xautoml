@@ -2,6 +2,8 @@ import {URLExt} from '@jupyterlab/coreutils';
 
 import {ServerConnection} from '@jupyterlab/services';
 import {CandidateId, Config} from "./model";
+import memoizee from "memoizee";
+
 
 export class ServerError extends Error {
 
@@ -79,6 +81,12 @@ export async function requestAPI<T>(
     return data;
 }
 
+const memRequestAPI = memoizee(requestAPI, {
+    promise: true, primitive: true, length: 2, max: 100, normalizer: (args => {
+        return `\u0001${args[0]}\u0001${args[1].body}`;
+    })
+});
+
 export interface LinePoint {
     x: number
     y: number
@@ -119,7 +127,7 @@ export interface FeatureImportance {
 }
 
 export function requestRocCurve(cids: CandidateId[], model_files: string[], data_file: string): CancelablePromise<RocCurveData> {
-    const promise = requestAPI<Map<string, LinePoint[]>>('roc_auc', {
+    const promise = memRequestAPI<Map<string, LinePoint[]>>('roc_auc', {
         method: 'POST', body: JSON.stringify({
             'cids': cids.join(','),
             'data_file': data_file,
@@ -140,7 +148,7 @@ export async function requestOutputDescription(model_file: string, data_file: st
 }
 
 async function requestOutput(model_file: string, data_file: string, method: string): Promise<OutputDescriptionData> {
-    return requestAPI<Map<string, Map<string, string>>>(`output/${method}`, {
+    return memRequestAPI<Map<string, Map<string, string>>>(`output/${method}`, {
         method: 'POST', body: JSON.stringify({
             'data_file': data_file,
             'model_files': model_file
@@ -156,7 +164,7 @@ export interface ConfusionMatrixData {
 }
 
 export async function requestConfusionMatrix(model_file: string, data_file: string): Promise<ConfusionMatrixData> {
-    return requestAPI<ConfusionMatrixData>(`confusion_matrix`, {
+    return memRequestAPI<ConfusionMatrixData>(`confusion_matrix`, {
         method: 'POST', body: JSON.stringify({
             'data_file': data_file,
             'model_files': model_file
@@ -180,7 +188,7 @@ export function requestLimeApproximation(model_file: string, idx: number, data_f
     //     })
     // })
 
-    const promise = requestAPI<LimeResult>('explanations/lime', {
+    const promise = memRequestAPI<LimeResult>('explanations/lime', {
         method: 'POST', body: JSON.stringify({
             'idx': idx,
             'data_file': data_file,
@@ -196,7 +204,7 @@ export function requestLimeApproximation(model_file: string, idx: number, data_f
 }
 
 export function requestGlobalSurrogate(model_file: string, data_file: string, step: string, max_leaf_nodes: number = undefined): CancelablePromise<DecisionTreeResult> {
-    const promise = requestAPI<DecisionTreeResult>('explanations/dt', {
+    const promise = memRequestAPI<DecisionTreeResult>('explanations/dt', {
         method: 'POST', body: JSON.stringify({
             'data_file': data_file,
             'model_files': model_file,
@@ -236,7 +244,7 @@ export function requestFeatureImportance(model_file: string, data_file: string, 
     //     )
     // })
 
-    const promise = requestAPI<FeatureImportance>('explanations/feature_importance', {
+    const promise = memRequestAPI<FeatureImportance>('explanations/feature_importance', {
         method: 'POST', body: JSON.stringify({
             'data_file': data_file,
             'model_files': model_file,
@@ -272,7 +280,7 @@ export interface FANOVAResponse {
 }
 
 export function requestFANOVA(cs: Config.ConfigSpace, configs: Config[], loss: number[], step?: string): Promise<FANOVAResponse> {
-    return requestAPI<FANOVAResponse>('hyperparameters/fanova', {
+    return memRequestAPI<FANOVAResponse>('hyperparameters/fanova', {
         method: 'POST', body: JSON.stringify({
             'configspace': JSON.parse(cs.json),
             'configs': configs,
@@ -283,7 +291,7 @@ export function requestFANOVA(cs: Config.ConfigSpace, configs: Config[], loss: n
 }
 
 export function requestSimulatedSurrogate(cs: Config.ConfigSpace, configs: Config[], loss: number[]): Promise<Config.Explanation> {
-    return requestAPI<Config.Explanation>('surrogate/simulate', {
+    return memRequestAPI<Config.Explanation>('surrogate/simulate', {
         method: 'POST', body: JSON.stringify({
             'configspace': JSON.parse(cs.json),
             'configs': configs,
