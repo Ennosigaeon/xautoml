@@ -1,6 +1,6 @@
 import React from "react";
 import {Candidate, Explanations, MetaInformation, Structure} from "../model";
-import {cidToSid, Components, JupyterContext} from "../util";
+import {Components, JupyterContext} from "../util";
 import {TwoColumnLayout} from "../util/layout";
 import {LimeComponent} from "./details/lime";
 import {FeatureImportanceComponent} from "./details/feature_importance";
@@ -9,9 +9,8 @@ import {DetailsModel} from "./details/model";
 import {GlobalSurrogateComponent} from "./details/global_surrogate";
 import {CollapseComp} from "../util/collapse";
 import {PerformanceComponent} from "./details/performance";
-import {BanditExplanationsComponent} from "./bandit_explanation";
 import {HPImportanceComp} from "./details/hp_importance";
-import {SurrogateExplanation} from "./surrogate_explanation";
+import {ConfigOriginComp} from "./details/config_origin";
 
 interface DataSetDetailsProps {
     candidate: Candidate
@@ -99,14 +98,12 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
 
                 {/* TODO samples not correctly assembled for auto-sklearn*/}
                 <CollapseComp showInitial={true}>
-                    <h4>Search Space Overview</h4>
-                    {explanations.structures &&
-                        <BanditExplanationsComponent explanations={explanations.structures}
-                                                     structures={structures}
-                                                     timestamp={cidToSid(candidate.id)}/>
-                    }
-                    <SurrogateExplanation meta={meta} structure={structure} candidate={candidate}
-                                          explanation={explanations.configs.get(candidate.id)}/>
+                    <h4>Configuration Origin</h4>
+                    <ConfigOriginComp candidate={candidate}
+                                  structure={structure}
+                                  meta={meta}
+                                  structures={structures}
+                                  explanations={explanations}/>
                 </CollapseComp>
             </>
         )

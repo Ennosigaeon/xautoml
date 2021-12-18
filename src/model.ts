@@ -186,6 +186,8 @@ export class Runtime {
     }
 }
 
+export type ConfigOrigin = 'Default' | 'Initial design' | 'Sobol' | 'Local Search' | 'Random Search (sorted)' | 'Random Search' | 'Hyperopt'
+
 export class Candidate {
 
     public static readonly SUCCESS = 'SUCCESS'
@@ -196,6 +198,7 @@ export class Candidate {
                 public readonly loss: number,
                 public readonly runtime: Runtime,
                 public readonly config: Config,
+                public readonly origin: ConfigOrigin,
                 public readonly model_file: string) {
     }
 
@@ -204,7 +207,7 @@ export class Candidate {
         Object.entries<string | number>(candidate.config as {})
             .forEach(k => config.set(k[0], k[1]));
 
-        return new Candidate(candidate.id, candidate.status, candidate.budget, candidate.loss, Runtime.fromJson(candidate.runtime), config, candidate.model_file)
+        return new Candidate(candidate.id, candidate.status, candidate.budget, candidate.loss, Runtime.fromJson(candidate.runtime), config, candidate.origin, candidate.model_file)
     }
 
     subConfig(step: PipelineStep, prune: boolean): Config {
