@@ -57,7 +57,13 @@ def get_subpipeline(pipeline: Pipeline,
                 modified_input = {}
                 modified_transformers = []
                 for name, transformer, columns in step.transformers_:
-                    named_columns = inputs[step_name].columns[columns]
+                    if isinstance(columns[0], bool) or isinstance(columns[0], int):
+                        named_columns = inputs[step_name].columns[columns]
+                    elif isinstance(columns[0], str):
+                        named_columns = columns
+                    else:
+                        raise ValueError('Unknown column selector {}'.format(columns))
+
                     if current_step_name.endswith(name):
                         for col in new_input:
                             modified_input['_{}'.format(col)] = new_input[col]
@@ -80,6 +86,7 @@ def get_subpipeline(pipeline: Pipeline,
                 current_step.transformers_ = numerical_transformers
                 current_step.n_features_in_ = new_input.shape[1]
                 current_step._n_features = new_input.shape[1]
+                current_step._validate_column_callables(new_input)
             elif isinstance(step, FeatureUnion):
                 modified_transformers = []
                 modified_input = pd.concat([inputs[step_name].copy(), new_input.copy().add_prefix('_')], axis=1)
@@ -105,11 +112,27 @@ def get_subpipeline(pipeline: Pipeline,
 
         initial_feature_names = outputs[initial_step_name].columns.tolist() + \
                                 outputs[initial_step_name].add_prefix('_').columns.tolist()
-        return (
-            current_step,
-            new_input,
-            list(set(new_input.columns) - set(initial_feature_names))
-        )
+
+        pipeline = current_step
+        X = new_input.convert_dtypes()
+        additional_features = list(set(new_input.columns) - set(initial_feature_names))
+
+    # Column Indexing has to be done using index and not column names. Replace with numerical column selector
+    for coordinate, model, subset in enumerate_pipeline_models(pipeline):
+        col_transfomer = None
+        if isinstance(model, ColumnTransformer) and hasattr(model, 'feature_names_in_'):
+            col_transfomer = model
+        elif AutoSklearnUtils.isFeatTypeSplit(model) and hasattr(model.column_transformer, 'feature_names_in_'):
+            col_transfomer = model.column_transformer
+
+        if col_transfomer:
+            del col_transfomer.feature_names_in_
+            col_transfomer.transformers_ = [(name, t, col_transfomer._transformer_to_input_indices[name])
+                                            for name, t, _ in col_transfomer.transformers_]
+            col_transfomer.transformers = [(name, t, col_transfomer._transformer_to_input_indices[name])
+                                           for name, t, _ in col_transfomer.transformers]
+
+    return pipeline, X, additional_features
 
 
 class DataFrameImputer(TransformerMixin):
