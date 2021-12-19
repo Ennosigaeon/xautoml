@@ -4,7 +4,7 @@ import {LoadingIndicator} from "../loading";
 import {DetailsModel} from "./model";
 import {ErrorIndicator} from "../../util/error";
 import {Colors, JupyterContext, prettyPrint} from "../../util";
-import {AdditionalFeatureWarning} from "../../util/warning";
+import {CommonWarnings} from "../../util/warning";
 import {Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, TooltipProps, XAxis, YAxis} from "recharts";
 import {JupyterButton} from "../../util/jupyter-button";
 import {ID} from "../../jupyter";
@@ -137,6 +137,7 @@ ${ID}_feature_importance
             maxLabelLength = Math.max(maxLabelLength, key.length * 4)
         })
         const additionalFeatures = data.has(component) ? data.get(component).additional_features : []
+        const downsampled = data.has(component) ? data.get(component).downsampled : false
 
         return (
             <>
@@ -150,7 +151,7 @@ ${ID}_feature_importance
                             <JupyterButton onClick={this.exportDataFrame}    />
                         </div>
 
-                        {additionalFeatures.length > 0 && <AdditionalFeatureWarning/>}
+                        <CommonWarnings additionalFeatures={additionalFeatures.length > 0} downsampled={downsampled}/>
                         <div style={{height: this.props.height}}>
                             <ResponsiveContainer>
                                 <BarChart data={bars} margin={{bottom: maxLabelLength}}>

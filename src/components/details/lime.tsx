@@ -5,7 +5,7 @@ import {LoadingIndicator} from "../loading";
 import {DetailsModel} from "./model";
 import {ErrorIndicator} from "../../util/error";
 import {CollapseComp} from "../../util/collapse";
-import {AdditionalFeatureWarning} from "../../util/warning";
+import {CommonWarnings} from "../../util/warning";
 import {Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, XAxis, YAxis} from "recharts";
 import ResizeObserver from "resize-observer-polyfill";
 
@@ -71,7 +71,7 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
             this.queryLime(this.props.model.selectedSample)
 
         if (this.container.current && this.resizeObserver === undefined) {
-            this.resizeObserver = new ResizeObserver(entries => {
+            this.resizeObserver = new ResizeObserver(() => {
                 this.container.current.querySelectorAll<SVGLineElement>('.recharts-cartesian-axis-line')
                     .forEach(e => {
                         const x1 = e.x1.animVal.value
@@ -162,7 +162,7 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
 
                     {data?.expl.size > 0 &&
                     <div style={{minWidth: "350px"}}>
-                        {data.additional_features.length > 0 && <AdditionalFeatureWarning/>}
+                        <CommonWarnings additionalFeatures={data.additional_features.length > 0} downsampled={false}/>
                         <CollapseComp showInitial={true}>
                             <h5>Predicted Class Probabilities</h5>
                             <>

@@ -66,8 +66,7 @@ export class SurrogateExplanation extends React.Component<SurrogateExplanationPr
                         {explanation !== undefined &&
                             <>
                                 {this.props.explanation === undefined &&
-                                    <WarningIndicator title={'Simulated Surrogate'}
-                                                      message={'The run history did not contain information about ' +
+                                    <WarningIndicator message={'The run history did not contain information about ' +
                                                           'the surrogate model. The surrogate state is only ' +
                                                           'simulated via hyperparameter importance and may differ ' +
                                                           'significantly from the real surrogate model.'}/>

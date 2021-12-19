@@ -12,7 +12,7 @@ def test_roc_curve():
     micro = model.get('micro', False)
     macro = model.get('macro', True)
     cid = model.get('cids')
-    X, y, pipeline = BaseHandler.load_model(model)
+    X, y, pipeline, _ = BaseHandler.load_model(model)
 
     result = {}
     roc = RocCurve(micro=micro, macro=macro)

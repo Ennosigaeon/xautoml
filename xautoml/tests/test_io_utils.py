@@ -22,7 +22,7 @@ def test_subpipeline():
                  'parallel', 'parallel:pca', 'parallel:scaling', 'classifier', 'SINK']:
         print(step)
 
-        X, y, pipeline = BaseHandler.load_model({
+        X, y, pipeline, _ = BaseHandler.load_model({
             "data_file": "/home/marc/phd/code/dswizard/scripts/run/168746/dataset.pkl",
             "model_files": "/home/marc/phd/code/dswizard/scripts/run/168746/models/models_0-0-0.pkl"
         })
@@ -49,7 +49,7 @@ def test_subpipeline_autosklearn():
                  'balancing', 'feature_preprocessor', 'classifier', 'SINK']:
         print(step)
 
-        X, y, pipeline = BaseHandler.load_model({
+        X, y, pipeline, _ = BaseHandler.load_model({
             "data_file": "/home/marc/phd/code/dswizard/scripts/run/autosklearn_categorical2/input/autosklearn_classification_example_tmp/dataset.pkl",
             "model_files": "/home/marc/phd/code/dswizard/scripts/run/autosklearn_categorical2/input/autosklearn_classification_example_tmp/.auto-sklearn/runs/1_2_0.0/1.2.0.0.model"
         })

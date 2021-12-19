@@ -13,7 +13,7 @@ import Slider from "rc-slider";
 import {ErrorIndicator} from "../../util/error";
 import {KeyValue} from "../../util/KeyValue";
 import {Dag} from "d3-dag";
-import {AdditionalFeatureWarning} from "../../util/warning";
+import {CommonWarnings} from "../../util/warning";
 import {JupyterButton} from "../../util/jupyter-button";
 import {JupyterContext} from "../../util";
 import {ID} from "../../jupyter";
@@ -180,7 +180,8 @@ ${ID}_dt
                                 <JupyterButton style={{float: "right"}} onClick={this.exportTree}/>
                             </div>
                         </div>
-                        {data.additional_features.length > 0 && <AdditionalFeatureWarning/>}
+                        <CommonWarnings additionalFeatures={data.additional_features.length > 0}
+                                        downsampled={data.downsampled}/>
                         <HierarchicalTree nodeHeight={GlobalSurrogateComponent.NODE_HEIGHT}
                                           nodeWidth={GlobalSurrogateComponent.NODE_WIDTH}
                                           data={data.root}

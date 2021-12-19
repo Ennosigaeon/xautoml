@@ -139,7 +139,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
 
     constructor(props: StructureGraphProps) {
         super(props);
-        this.state = {loading: false, outputs: new Map<string, string>(), error: undefined}
+        this.state = {loading: false, outputs: {data: new Map<string, string>(), downsampled: false}, error: undefined}
 
         this.fetchOutputs = this.fetchOutputs.bind(this)
         this.renderNodes = this.renderNodes.bind(this)
@@ -150,7 +150,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
         if (this.state.loading)
             // Loading already in progress
             return
-        if (this.state.outputs.size > 0)
+        if (this.state.outputs.data.size > 0)
             // Outputs already cached
             return
 
@@ -209,7 +209,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
                     <SingleComponent step={node.data}
                                      error={error}
                                      loading={loading}
-                                     output={outputs.get(node.data.id)}
+                                     output={outputs.data.get(node.data.id)}
                                      onHover={this.fetchOutputs}/>
                 </GraphNode>
             )

@@ -5,6 +5,7 @@ import traceback
 from typing import Optional, Awaitable
 
 import joblib
+import numpy as np
 import pandas as pd
 import tornado.web
 from jupyter_server.base.handlers import APIHandler
@@ -26,6 +27,7 @@ class ChildTaskException(Exception):
 
 class BaseHandler(APIHandler):
     is_async = False
+    MAX_SAMPLES = 5000
 
     def data_received(self, chunk: bytes) -> Optional[Awaitable[None]]:
         pass
@@ -96,7 +98,7 @@ class BaseHandler(APIHandler):
         return wrapper
 
     @staticmethod
-    def load_models(model) -> tuple[pd.DataFrame, pd.Series, list[Pipeline]]:
+    def load_models(model, n_samples: int = MAX_SAMPLES) -> tuple[pd.DataFrame, pd.Series, list[Pipeline], bool]:
         data_file = model.get('data_file')
         model_files = model.get('model_files').split(',')
 
@@ -112,17 +114,27 @@ class BaseHandler(APIHandler):
                 # Failed configurations do not have a model file
                 pass
 
-        return pd.DataFrame(X, columns=feature_labels).convert_dtypes(), pd.Series(y), models
+        X = pd.DataFrame(X, columns=feature_labels).convert_dtypes()
+        y = pd.Series(y)
+
+        downsample = X.shape[0] > n_samples
+        if downsample:
+            idx = np.random.choice(X.shape[0], size=n_samples, replace=False)
+            X = X.loc[idx, :].reset_index(drop=True)
+            y = y.loc[idx].reset_index(drop=True)
+
+
+        return X, y, models, downsample
 
     @staticmethod
-    def load_model(model) -> tuple[pd.DataFrame, pd.Series, Pipeline]:
-        X, y, models = BaseHandler.load_models(model)
+    def load_model(model, n_samples: int = MAX_SAMPLES) -> tuple[pd.DataFrame, pd.Series, Pipeline, bool]:
+        X, y, models, downsampled = BaseHandler.load_models(model, n_samples=n_samples)
         if len(models) == 0:
             raise ValueError('Unable to use failed pipeline to evaluate model.')
 
         assert len(models) == 1, 'Expected exactly 1 model, got {}'.format(len(models))
         pipeline = models[0]
-        return X, y, pipeline
+        return X, y, pipeline, downsampled
 
     def _get_intermediate_output(self, X, y, model, method):
         df_handler = OutputCalculator()
@@ -136,9 +148,9 @@ class BaseHandler(APIHandler):
 class OutputHandler(BaseHandler):
 
     def _calculate_output(self, model, method):
-        X, y, pipeline = self.load_model(model)
+        X, y, pipeline, downsampled = self.load_model(model)
         steps = self._get_intermediate_output(X, y, pipeline, method=method)
-        self.finish(json.dumps(steps))
+        self.finish(json.dumps({'data': steps, 'downsampled': downsampled}))
 
 
 class OutputDescriptionHandler(OutputHandler):
@@ -164,7 +176,7 @@ class RocCurveHandler(BaseHandler):
         macro = model.get('macro', True)
         max_samples = model.get('sample_rate', 50)
         cids = model.get('cids').split(',')
-        X, y, models = self.load_models(model)
+        X, y, models, _ = self.load_models(model)
 
         result = {}
         for cid, pipeline in zip(cids, models):
@@ -189,7 +201,7 @@ class LimeHandler(BaseHandler):
     # TODO should be async
 
     def _process_post(self, model):
-        X, y, pipeline = BaseHandler.load_model(model)
+        X, y, pipeline, _ = BaseHandler.load_model(model)
         idx = model.get('idx', 0)
         step = model.get('step', SOURCE)
 
@@ -210,7 +222,7 @@ class LimeHandler(BaseHandler):
 class ConfusionMatrixHandler(BaseHandler):
 
     def _process_post(self, model):
-        X, y, pipeline = self.load_model(model)
+        X, y, pipeline, _ = self.load_model(model)
         details = ModelDetails()
         cm = details.calculate_confusion_matrix(X, y, pipeline)
         self.finish(json.dumps({"classes": cm.columns.to_list(), "values": cm.values.tolist()}))
@@ -219,7 +231,7 @@ class ConfusionMatrixHandler(BaseHandler):
 class DecisionTreeHandler(BaseHandler):
 
     def _process_post(self, model):
-        X, y, pipeline = self.load_model(model)
+        X, y, pipeline, downsampled = self.load_model(model)
         step = model.get('step', SOURCE)
         max_leaf_nodes = model.get('max_leaf_nodes', None)
 
@@ -232,14 +244,14 @@ class DecisionTreeHandler(BaseHandler):
             details = ModelDetails()
             res = details.calculate_decision_tree(X, pipeline, max_leaf_nodes=max_leaf_nodes)
 
-        self.finish(json.dumps(res.as_dict(additional_features)))
+        self.finish(json.dumps(res.as_dict(additional_features, downsampled)))
 
 
 class FeatureImportanceHandler(BaseHandler):
     # TODO should be async
 
     def _process_post(self, model):
-        X, y, pipeline = FeatureImportanceHandler.load_model(model)
+        X, y, pipeline, downsampled = FeatureImportanceHandler.load_model(model)
         step = model.get('step', SOURCE)
 
         if step == pipeline.steps[-1][0] or step == SINK:
@@ -249,7 +261,7 @@ class FeatureImportanceHandler(BaseHandler):
             pipeline, X, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X, y)
             details = ModelDetails()
             res = details.calculate_feature_importance(X, y, pipeline)
-        self.finish(json.dumps({'data': res.to_dict(), 'additional_features': additional_features}))
+        self.finish(json.dumps({'data': res.to_dict(), 'additional_features': additional_features, 'downsampled': downsampled}))
 
 
 class FANOVAHandler(BaseHandler):

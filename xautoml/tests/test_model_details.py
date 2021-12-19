@@ -4,7 +4,7 @@ from xautoml.util import pipeline_utils
 
 
 def test_decision_tree():
-    X, y, pipeline = BaseHandler.load_model({
+    X, y, pipeline, _ = BaseHandler.load_model({
         "data_file": "/home/marc/phd/code/dswizard/scripts/run/168746/dataset.pkl",
         "model_files": "/home/marc/phd/code/dswizard/scripts/run/168746/models/models_0-0-6.pkl"
     })
@@ -18,7 +18,7 @@ def test_decision_tree():
 
 
 def test_decision_tree_without_max_leaf_nodes():
-    X, y, pipeline = BaseHandler.load_model({
+    X, y, pipeline, _ = BaseHandler.load_model({
         "data_file": "/home/marc/phd/code/dswizard/scripts/run/168746/dataset.pkl",
         "model_files": "/home/marc/phd/code/dswizard/scripts/run/168746/models/models_0-0-0.pkl"
     })
@@ -33,7 +33,7 @@ def test_decision_tree_without_max_leaf_nodes():
 
 
 def test_lime_for_step():
-    X, y, pipeline = BaseHandler.load_model({
+    X, y, pipeline, _ = BaseHandler.load_model({
         "data_file": "/home/marc/phd/code/dswizard/scripts/run/168746/dataset.pkl",
         "model_files": "/home/marc/phd/code/dswizard/scripts/run/168746/models/models_0-0-0.pkl"
     })
@@ -49,7 +49,7 @@ def test_lime_for_step():
 
 
 def test_lime_string_class():
-    X, y, pipeline = BaseHandler.load_model({
+    X, y, pipeline, _ = BaseHandler.load_model({
         "data_file": "/home/marc/phd/code/dswizard/scripts/run/7306/dataset.pkl",
         "model_files": "/home/marc/phd/code/dswizard/scripts/run/7306/models/models_0-0-0.pkl"
     })
@@ -65,7 +65,7 @@ def test_lime_string_class():
 
 
 def test_lime_for_auto_sklearn():
-    X, y, pipeline = BaseHandler.load_model({
+    X, y, pipeline, _ = BaseHandler.load_model({
         "data_file": "/home/marc/phd/code/dswizard/scripts/run/autosklearn/input/autosklearn_classification_example_tmp/dataset.pkl",
         "model_files": "/home/marc/phd/code/dswizard/scripts/run/autosklearn/input/autosklearn_classification_example_tmp/.auto-sklearn/runs/1_2_0.0/1.2.0.0.model"
     })
@@ -81,7 +81,7 @@ def test_lime_for_auto_sklearn():
 
 
 def test_confusion_matrix():
-    X, y, pipeline = BaseHandler.load_model({
+    X, y, pipeline, _ = BaseHandler.load_model({
         "data_file": "/home/marc/phd/code/dswizard/scripts/run/autosklearn_categorical/input/autosklearn_classification_example_tmp/dataset.pkl",
         "model_files": "/home/marc/phd/code/dswizard/scripts/run/autosklearn_categorical/input/autosklearn_classification_example_tmp/.auto-sklearn/runs/1_12_0.0/1.12.0.0.model"
     })

@@ -116,14 +116,16 @@ export interface DecisionTreeResult {
     n_leaves: number,
     root: DecisionTreeNode,
     max_leaf_nodes: number,
-    additional_features: string[]
+    additional_features: string[],
+    downsampled: boolean
 }
 
 export type LocalExplanation = Array<[string, number]>
 
 export interface FeatureImportance {
     data: Map<string, number>,
-    additional_features: string[]
+    additional_features: string[],
+    downsampled: boolean
 }
 
 export function requestRocCurve(cids: CandidateId[], model_files: string[], data_file: string): CancelablePromise<RocCurveData> {
@@ -137,7 +139,10 @@ export function requestRocCurve(cids: CandidateId[], model_files: string[], data
     return cancelablePromise(promise)
 }
 
-export type OutputDescriptionData = Map<string, string>
+export interface OutputDescriptionData {
+    data: Map<string, string>
+    downsampled: boolean
+}
 
 export async function requestOutputComplete(model_file: string, data_file: string): Promise<OutputDescriptionData> {
     return requestOutput(model_file, data_file, 'complete')
@@ -148,13 +153,13 @@ export async function requestOutputDescription(model_file: string, data_file: st
 }
 
 async function requestOutput(model_file: string, data_file: string, method: string): Promise<OutputDescriptionData> {
-    return memRequestAPI<Map<string, Map<string, string>>>(`output/${method}`, {
+    return memRequestAPI<OutputDescriptionData>(`output/${method}`, {
         method: 'POST', body: JSON.stringify({
             'data_file': data_file,
             'model_files': model_file
         })
     }).then(data => {
-        return new Map<string, string>(Object.entries(data))
+        return {data: new Map<string, string>(Object.entries(data.data)), downsampled: data.downsampled}
     })
 }
 
