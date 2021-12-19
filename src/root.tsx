@@ -146,6 +146,25 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
                                             onCandidateSelection={this.onCandidateSelection}/>
                     </div>
                     <div style={{flexGrow: 2}}>
+
+
+                        <button
+                            key="header-thread"
+                            className="jp-example-button"
+                            onClick={(): void => {
+                                jupyter.executeCode('print("8")\nraise ValueError()')
+                                    .then((res: any) => {
+                                        console.log(res)
+                                    })
+                                    .catch((error: Error) => {
+                                        console.error(error)
+                                    })
+                            }}
+                        >
+                            Compute 3+5
+                        </button>
+
+
                         <TabContext value={openTab}>
                             <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
                                 <Tabs value={openTab} onChange={this.switchTab} TabIndicatorProps={{

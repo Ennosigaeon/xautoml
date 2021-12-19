@@ -19,6 +19,12 @@ import {
 } from "./handler";
 import {INotebookTracker, Notebook, NotebookActions} from "@jupyterlab/notebook";
 import {TagTool} from "@jupyterlab/celltags";
+import {Kernel, KernelMessage, ServiceManager} from "@jupyterlab/services";
+import {IError, IExecuteResult, IMimeBundle, IStream} from '@jupyterlab/nbformat';
+import {each} from "@lumino/algorithm";
+import {SessionContext} from '@jupyterlab/apputils';
+import {IModel} from "@jupyterlab/services/lib/session/session";
+import {PartialJSONValue} from "@lumino/coreutils/src/json";
 import {Config} from "./model";
 
 export class Jupyter {
@@ -27,8 +33,76 @@ export class Jupyter {
     private readonly TAG_NAME = 'xautoml-generated'
     private previousCellContent: string = undefined;
 
-    constructor(private notebooks: INotebookTracker, private tags: TagTool) {
+    private readonly sessionContext: SessionContext
+
+    constructor(private notebooks: INotebookTracker, private tags: TagTool, private manager: ServiceManager.IManager) {
         this.previousCellContent = localStorage.getItem(this.LOCAL_STORAGE_CONTENT)
+
+        this.sessionContext = new SessionContext({
+            sessionManager: manager.sessions,
+            specsManager: manager.kernelspecs,
+            name: 'XAutoML',
+        });
+
+        let kernel: Kernel.IModel = {id: '', name: this.sessionContext.specsManager.specs.default}
+        each(manager.sessions.running(), (session: IModel) => {
+            if (session.name === 'XAutoML') {
+                console.log(`Found existing kernel ${session.name}(${session.id})`)
+                kernel = session.kernel
+            }
+        })
+
+        void this.sessionContext
+            .initialize()
+            .then(async (value) => {
+                if (value)
+                    await this.sessionContext.changeKernel(kernel)
+            })
+            .catch((reason) => {
+                console.error(
+                    `Failed to initialize the XAutoML session.\n${reason}`
+                );
+            });
+    }
+
+    executeCode(code: string): Promise<string | number | boolean | PartialJSONValue | IMimeBundle> {
+        if (!this.sessionContext || !this.sessionContext.session?.kernel) {
+            // TODO error handling
+            return;
+        }
+        const request = this.sessionContext.session?.kernel?.requestExecute({code})
+
+        const outputBuffer: string[] = []
+        let result: IExecuteResult = undefined
+        let error: IError = undefined
+
+        request.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
+            const msgType = msg.header.msg_type;
+            switch (msgType) {
+                case 'error':
+                    error = msg.content as IError
+                    break
+                case 'stream':
+                    const text = (msg.content as IStream).text
+                    outputBuffer.push(typeof text === 'string' ? text : text.join('\n'))
+                    break
+                case 'execute_result':
+                    result = msg.content as IExecuteResult
+                    break
+                default:
+                    break;
+            }
+            return;
+        }
+
+        return request.done.then((msg) => {
+            console.log(outputBuffer.join('\n'))
+            if (error) {
+                console.error(error)
+                throw new Error(error.evalue)
+            }
+            return result.data
+        })
     }
 
     createCell(content: string = ''): void {
