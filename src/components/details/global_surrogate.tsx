@@ -76,7 +76,7 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
         if (component === undefined)
             return
 
-        const promise = requestGlobalSurrogate(candidate.model_file, meta.data_file, component, maxLeafNodes)
+        const promise = this.context.requestGlobalSurrogate(candidate.model_file, meta.data_file, component, maxLeafNodes)
         this.setState({pendingRequest: promise, data: undefined, error: undefined})
 
         promise

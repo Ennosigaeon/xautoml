@@ -1,10 +1,10 @@
-import {ConfusionMatrixData, requestConfusionMatrix} from "../handler";
+import {ConfusionMatrixData} from "../handler";
 import React from "react";
 import {DetailsModel} from "./details/model";
 import {ErrorIndicator} from "../util/error";
 import {LoadingIndicator} from "./loading";
 import {Table, TableBody, TableCell, TableRow} from "@material-ui/core";
-import {prettyPrint} from "../util";
+import {JupyterContext, prettyPrint} from "../util";
 
 
 interface ConfusionMatrixProps {
@@ -18,6 +18,9 @@ interface ConfusionMatrixState {
 }
 
 export class ConfusionMatrix extends React.Component<ConfusionMatrixProps, ConfusionMatrixState> {
+
+    static contextType = JupyterContext;
+    context: React.ContextType<typeof JupyterContext>;
 
     constructor(props: ConfusionMatrixProps) {
         super(props);
@@ -36,7 +39,7 @@ export class ConfusionMatrix extends React.Component<ConfusionMatrixProps, Confu
 
         const {model} = this.props
         this.setState({loadingCM: true})
-        requestConfusionMatrix(model.candidate.model_file, model.meta.data_file)
+        this.context.requestConfusionMatrix(model.candidate.model_file, model.meta.data_file)
             .then(data => this.setState({cm: data, loadingCM: false}))
             .catch(error => {
                 console.error(`Failed to fetch confusion matrix: \n${error.name}: ${error.message}`);

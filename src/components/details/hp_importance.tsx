@@ -4,7 +4,7 @@ import {ContinuousHPImportance, HPImportance, HPImportanceDetails, requestFANOVA
 
 import * as d3 from 'd3'
 
-import {Colors, prettyPrint} from "../../util";
+import {Colors, JupyterContext, prettyPrint} from "../../util";
 import {
     Area,
     Bar,
@@ -192,6 +192,9 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
         'By selecting a single step, only the hyperparameters of the selected step are shown. To view the overall ' +
         'most important hyperparameters, select either the pipeline source or sink.'
 
+    static contextType = JupyterContext;
+    context: React.ContextType<typeof JupyterContext>;
+
     constructor(props: HPImportanceProps) {
         super(props);
         this.state = {overview: undefined, details: undefined, error: undefined, selectedRow: undefined}
@@ -220,7 +223,7 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
         })
         const loss = structure.configs.map(c => c.loss)
 
-        requestFANOVA(cs, configs, loss, component)
+        this.context.requestFANOVA(cs, configs, loss, component)
             .then(resp => {
                 if (resp.error)
                     this.setState({error: new Error(resp.error)})

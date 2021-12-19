@@ -1,6 +1,6 @@
 import React from "react";
 import {Candidate, Config, ConfigValue, MetaInformation, Pipeline, PipelineStep, Structure} from "../../model";
-import {Components, prettyPrint} from "../../util";
+import {Components, JupyterContext, prettyPrint} from "../../util";
 import {Table, TableBody, TableCell, TableRow, Tooltip, Typography} from "@material-ui/core";
 import {OutputDescriptionData, requestOutputDescription} from "../../handler";
 import {LoadingIndicator} from "../loading";
@@ -137,6 +137,9 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
     private static readonly NODE_HEIGHT = 26;
     private static readonly NODE_WIDTH = 100;
 
+    static contextType = JupyterContext;
+    context: React.ContextType<typeof JupyterContext>;
+
     constructor(props: StructureGraphProps) {
         super(props);
         this.state = {loading: false, outputs: {data: new Map<string, string>(), downsampled: false}, error: undefined}
@@ -155,7 +158,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
             return
 
         this.setState({loading: true})
-        requestOutputDescription(this.props.candidate.model_file, this.props.meta.data_file)
+        this.context.requestOutputDescription(this.props.candidate.model_file, this.props.meta.data_file)
             .then(data => this.setState({outputs: data, loading: false}))
             .catch(error => {
                 console.error(`Failed to fetch output data.\n${error.name}: ${error.message}`);

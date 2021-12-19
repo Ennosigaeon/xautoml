@@ -77,7 +77,7 @@ export class RawDataset extends React.Component<RawDatasetProps, RawDatasetState
 
             // Outputs not cached yet
             this.setState({loadingDf: true})
-            requestOutputComplete(candidate.model_file, meta.data_file)
+            this.context.requestOutputComplete(candidate.model_file, meta.data_file)
                 .then(data => this.setState({outputs: data, loadingDf: false}))
                 .catch(error => {
                     console.error(`Failed to fetch output data: \n${error.name}: ${error.message}`);

@@ -1,6 +1,6 @@
 import {Candidate, ConfigOrigin, Explanations, MetaInformation, Structure} from "../../model";
 import {BanditExplanationsComponent} from "../bandit_explanation";
-import {cidToSid} from "../../util";
+import {cidToSid, JupyterContext} from "../../util";
 import {SurrogateExplanation} from "../surrogate_explanation";
 import React from "react";
 import {KeyValue} from "../../util/KeyValue";
@@ -17,15 +17,25 @@ interface ConfigOriginProps {
 
 export class ConfigOriginComp extends React.Component<ConfigOriginProps, any> {
 
+    static contextType = JupyterContext;
+    context: React.ContextType<typeof JupyterContext>;
+
     private getHelp(origin: ConfigOrigin): string {
         switch (origin) {
-            case 'Default': return 'Fixed default configuration'
-            case 'Hyperopt': return 'Configuration obtained by maximizing the surrogate posterior'
-            case 'Initial design': return 'Fixed configuration provided via meta-learning'
-            case 'Local Search': return 'Configuration obtained via local search around all-ready evaluated configuration maximizing the acquisition function'
-            case 'Random Search': return 'Random selection of configuration'
-            case 'Random Search (sorted)': return 'Configuration obtained via random search maximizing the acquisition function'
-            case 'Sobol': return 'Quasi-random selection of configuration based on a Sobol sequence'
+            case 'Default':
+                return 'Fixed default configuration'
+            case 'Hyperopt':
+                return 'Configuration obtained by maximizing the surrogate posterior'
+            case 'Initial design':
+                return 'Fixed configuration provided via meta-learning'
+            case 'Local Search':
+                return 'Configuration obtained via local search around all-ready evaluated configuration maximizing the acquisition function'
+            case 'Random Search':
+                return 'Random selection of configuration'
+            case 'Random Search (sorted)':
+                return 'Configuration obtained via random search maximizing the acquisition function'
+            case 'Sobol':
+                return 'Quasi-random selection of configuration based on a Sobol sequence'
         }
     }
 

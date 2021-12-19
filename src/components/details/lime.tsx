@@ -1,6 +1,6 @@
 import React from "react";
 import {CancelablePromise, CanceledPromiseError, Label, LimeResult, requestLimeApproximation} from "../../handler";
-import {Colors} from "../../util";
+import {Colors, JupyterContext} from "../../util";
 import {LoadingIndicator} from "../loading";
 import {DetailsModel} from "./model";
 import {ErrorIndicator} from "../../util/error";
@@ -51,6 +51,9 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
     private resizeObserver: ResizeObserver
     private readonly container = React.createRef<HTMLDivElement>()
 
+    static contextType = JupyterContext;
+    context: React.ContextType<typeof JupyterContext>;
+
     constructor(props: LimeProps) {
         super(props);
         this.state = {
@@ -98,7 +101,7 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
         if (component === undefined || idx === undefined)
             return
 
-        const promise = requestLimeApproximation(candidate.model_file, idx, meta.data_file, component)
+        const promise = this.context.requestLimeApproximation(candidate.model_file, idx, meta.data_file, component)
         this.setState({pendingRequest: promise, data: undefined, selectedLabel: undefined, error: undefined})
 
         promise

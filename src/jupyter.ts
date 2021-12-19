@@ -1,5 +1,15 @@
+import {
+    CancelablePromise,
+    ConfusionMatrixData, DecisionTreeResult, FANOVAResponse, FeatureImportance, LimeResult,
+    OutputDescriptionData,
+    requestConfusionMatrix, requestFANOVA, requestFeatureImportance, requestGlobalSurrogate,
+    requestLimeApproximation,
+    requestOutputComplete,
+    requestOutputDescription, requestSimulatedSurrogate
+} from "./handler";
 import {INotebookTracker, Notebook, NotebookActions} from "@jupyterlab/notebook";
 import {TagTool} from "@jupyterlab/celltags";
+import {Config} from "./model";
 
 export class Jupyter {
 
@@ -33,6 +43,38 @@ export class Jupyter {
         localStorage.setItem(this.LOCAL_STORAGE_CONTENT, content)
 
         notebook.activeCell.editor.focus()
+    }
+
+    requestConfusionMatrix(model_file: string, data_file: string): Promise<ConfusionMatrixData> {
+        return requestConfusionMatrix(model_file, data_file)
+    }
+
+    requestOutputComplete(model_file: string, data_file: string): Promise<OutputDescriptionData> {
+        return requestOutputComplete(model_file, data_file)
+    }
+
+    requestOutputDescription(model_file: string, data_file: string): Promise<OutputDescriptionData> {
+        return requestOutputDescription(model_file, data_file)
+    }
+
+    requestLimeApproximation(model_file: string, idx: number, data_file: string, step: string): CancelablePromise<LimeResult> {
+        return requestLimeApproximation(model_file, idx, data_file, step)
+    }
+
+    requestGlobalSurrogate(model_file: string, data_file: string, step: string, max_leaf_nodes: number = undefined): CancelablePromise<DecisionTreeResult> {
+        return requestGlobalSurrogate(model_file, data_file, step, max_leaf_nodes)
+    }
+
+    requestFeatureImportance(model_file: string, data_file: string, step: string): CancelablePromise<FeatureImportance> {
+        return requestFeatureImportance(model_file, data_file, step)
+    }
+
+    requestFANOVA(cs: Config.ConfigSpace, configs: Config[], loss: number[], step?: string): Promise<FANOVAResponse> {
+        return requestFANOVA(cs, configs, loss, step)
+    }
+
+    requestSimulatedSurrogate(cs: Config.ConfigSpace, configs: Config[], loss: number[]): Promise<Config.Explanation> {
+        return requestSimulatedSurrogate(cs, configs, loss)
     }
 }
 
