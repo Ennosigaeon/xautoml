@@ -5,9 +5,35 @@
 
 ## New Features
 
-- Distribution of Hyperparameters vs Performance
+- PC Explanations for Hyperopt
+- PC Explanations for SMAC
 - Ensemble Introspections
 - More "Continue in Jupyter" Buttons
-- Support for auto-sklearn
+- Show selected/total number of candidates
+- Show confidence schores for predictions (predict_proba) next to target values
+- 2D Scatter plot for config similarity
+- Calculate prediction time during confusion matrix calculation
+- Sampled values of single hyperparameter over time
+
+- Feature Correlation
 - Partial Dependency Plots
-- Individual Conditional Expectation Plots¶
+- Individual Conditional Expectation Plots
+- Store which details were opened/closed
+
+
+## Improvements
+- Execute python code in user kernel
+
+
+## Data Sets for Evaluation
+
+###Overview
+https://www.openml.org/search?q=tags.tag%3Astudy_218&type=data&table=1&size=39
+
+###Candidates
+- https://www.openml.org/d/1169
+- https://www.openml.org/d/1590
+- https://www.openml.org/d/1596
+- https://www.openml.org/d/41147
+- https://www.openml.org/d/949
+- https://www.openml.org/d/1498
