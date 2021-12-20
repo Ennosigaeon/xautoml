@@ -10,7 +10,7 @@ import {CandidateTable} from "./components/candidate_table";
 import {Jupyter} from "./jupyter";
 import {LoadingIndicator} from "./components/loading";
 import {CollapseComp} from "./util/collapse";
-import {Box, Tab, Tabs} from "@material-ui/core";
+import {Box, Checkbox, Tab, Tabs} from "@material-ui/core";
 import {TabContext} from "@material-ui/lab";
 import {TabPanel} from "./util/tabpanel";
 import {SearchSpace} from "./components/search_space";
@@ -66,6 +66,7 @@ interface ReactRootState {
     showCandidate: CandidateId
     openTab: string
     mounted: boolean
+    hideUnselected: boolean
 }
 
 export default class ReactRoot extends React.Component<ReactRootProps, ReactRootState> {
@@ -74,18 +75,24 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
 
     constructor(props: ReactRootProps) {
         super(props);
-        this.state = {selectedCandidates: new Set<CandidateId>(), mounted: false, openTab: '1', showCandidate: undefined}
+        this.state = {
+            selectedCandidates: new Set<CandidateId>(),
+            mounted: false,
+            openTab: '1',
+            showCandidate: undefined,
+            hideUnselected: false
+        }
 
         this.onCandidateSelection = this.onCandidateSelection.bind(this)
         this.switchTab = this.switchTab.bind(this)
+        this.toggleShowAllCandidates = this.toggleShowAllCandidates.bind(this)
     }
 
     private onCandidateSelection(cids: Set<CandidateId>, show: boolean = false) {
         if (show && cids.size === 1) {
             const cid = cids.values().next().value
             this.setState({showCandidate: cid, openTab: '1'})
-        }
-        else {
+        } else {
             this.setState({selectedCandidates: cids})
         }
     }
@@ -103,9 +110,21 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
         this.setState({openTab: selectedTab})
     }
 
+    private toggleShowAllCandidates(_: React.ChangeEvent, checked: boolean) {
+        this.setState({hideUnselected: !checked})
+    }
+
     render() {
         const {runhistory, jupyter} = this.props
-        const {selectedCandidates, showCandidate, mounted, openTab} = this.state
+        const {selectedCandidates, showCandidate, mounted, openTab, hideUnselected} = this.state
+
+        class DivInTabs extends React.Component<any> {
+            render() {
+                let {children, style} = this.props;
+                return <div style={style} className={'MuiButtonBase-root MuiTab-root MuiTab-textColorInherit'}
+                            onClick={e => e.stopPropagation()} children={children}/>;
+            }
+        }
 
         if (!mounted) {
             // Render loading indicator while waiting for delayed re-rendering with mounted container
@@ -115,6 +134,10 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
                 </div>
             )
         }
+
+        const structures = hideUnselected ? runhistory.structures
+            .map(s => s.filter(selectedCandidates))
+            .filter(s => s.configs.length > 0) : runhistory.structures;
 
         if (!runhistory) {
             return <p>Error loading data...</p>
@@ -147,11 +170,23 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
                                     <Tab label="Candidates" value={'1'}/>
                                     <Tab label="Search Space" value={'2'}/>
                                     <Tab label="Ensembles" value={'3'}/>
+
+                                    <DivInTabs style={{marginLeft: 'auto', cursor: 'default'}}>
+                                        <span className={'MuiTab-wrapper'}>
+                                            Selected Candidates: {selectedCandidates.size} / {runhistory.meta.n_configs}
+                                        </span>
+                                    </DivInTabs>
+                                    <DivInTabs>
+                                        <label className={'MuiFormControlLabel-root'}>
+                                            <Checkbox checked={!hideUnselected} onChange={this.toggleShowAllCandidates}/>
+                                            <span>Show&nbsp;All&nbsp;Candidates</span>
+                                        </label>
+                                    </DivInTabs>
                                 </Tabs>
                             </Box>
 
                             <TabPanel value={'1'}>
-                                <CandidateTable structures={runhistory.structures}
+                                <CandidateTable structures={structures}
                                                 selectedCandidates={selectedCandidates}
                                                 meta={runhistory.meta}
                                                 explanations={runhistory.explanations}
@@ -159,7 +194,9 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
                                                 onCandidateSelection={this.onCandidateSelection}/>
                             </TabPanel>
                             <TabPanel value={'2'}>
-                                <SearchSpace runhistory={runhistory}
+                                <SearchSpace structures={structures}
+                                             meta={runhistory.meta}
+                                             explanations={runhistory.explanations}
                                              selectedCandidates={selectedCandidates}
                                              onCandidateSelection={this.onCandidateSelection}/>
                             </TabPanel>

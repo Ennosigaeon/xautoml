@@ -336,6 +336,10 @@ export class Structure {
         this.allConfigs_ = configs
     }
 
+    public filter(filter: Set<CandidateId>): Structure {
+        return new Structure(this.cid, this.pipeline, this.configspace, this.configs.filter(c => filter.has(c.id)))
+    }
+
     static fromJson(structure: Structure, defaultConfigSpace: Config.ConfigSpace): Structure {
         // raw pipeline data is list of tuple and not object
         const pipeline = Pipeline.fromJson(structure.pipeline as any)

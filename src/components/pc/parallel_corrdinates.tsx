@@ -36,7 +36,6 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
         'hovering categorical values or clicking/hovering single lines.'
 
     private readonly NODE_HEIGHT = 55
-    private readonly root: cpc.Choice;
 
     private svg: React.RefObject<SVGSVGElement> = React.createRef<SVGSVGElement>()
 
@@ -52,20 +51,13 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
     constructor(props: PCProps) {
         super(props)
 
-        const candidates: [Candidate, Structure][] = this.props.candidates !== undefined ?
-            this.props.candidates : [].concat(...this.props.structures.map(s => s.configs.map(c => [c, s])))
-
-        const model = ParCord.parseRunhistory(this.props.meta, this.props.structures, candidates, this.props.explanation)
-        const filter = new Map<cpc.Axis, cpc.Choice | [number, number]>()
+        const [model, filter] = this.calcModel()
         this.state = {
             model: model,
+            filter: filter,
             highlightedLines: this.props.selectedCandidates,
-            container: undefined,
-            filter: filter
+            container: undefined
         }
-
-        // init root node
-        this.root = new cpc.Choice('', this.state.model.axes, false);
 
         this.onCollapse = this.onCollapse.bind(this)
         this.onExpand = this.onExpand.bind(this)
@@ -75,9 +67,25 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
         this.onShowCandidate = this.onShowCandidate.bind(this)
     }
 
+    private calcModel(): [cpc.Model, Map<cpc.Axis, cpc.Choice | [number, number]>] {
+        const candidates: [Candidate, Structure][] = this.props.candidates !== undefined ?
+            this.props.candidates : [].concat(...this.props.structures.map(s => s.configs.map(c => [c, s])))
+
+        const model = ParCord.parseRunhistory(this.props.meta, this.props.structures, candidates, this.props.explanation)
+        const filter = new Map<cpc.Axis, cpc.Choice | [number, number]>()
+
+        return [model, filter]
+    }
+
     componentDidUpdate(prevProps: Readonly<PCProps>, prevState: Readonly<PCState>, snapshot?: any) {
         if (prevProps.selectedCandidates.size !== this.props.selectedCandidates.size)
             this.setState({highlightedLines: this.props.selectedCandidates})
+
+        if (prevProps.structures.length !== this.props.structures.length ||
+            prevProps.structures.map(c => c.configs.length).reduce((a, b) => a + b, 0) !== this.props.structures.map(c => c.configs.length).reduce((a, b) => a + b, 0)) {
+            const [model, filter] = this.calcModel()
+            this.setState({model: model, filter: filter})
+        }
     }
 
     private onCollapse(choice: cpc.Choice) {
@@ -135,15 +143,17 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
         const {model, highlightedLines, container} = this.state
         const width = (container && container.current) ? container.current.clientWidth : 0
 
+        const root = new cpc.Choice('', this.state.model.axes, false);
+
         // Estimate height based on maximum number of choices in all coordinates
-        const maxNodes = Math.max(...this.root.axes.map(a => a.getHeightWeight()))
+        const maxNodes = Math.max(...root.axes.map(a => a.getHeightWeight()))
         const height = this.NODE_HEIGHT * maxNodes
-        const yScale = d3.scaleBand([this.root.value.toString()], [0, height / this.root.getHeightWeight()])
-        this.root.layout([0, width], yScale)
+        const yScale = d3.scaleBand([root.value.toString()], [0, height / root.getHeightWeight()])
+        root.layout([0, width], yScale)
 
         return (
             <RefableFlexibleSvg height={height} onContainerChange={this.updateContainer} ref={this.svg}>
-                <PCChoice choice={this.root} parent={undefined}
+                <PCChoice choice={root} parent={undefined}
                           svg={model.lines.length > 1 ? this.svg : undefined} // Disable brushing when only when line present
                           onCollapse={this.onCollapse}
                           onExpand={this.onExpand}
