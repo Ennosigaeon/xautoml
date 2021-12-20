@@ -304,3 +304,21 @@ export function requestSimulatedSurrogate(cs: Config.ConfigSpace, configs: Confi
         })
     }).then(data => new Config.Explanation(new Map<string, [number, number][]>(Object.entries(data))))
 }
+
+
+export interface ConfigSimilarityResponse {
+    config: { x: number, y: number, idx: number }[],
+    incumbents: { x: number, y: number, idx: number }[],
+    surface: { x1: number, x2: number, y1: number, y2: number, z: number }[]
+}
+
+export function requestConfigSimilarity(cs: Config.ConfigSpace[], configs: any[][], loss: number[], is_minimization: boolean): Promise<ConfigSimilarityResponse> {
+    return memRequestAPI<ConfigSimilarityResponse>('config_similarity', {
+        method: 'POST', body: JSON.stringify({
+            'configspace': cs.map(c => JSON.parse(c.json)),
+            'configs': configs,
+            'loss': loss,
+            'is_minimization': is_minimization
+        })
+    })
+}

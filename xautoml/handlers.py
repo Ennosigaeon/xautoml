@@ -12,6 +12,7 @@ from jupyter_server.base.handlers import APIHandler
 from jupyter_server.utils import url_path_join
 from sklearn.pipeline import Pipeline
 
+from xautoml.config_similarity import ConfigSimilarity
 from xautoml.hp_importance import HPImportance
 from xautoml.model_details import ModelDetails, LimeResult, DecisionTreeResult
 from xautoml.output import OutputCalculator, DESCRIPTION, COMPLETE
@@ -122,7 +123,6 @@ class BaseHandler(APIHandler):
             idx = np.random.choice(X.shape[0], size=n_samples, replace=False)
             X = X.loc[idx, :].reset_index(drop=True)
             y = y.loc[idx].reset_index(drop=True)
-
 
         return X, y, models, downsample
 
@@ -293,6 +293,13 @@ class SimulatedSurrogate(BaseHandler):
             raise ValueError('Unable to simulate surrogate model without trainings data')
 
 
+class ConfigSimilarityHandler(BaseHandler):
+
+    def _process_post(self, model):
+        res = ConfigSimilarity.compute(model)
+        self.finish(json.dumps(res))
+
+
 def setup_handlers(web_app):
     host_pattern = ".*$"
 
@@ -307,5 +314,6 @@ def setup_handlers(web_app):
         (url_path_join(base_url, 'xautoml', 'explanations/dt'), DecisionTreeHandler),
         (url_path_join(base_url, 'xautoml', 'hyperparameters/fanova'), FANOVAHandler),
         (url_path_join(base_url, 'xautoml', 'surrogate/simulate'), SimulatedSurrogate),
+        (url_path_join(base_url, 'xautoml', 'config_similarity'), ConfigSimilarityHandler),
     ]
     web_app.add_handlers(host_pattern, handlers)

@@ -1,7 +1,7 @@
 import {
-    CancelablePromise,
+    CancelablePromise, ConfigSimilarityResponse,
     ConfusionMatrixData, DecisionTreeResult, FANOVAResponse, FeatureImportance, LimeResult,
-    OutputDescriptionData,
+    OutputDescriptionData, requestConfigSimilarity,
     requestConfusionMatrix, requestFANOVA, requestFeatureImportance, requestGlobalSurrogate,
     requestLimeApproximation,
     requestOutputComplete,
@@ -75,6 +75,10 @@ export class Jupyter {
 
     requestSimulatedSurrogate(cs: Config.ConfigSpace, configs: Config[], loss: number[]): Promise<Config.Explanation> {
         return requestSimulatedSurrogate(cs, configs, loss)
+    }
+
+    requestConfigSimilarity(cs: Config.ConfigSpace[], configs: any[][], loss: number[], is_minimization: boolean): Promise<ConfigSimilarityResponse> {
+        return requestConfigSimilarity(cs, configs, loss, is_minimization)
     }
 }
 

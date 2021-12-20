@@ -4,6 +4,8 @@ import {BanditExplanationsComponent} from "./bandit_explanation";
 import {ParallelCoordinates} from "./pc/parallel_corrdinates";
 import {CandidateId, Explanations, MetaInformation, Structure} from "../model";
 import Slider from "rc-slider";
+import {ConfigSimilarity} from "./config_similarity";
+import {ConfigSimilarityResponse} from "../handler";
 
 interface SearchSpaceProps {
     structures: Structure[],
@@ -16,6 +18,7 @@ interface SearchSpaceProps {
 interface SearchSpaceState {
     sliderMarks: { [key: string]: string; }
     timestamp: number
+    configSimilarity: ConfigSimilarityResponse
 }
 
 export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceState> {
@@ -27,7 +30,7 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
         const keys = [].concat(...this.props.structures.map(s => s.configs.map(c => c.id.slice(3))))
         keys.forEach((k, idx) => sliderMarks[idx] = k)
 
-        this.state = {sliderMarks: sliderMarks, timestamp: keys.length - 1}
+        this.state = {sliderMarks: sliderMarks, timestamp: keys.length - 1, configSimilarity: undefined}
 
         this.changeTimestamp = this.changeTimestamp.bind(this)
     }
@@ -58,6 +61,17 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
                                          onCandidateSelection={onCandidateSelection}
                                          timestamp={this.state.timestamp}/>
                 </CollapseComp>
+
+                {structures.length > 0 &&
+                    <CollapseComp showInitial={true} help={''}>
+                        <h4>Candidate Distribution</h4>
+                        <ConfigSimilarity structures={structures}
+                                          selectedCandidates={selectedCandidates}
+                                          meta={meta}
+                                          timestamp={this.state.timestamp}
+                                          onCandidateSelection={onCandidateSelection}/>
+                    </CollapseComp>
+                }
 
                 {/* Only display slider when data is already loaded*/}
                 {nSteps > 0 &&

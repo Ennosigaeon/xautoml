@@ -5,12 +5,12 @@ from collections import defaultdict
 
 import numpy as np
 import pandas as pd
-from ConfigSpace import CategoricalHyperparameter, ConfigurationSpace, Configuration, Constant
+from ConfigSpace import CategoricalHyperparameter, ConfigurationSpace
 from ConfigSpace.hyperparameters import OrdinalHyperparameter, NumericalHyperparameter
 from ConfigSpace.read_and_write import json as config_json
-from ConfigSpace.util import impute_inactive_values
 from fanova import fANOVA, visualizer
 
+from xautoml.util import io_utils
 from xautoml.util.constants import NUMBER_PRECISION, SOURCE, SINK
 
 
@@ -174,25 +174,7 @@ class HPImportance:
 
     @staticmethod
     def load_model(model):
-        cs = model['configspace']
-
-        constants = set()
-
-        if 'name' in cs:
-            config_space = ConfigurationSpace(name=cs['name'])
-        else:
-            config_space = ConfigurationSpace()
-        for hyperparameter in cs['hyperparameters']:
-            hp = config_json._construct_hyperparameter(hyperparameter)
-            if isinstance(hp, Constant):
-                constants.add(hp.name)
-            else:
-                config_space.add_hyperparameter(hp)
-        for condition in cs['conditions']:
-            if condition['child'] in constants or condition['parent'] in constants:
-                continue
-            config_space.add_condition(config_json._construct_condition(condition, config_space))
-
+        config_space, constants = io_utils.deserialize_configuration_space(model['configspace'])
         return HPImportance._construct_fanova(config_space, model['configs'], model['loss'], constants)
 
     @staticmethod
@@ -208,32 +190,7 @@ class HPImportance:
 
     @staticmethod
     def _construct_fanova(cs: ConfigurationSpace, configs: list[dict], performances: list[float], constants: set[str]):
-        def prep_config(c: dict):
-            c = {key: value for key, value in c.items() if key not in constants}
-            conf = impute_inactive_values(Configuration(cs, c))
-            return conf.get_dictionary()
-
-        configs_ = [prep_config(c) for c in configs]
-
-        X = pd.DataFrame(configs_, columns=cs.get_hyperparameter_names())
         y = np.array(performances, dtype=float)
-
-        pruned_cs = ConfigurationSpace()
-        for hp in cs.get_hyperparameters():
-            if isinstance(hp, CategoricalHyperparameter):
-                X[hp.name] = X[hp.name].map(hp._inverse_transform)
-
-            if X[hp.name].nunique() == 1 and X.shape[0] > 1:
-                X.drop(hp.name, axis=1, inplace=True)
-            else:
-                pruned_cs.add_hyperparameter(hp)
-
-        for condition in cs.get_conditions():
-            try:
-                pruned_cs.add_condition(condition)
-            except ValueError:
-                # Either parent or child hp was pruned from cs
-                pass
-
+        pruned_cs, X = io_utils.configs_as_dataframe(cs, configs, constants)
         f = fANOVA(X, y, config_space=pruned_cs)
         return f, X

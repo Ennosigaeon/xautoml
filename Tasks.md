@@ -9,9 +9,7 @@
 - PC Explanations for SMAC
 - Ensemble Introspections
 - More "Continue in Jupyter" Buttons
-- Show selected/total number of candidates
-- Show confidence schores for predictions (predict_proba) next to target values
-- 2D Scatter plot for config similarity
+- Show confidence scores for predictions (predict_proba) next to target values
 - Calculate prediction time during confusion matrix calculation
 - Sampled values of single hyperparameter over time
 

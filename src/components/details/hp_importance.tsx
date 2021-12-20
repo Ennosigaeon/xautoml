@@ -1,5 +1,5 @@
 import React from "react";
-import {ContinuousHPImportance, HPImportance, HPImportanceDetails, requestFANOVA} from "../../handler";
+import {ContinuousHPImportance, HPImportance, HPImportanceDetails} from "../../handler";
 
 
 import * as d3 from 'd3'
@@ -24,6 +24,7 @@ import {
 import {ErrorIndicator} from "../../util/error";
 import {LoadingIndicator} from "../loading";
 import {Structure} from "../../model";
+import {Heatbar} from "../../util/heatbar";
 
 
 interface SingleHPProps {
@@ -87,7 +88,7 @@ class SingleHP extends React.Component<SingleHPProps> {
                 .map(d => Object.values(d)).reduce((a, b) => a.concat(b), [])
             const min = Math.min(...values)
             const max = Math.max(...values)
-            const scale = d3.scaleSequential(d3.interpolateBlues)
+            const scale = d3.scaleSequential(d3.interpolateSpectral)
                 .domain([min, max])
 
             const marginLeft = columns.map(r => r.length).reduce((a, b) => Math.max(a, b), 0) * 8
@@ -122,24 +123,7 @@ class SingleHP extends React.Component<SingleHPProps> {
                 </LineChart>
             )
             additionalData = (
-                <div style={{width: "100%", paddingLeft: marginLeft, marginTop: "10px", boxSizing: 'border-box'}}>
-                    <svg height="20" width="100%">
-                        <defs>
-                            <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
-                                <stop offset="0%" style={{stopColor: scale(min), stopOpacity: 1}}/>
-                                <stop offset="100%" style={{stopColor: scale(max), stopOpacity: 1}}/>
-                            </linearGradient>
-                        </defs>
-                        <rect x="0" y="0" width="100%" height="100%" fill="url(#grad1)"/>
-
-                        <text x={'5%'} y={'50%'} dominantBaseline={'middle'}>
-                            {prettyPrint(min, 5)}
-                        </text>
-                        <text x={'95%'} y={'50%'} dominantBaseline={'middle'} textAnchor={'end'}>
-                            {prettyPrint(max, 5)}
-                        </text>
-                    </svg>
-                </div>
+                <Heatbar scale={scale} marginLeft={marginLeft}/>
             )
         }
 
