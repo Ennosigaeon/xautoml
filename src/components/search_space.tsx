@@ -23,13 +23,31 @@ interface SearchSpaceState {
 
 export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceState> {
 
+    private readonly cids: string[]
+
     constructor(props: SearchSpaceProps) {
         super(props);
 
         const sliderMarks: { [key: string]: string; } = {}
-        const keys = [].concat(...this.props.structures.map(s => s.configs.map(c => c.id.slice(3))))
-        keys.forEach((k, idx) => sliderMarks[idx] = k)
 
+        this.cids = [].concat(...this.props.structures.map(s => s.configs.map(c => c.id)))
+
+        let keys: string[]
+        if (this.cids.length <= 10)
+            keys = this.cids
+        else if (this.cids.length <= 50)
+            keys = this.cids.map(c => c.split(':').slice(1).join(':'))
+        else if (this.cids.length <= 100)
+            keys = this.cids.map((c, idx) => idx.toString())
+        else {
+            const stepSize = Math.ceil(this.cids.length / 100)
+            keys = this.cids
+                .map((c, idx) => idx)
+                .filter(idx => idx % stepSize === 0)
+                .map(idx => idx.toString())
+        }
+
+        keys.forEach((k, idx) => sliderMarks[idx] = k)
         this.state = {sliderMarks: sliderMarks, timestamp: keys.length - 1, configSimilarity: undefined}
 
         this.changeTimestamp = this.changeTimestamp.bind(this)
@@ -51,7 +69,7 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
                         <BanditExplanationsComponent explanations={explanations.structures}
                                                      selectedCandidates={selectedCandidates}
                                                      structures={structures}
-                                                     timestamp={'00:' + this.state.sliderMarks[this.state.timestamp].split(':').slice(0, -1).join(':')}
+                                                     timestamp={this.cids[this.state.timestamp].split(':').slice(0, -1).join(':')}
                                                      onCandidateSelection={onCandidateSelection}/>
                     </CollapseComp>}
                 <CollapseComp showInitial={true} help={ParallelCoordinates.HELP}>
@@ -73,11 +91,10 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
                     </CollapseComp>
                 }
 
-                {/* Only display slider when data is already loaded*/}
                 {nSteps > 0 &&
                     <div style={{margin: '20px'}}>
                         <Slider min={0} max={nSteps} marks={this.state.sliderMarks} defaultValue={nSteps}
-                                included={false} onAfterChange={this.changeTimestamp}/>
+                                included={false} onChange={this.changeTimestamp}/>
                     </div>}
             </>
         )
