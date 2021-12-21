@@ -14,6 +14,7 @@ interface PCProps {
     candidates?: [Candidate, Structure][]
     explanation?: Config.Explanation
     selectedCandidates?: Set<CandidateId>
+    hideUnselectedCandidates?: boolean
     onCandidateSelection?: (cid: Set<CandidateId>, show?: boolean) => void
 
     timestamp?: number
@@ -43,6 +44,7 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
         candidates: (undefined as [Candidate, Structure][]),
         explanation: (undefined as Config.Explanation),
         selectedCandidates: new Set<CandidateId>(),
+        hideUnselectedCandidates: false,
         onCandidateSelection: () => {
         },
         timestamp: Infinity
@@ -160,6 +162,7 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
                           onHighlight={this.highlightLines}/>
                 {this.state.model.lines
                     .slice(0, this.props.timestamp + 1)
+                    .filter(line => !this.props.hideUnselectedCandidates || this.props.selectedCandidates.has(line.id))
                     .map((line, idx) => <PCLine key={line.id} model={model} line={line}
                                                 selected={idx == this.props.timestamp}
                                                 highlight={highlightedLines.has(line.id)}

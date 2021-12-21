@@ -21,6 +21,7 @@ interface ConfigSimilarityProps {
     meta: MetaInformation
     structures: Structure[]
     selectedCandidates: Set<CandidateId>
+    hideUnselectedCandidates: boolean
     timestamp: number
     onCandidateSelection?: (cid: Set<CandidateId>, show?: boolean) => void
 }
@@ -82,7 +83,7 @@ export class ConfigSimilarity extends React.Component<ConfigSimilarityProps, Con
     }
 
     render() {
-        const {selectedCandidates} = this.props
+        const {selectedCandidates, hideUnselectedCandidates} = this.props
         const {cids, data} = this.state
 
         const values = data ? data.surface.map(s => s.z) : [0, 1]
@@ -127,7 +128,7 @@ export class ConfigSimilarity extends React.Component<ConfigSimilarityProps, Con
                                              name={'Candidates'}
                                              onClick={this.onScatterClick}>
                                         {data.config
-                                            .filter(c => c.idx <= this.props.timestamp)
+                                            .filter(c => c.idx <= this.props.timestamp && (!hideUnselectedCandidates || selectedCandidates.has(cids[c.idx])))
                                             .map((d, index) => (
                                                 <Cell key={`cell-${index}`}
                                                       fill={selectedCandidates.has(cids[d.idx]) ? Colors.HIGHLIGHT : Colors.DEFAULT}
@@ -142,7 +143,7 @@ export class ConfigSimilarity extends React.Component<ConfigSimilarityProps, Con
                                              name={'Incumbents'} legendType={'rect'}
                                              onClick={this.onScatterClick}>
                                         {data.incumbents
-                                            .filter(c => c.idx <= this.props.timestamp)
+                                            .filter(c => c.idx <= this.props.timestamp && (!hideUnselectedCandidates || selectedCandidates.has(cids[c.idx])))
                                             .map((d, index) => (
                                                 <Cell key={`cell-${index}`}
                                                       fill={selectedCandidates.has(cids[d.idx]) ? Colors.HIGHLIGHT : Colors.DEFAULT}

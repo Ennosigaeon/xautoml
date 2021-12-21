@@ -223,6 +223,7 @@ ${ID}_pipeline
 interface CandidateTableProps {
     structures: Structure[];
     selectedCandidates: Set<CandidateId>;
+    hideUnselectedCandidates: boolean;
     showCandidate: CandidateId;
     meta: MetaInformation;
     explanations: Explanations;
@@ -296,7 +297,7 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
     }
 
     componentDidUpdate(prevProps: Readonly<CandidateTableProps>, prevState: Readonly<CandidateTableState>, snapshot?: any) {
-        if (prevProps.structures !== this.props.structures) {
+        if (prevProps.structures !== this.props.structures || prevProps.hideUnselectedCandidates !== this.props.hideUnselectedCandidates) {
             const rows = this.calculateData()
             this.setState({rows: rows})
         }
@@ -312,16 +313,18 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
         const rows: SingleCandidate[] = []
 
         this.props.structures.forEach(structure => {
-            structure.configs.forEach(c => {
-                rows.push(
-                    {
-                        id: c.id,
-                        timestamp: c.runtime.timestamp,
-                        performance: c.loss,
-                        candidate: [structure, c]
-                    }
-                )
-            })
+            structure.configs
+                .filter(c => !this.props.hideUnselectedCandidates || this.props.selectedCandidates.has(c.id))
+                .forEach(c => {
+                    rows.push(
+                        {
+                            id: c.id,
+                            timestamp: c.runtime.timestamp,
+                            performance: c.loss,
+                            candidate: [structure, c]
+                        }
+                    )
+                })
         })
         return rows
     }

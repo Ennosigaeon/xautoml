@@ -135,10 +135,6 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
             )
         }
 
-        const structures = hideUnselected ? runhistory.structures
-            .map(s => s.filter(selectedCandidates))
-            .filter(s => s.configs.length > 0) : runhistory.structures;
-
         if (!runhistory) {
             return <p>Error loading data...</p>
         }
@@ -186,18 +182,20 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
                             </Box>
 
                             <TabPanel value={'1'}>
-                                <CandidateTable structures={structures}
+                                <CandidateTable structures={runhistory.structures}
                                                 selectedCandidates={selectedCandidates}
+                                                hideUnselectedCandidates={hideUnselected}
                                                 meta={runhistory.meta}
                                                 explanations={runhistory.explanations}
                                                 showCandidate={showCandidate}
                                                 onCandidateSelection={this.onCandidateSelection}/>
                             </TabPanel>
                             <TabPanel value={'2'}>
-                                <SearchSpace structures={structures}
+                                <SearchSpace structures={runhistory.structures}
                                              meta={runhistory.meta}
                                              explanations={runhistory.explanations}
                                              selectedCandidates={selectedCandidates}
+                                             hideUnselectedCandidates={hideUnselected}
                                              onCandidateSelection={this.onCandidateSelection}/>
                             </TabPanel>
                             <TabPanel value={'3'}>

@@ -12,6 +12,7 @@ interface SearchSpaceProps {
     meta: MetaInformation,
     explanations: Explanations,
     selectedCandidates: Set<CandidateId>
+    hideUnselectedCandidates: boolean
     onCandidateSelection?: (cid: Set<CandidateId>, show?: boolean) => void
 }
 
@@ -58,7 +59,7 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
     }
 
     render() {
-        const {explanations, structures, meta, selectedCandidates, onCandidateSelection} = this.props
+        const {explanations, structures, meta, selectedCandidates, onCandidateSelection, hideUnselectedCandidates} = this.props
         const nSteps = Object.keys(this.state.sliderMarks).length - 1;
 
         return (
@@ -68,6 +69,7 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
                         <h4>Reinforcement Learning</h4>
                         <BanditExplanationsComponent explanations={explanations.structures}
                                                      selectedCandidates={selectedCandidates}
+                                                     hideUnselectedCandidates={hideUnselectedCandidates}
                                                      structures={structures}
                                                      timestamp={this.cids[this.state.timestamp].split(':').slice(0, -1).join(':')}
                                                      onCandidateSelection={onCandidateSelection}/>
@@ -75,6 +77,7 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
                 <CollapseComp showInitial={true} help={ParallelCoordinates.HELP}>
                     <h4>Bayesian Optimization</h4>
                     <ParallelCoordinates structures={structures} meta={meta}
+                                         hideUnselectedCandidates={hideUnselectedCandidates}
                                          selectedCandidates={selectedCandidates}
                                          onCandidateSelection={onCandidateSelection}
                                          timestamp={this.state.timestamp}/>
@@ -85,6 +88,7 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
                         <h4>Candidate Distribution</h4>
                         <ConfigSimilarity structures={structures}
                                           selectedCandidates={selectedCandidates}
+                                          hideUnselectedCandidates={hideUnselectedCandidates}
                                           meta={meta}
                                           timestamp={this.state.timestamp}
                                           onCandidateSelection={onCandidateSelection}/>

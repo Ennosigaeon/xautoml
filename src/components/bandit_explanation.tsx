@@ -63,6 +63,7 @@ interface BanditExplanationsProps {
     structures: Structure[];
 
     selectedCandidates?: Set<CandidateId>;
+    hideUnselectedCandidates?: boolean
     onCandidateSelection?: (cid: Set<CandidateId>) => void;
 
     timestamp: string
@@ -84,6 +85,7 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
 
     static defaultProps = {
         selectedCandidates: new Set<CandidateId>(),
+        hideUnselectedCandidates: false,
         onCandidateSelection: (_: CandidateId[]) => {
         }
     }
@@ -164,28 +166,32 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
         const highlight = this.selectedNodes(this.props.selectedCandidates).has(data.id)
 
         return (
-            <GraphNode key={data.id}
-                       node={node}
-                       className={`bandit-explanation ${details.selected ? 'selected' : ''} ${highlight ? 'highlight' : ''}`}
-                       nodeWidth={BanditExplanationsComponent.NODE_WIDTH}
-                       nodeHeight={BanditExplanationsComponent.NODE_HEIGHT}
-                       onClick={this.toggleNode}
-                       onAlternativeClick={this.selectNode}>
-                <>
-                    <CollapseComp showInitial={false} className={''}>
-                        <h3>
-                            {normalizeComponent(data.label)}: {details.isFailure() ? details.failure_message : prettyPrint(details.score)}
-                        </h3>
-                        <div className={'bandit-explanation_node-details'} style={{marginTop: "-10px"}}>
-                            <KeyValue key_={'Id'} value={data.id} tight={true}/>
+            <>
+                {(!this.props.hideUnselectedCandidates || highlight) &&
+                    <GraphNode key={data.id}
+                               node={node}
+                               className={`bandit-explanation ${details.selected ? 'selected' : ''} ${highlight ? 'highlight' : ''}`}
+                               nodeWidth={BanditExplanationsComponent.NODE_WIDTH}
+                               nodeHeight={BanditExplanationsComponent.NODE_HEIGHT}
+                               onClick={this.toggleNode}
+                               onAlternativeClick={this.selectNode}>
+                        <>
+                            <CollapseComp showInitial={false} className={''}>
+                                <h3>
+                                    {normalizeComponent(data.label)}: {details.isFailure() ? details.failure_message : prettyPrint(details.score)}
+                                </h3>
+                                <div className={'bandit-explanation_node-details'} style={{marginTop: "-10px"}}>
+                                    <KeyValue key_={'Id'} value={data.id} tight={true}/>
 
-                            {Array.from(details.policy.keys()).map(k =>
-                                <KeyValue key={k} key_={k} value={details.policy.get(k)} tight={true} prec={2}/>
-                            )}
-                        </div>
-                    </CollapseComp>
-                </>
-            </GraphNode>
+                                    {Array.from(details.policy.keys()).map(k =>
+                                        <KeyValue key={k} key_={k} value={details.policy.get(k)} tight={true} prec={2}/>
+                                    )}
+                                </div>
+                            </CollapseComp>
+                        </>
+                    </GraphNode>
+                }
+            </>
         )
     }
 
@@ -199,11 +205,17 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
                 const details = data.getDetails(this.props.timestamp)
                 const highlight = this.selectedNodes(this.props.selectedCandidates).has(data.id)
 
-                return <GraphEdge key={key}
-                                  link={link}
-                                  nodeWidth={BanditExplanationsComponent.NODE_WIDTH}
-                                  nodeHeight={BanditExplanationsComponent.NODE_HEIGHT}
-                                  highlight={details.selected || highlight}/>
+                return (
+                    <>
+                        {(!this.props.hideUnselectedCandidates || highlight) &&
+                            <GraphEdge key={key}
+                                       link={link}
+                                       nodeWidth={BanditExplanationsComponent.NODE_WIDTH}
+                                       nodeHeight={BanditExplanationsComponent.NODE_HEIGHT}
+                                       highlight={details.selected || highlight}/>
+                        }
+                    </>
+                )
             })
 
         return (
