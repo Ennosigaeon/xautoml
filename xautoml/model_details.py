@@ -1,3 +1,4 @@
+import time
 from dataclasses import dataclass
 
 import numpy as np
@@ -5,7 +6,7 @@ import pandas as pd
 from sklearn import metrics
 from sklearn.compose import ColumnTransformer, make_column_selector
 from sklearn.inspection import permutation_importance
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, get_scorer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OrdinalEncoder
 from sklearn.tree import DecisionTreeClassifier
@@ -56,11 +57,19 @@ class DecisionTreeResult:
 class ModelDetails:
 
     @staticmethod
-    def calculate_confusion_matrix(X: pd.DataFrame, y: pd.Series, model):
+    def calculate_performance_data(X: pd.DataFrame, y: pd.Series, model, scoreing: str):
+        start = time.time()
         y_pred = model.predict(X)
+        duration = time.time() - start
+
+        validation_score = get_scorer(scoreing)(model, X, y)
+
         cm = confusion_matrix(y, y_pred)
         labels = unique_labels(y, y_pred)
-        return pd.DataFrame(cm, columns=labels, index=labels)
+        df = pd.DataFrame(cm, columns=labels, index=labels)
+
+        return {'duration': duration, 'val_score': validation_score,
+                'cm': {"classes": df.columns.to_list(), "values": df.values.tolist()}}
 
     @staticmethod
     def calculate_lime(df: pd.DataFrame, y: pd.Series, model, idx: int) -> LimeResult:

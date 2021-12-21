@@ -10,7 +10,6 @@
 - Ensemble Introspections
 - More "Continue in Jupyter" Buttons
 - Show confidence scores for predictions (predict_proba) next to target values
-- Calculate prediction time during confusion matrix calculation
 - Sampled values of single hyperparameter over time
 
 - Feature Correlation

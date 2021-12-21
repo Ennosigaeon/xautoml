@@ -1,11 +1,21 @@
 import {
-    CancelablePromise, ConfigSimilarityResponse,
-    ConfusionMatrixData, DecisionTreeResult, FANOVAResponse, FeatureImportance, LimeResult,
-    OutputDescriptionData, requestConfigSimilarity,
-    requestConfusionMatrix, requestFANOVA, requestFeatureImportance, requestGlobalSurrogate,
+    CancelablePromise,
+    ConfigSimilarityResponse,
+    DecisionTreeResult,
+    FANOVAResponse,
+    FeatureImportance,
+    LimeResult,
+    OutputDescriptionData,
+    PerformanceData,
+    requestConfigSimilarity,
+    requestFANOVA,
+    requestFeatureImportance,
+    requestGlobalSurrogate,
     requestLimeApproximation,
     requestOutputComplete,
-    requestOutputDescription, requestSimulatedSurrogate
+    requestOutputDescription,
+    requestPerformanceData,
+    requestSimulatedSurrogate
 } from "./handler";
 import {INotebookTracker, Notebook, NotebookActions} from "@jupyterlab/notebook";
 import {TagTool} from "@jupyterlab/celltags";
@@ -45,8 +55,8 @@ export class Jupyter {
         notebook.activeCell.editor.focus()
     }
 
-    requestConfusionMatrix(model_file: string, data_file: string): Promise<ConfusionMatrixData> {
-        return requestConfusionMatrix(model_file, data_file)
+    requestPerformanceData(model_file: string, data_file: string, metric: string): Promise<PerformanceData> {
+        return requestPerformanceData(model_file, data_file, metric)
     }
 
     requestOutputComplete(model_file: string, data_file: string): Promise<OutputDescriptionData> {

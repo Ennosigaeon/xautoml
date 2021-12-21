@@ -224,8 +224,8 @@ class ConfusionMatrixHandler(BaseHandler):
     def _process_post(self, model):
         X, y, pipeline, _ = self.load_model(model)
         details = ModelDetails()
-        cm = details.calculate_confusion_matrix(X, y, pipeline)
-        self.finish(json.dumps({"classes": cm.columns.to_list(), "values": cm.values.tolist()}))
+        cm = details.calculate_performance_data(X, y, pipeline, model['metric'])
+        self.finish(json.dumps(cm))
 
 
 class DecisionTreeHandler(BaseHandler):

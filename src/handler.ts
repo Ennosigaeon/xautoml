@@ -163,16 +163,23 @@ async function requestOutput(model_file: string, data_file: string, method: stri
     })
 }
 
+export interface PerformanceData {
+    duration: number
+    val_score: number
+    cm: ConfusionMatrixData
+}
+
 export interface ConfusionMatrixData {
     classes: string[]
     values: number[][]
 }
 
-export async function requestConfusionMatrix(model_file: string, data_file: string): Promise<ConfusionMatrixData> {
-    return memRequestAPI<ConfusionMatrixData>(`confusion_matrix`, {
+export async function requestPerformanceData(model_file: string, data_file: string, metric: string): Promise<PerformanceData> {
+    return memRequestAPI<PerformanceData>(`confusion_matrix`, {
         method: 'POST', body: JSON.stringify({
             'data_file': data_file,
-            'model_files': model_file
+            'model_files': model_file,
+            'metric': metric
         })
     })
 }

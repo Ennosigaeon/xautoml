@@ -80,14 +80,14 @@ def test_lime_for_auto_sklearn():
     print(res)
 
 
-def test_confusion_matrix():
+def test_performance_data():
     X, y, pipeline, _ = BaseHandler.load_model({
-        "data_file": "/home/marc/phd/code/dswizard/scripts/run/autosklearn_categorical/input/autosklearn_classification_example_tmp/dataset.pkl",
-        "model_files": "/home/marc/phd/code/dswizard/scripts/run/autosklearn_categorical/input/autosklearn_classification_example_tmp/.auto-sklearn/runs/1_12_0.0/1.12.0.0.model"
+        "data_file": "/home/marc/phd/code/dswizard/scripts/run/31/dataset.pkl",
+        "model_files": "/home/marc/phd/code/dswizard/scripts/run/31/models/models_0-20-0.pkl"
     })
 
     details = ModelDetails()
-    cm = details.calculate_confusion_matrix(X, y, pipeline)
+    cm = details.calculate_performance_data(X, y, pipeline, 'roc_auc')
 
     print(cm)
 
