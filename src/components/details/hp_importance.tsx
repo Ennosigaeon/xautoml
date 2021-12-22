@@ -22,7 +22,7 @@ import {
     YAxis
 } from "recharts";
 import {ErrorIndicator} from "../../util/error";
-import {LoadingIndicator} from "../loading";
+import {LoadingIndicator} from "../../util/loading";
 import {Structure} from "../../model";
 import {Heatbar} from "../../util/heatbar";
 

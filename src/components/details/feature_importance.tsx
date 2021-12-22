@@ -1,6 +1,6 @@
 import React from 'react';
-import {FeatureImportance, requestFeatureImportance} from "../../handler";
-import {LoadingIndicator} from "../loading";
+import {FeatureImportance} from "../../handler";
+import {LoadingIndicator} from "../../util/loading";
 import {DetailsModel} from "./model";
 import {ErrorIndicator} from "../../util/error";
 import {Colors, JupyterContext, prettyPrint} from "../../util";

@@ -4,10 +4,9 @@ import {
     CancelablePromise,
     CanceledPromiseError,
     DecisionTreeNode,
-    DecisionTreeResult,
-    requestGlobalSurrogate
+    DecisionTreeResult
 } from "../../handler";
-import {LoadingIndicator} from "../loading";
+import {LoadingIndicator} from "../../util/loading";
 import {GraphEdge, GraphNode, HierarchicalTree} from "../tree_structure";
 import Slider from "rc-slider";
 import {ErrorIndicator} from "../../util/error";

@@ -1,7 +1,7 @@
 import React from "react";
 import {CancelablePromise, CanceledPromiseError, Label, LimeResult, requestLimeApproximation} from "../../handler";
 import {Colors, JupyterContext} from "../../util";
-import {LoadingIndicator} from "../loading";
+import {LoadingIndicator} from "../../util/loading";
 import {DetailsModel} from "./model";
 import {ErrorIndicator} from "../../util/error";
 import {CollapseComp} from "../../util/collapse";

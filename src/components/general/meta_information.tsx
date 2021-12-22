@@ -1,8 +1,8 @@
 import React from "react";
-import {ConfigValue, MetaInformation, Runhistory} from "../model";
-import {CollapseComp} from "../util/collapse";
-import {KeyValue} from "../util/KeyValue";
-import {prettyPrint} from "../util";
+import {ConfigValue, MetaInformation} from "../../model";
+import {CollapseComp} from "../../util/collapse";
+import {KeyValue} from "../../util/KeyValue";
+import {prettyPrint} from "../../util";
 
 interface MetaInformationProps {
     meta: MetaInformation

@@ -1,5 +1,5 @@
 import React from "react";
-import {ConfigSimilarityResponse} from "../handler";
+import {ConfigSimilarityResponse} from "../../handler";
 import {
     CartesianGrid,
     Cell,
@@ -11,11 +11,11 @@ import {
     XAxis,
     YAxis
 } from "recharts";
-import {Colors, JupyterContext, prettyPrint} from "../util";
+import {Colors, JupyterContext, prettyPrint} from "../../util";
 import * as d3 from "d3";
-import {CandidateId, MetaInformation, Structure} from "../model";
-import {LoadingIndicator} from "./loading";
-import {Heatbar} from "../util/heatbar";
+import {CandidateId, MetaInformation, Structure} from "../../model";
+import {LoadingIndicator} from "../../util/loading";
+import {Heatbar} from "../../util/heatbar";
 
 interface ConfigSimilarityProps {
     meta: MetaInformation

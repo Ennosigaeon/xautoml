@@ -1,10 +1,10 @@
-import {ParallelCoordinates} from "./pc/parallel_corrdinates";
+import {ParallelCoordinates} from "../pc/parallel_corrdinates";
 import React from "react";
-import {Candidate, CandidateId, Config, MetaInformation, Structure} from "../model";
-import {ErrorIndicator} from "../util/error";
-import {LoadingIndicator} from "./loading";
-import {WarningIndicator} from "../util/warning";
-import {JupyterContext} from "../util";
+import {Candidate, CandidateId, Config, MetaInformation, Structure} from "../../model";
+import {ErrorIndicator} from "../../util/error";
+import {LoadingIndicator} from "../../util/loading";
+import {WarningIndicator} from "../../util/warning";
+import {JupyterContext} from "../../util";
 
 
 interface SurrogateExplanationProps {

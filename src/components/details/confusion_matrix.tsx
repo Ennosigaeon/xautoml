@@ -1,7 +1,7 @@
-import {ConfusionMatrixData} from "../handler";
+import {ConfusionMatrixData} from "../../handler";
 import React from "react";
 import {Table, TableBody, TableCell, TableRow} from "@material-ui/core";
-import {prettyPrint} from "../util";
+import {prettyPrint} from "../../util";
 
 
 interface ConfusionMatrixProps {

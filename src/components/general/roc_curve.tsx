@@ -1,10 +1,10 @@
 import React from "react";
-import {Candidate, CandidateId, MetaInformation} from "../model";
-import {CancelablePromise, CanceledPromiseError, requestRocCurve, RocCurveData} from "../handler";
-import {LoadingIndicator} from "./loading";
-import {ErrorIndicator} from "../util/error";
+import {Candidate, CandidateId, MetaInformation} from "../../model";
+import {CancelablePromise, CanceledPromiseError, requestRocCurve, RocCurveData} from "../../handler";
+import {LoadingIndicator} from "../../util/loading";
+import {ErrorIndicator} from "../../util/error";
 import {CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, XAxis, YAxis} from "recharts";
-import {Colors} from "../util";
+import {Colors} from "../../util";
 
 
 interface RocCurveProps {

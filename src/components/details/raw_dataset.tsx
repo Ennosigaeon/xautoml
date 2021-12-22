@@ -1,6 +1,6 @@
 import React from "react";
 import {OutputDescriptionData} from "../../handler";
-import {LoadingIndicator} from "../loading";
+import {LoadingIndicator} from "../../util/loading";
 import {DetailsModel} from "./model";
 import {TwoColumnLayout} from "../../util/layout";
 import {JupyterButton} from "../../util/jupyter-button";

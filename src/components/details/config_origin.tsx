@@ -1,7 +1,7 @@
 import {Candidate, ConfigOrigin, Explanations, MetaInformation, Structure} from "../../model";
-import {BanditExplanationsComponent} from "../bandit_explanation";
+import {BanditExplanationsComponent} from "../search_space/bandit_explanation";
 import {cidToSid, JupyterContext} from "../../util";
-import {SurrogateExplanation} from "../surrogate_explanation";
+import {SurrogateExplanation} from "./surrogate_explanation";
 import React from "react";
 import {KeyValue} from "../../util/KeyValue";
 
@@ -20,7 +20,7 @@ export class ConfigOriginComp extends React.Component<ConfigOriginProps, any> {
     static contextType = JupyterContext;
     context: React.ContextType<typeof JupyterContext>;
 
-    private getHelp(origin: ConfigOrigin): string {
+    private static getHelp(origin: ConfigOrigin): string {
         switch (origin) {
             case 'Default':
                 return 'Fixed default configuration'
@@ -44,7 +44,7 @@ export class ConfigOriginComp extends React.Component<ConfigOriginProps, any> {
 
         return (
             <>
-                <KeyValue key_={'Origin'} value={candidate.origin} help={this.getHelp(candidate.origin)}/>
+                <KeyValue key_={'Origin'} value={candidate.origin} help={ConfigOriginComp.getHelp(candidate.origin)}/>
                 {explanations.structures &&
                     <BanditExplanationsComponent explanations={explanations.structures}
                                                  structures={structures}

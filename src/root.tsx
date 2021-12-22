@@ -2,18 +2,15 @@ import React from "react";
 import {ReactWidget} from "@jupyterlab/apputils";
 import {IRenderMime} from "@jupyterlab/rendermime-interfaces";
 import {CandidateId, Runhistory} from "./model";
-import MetaInformationTable from "./components/meta_information";
-import PerformanceTimeline from "./components/performance_timeline";
 import {Colors, JupyterContext} from "./util";
-import {RocCurve} from "./components/roc_curve";
 import {CandidateTable} from "./components/candidate_table";
 import {Jupyter} from "./jupyter";
-import {LoadingIndicator} from "./components/loading";
-import {CollapseComp} from "./util/collapse";
+import {LoadingIndicator} from "./util/loading";
 import {Box, Checkbox, Tab, Tabs} from "@material-ui/core";
 import {TabContext} from "@material-ui/lab";
 import {TabPanel} from "./util/tabpanel";
 import {SearchSpace} from "./components/search_space";
+import {GeneralInformation} from "./components/general_information";
 
 
 /**
@@ -142,20 +139,11 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
             <JupyterContext.Provider value={jupyter}>
                 <div style={{display: 'flex'}}>
                     <div style={{flexGrow: 0, flexShrink: 0, flexBasis: '300px', marginRight: '20px'}}>
-                        <MetaInformationTable meta={runhistory.meta}/>
-                        <CollapseComp showInitial={true} help={PerformanceTimeline.HELP}>
-                            <h4>Performance Timeline</h4>
-                            <PerformanceTimeline data={runhistory.structures} meta={runhistory.meta}
-                                                 selectedCandidates={selectedCandidates}
-                                                 onCandidateSelection={this.onCandidateSelection}/>
-                        </CollapseComp>
-                        <CollapseComp showInitial={true} help={RocCurve.HELP}>
-                            <h4>ROC Curve</h4>
-                            <RocCurve selectedCandidates={selectedCandidates}
-                                      candidateMap={runhistory.candidateMap}
-                                      meta={runhistory.meta}
-                                      height={300}/>
-                        </CollapseComp>
+                        <GeneralInformation structures={runhistory.structures}
+                                            meta={runhistory.meta}
+                                            candidateMap={runhistory.candidateMap}
+                                            selectedCandidates={selectedCandidates}
+                                            onCandidateSelection={this.onCandidateSelection}/>
                     </div>
                     <div style={{flexGrow: 2}}>
                         <TabContext value={openTab}>
@@ -174,7 +162,8 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
                                     </DivInTabs>
                                     <DivInTabs>
                                         <label className={'MuiFormControlLabel-root'}>
-                                            <Checkbox checked={!hideUnselected} onChange={this.toggleShowAllCandidates}/>
+                                            <Checkbox checked={!hideUnselected}
+                                                      onChange={this.toggleShowAllCandidates}/>
                                             <span>Show&nbsp;All&nbsp;Candidates</span>
                                         </label>
                                     </DivInTabs>

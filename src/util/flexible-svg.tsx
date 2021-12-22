@@ -1,5 +1,5 @@
 import React from "react";
-import {LoadingIndicator} from "../components/loading";
+import {LoadingIndicator} from "./loading";
 import ResizeObserver from "resize-observer-polyfill";
 
 interface FlexibleSvgProps {

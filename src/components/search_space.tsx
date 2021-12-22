@@ -1,10 +1,10 @@
 import React from "react";
 import {CollapseComp} from "../util/collapse";
-import {BanditExplanationsComponent} from "./bandit_explanation";
+import {BanditExplanationsComponent} from "./search_space/bandit_explanation";
 import {ParallelCoordinates} from "./pc/parallel_corrdinates";
 import {CandidateId, Explanations, MetaInformation, Structure} from "../model";
 import Slider from "rc-slider";
-import {ConfigSimilarity} from "./config_similarity";
+import {ConfigSimilarity} from "./search_space/config_similarity";
 import {ConfigSimilarityResponse} from "../handler";
 
 interface SearchSpaceProps {

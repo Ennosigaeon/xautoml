@@ -1,13 +1,13 @@
 import React from "react";
 import * as d3 from "d3";
-import {CandidateId, Pipeline, RF, Structure} from "../model";
+import {CandidateId, Pipeline, RF, Structure} from "../../model";
 import 'rc-slider/assets/index.css';
-import {areSetInputsEqual, cidToSid, normalizeComponent, prettyPrint} from "../util";
-import {GraphEdge, GraphNode, HierarchicalTree} from "./tree_structure";
+import {areSetInputsEqual, cidToSid, normalizeComponent, prettyPrint} from "../../util";
+import {GraphEdge, GraphNode, HierarchicalTree} from "../tree_structure";
 import {Dag, DagNode} from "d3-dag";
 import memoizeOne from "memoize-one";
-import {CollapseComp} from "../util/collapse";
-import {KeyValue} from "../util/KeyValue";
+import {CollapseComp} from "../../util/collapse";
+import {KeyValue} from "../../util/KeyValue";
 
 
 interface CollapsibleNode {

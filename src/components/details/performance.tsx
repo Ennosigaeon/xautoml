@@ -2,12 +2,12 @@ import React from "react";
 import {DetailsModel} from "./model";
 import {KeyValue} from "../../util/KeyValue";
 import {JupyterContext, prettyPrint} from "../../util";
-import {ConfusionMatrix} from "../confusion_matrix";
-import {RocCurve} from "../roc_curve";
+import {ConfusionMatrix} from "./confusion_matrix";
+import {RocCurve} from "../general/roc_curve";
 import {Candidate, CandidateId} from "../../model";
 import {PerformanceData} from "../../handler";
 import {ErrorIndicator} from "../../util/error";
-import {LoadingIndicator} from "../loading";
+import {LoadingIndicator} from "../../util/loading";
 
 
 interface PerformanceComponentProps {

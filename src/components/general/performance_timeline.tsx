@@ -1,6 +1,6 @@
 import React from 'react';
-import {Candidate, CandidateId, MetaInformation, Structure} from "../model";
-import {Colors, fixedPrec} from "../util";
+import {Candidate, CandidateId, MetaInformation, Structure} from "../../model";
+import {Colors, fixedPrec} from "../../util";
 import {CartesianGrid, Cell, ComposedChart, Line, ResponsiveContainer, Scatter, XAxis, YAxis} from "recharts";
 
 interface ConfigHistoryProps {
