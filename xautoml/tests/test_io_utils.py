@@ -6,8 +6,8 @@ from xautoml.util.mlinsights import enumerate_pipeline_models
 
 
 def test_load_dataframe():
-    xautoml_X, _ = io_utils.load_input_data('/home/marc/phd/code/dswizard/scripts/run/168746/dataset.pkl',
-                                            framework='dswizard')
+    xautoml_X, xautoml_y = io_utils.load_input_data('/home/marc/phd/code/dswizard/scripts/run/168746/dataset.pkl',
+                                                    framework='dswizard')
     xautoml_pipeline = io_utils.load_pipeline(
         '/home/marc/phd/code/dswizard/scripts/run/168746/models/models_0-0-0.pkl',
         framework='dswizard')

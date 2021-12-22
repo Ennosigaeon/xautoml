@@ -181,10 +181,16 @@ div.structure-graph_tooltip {
 
 
 /** Raw Dataset */
-.raw-dataset tr th:last-of-type,
-.raw-dataset tr td:last-of-type {
-    padding-left: 40px;
+.raw-dataset tr th:nth-last-child(2),
+.raw-dataset tr td:nth-last-child(2) {
+    border-left: var(--jp-border-width) solid var(--jp-border-color1);
+    padding-left: 10px;
     font-style: italic;
+}
+
+.raw-dataset tr th:nth-last-child(3),
+.raw-dataset tr td:nth-last-child(3) {
+    padding-right: 30px;
 }
 
 

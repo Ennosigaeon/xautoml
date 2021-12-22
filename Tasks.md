@@ -9,8 +9,9 @@
 - PC Explanations for SMAC
 - Ensemble Introspections
 - More "Continue in Jupyter" Buttons
-- Show confidence scores for predictions (predict_proba) next to target values
 - Sampled values of single hyperparameter over time
+- Histogram of training performances (as additional tab in performance timeline)
+- Improve help texts
 
 - Feature Correlation
 - Partial Dependency Plots

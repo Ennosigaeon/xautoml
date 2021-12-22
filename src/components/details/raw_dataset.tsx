@@ -1,5 +1,5 @@
 import React from "react";
-import {OutputDescriptionData, requestOutputComplete} from "../../handler";
+import {OutputDescriptionData} from "../../handler";
 import {LoadingIndicator} from "../loading";
 import {DetailsModel} from "./model";
 import {TwoColumnLayout} from "../../util/layout";
@@ -107,7 +107,7 @@ export class RawDataset extends React.Component<RawDatasetProps, RawDatasetState
         this.context.createCell(`
 from xautoml.util import io_utils
 
-${ID}_X, _ = io_utils.load_input_data('${meta.data_file}', framework='${meta.framework}')
+${ID}_X, ${ID}_y = io_utils.load_input_data('${meta.data_file}', framework='${meta.framework}')
 ${ID}_pipeline = io_utils.load_pipeline('${candidate.model_file}', framework='${meta.framework}')
 
 ${ID}_df = io_utils.load_output_dataframe(${ID}_pipeline, '${component}', ${ID}_X)
