@@ -5,11 +5,11 @@ from xautoml.util import pipeline_utils
 
 def test_decision_tree():
     X, y, pipeline, _ = BaseHandler.load_model({
-        "data_file": "/home/marc/phd/code/dswizard/scripts/run/168746/dataset.pkl",
-        "model_files": "/home/marc/phd/code/dswizard/scripts/run/168746/models/models_0-0-6.pkl"
+        "data_file": "res/168746/dataset.pkl",
+        "model_files": "res/168746/models_0-0-6.pkl"
     })
 
-    step = 'data_preprocessing:categorical:encoding'
+    step = 'data_preprocessing:categorical:ordinal_encoder'
     pipeline, X, _ = pipeline_utils.get_subpipeline(pipeline, step, X, y)
     details = ModelDetails()
     res = details.calculate_decision_tree(X, pipeline, max_leaf_nodes=None)
@@ -19,8 +19,8 @@ def test_decision_tree():
 
 def test_decision_tree_without_max_leaf_nodes():
     X, y, pipeline, _ = BaseHandler.load_model({
-        "data_file": "/home/marc/phd/code/dswizard/scripts/run/168746/dataset.pkl",
-        "model_files": "/home/marc/phd/code/dswizard/scripts/run/168746/models/models_0-0-0.pkl"
+        "data_file": "res/168746/dataset.pkl",
+        "model_files": "res/168746/models_0-0-0.pkl"
     })
 
     step = 'SOURCE'
@@ -34,8 +34,8 @@ def test_decision_tree_without_max_leaf_nodes():
 
 def test_lime_for_step():
     X, y, pipeline, _ = BaseHandler.load_model({
-        "data_file": "/home/marc/phd/code/dswizard/scripts/run/168746/dataset.pkl",
-        "model_files": "/home/marc/phd/code/dswizard/scripts/run/168746/models/models_0-0-0.pkl"
+        "data_file": "res/168746/dataset.pkl",
+        "model_files": "res/168746/models_0-0-0.pkl"
     })
 
     step = 'data_preprocessing:categorical'
@@ -50,8 +50,8 @@ def test_lime_for_step():
 
 def test_lime_string_class():
     X, y, pipeline, _ = BaseHandler.load_model({
-        "data_file": "/home/marc/phd/code/dswizard/scripts/run/7306/dataset.pkl",
-        "model_files": "/home/marc/phd/code/dswizard/scripts/run/7306/models/models_0-0-0.pkl"
+        "data_file": "res/7306/dataset.pkl",
+        "model_files": "res/7306/models_0-0-0.pkl"
     })
 
     step = 'SOURCE'
@@ -66,8 +66,8 @@ def test_lime_string_class():
 
 def test_lime_for_auto_sklearn():
     X, y, pipeline, _ = BaseHandler.load_model({
-        "data_file": "/home/marc/phd/code/dswizard/scripts/run/autosklearn/input/autosklearn_classification_example_tmp/dataset.pkl",
-        "model_files": "/home/marc/phd/code/dswizard/scripts/run/autosklearn/input/autosklearn_classification_example_tmp/.auto-sklearn/runs/1_2_0.0/1.2.0.0.model"
+        "data_file": "res/autosklearn/dataset.pkl",
+        "model_files": "res/autosklearn/1.2.0.0.model"
     })
 
     step = 'SOURCE'
@@ -82,8 +82,8 @@ def test_lime_for_auto_sklearn():
 
 def test_performance_data():
     X, y, pipeline, _ = BaseHandler.load_model({
-        "data_file": "/home/marc/phd/code/dswizard/scripts/run/31/dataset.pkl",
-        "model_files": "/home/marc/phd/code/dswizard/scripts/run/31/models/models_0-20-0.pkl"
+        "data_file": "res/31/dataset.pkl",
+        "model_files": "res/31/models_0-2-2.pkl"
     })
 
     details = ModelDetails()

@@ -22,7 +22,7 @@ class OutputCalculator:
             else:
                 return pd.DataFrame()
 
-        data = d['predict_proba'] if 'predict_proba' in d else d['transform']
+        data = d['predict'] if 'predict' in d else d['transform']
         feature_names = d.get('get_feature_names_out', None)
 
         df = pd.DataFrame(data, columns=feature_names)
@@ -44,6 +44,7 @@ class OutputCalculator:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", UserWarning)
             alter_pipeline_for_debugging(pipeline)
+            pipeline.predict(X)
             y_proba = pipeline.predict_proba(X)
             confidence = pd.Series(np.max(y_proba, axis=1))
 

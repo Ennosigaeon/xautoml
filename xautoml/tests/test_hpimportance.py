@@ -6,13 +6,13 @@ from xautoml.hp_importance import HPImportance
 
 
 def test_overview():
-    f, X = HPImportance.load_file('/home/marc/phd/code/dswizard/scripts/run/168746/runhistory_168746.json')
+    f, X = HPImportance.load_file('res/168746/runhistory_168746.json')
     overview = HPImportance.calculate_fanova_overview(f, X)
     overview_js = json.dumps(overview)
 
 
 def test_for_step():
-    f, X = HPImportance.load_file('/home/marc/phd/code/dswizard/scripts/run/168746/runhistory_168746.json')
+    f, X = HPImportance.load_file('res/168746/runhistory_168746.json')
     overview = HPImportance.calculate_fanova_overview(f, X, '1.1')
     overview_js = json.dumps(overview)
 
@@ -21,7 +21,7 @@ def test_for_step():
 
 
 def test_details():
-    f, X = HPImportance.load_file('/home/marc/phd/code/dswizard/scripts/run/168746/runhistory_168746.json')
+    f, X = HPImportance.load_file('res/168746/runhistory_168746.json')
     details = HPImportance.calculate_fanova_details(f, X)
     details_js = json.dumps(details)
 
@@ -41,13 +41,13 @@ def test_details():
 
 
 def test_expected_performance_simulation():
-    f, X = HPImportance.load_file('/home/marc/phd/code/dswizard/scripts/run/168746/runhistory_168746.json')
+    f, X = HPImportance.load_file('res/168746/runhistory_168746.json')
     details = HPImportance.simulate_surrogate(f, X)
     details_js = json.dumps(details)
 
 
 def test_fanova():
-    f, X = HPImportance.load_file('/home/marc/phd/code/dswizard/scripts/run/168746/runhistory_168746.json')
+    f, X = HPImportance.load_file('res/168746/runhistory_168746.json')
     vis = visualizer.Visualizer(f, f.cs, '/tmp')
 
     vis.plot_marginal(0)

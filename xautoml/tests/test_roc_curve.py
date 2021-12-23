@@ -5,8 +5,8 @@ from xautoml.roc_auc import RocCurve
 def test_roc_curve():
     model = {
         "cids": "00:02:07",
-        "data_file": "/home/marc/phd/code/dswizard/scripts/run/autosklearn_categorical/input/autosklearn_classification_example_tmp/dataset.pkl",
-        "model_files": "/home/marc/phd/code/dswizard/scripts/run/autosklearn_categorical/input/autosklearn_classification_example_tmp/.auto-sklearn/runs/1_7_0.0/1.7.0.0.model"
+        "data_file": "res/autosklearn_categorical/dataset.pkl",
+        "model_files": "res/autosklearn_categorical/1.2.0.0.model"
     }
 
     micro = model.get('micro', False)
