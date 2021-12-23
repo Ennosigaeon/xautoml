@@ -23,6 +23,7 @@ interface ConfigSimilarityProps {
     selectedCandidates: Set<CandidateId>
     hideUnselectedCandidates: boolean
     timestamp: number
+    height: string
     onCandidateSelection?: (cid: Set<CandidateId>, show?: boolean) => void
 }
 
@@ -95,19 +96,21 @@ export class ConfigSimilarity extends React.Component<ConfigSimilarityProps, Con
             .map(p => [(p.x2 - p.x1) / 1.9, (p.y2 - p.y1) / 1.9])[0] : [0, 0]
 
         return (
-            <div>
+            <div style={{height: this.props.height}}>
                 <LoadingIndicator loading={data == undefined}/>
                 {data &&
-                    <>
-                        <div style={{height: 300}}>
+                    <div style={{height: '100%', display: "flex", flexDirection: "column"}}>
+                        <div style={{flex: '1 1 auto'}}>
                             <ResponsiveContainer>
                                 <ComposedChart>
                                     <CartesianGrid strokeDasharray="3 3"/>
 
                                     <XAxis type="number" dataKey="x" label={{value: 'Dimension 1', dy: 10}}
-                                           domain={[`dataMin - ${patchPadding[0]}`, `dataMax + ${patchPadding[0]}`]} tickFormatter={prettyPrint}/>
-                                    <YAxis type="number" dataKey="y" label={{value: 'Dimension 2', angle: -90}}
-                                           domain={[`dataMin - ${patchPadding[1]}`, `dataMax + ${patchPadding[1]}`]} tickFormatter={prettyPrint}/>
+                                           domain={[`dataMin - ${patchPadding[0]}`, `dataMax + ${patchPadding[0]}`]}
+                                           tickFormatter={prettyPrint}/>
+                                    <YAxis type="number" dataKey="y" label={{value: 'Dimension 2', angle: -90, dx: -20}}
+                                           domain={[`dataMin - ${patchPadding[1]}`, `dataMax + ${patchPadding[1]}`]}
+                                           tickFormatter={prettyPrint}/>
 
                                     {data.surface.map(patch => (
                                         <ReferenceArea
@@ -132,7 +135,7 @@ export class ConfigSimilarity extends React.Component<ConfigSimilarityProps, Con
                                             .map((d, index) => (
                                                 <Cell key={`cell-${index}`}
                                                       fill={selectedCandidates.has(cids[d.idx]) ? Colors.HIGHLIGHT : Colors.DEFAULT}
-                                                      stroke={'black'}
+                                                      stroke={Colors.BORDER}
                                                       cursor={'pointer'}/>
                                             ))}
                                     </Scatter>
@@ -149,7 +152,7 @@ export class ConfigSimilarity extends React.Component<ConfigSimilarityProps, Con
                                                       fill={selectedCandidates.has(cids[d.idx]) ? Colors.HIGHLIGHT : Colors.DEFAULT}
                                                       width={15}
                                                       height={15}
-                                                      stroke={'black'}
+                                                      stroke={Colors.BORDER}
                                                       cursor={'pointer'}/>
                                             ))}
                                     </Scatter>
@@ -157,8 +160,10 @@ export class ConfigSimilarity extends React.Component<ConfigSimilarityProps, Con
                                 </ComposedChart>
                             </ResponsiveContainer>
                         </div>
-                        <Heatbar scale={scale}/>
-                    </>
+                        <div style={{flex: '0 1 auto'}}>
+                            <Heatbar scale={scale}/>
+                        </div>
+                    </div>
                 }
             </div>
         )

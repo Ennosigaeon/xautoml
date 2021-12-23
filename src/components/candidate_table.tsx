@@ -180,9 +180,7 @@ ${ID}_pipeline
                             color='primary'
                         />
                     </TableCell>
-                    <TableCell component='th' id={candidate.id} scope='row' padding='none'>
-                        {candidate.id}
-                    </TableCell>
+                    <TableCell id={candidate.id} scope='row' padding='none'>{candidate.id}</TableCell>
                     <TableCell align='right'>{prettyPrint(candidate.timestamp, 2)}</TableCell>
                     <TableCell align='right'>{prettyPrint(candidate.performance, 4)}</TableCell>
                     <TableCell align='right' style={{height: '50px'}} padding='none'>
@@ -343,8 +341,8 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
 
         const headCells: HeadCell[] = [
             {id: 'id', numeric: false, sortable: true, label: 'Id', width: '40px'},
-            {id: 'timestamp', numeric: true, sortable: true, label: 'Timestamp', width: '100px'},
-            {id: 'performance', numeric: true, sortable: true, label: 'Performance', width: '110px'},
+            {id: 'timestamp', numeric: true, sortable: true, label: 'Timestamp', width: '90px'},
+            {id: 'performance', numeric: true, sortable: true, label: 'Performance', width: '100px'},
             {id: 'candidate', numeric: false, sortable: false, label: 'Configuration', width: 'auto'}
         ];
 
@@ -354,10 +352,8 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
                     <Table
                         aria-labelledby='tableTitle'
                         aria-label='enhanced table'
-                        //TODO: To prevent the table from getting wider than parent, a fixed table-layout is necessary.
-                        //Yet, this requires hardcoded columns width which is quite ugly (see HeadCell above).
-                        //Replace everything with DataGrid once https://github.com/mui-org/material-ui-x/issues/192 is resolved.
                         style={{tableLayout: 'fixed'}}
+                        size="small"
                     >
                         <CandidateTableHead
                             headCells={headCells}

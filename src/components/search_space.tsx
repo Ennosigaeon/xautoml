@@ -90,6 +90,7 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
                                           selectedCandidates={selectedCandidates}
                                           hideUnselectedCandidates={hideUnselectedCandidates}
                                           meta={meta}
+                                          height={'300px'}
                                           timestamp={this.state.timestamp}
                                           onCandidateSelection={onCandidateSelection}/>
                     </CollapseComp>

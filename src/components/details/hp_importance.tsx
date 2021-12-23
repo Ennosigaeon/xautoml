@@ -45,7 +45,7 @@ class SingleHP extends React.Component<SingleHPProps> {
             })
 
             plot = (
-                <BarChart data={whiskers} margin={{left: 40, bottom: 5}}>
+                <BarChart data={whiskers} margin={{left: 30, bottom: 5}}>
                     <CartesianGrid strokeDasharray="3 3"/>
                     <XAxis dataKey="label" label={{value: data.name[0], dy: 10}}/>
                     <YAxis label={{value: 'Marginal Performance', angle: -90, dx: -40}} domain={['auto', 'auto']}/>
@@ -55,9 +55,9 @@ class SingleHP extends React.Component<SingleHPProps> {
         } else if (data.mode === 'continuous') {
             if (data.name.length === 1) {
                 plot = (
-                    <ComposedChart data={(data.data as ContinuousHPImportance)} margin={{left: 40, bottom: 5}}>
+                    <ComposedChart data={(data.data as ContinuousHPImportance)} margin={{left: 30, bottom: 5}}>
                         <CartesianGrid strokeDasharray="3 3"/>
-                        <XAxis dataKey="x" label={{value: data.name[0], dy: 10}} type={'number'}
+                        <XAxis dataKey="x" label={{value: data.name[0]}} type={'number'}
                                domain={['dataMin', 'dataMax']}/>
                         <YAxis label={{value: 'Marginal Performance', angle: -90, dx: -40}} domain={['auto', 'auto']}/>
                         <Area type="monotone" dataKey="area" fill={Colors.DEFAULT} stroke={Colors.DEFAULT}/>
@@ -67,7 +67,7 @@ class SingleHP extends React.Component<SingleHPProps> {
             } else {
                 const keys = Object.keys(data.data[0]).filter(k => k !== 'x')
                 plot = (
-                    <LineChart data={data.data} margin={{left: 40}}>
+                    <LineChart data={data.data} margin={{left: 30}}>
                         <CartesianGrid strokeDasharray="3 3"/>
                         <XAxis dataKey="x" label={{value: data.name[1], dy: 10}} type={'number'}
                                domain={['dataMin', 'dataMax']}/>
@@ -91,7 +91,7 @@ class SingleHP extends React.Component<SingleHPProps> {
             const scale = d3.scaleSequential(d3.interpolateSpectral)
                 .domain([min, max])
 
-            const marginLeft = columns.map(r => r.length).reduce((a, b) => Math.max(a, b), 0) * 8
+            const marginLeft = columns.map(r => r.length).reduce((a, b) => Math.max(a, b), 0) * 5
             plot = (
                 <LineChart margin={{left: marginLeft, bottom: 5}}>
                     {this.generateHeatMap(columns, rows).map(sector => (
@@ -118,7 +118,7 @@ class SingleHP extends React.Component<SingleHPProps> {
                            ticks={[...Array(columns.length).keys()].map((_, i) => i + 0.5)}
                            interval={0}
                            tickFormatter={y => prettyPrint(columns[y - 0.5])}
-                           label={{value: data.name[0], angle: -90, dx: -marginLeft}}/>
+                           label={{value: data.name[0], angle: -90, dx: -marginLeft - 20}}/>
                     <Tooltip cursor={{strokeDasharray: '3 3'}}/>
                 </LineChart>
             )

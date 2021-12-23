@@ -18,7 +18,7 @@ export class JupyterButton extends React.Component<JupyterButtonProps, {}> {
             <Button className={'jupyter-button'}
                     onClick={onClick}
                     style={style}>
-                Continue in <div dangerouslySetInnerHTML={{__html: JupyterLogo}}/>
+                Continue in <div style={{marginLeft: '-5px'}} dangerouslySetInnerHTML={{__html: JupyterLogo}}/>
             </Button>
         );
     }

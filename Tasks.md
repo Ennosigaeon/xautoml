@@ -12,6 +12,7 @@
 - Sampled values of single hyperparameter over time
 - Histogram of training performances (as additional tab in performance timeline)
 - Improve help texts
+- Help texts for components. Link to sklearn
 
 - Feature Correlation
 - Partial Dependency Plots

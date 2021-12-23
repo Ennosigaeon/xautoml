@@ -49,6 +49,7 @@ export function areSetInputsEqual(
 export namespace Colors {
     export const DEFAULT: string = '#abe2fb'
     export const HIGHLIGHT: string = '#2196f3'
+    export const BORDER: string = '#aaa'
 
 
     export const EXTENDED_DISCRETE_COLOR_RANGE = [

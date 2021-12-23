@@ -23,7 +23,7 @@ export class GeneralInformation extends React.Component<GeneralInformationProps,
                 <MetaInformationTable meta={meta}/>
                 <CollapseComp showInitial={true} help={PerformanceTimeline.HELP}>
                     <h4>Performance Timeline</h4>
-                    <PerformanceTimeline data={structures} meta={meta}
+                    <PerformanceTimeline data={structures} meta={meta} height={250}
                                          selectedCandidates={selectedCandidates}
                                          onCandidateSelection={onCandidateSelection}/>
                 </CollapseComp>
@@ -32,7 +32,7 @@ export class GeneralInformation extends React.Component<GeneralInformationProps,
                     <RocCurve selectedCandidates={selectedCandidates}
                               candidateMap={candidateMap}
                               meta={meta}
-                              height={300}/>
+                              height={250}/>
                 </CollapseComp>
             </>
         )

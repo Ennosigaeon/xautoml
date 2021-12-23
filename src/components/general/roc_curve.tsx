@@ -123,7 +123,7 @@ export class RocCurve extends React.Component<RocCurveProps, RocCurveState> {
                             {data.length <= 12 && <Legend/>}
                             {data.map((s, idx) => (
                                 <Line key={labels[idx]} name={labels[idx]} data={s} dataKey={'y'}
-                                      stroke={Colors.getColor(idx)} strokeWidth={2}/>
+                                      stroke={Colors.getColor(idx)} strokeWidth={2} dot={false}/>
                             ))}
                         </LineChart>
                     </ResponsiveContainer>

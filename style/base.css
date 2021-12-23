@@ -62,6 +62,10 @@ tr.MuiTableRow-root.MuiTableRow-hover:hover {
     left: 0;
 }
 
+.recharts-surface {
+    overflow: visible;
+}
+
 
 /** Hierarchical Tree */
 .hierarchical-tree_node-container {
@@ -175,8 +179,18 @@ div.structure-graph_tooltip {
     width: initial;
 }
 
-.jp-RenderedHTMLCommon .MuiTableCell-root {
-    font-size: 12px;
+.jp-Cell-outputWrapper .MuiTableCell-root,
+.jp-Cell-outputWrapper .MuiCollapse-wrapperInner{
+    font-size: var(--jp-code-font-size);
+}
+
+.jp-Cell-outputWrapper .MuiTableCell-sizeSmall,
+.jp-Cell-outputWrapper .MuiTableCell-sizeSmall.MuiTableCell-paddingCheckbox{
+    padding: 6px;
+}
+
+.jp-Cell-outputWrapper .MuiTableCell-sizeSmall:last-child {
+    padding: 6px 0;
 }
 
 
@@ -195,6 +209,10 @@ div.structure-graph_tooltip {
 
 
 /** JupyterButton */
+.jupyter-button > span {
+    font-size: var(--jp-code-font-size);
+}
+
 .jupyter-button svg {
     height: 1.75em;
     vertical-align: bottom;
@@ -282,6 +300,10 @@ text.pc-axis-y-tick {
 text.pc-axis-x-tick {
     dominant-baseline: hanging;
     text-anchor: middle;
+}
+
+text.pc-axis-label {
+    cursor: pointer;
 }
 
 .pc-line {
