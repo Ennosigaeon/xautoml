@@ -7,7 +7,7 @@ interface ConfigHistoryProps {
     data: Structure[]
     meta: MetaInformation
     selectedCandidates: Set<CandidateId>
-    onCandidateSelection?: (cid: Set<CandidateId>) => void
+    onCandidateSelection?: (cid: Set<CandidateId>, show?: boolean) => void
     height: number
 }
 
@@ -59,14 +59,17 @@ export default class PerformanceTimeline extends React.Component<ConfigHistoryPr
             })
     }
 
-    private onScatterClick(x: any) {
+    private onScatterClick(x: any, _: number, e: React.MouseEvent) {
         const cid: CandidateId = x.cid
-        const selected = new Set(this.props.selectedCandidates)
-        if (this.props.selectedCandidates.has(cid))
-            selected.delete(cid)
-        else
-            selected.add(cid)
-        this.props.onCandidateSelection(selected)
+        if (e.ctrlKey) {
+            const selected = new Set(this.props.selectedCandidates)
+            if (this.props.selectedCandidates.has(cid))
+                selected.delete(cid)
+            else
+                selected.add(cid)
+            this.props.onCandidateSelection(selected)
+        } else
+            this.props.onCandidateSelection(new Set<CandidateId>([cid]), true)
     }
 
     render() {
@@ -82,7 +85,8 @@ export default class PerformanceTimeline extends React.Component<ConfigHistoryPr
                     <ComposedChart data={data}>
                         <CartesianGrid strokeDasharray="3 3"/>
                         <XAxis dataKey="x" label={{value: 'Timestamp', dy: 10}} type={'number'} unit={'s'}/>
-                        <YAxis label={{value: this.props.meta.metric, angle: -90, dx: -25}} domain={['dataMin', 'dataMax']}/>
+                        <YAxis label={{value: this.props.meta.metric, angle: -90, dx: -25}}
+                               domain={['dataMin', 'dataMax']}/>
 
                         <Line dataKey={'Incumbent'} stroke={Colors.HIGHLIGHT} dot={false}/>
                         <Scatter dataKey="y" onClick={this.onScatterClick}>

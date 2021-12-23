@@ -99,7 +99,7 @@ interface CandidateTableRowProps {
     candidate: SingleCandidate
     meta: MetaInformation
     selected: boolean
-    onSelectionToggle: (id: CandidateId) => void
+    onRowClick: (id: CandidateId) => void
 
     structures: Structure[]
     explanations: Explanations
@@ -121,9 +121,11 @@ class CandidateTableRow extends React.Component<CandidateTableRowProps, Candidat
         super(props);
         this.state = {open: this.props.open, selectedComponent: [undefined, undefined]}
 
-        this.toggleOpen = this.toggleOpen.bind(this)
+        this.toggleDetails = this.toggleDetails.bind(this)
         this.openComponent = this.openComponent.bind(this)
         this.openCandidateInJupyter = this.openCandidateInJupyter.bind(this)
+        this.onRowClick = this.onRowClick.bind(this)
+        this.onCheckBoxClick = this.onCheckBoxClick.bind(this)
     }
 
     componentDidUpdate(prevProps: Readonly<CandidateTableRowProps>, prevState: Readonly<CandidateTableRowState>, snapshot?: any) {
@@ -131,7 +133,7 @@ class CandidateTableRow extends React.Component<CandidateTableRowProps, Candidat
             this.setState({open: true})
     }
 
-    private toggleOpen(e: React.MouseEvent) {
+    private toggleDetails(e: React.MouseEvent) {
         this.setState(state => {
             if (state.open)
                 return {open: false, selectedComponent: [undefined, undefined]}
@@ -161,24 +163,33 @@ ${ID}_pipeline
         e.stopPropagation()
     }
 
+    private onRowClick(e: React.MouseEvent) {
+        if (e.ctrlKey)
+            this.props.onRowClick(this.props.candidate.id)
+        else
+            this.toggleDetails(e)
+    }
+
+    private onCheckBoxClick(e: React.MouseEvent) {
+        this.props.onRowClick(this.props.candidate.id)
+        e.stopPropagation()
+    }
+
     render() {
-        const {candidate, meta, selected, onSelectionToggle, structures, explanations} = this.props
+        const {candidate, meta, selected, structures, explanations} = this.props
         const {selectedComponent} = this.state
 
         return (
             <>
-                <TableRow
-                    hover
-                    onClick={() => onSelectionToggle(candidate.id)}
-                    role='checkbox'
-                    tabIndex={-1}
-                    selected={selected}
-                >
+                <TableRow hover
+                          onClick={this.onRowClick}
+                          role='checkbox'
+                          tabIndex={-1}
+                          selected={selected}>
                     <TableCell padding='checkbox'>
-                        <Checkbox
-                            checked={selected}
-                            color='primary'
-                        />
+                        <Checkbox checked={selected}
+                                  color='primary'
+                                  onClick={this.onCheckBoxClick}/>
                     </TableCell>
                     <TableCell id={candidate.id} scope='row' padding='none'>{candidate.id}</TableCell>
                     <TableCell align='right'>{prettyPrint(candidate.timestamp, 2)}</TableCell>
@@ -192,7 +203,7 @@ ${ID}_pipeline
                     </TableCell>
                     <TableCell>
                         <JupyterButton onClick={this.openCandidateInJupyter}/>
-                        <IconButton aria-label='expand row' size='small' onClick={this.toggleOpen}>
+                        <IconButton aria-label='expand row' size='small' onClick={this.toggleDetails}>
                             {this.state.open ? <KeyboardArrowUpIcon/> : <KeyboardArrowDownIcon/>}
                         </IconButton>
                     </TableCell>
@@ -256,7 +267,7 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
 
         this.handleRequestSort = this.handleRequestSort.bind(this)
         this.handleSelectAllClick = this.handleSelectAllClick.bind(this)
-        this.handleSelectionToggle = this.handleSelectionToggle.bind(this)
+        this.handleRowClick = this.handleRowClick.bind(this)
         this.handleChangePage = this.handleChangePage.bind(this)
         this.handleChangeRowsPerPage = this.handleChangeRowsPerPage.bind(this)
     }
@@ -275,7 +286,7 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
         }
     }
 
-    private handleSelectionToggle(id: CandidateId): void {
+    private handleRowClick(id: CandidateId): void {
         const selected = new Set(this.props.selectedCandidates)
         if (selected.has(id)) {
             selected.delete(id)
@@ -349,12 +360,14 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
         return (
             <>
                 <TableContainer>
-                    <Table
-                        aria-labelledby='tableTitle'
-                        aria-label='enhanced table'
-                        style={{tableLayout: 'fixed'}}
-                        size="small"
-                    >
+                    <Table style={{tableLayout: 'fixed'}}
+                           size="small"
+                           onMouseDown={(e => {
+                               // Prevent browser from highlighting clicked table cells.
+                               // See https://stackoverflow.com/questions/5067644/html-table-when-i-ctrlclick-the-border-of-the-cell-appears
+                               if (e.ctrlKey)
+                                   e.preventDefault()
+                           })}>
                         <CandidateTableHead
                             headCells={headCells}
                             numSelected={this.props.selectedCandidates.size}
@@ -372,7 +385,7 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
                                                            candidate={row}
                                                            meta={this.props.meta}
                                                            selected={this.props.selectedCandidates.has(row.id)}
-                                                           onSelectionToggle={this.handleSelectionToggle}
+                                                           onRowClick={this.handleRowClick}
                                                            structures={structures}
                                                            explanations={explanations}
                                                            open={row.id === this.props.showCandidate}/>
