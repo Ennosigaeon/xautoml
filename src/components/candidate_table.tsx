@@ -177,7 +177,10 @@ ${ID}_pipeline
 
     render() {
         const {candidate, meta, selected, structures, explanations} = this.props
-        const {selectedComponent} = this.state
+        const {open} = this.state
+
+        const selectedComponent = (open && this.state.selectedComponent[0] === undefined) ?
+            [Components.SOURCE, Components.SOURCE] : this.state.selectedComponent;
 
         return (
             <>
@@ -215,8 +218,8 @@ ${ID}_pipeline
                                 <DataSetDetailsComponent
                                     structure={candidate.candidate[0]}
                                     candidate={candidate.candidate[1]}
-                                    componentId={this.state.selectedComponent[0]}
-                                    componentLabel={this.state.selectedComponent[1]}
+                                    componentId={selectedComponent[0]}
+                                    componentLabel={selectedComponent[1]}
                                     meta={meta}
                                     explanations={explanations}
                                     structures={structures}/>
