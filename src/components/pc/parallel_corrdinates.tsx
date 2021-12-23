@@ -16,6 +16,7 @@ interface PCProps {
     selectedCandidates?: Set<CandidateId>
     hideUnselectedCandidates?: boolean
     onCandidateSelection?: (cid: Set<CandidateId>, show?: boolean) => void
+    onAxisSelection?: (hyperparameter: string) => void
 
     timestamp?: number
 }
@@ -47,6 +48,8 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
         hideUnselectedCandidates: false,
         onCandidateSelection: () => {
         },
+        onAxisSelection: () => {
+        },
         timestamp: Infinity
     }
 
@@ -67,6 +70,7 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
         this.updateContainer = this.updateContainer.bind(this)
         this.onSelectLine = this.onSelectLine.bind(this)
         this.onShowCandidate = this.onShowCandidate.bind(this)
+        this.onAxisSelection = this.onAxisSelection.bind(this)
     }
 
     private calcModel(): [cpc.Model, Map<cpc.Axis, cpc.Choice | [number, number]>] {
@@ -111,6 +115,11 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
         const highlights = this.calculateHighlightedLines(this.state.model.lines, this.state.filter)
         this.setState({highlightedLines: highlights, filter: this.state.filter})
         this.props.onCandidateSelection(highlights)
+    }
+
+    private onAxisSelection(axis: cpc.Axis) {
+        console.log(axis)
+        this.props.onAxisSelection(axis.id)
     }
 
     private calculateHighlightedLines(lines: cpc.Line[], filter: Map<cpc.Axis, cpc.Choice | [number, number]>) {
@@ -159,7 +168,8 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
                           svg={model.lines.length > 1 ? this.svg : undefined} // Disable brushing when only when line present
                           onCollapse={this.onCollapse}
                           onExpand={this.onExpand}
-                          onHighlight={this.highlightLines}/>
+                          onHighlight={this.highlightLines}
+                          onAxisSelection={this.onAxisSelection}/>
                 {this.state.model.lines
                     .slice(0, this.props.timestamp + 1)
                     .filter(line => !this.props.hideUnselectedCandidates || this.props.selectedCandidates.has(line.id))

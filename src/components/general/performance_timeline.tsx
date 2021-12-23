@@ -1,26 +1,34 @@
 import React from 'react';
-import {Candidate, CandidateId, MetaInformation, Structure} from "../../model";
+import {CandidateId, MetaInformation} from "../../model";
 import {Colors, fixedPrec} from "../../util";
 import {CartesianGrid, Cell, ComposedChart, Line, ResponsiveContainer, Scatter, XAxis, YAxis} from "recharts";
+import {LoadingIndicator} from "../../util/loading";
+import {Margin} from "recharts/types/util/types";
+
+
+export interface TimelineRecord {
+    timestamp: number;
+    performance: number;
+    cid: CandidateId;
+}
 
 interface ConfigHistoryProps {
-    data: Structure[]
+    data: TimelineRecord[]
     meta: MetaInformation
     selectedCandidates: Set<CandidateId>
     onCandidateSelection?: (cid: Set<CandidateId>, show?: boolean) => void
     height: number
+
+    margin?: Margin
+    xDomain?: [any, any]
 }
 
 interface ConfigHistoryState {
-    data: ConfigRecord[];
+    data: IncumbentRecord[];
 }
 
-
-export interface ConfigRecord {
-    x: number;
-    y: number;
+interface IncumbentRecord extends TimelineRecord {
     Incumbent: number;
-    cid: CandidateId;
 }
 
 export default class PerformanceTimeline extends React.Component<ConfigHistoryProps, ConfigHistoryState> {
@@ -30,32 +38,37 @@ export default class PerformanceTimeline extends React.Component<ConfigHistoryPr
         'selected by clicking on the corresponding patch.'
 
     static defaultProps = {
+        margin: undefined as Margin,
+        xDomain: [0, 'auto'],
         onCandidateSelection: (_: CandidateId[]) => {
         }
     }
 
     constructor(props: ConfigHistoryProps) {
         super(props);
-        this.state = {data: []}
+        this.state = {data: this.calcIncumbent()}
 
         this.onScatterClick = this.onScatterClick.bind(this)
     }
 
-    componentDidMount() {
-        const data = this.performanceTimeline()
-        this.setState({data: data})
+    componentDidUpdate(prevProps: Readonly<ConfigHistoryProps>, prevState: Readonly<ConfigHistoryState>, snapshot?: any) {
+        if (prevProps.data.length !== this.props.data.length)
+            this.setState({data: this.calcIncumbent()})
     }
 
-    private performanceTimeline(): ConfigRecord[] {
+    private calcIncumbent() {
         const optimFunction = this.props.meta.is_minimization ? Math.min : Math.max
         let best = this.props.meta.is_minimization ? Infinity : -Infinity
 
-        return [].concat(...this.props.data.map(s => s.configs))
-            .map((c: Candidate) => ({x: c.runtime.timestamp, y: c.loss, cid: c.id}))
-            .sort((a, b) => a.x - b.x)
+        return this.props.data
             .map(v => {
-                best = optimFunction(best, v.y)
-                return {x: fixedPrec(v.x), y: fixedPrec(v.y), Incumbent: fixedPrec(best), cid: v.cid}
+                best = optimFunction(best, v.performance)
+                return {
+                    timestamp: fixedPrec(v.timestamp),
+                    performance: fixedPrec(v.performance),
+                    Incumbent: fixedPrec(best),
+                    cid: v.cid
+                }
             })
     }
 
@@ -76,29 +89,36 @@ export default class PerformanceTimeline extends React.Component<ConfigHistoryPr
         const {data} = this.state
         const {selectedCandidates} = this.props
 
-        if (data.length === 0)
-            return <p>Loading...</p>
-
         return (
             <div style={{height: this.props.height}}>
-                <ResponsiveContainer>
-                    <ComposedChart data={data}>
-                        <CartesianGrid strokeDasharray="3 3"/>
-                        <XAxis dataKey="x" label={{value: 'Timestamp', dy: 10}} type={'number'} unit={'s'}/>
-                        <YAxis label={{value: this.props.meta.metric, angle: -90, dx: -25}}
-                               domain={['dataMin', 'dataMax']}/>
+                <LoadingIndicator loading={data.length === 0}/>
 
-                        <Line dataKey={'Incumbent'} stroke={Colors.HIGHLIGHT} dot={false}/>
-                        <Scatter dataKey="y" onClick={this.onScatterClick}>
-                            {data.map((d, index) => (
-                                <Cell key={`cell-${index}`}
-                                      fill={selectedCandidates.has(d.cid) ? Colors.HIGHLIGHT : Colors.DEFAULT}
-                                      stroke={Colors.BORDER}
-                                      cursor={'pointer'}/>
-                            ))}
-                        </Scatter>
-                    </ComposedChart>
-                </ResponsiveContainer>
+                {data.length > 0 &&
+                    <ResponsiveContainer>
+                        <ComposedChart data={data} margin={this.props.margin}>
+                            <CartesianGrid strokeDasharray="3 3"/>
+                            <XAxis dataKey="timestamp" label={{value: 'Timestamp', dy: 10}}
+                                   type={'number'} unit={'s'}
+                                   domain={this.props.xDomain}/>
+                            <YAxis domain={['dataMin', 'dataMax']}
+                                   label={{
+                                       value: this.props.meta.metric,
+                                       angle: -90,
+                                       dx: this.props.margin ? -this.props.margin.left - 10 : -25
+                                   }}/>
+
+                            <Line dataKey={'Incumbent'} stroke={Colors.HIGHLIGHT} dot={false}/>
+                            <Scatter dataKey="performance" onClick={this.onScatterClick}>
+                                {data.map((d, index) => (
+                                    <Cell key={`cell-${index}`}
+                                          fill={selectedCandidates.has(d.cid) ? Colors.HIGHLIGHT : Colors.DEFAULT}
+                                          stroke={Colors.BORDER}
+                                          cursor={'pointer'}/>
+                                ))}
+                            </Scatter>
+                        </ComposedChart>
+                    </ResponsiveContainer>
+                }
             </div>
         );
     }

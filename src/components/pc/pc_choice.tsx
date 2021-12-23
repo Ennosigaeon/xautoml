@@ -13,6 +13,7 @@ interface CPCPChoiceProps {
     onExpand: (choice: cpc.Choice) => void
     onCollapse: (choice: cpc.Choice) => void
     onHighlight: (axis: cpc.Axis, selection: cpc.Choice | [number, number]) => void
+    onAxisSelection: (axis: cpc.Axis) => void
 }
 
 export class PCChoice extends React.Component<CPCPChoiceProps, {}> {
@@ -48,7 +49,7 @@ export class PCChoice extends React.Component<CPCPChoiceProps, {}> {
     }
 
     render() {
-        const {choice, parent, onCollapse, onExpand, onHighlight, svg} = this.props
+        const {choice, parent, onCollapse, onExpand, onHighlight, onAxisSelection, svg} = this.props
         const {x, y, width, height} = choice.getLayout()
         const centeredX = choice.getLayout().centeredX()
         const centeredY = choice.getLayout().centeredY()
@@ -72,7 +73,8 @@ export class PCChoice extends React.Component<CPCPChoiceProps, {}> {
                                                   svg={svg}
                                                   onCollapse={onCollapse}
                                                   onExpand={onExpand}
-                                                  onHighlight={onHighlight}/>)}
+                                                  onHighlight={onHighlight}
+                                                  onClick={onAxisSelection}/>)}
                 </>}
             </g>
         )

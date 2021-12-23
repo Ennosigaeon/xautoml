@@ -167,6 +167,7 @@ interface CPCAxisProps {
     onExpand: (choice: cpc.Choice) => void
     onCollapse: (choice: cpc.Choice) => void
     onHighlight: (axis: cpc.Axis, selection: cpc.Choice | [number, number]) => void
+    onClick: (axis: cpc.Axis) => void
 }
 
 interface CPCAxisState {
@@ -202,16 +203,19 @@ export class PCAxis extends React.Component<CPCAxisProps, CPCAxisState> {
     }
 
     render() {
-        const {axis, onExpand, onCollapse, onHighlight, svg} = this.props
+        const {axis, onExpand, onCollapse, onHighlight, onClick, svg} = this.props
         const {x, y, width, yScale} = axis.getLayout()
         const xScale = axis.getLayout().perfEstScale(axis.explanation)
 
         const choices = axis.choices.map(c => <PCChoice choice={c} parent={axis} svg={svg}
                                                         onExpand={onExpand}
                                                         onCollapse={onCollapse}
-                                                        onHighlight={onHighlight}/>)
+                                                        onHighlight={onHighlight}
+                                                        onAxisSelection={onClick}/>)
 
         const id = `path-${uuidv4()}`
+
+        const selectableTitle = axis.isNumerical() || choices.length > 1
 
         return (
             <>
@@ -233,7 +237,11 @@ export class PCAxis extends React.Component<CPCAxisProps, CPCAxisState> {
                                                      onBrushEnd={this.onBrushEnd}
                     />}
 
-                    <text>
+                    <text className={selectableTitle ? 'pc-axis-label' : ''} onClick={(e) => {
+                        if (selectableTitle)
+                            onClick(axis)
+                        e.stopPropagation()
+                    }}>
                         <path id={id} d={
                             linkHorizontal().x(d => d[0]).y(d => d[1])({
                                 source: [x, y - 0.5 * Constants.TEXT_HEIGHT],
