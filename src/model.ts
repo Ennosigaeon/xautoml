@@ -8,11 +8,7 @@ export type Config = Map<string, ConfigValue>
 export namespace Config {
     export class ConfigSpace {
         constructor(public readonly conditions: Condition[],
-                    public readonly forbiddens: any[],
-                    public readonly hyperparameters: HyperParameter[],
-                    public readonly json_format_version: string,
-                    public readonly python_module_version: string,
-                    public readonly json: string) {
+                    public readonly hyperparameters: HyperParameter[]) {
 
             this.conditions.forEach(con => {
                 const parent = this.hyperparameters.filter(hp => hp.name === con.parent)[0]
@@ -25,8 +21,7 @@ export namespace Config {
             const cs = JSON.parse(configSpace)
             const hyperparameters = (cs.hyperparameters as HyperParameter[]).map(hp => HyperParameter.fromJSON(hp))
             const conditions = (cs.conditions as Condition[]).map(con => Condition.fromJSON(con))
-
-            return new ConfigSpace(conditions, cs.forbiddens, hyperparameters, cs.json_format_version, cs.python_module_version, configSpace)
+            return new ConfigSpace(conditions, hyperparameters)
         }
 
         getHyperparameters(name: string): HyperParameter[] {
@@ -198,8 +193,7 @@ export class Candidate {
                 public readonly loss: number,
                 public readonly runtime: Runtime,
                 public readonly config: Config,
-                public readonly origin: ConfigOrigin,
-                public readonly model_file: string) {
+                public readonly origin: ConfigOrigin) {
     }
 
     public static fromJson(candidate: Candidate): Candidate {
@@ -207,7 +201,7 @@ export class Candidate {
         Object.entries<string | number>(candidate.config as {})
             .forEach(k => config.set(k[0], k[1]));
 
-        return new Candidate(candidate.id, candidate.status, candidate.budget, candidate.loss, Runtime.fromJson(candidate.runtime), config, candidate.origin, candidate.model_file)
+        return new Candidate(candidate.id, candidate.status, candidate.budget, candidate.loss, Runtime.fromJson(candidate.runtime), config, candidate.origin)
     }
 
     subConfig(step: PipelineStep, prune: boolean): Config {
@@ -232,8 +226,6 @@ export class MetaInformation {
                 public readonly openml_fold: number,
                 public readonly n_structures: number,
                 public readonly n_configs: number,
-                public readonly iterations: {},
-                public readonly data_file: string,
                 public readonly bestPerformance: number,
                 public readonly worstPerformance: number,
                 public readonly config: Map<string, ConfigValue>) {
@@ -244,8 +236,8 @@ export class MetaInformation {
         const worstPerformance = meta.is_minimization ? Math.max(...losses) : Math.min(...losses)
 
         return new MetaInformation('dswizard', meta.start_time, meta.end_time, meta.metric, meta.is_minimization,
-            meta.openml_task, meta.openml_fold, meta.n_structures, meta.n_configs, meta.iterations,
-            meta.data_file, bestPerformance, worstPerformance, new Map<string, ConfigValue>(Object.entries(meta.config)))
+            meta.openml_task, meta.openml_fold, meta.n_structures, meta.n_configs,
+            bestPerformance, worstPerformance, new Map<string, ConfigValue>(Object.entries(meta.config)))
     }
 }
 

@@ -77,7 +77,6 @@ export class GeneralInformation extends React.Component<GeneralInformationProps,
                     <h4>ROC Curve</h4>
                     <RocCurve selectedCandidates={selectedCandidates}
                               candidateMap={candidateMap}
-                              meta={meta}
                               height={250}/>
                 </CollapseComp>
             </>

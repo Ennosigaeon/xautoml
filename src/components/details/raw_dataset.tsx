@@ -73,11 +73,11 @@ export class RawDataset extends React.Component<RawDatasetProps, RawDatasetState
             return
         }
         if (this.state.outputs.data.size == 0) {
-            const {candidate, meta} = this.props.model
+            const {candidate} = this.props.model
 
             // Outputs not cached yet
             this.setState({loadingDf: true})
-            this.context.requestOutputComplete(candidate.model_file, meta.data_file)
+            this.context.requestOutputComplete(candidate.id)
                 .then(data => this.setState({outputs: data, loadingDf: false}))
                 .catch(error => {
                     console.error(`Failed to fetch output data: \n${error.name}: ${error.message}`);
@@ -103,15 +103,13 @@ export class RawDataset extends React.Component<RawDatasetProps, RawDatasetState
     }
 
     private handleLoadDataframe() {
-        const {meta, candidate, component} = this.props.model
+        const {candidate, component} = this.props.model
+
         this.context.createCell(`
 from xautoml.util import io_utils
 
-${ID}_X, ${ID}_y = io_utils.load_input_data('${meta.data_file}', framework='${meta.framework}')
-${ID}_pipeline = io_utils.load_pipeline('${candidate.model_file}', framework='${meta.framework}')
-
-${ID}_df = io_utils.load_output_dataframe(${ID}_pipeline, '${component}', ${ID}_X)
-${ID}_df
+${ID}_X, ${ID}_y, ${ID}_pipeline = xautoml.get_sub_pipeline('${candidate.id}', '${component}')
+${ID}_X
         `.trim())
     }
 

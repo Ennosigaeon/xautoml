@@ -11,6 +11,7 @@
 - More "Continue in Jupyter" Buttons
 - Improve help texts
 - Help texts for components. Link to sklearn
+- Decision Tree approximation has same labels at some child nodes
 
 - Feature Correlation
 - Partial Dependency Plots

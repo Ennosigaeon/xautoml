@@ -60,7 +60,7 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
         const {candidate, structure, meta, componentId, componentLabel, structures, explanations} = this.props
         const {selectedSample} = this.state
 
-        const model = new DetailsModel(meta, candidate, componentId, componentLabel, selectedSample)
+        const model = new DetailsModel(candidate, componentId, componentLabel, selectedSample)
 
         return (
             <>
@@ -92,7 +92,7 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
 
                 <CollapseComp showInitial={true} help={PerformanceComponent.HELP}>
                     <h4>Performance Details</h4>
-                    <PerformanceComponent model={model} candidateMap={new Map(structure.configs.map(c => [c.id, c]))}/>
+                    <PerformanceComponent model={model} meta={meta} candidateMap={new Map(structure.configs.map(c => [c.id, c]))}/>
                 </CollapseComp>
 
                 <CollapseComp showInitial={true}>

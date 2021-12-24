@@ -85,12 +85,12 @@ export class FeatureImportanceComponent extends React.Component<FeatureImportanc
     }
 
     private queryFeatureImportance() {
-        const {candidate, meta, component} = this.props.model
+        const {candidate, component} = this.props.model
         if (!component || this.state.data.has(component))
             return
 
         this.setState({error: undefined})
-        this.context.requestFeatureImportance(candidate.model_file, meta.data_file, component)
+        this.context.requestFeatureImportance(candidate.id, component)
             .then(data => this.setState((state) => ({data: state.data.set(component, data)})))
             .catch(error => {
                 console.error(`Failed to fetch FeatureImportance data.\n${error.name}: ${error.message}`)

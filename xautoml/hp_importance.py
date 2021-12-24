@@ -1,13 +1,11 @@
 import itertools as it
-import json
 import tempfile
 from collections import defaultdict
 
 import numpy as np
 import pandas as pd
-from ConfigSpace import CategoricalHyperparameter, ConfigurationSpace
+from ConfigSpace import CategoricalHyperparameter, ConfigurationSpace, Configuration
 from ConfigSpace.hyperparameters import OrdinalHyperparameter, NumericalHyperparameter
-from ConfigSpace.read_and_write import json as config_json
 from fanova import fANOVA, visualizer
 
 from xautoml.util import io_utils
@@ -173,24 +171,8 @@ class HPImportance:
             return {'name': [name1, name2], 'data': df.round(NUMBER_PRECISION).to_dict(), 'mode': 'heatmap'}
 
     @staticmethod
-    def load_model(model):
-        config_space, constants = io_utils.deserialize_configuration_space(model['configspace'])
-        return HPImportance._construct_fanova(config_space, model['configs'], model['loss'], constants)
-
-    @staticmethod
-    def load_file(runhistory_file: str, before: float = np.Infinity):
-        with open(runhistory_file) as f:
-            model = json.load(f)['structures'][0]
-            cs = config_json.read(model['configspace'])
-
-            configs = [c['config'] for c in model['configs'] if c['runtime']['timestamp'] < before]
-            performances = [c['loss'] for c in model['configs'] if c['runtime']['timestamp'] < before]
-
-        return HPImportance._construct_fanova(cs, configs, performances, set())
-
-    @staticmethod
-    def _construct_fanova(cs: ConfigurationSpace, configs: list[dict], performances: list[float], constants: set[str]):
-        y = np.array(performances, dtype=float)
-        pruned_cs, X = io_utils.configs_as_dataframe(cs, configs, constants)
+    def construct_fanova(cs: ConfigurationSpace, configs: list[Configuration], performances: np.ndarray):
+        y = performances.astype(float)
+        pruned_cs, X = io_utils.configs_as_dataframe(cs, configs)
         f = fANOVA(X, y, config_space=pruned_cs)
         return f, X

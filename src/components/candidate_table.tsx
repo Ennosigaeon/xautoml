@@ -154,10 +154,7 @@ class CandidateTableRow extends React.Component<CandidateTableRowProps, Candidat
 
     private openCandidateInJupyter(e: React.MouseEvent) {
         this.context.createCell(`
-from xautoml.util import io_utils
-
-${ID}_X, ${ID}_y = io_utils.load_input_data('${this.props.meta.data_file}', framework='${this.props.meta.framework}')
-${ID}_pipeline = io_utils.load_pipeline('${this.props.candidate.candidate[1].model_file}', framework='${this.props.meta.framework}')
+${ID}_X, ${ID}_y, ${ID}_pipeline = xautoml.get_pipeline('${this.props.candidate.candidate[1].id}')
 ${ID}_pipeline
         `.trim())
         e.stopPropagation()
@@ -201,7 +198,6 @@ ${ID}_pipeline
                         <StructureGraphComponent structure={candidate.candidate[0]}
                                                  candidate={candidate.candidate[1]}
                                                  selectedComponent={selectedComponent[0]}
-                                                 meta={meta}
                                                  onComponentSelection={this.openComponent}/>
                     </TableCell>
                     <TableCell>

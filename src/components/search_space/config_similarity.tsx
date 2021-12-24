@@ -16,6 +16,7 @@ import * as d3 from "d3";
 import {CandidateId, MetaInformation, Structure} from "../../model";
 import {LoadingIndicator} from "../../util/loading";
 import {Heatbar} from "../../util/heatbar";
+import {ErrorIndicator} from "../../util/error";
 
 interface ConfigSimilarityProps {
     meta: MetaInformation
@@ -30,6 +31,7 @@ interface ConfigSimilarityProps {
 interface ConfigSimilarityState {
     cids: CandidateId[]
     data: ConfigSimilarityResponse
+    error: Error
 }
 
 export class ConfigSimilarity extends React.Component<ConfigSimilarityProps, ConfigSimilarityState> {
@@ -45,7 +47,7 @@ export class ConfigSimilarity extends React.Component<ConfigSimilarityProps, Con
 
     constructor(props: ConfigSimilarityProps) {
         super(props);
-        this.state = {cids: [], data: undefined}
+        this.state = {cids: [], data: undefined, error: undefined}
 
         this.onScatterClick = this.onScatterClick.bind(this)
     }
@@ -56,16 +58,12 @@ export class ConfigSimilarity extends React.Component<ConfigSimilarityProps, Con
     }
 
     private queryConfigSimilarity() {
-        const cs = this.props.structures.map(s => s.configspace)
-        const configs = this.props.structures.map(s => s.configs.map(c => {
-            const obj: any = {}
-            c.config.forEach((v, k) => obj[k] = v)
-            return obj
-        }))
-        const loss = [].concat(...this.props.structures.map(s => s.configs.map(c => c.loss)))
-
-        this.context.requestConfigSimilarity(cs, configs, loss, this.props.meta.is_minimization)
+        this.context.requestConfigSimilarity()
             .then(res => this.setState({data: res}))
+            .catch(error => {
+                console.error(`Failed to fetch Roc Curve data.\n${error.name}: ${error.message}`)
+                this.setState({error: error})
+            });
     }
 
     private onScatterClick(point: { x: number, y: number, idx: number }, _: number, e: React.MouseEvent) {
@@ -85,7 +83,7 @@ export class ConfigSimilarity extends React.Component<ConfigSimilarityProps, Con
 
     render() {
         const {selectedCandidates, hideUnselectedCandidates} = this.props
-        const {cids, data} = this.state
+        const {cids, data, error} = this.state
 
         const values = data ? data.surface.map(s => s.z) : [0, 1]
         const scale = d3.scaleSequential(d3.interpolateSpectral)
@@ -97,7 +95,8 @@ export class ConfigSimilarity extends React.Component<ConfigSimilarityProps, Con
 
         return (
             <div style={{height: this.props.height}}>
-                <LoadingIndicator loading={data == undefined}/>
+                <LoadingIndicator loading={data === undefined && error === undefined}/>
+                <ErrorIndicator error={error}/>
                 {data &&
                     <div style={{height: '100%', display: "flex", flexDirection: "column"}}>
                         <div style={{flex: '1 1 auto'}}>

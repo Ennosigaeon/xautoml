@@ -1,11 +1,6 @@
 import React from "react";
 import {DetailsModel} from "./model";
-import {
-    CancelablePromise,
-    CanceledPromiseError,
-    DecisionTreeNode,
-    DecisionTreeResult
-} from "../../handler";
+import {DecisionTreeNode, DecisionTreeResult} from "../../handler";
 import {LoadingIndicator} from "../../util/loading";
 import {GraphEdge, GraphNode, HierarchicalTree} from "../tree_structure";
 import Slider from "rc-slider";
@@ -23,7 +18,7 @@ interface GlobalSurrogateProps {
 }
 
 interface GlobalSurrogateState {
-    pendingRequest: CancelablePromise<DecisionTreeResult>
+    pendingRequest: Promise<DecisionTreeResult>
     data: DecisionTreeResult
     maxLeafNodes: number
     error: Error
@@ -66,29 +61,20 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
     }
 
     private queryDT(maxLeafNodes: number) {
-        if (this.state.pendingRequest !== undefined) {
-            // Request for data is currently still pending. Cancel previous request.
-            this.state.pendingRequest.cancel()
-        }
-
-        const {candidate, meta, component} = this.props.model
+        const {candidate, component} = this.props.model
         if (component === undefined)
             return
 
-        const promise = this.context.requestGlobalSurrogate(candidate.model_file, meta.data_file, component, maxLeafNodes)
-        this.setState({pendingRequest: promise, data: undefined, error: undefined})
+        const promise = this.context.requestGlobalSurrogate(candidate.id, component, maxLeafNodes)
+        this.setState({data: undefined, error: undefined})
 
         promise
             .then(data => {
                 this.setState({data: data, pendingRequest: undefined, maxLeafNodes: data.max_leaf_nodes})
             })
             .catch(error => {
-                if (!(error instanceof CanceledPromiseError)) {
-                    console.error(`Failed to fetch DecisionTreeResult data.\n${error.name}: ${error.message}`)
-                    this.setState({error: error, pendingRequest: undefined})
-                } else {
-                    console.log('Cancelled promise due to user request')
-                }
+                console.error(`Failed to fetch DecisionTreeResult data.\n${error.name}: ${error.message}`)
+                this.setState({error: error, pendingRequest: undefined})
             });
     }
 
@@ -125,16 +111,13 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
     }
 
     private exportTree() {
-        const {meta, candidate, component} = this.props.model
+        const {candidate, component} = this.props.model
         const {maxLeafNodes} = this.state
 
         this.context.createCell(`
-from xautoml.util import io_utils, pipeline_utils
-import pandas as pd
+from xautoml.util import pipeline_utils
 
-${ID}_X, ${ID}_y = io_utils.load_input_data('${meta.data_file}', framework='${meta.framework}')
-${ID}_pipeline = io_utils.load_pipeline('${candidate.model_file}', framework='${meta.framework}')
-${ID}_pipeline, ${ID}_X, _ = pipeline_utils.get_subpipeline(${ID}_pipeline, '${component}', ${ID}_X, ${ID}_y)
+${ID}_X, ${ID}_y, ${ID}_pipeline = xautoml.get_sub_pipeline('${candidate.id}', '${component}')
 
 ${ID}_dt = pipeline_utils.fit_decision_tree(${ID}_X, ${ID}_pipeline.predict(${ID}_X), max_leaf_nodes=${maxLeafNodes})
 ${ID}_dt
@@ -150,20 +133,19 @@ ${ID}_dt
         return (
             <>
                 <ErrorIndicator error={error}/>
-                {!error &&
-                <>
+                {!error && <>
                     <LoadingIndicator loading={!!pendingRequest}/>
 
                     {data?.root.children.length === 0 &&
-                    <p>Decision Tree approximation not available for the actual predictions.</p>
+                        <p>Decision Tree approximation not available for the actual predictions.</p>
                     }
 
-                    {data?.root.children.length > 0 &&
-                    <>
+                    {data?.root.children.length > 0 && <>
                         <div style={{display: 'flex'}}>
                             <div style={{flexGrow: 1}}>
-                                <div
-                                    style={{display: "flex", flexDirection: "column", justifyContent: "space-between"}}>
+                                <div style={{
+                                    display: "flex", flexDirection: "column", justifyContent: "space-between"
+                                }}>
                                     <KeyValue key_={'Fidelity'} value={data.fidelity}/>
                                     <KeyValue key_={'Leave Nodes'} value={data.n_leaves}/>
                                 </div>

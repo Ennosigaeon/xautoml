@@ -1,5 +1,5 @@
 import React from "react";
-import {CancelablePromise, CanceledPromiseError, Label, LimeResult, requestLimeApproximation} from "../../handler";
+import {Label, LimeResult} from "../../handler";
 import {Colors, JupyterContext} from "../../util";
 import {LoadingIndicator} from "../../util/loading";
 import {DetailsModel} from "./model";
@@ -31,7 +31,7 @@ interface LimeProps {
 
 interface LimeState {
     selectedLabel: Label
-    pendingRequest: CancelablePromise<LimeResult>
+    loading: boolean
     data: LimeResult
     error: Error
 
@@ -58,7 +58,7 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
         super(props);
         this.state = {
             selectedLabel: undefined,
-            pendingRequest: undefined,
+            loading: false,
             data: undefined,
             error: undefined,
             x1: undefined,
@@ -92,27 +92,18 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
     }
 
     private queryLime(idx: number) {
-        if (this.state.pendingRequest !== undefined) {
-            // Request for data is currently still pending. Cancel previous request.
-            this.state.pendingRequest.cancel()
-        }
-
-        const {candidate, meta, component} = this.props.model
+        const {candidate, component} = this.props.model
         if (component === undefined || idx === undefined)
             return
 
-        const promise = this.context.requestLimeApproximation(candidate.model_file, idx, meta.data_file, component)
-        this.setState({pendingRequest: promise, data: undefined, selectedLabel: undefined, error: undefined})
+        const promise = this.context.requestLimeApproximation(candidate.id, idx, component)
+        this.setState({loading: true, data: undefined, selectedLabel: undefined, error: undefined})
 
         promise
-            .then(data => this.setState({data: data, pendingRequest: undefined, selectedLabel: data.label}))
+            .then(data => this.setState({loading: false, data: data, selectedLabel: data.label}))
             .catch(error => {
-                if (!(error instanceof CanceledPromiseError)) {
-                    console.error(`Failed to fetch LimeResult data.\n${error.name}: ${error.message}`)
-                    this.setState({error: error, pendingRequest: undefined})
-                } else {
-                    console.log('Cancelled promise due to user request')
-                }
+                console.error(`Failed to fetch LimeResult data.\n${error.name}: ${error.message}`)
+                this.setState({error: error, loading: undefined})
             });
     }
 
@@ -122,7 +113,7 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
 
     render() {
         const {selectedSample} = this.props.model
-        const {selectedLabel, data, pendingRequest, error} = this.state
+        const {selectedLabel, data, loading, error} = this.state
 
         const probs: any[] = []
         data?.prob.forEach((p, label) => probs.push({label: label, y: p}))
@@ -140,16 +131,14 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
             <div className={'lime'} style={{height: '100%'}}>
                 <h4>Local Approximation</h4>
                 <ErrorIndicator error={error}/>
-                {!error &&
-                <>
-                    <LoadingIndicator loading={!!pendingRequest}/>
+                {!error && <>
+                    <LoadingIndicator loading={loading}/>
 
-                    {!pendingRequest && !selectedSample &&
-                    <p>Select a data set sample to calculate a local model approximation (LIME).</p>
+                    {(!loading && !selectedSample) &&
+                        <p>Select a data set sample to calculate a local model approximation (LIME).</p>
                     }
 
-                    {data?.categorical_input &&
-                    <ErrorIndicator error={{
+                    {data?.categorical_input && <ErrorIndicator error={{
                         name: "Calculation Failed",
                         message: 'Calculation of LIME failed, probably due to categorical input. If the selected data frame ' +
                             'contains any categorical features, please select a later stage in the pipeline after imputation ' +
@@ -159,12 +148,11 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
                     }}/>
                     }
 
-                    {!data?.categorical_input && data?.expl.size === 0 &&
-                    <p>LIME explanations are not available for the actual predictions.</p>
+                    {!data?.categorical_input && data?.expl.size === 0 && <p>
+                        LIME explanations are not available for the actual predictions.</p>
                     }
 
-                    {data?.expl.size > 0 &&
-                    <div style={{minWidth: "350px"}}>
+                    {data?.expl.size > 0 && <div style={{minWidth: "350px"}}>
                         <CommonWarnings additionalFeatures={data.additional_features.length > 0} downsampled={false}/>
                         <CollapseComp showInitial={true}>
                             <h5>Predicted Class Probabilities</h5>
@@ -200,10 +188,10 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
                                                tick={<CustomizedTick additionalFeatures={data.additional_features}/>}/>
                                         <Bar dataKey="x" fill={Colors.DEFAULT}/>
                                         {this.state.x1 &&
-                                        <text x={this.state.x1} y={15}>{`Not ${selectedLabel}`}</text>}
+                                            <text x={this.state.x1} y={15}>{`Not ${selectedLabel}`}</text>}
                                         {this.state.x2 &&
-                                        <text x={this.state.x2} textAnchor="end"
-                                              y={15}>{selectedLabel.toString()}</text>}
+                                            <text x={this.state.x2} textAnchor="end"
+                                                  y={15}>{selectedLabel.toString()}</text>}
                                     </BarChart>
                                 </ResponsiveContainer>
                             </div>

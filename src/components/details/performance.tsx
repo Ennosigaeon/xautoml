@@ -4,7 +4,7 @@ import {KeyValue} from "../../util/KeyValue";
 import {JupyterContext, prettyPrint} from "../../util";
 import {ConfusionMatrix} from "./confusion_matrix";
 import {RocCurve} from "../general/roc_curve";
-import {Candidate, CandidateId} from "../../model";
+import {Candidate, CandidateId, MetaInformation} from "../../model";
 import {PerformanceData} from "../../handler";
 import {ErrorIndicator} from "../../util/error";
 import {LoadingIndicator} from "../../util/loading";
@@ -12,6 +12,7 @@ import {LoadingIndicator} from "../../util/loading";
 
 interface PerformanceComponentProps {
     model: DetailsModel
+    meta: MetaInformation
     candidateMap: Map<CandidateId, Candidate>
 }
 
@@ -44,7 +45,7 @@ export class PerformanceComponent extends React.Component<PerformanceComponentPr
 
         const {model} = this.props
         this.setState({loading: true})
-        this.context.requestPerformanceData(model.candidate.model_file, model.meta.data_file, model.meta.metric)
+        this.context.requestPerformanceData(model.candidate.id)
             .then(data => this.setState({data: data, loading: false}))
             .catch(error => {
                 console.error(`Failed to fetch confusion matrix: \n${error.name}: ${error.message}`);
@@ -53,7 +54,7 @@ export class PerformanceComponent extends React.Component<PerformanceComponentPr
     }
 
     render() {
-        const {model, candidateMap} = this.props
+        const {model, meta, candidateMap} = this.props
         const {data, loading, error} = this.state
 
         return (
@@ -65,9 +66,9 @@ export class PerformanceComponent extends React.Component<PerformanceComponentPr
                         <div style={{display: "flex"}}>
                             <div style={{flexGrow: 1, flexShrink: 1, flexBasis: "20%"}}>
                                 <h5>Metrics</h5>
-                                <KeyValue key_={`Training ${model.meta.metric}`}
+                                <KeyValue key_={`Training ${meta.metric}`}
                                           value={model.candidate.loss}/>
-                                <KeyValue key_={`Validation ${model.meta.metric}`} value={data.val_score}/>
+                                <KeyValue key_={`Validation ${meta.metric}`} value={data.val_score}/>
                                 <KeyValue key_={'Training Duration'}
                                           value={`${prettyPrint(model.candidate.runtime.training_time)} sec`}/>
                                 <KeyValue key_={'Prediction Duration'}
@@ -82,7 +83,6 @@ export class PerformanceComponent extends React.Component<PerformanceComponentPr
                             <div style={{flexGrow: 1, flexBasis: "40%"}}>
                                 <h5>Receiver Operating Characteristic (ROC) Curve</h5>
                                 <RocCurve selectedCandidates={new Set([model.candidate.id])}
-                                          meta={model.meta}
                                           candidateMap={candidateMap}
                                           height={200}/>
                             </div>

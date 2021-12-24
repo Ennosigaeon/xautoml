@@ -37,18 +37,7 @@ export class SurrogateExplanation extends React.Component<SurrogateExplanationPr
     private simulateExplanation() {
         const {candidate, structure} = this.props
 
-        const cs = structure.configspace
-        const relevantConfigs = structure.equivalentConfigs.filter(c => c.runtime.timestamp < candidate.runtime.timestamp)
-
-        const configs = relevantConfigs.map(c => {
-            const obj: any = {}
-            c.config.forEach((v, k) => obj[k] = v)
-            return obj
-        })
-        const loss = relevantConfigs.map(c => c.loss)
-
-
-        this.context.requestSimulatedSurrogate(cs, configs, loss)
+        this.context.requestSimulatedSurrogate(structure.cid, candidate.runtime.timestamp)
             .then(resp => {
                 this.setState({explanation: resp})
             })

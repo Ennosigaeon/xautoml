@@ -1,12 +1,10 @@
-from xautoml.handlers import OutputDescriptionHandler
 from xautoml.output import OutputCalculator, RAW
+from xautoml.tests import get_168746, get_autosklearn
 
 
 def test_outputs():
-    X, y, pipeline, _ = OutputDescriptionHandler.load_model({
-        "data_file": "res/168746/dataset.pkl",
-        "model_files": "res/168746/models_0-0-0.pkl"
-    })
+    main = get_168746()
+    X, y, pipeline = main.get_pipeline('00:00:00')
 
     df_handler = OutputCalculator()
     inputs, outputs = df_handler.calculate_outputs(pipeline, X, y, method=RAW)
@@ -15,16 +13,10 @@ def test_outputs():
 
 
 def test_outputs_auto_sklearn():
-    X, y, pipeline, _ = OutputDescriptionHandler.load_model({
-        "data_file": "res/autosklearn/dataset.pkl",
-        "model_files": "res/autosklearn/1.2.0.0.model"
-    })
+    main = get_autosklearn()
+    X, y, pipeline = main.get_pipeline('00:00:02')
 
     df_handler = OutputCalculator()
     inputs, outputs = df_handler.calculate_outputs(pipeline, X, y, method=RAW)
 
     print(outputs)
-
-
-if __name__ == '__main__':
-    test_outputs()

@@ -1,16 +1,12 @@
-from xautoml.handlers import FeatureImportanceHandler
 from xautoml.model_details import ModelDetails
+from xautoml.tests import get_168746, get_7306
 from xautoml.util import pipeline_utils
 
 
 def test_source():
-    model = {
-        'data_file': 'res/7306/dataset.pkl',
-        'model_files': 'res/7306/models_0-0-0.pkl'
-    }
+    main = get_7306()
+    X, y, pipeline = main.get_pipeline('00:00:00')
     step = 'SOURCE'
-
-    X, y, pipeline, _ = FeatureImportanceHandler.load_model(model)
 
     pipeline, X, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X, y)
     details = ModelDetails()
@@ -19,13 +15,9 @@ def test_source():
 
 
 def test_step():
-    model = {
-        "data_file": "res/168746/dataset.pkl",
-        "model_files": "res/168746/models_0-0-103.pkl",
-    }
+    main = get_168746()
+    X, y, pipeline = main.get_pipeline('00:00:103')
     step = "data_preprocessing:categorical:imputation"
-
-    X, y, pipeline, _ = FeatureImportanceHandler.load_model(model)
 
     pipeline, X, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X, y)
     details = ModelDetails()

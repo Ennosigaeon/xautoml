@@ -1,5 +1,5 @@
 import React from "react";
-import {Candidate, Config, ConfigValue, MetaInformation, Pipeline, PipelineStep, Structure} from "../../model";
+import {Candidate, Config, ConfigValue, Pipeline, PipelineStep, Structure} from "../../model";
 import {Components, JupyterContext, prettyPrint} from "../../util";
 import {Table, TableBody, TableCell, TableRow, Tooltip, Typography} from "@material-ui/core";
 import {OutputDescriptionData} from "../../handler";
@@ -121,7 +121,6 @@ class SingleComponent extends React.Component<SingleComponentProps, any> {
 interface StructureGraphProps {
     structure: Structure
     candidate: Candidate
-    meta: MetaInformation
     selectedComponent: string
     onComponentSelection?: (component: StepWithConfig) => void
 }
@@ -158,7 +157,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
             return
 
         this.setState({loading: true})
-        this.context.requestOutputDescription(this.props.candidate.model_file, this.props.meta.data_file)
+        this.context.requestOutputDescription(this.props.candidate.id)
             .then(data => this.setState({outputs: data, loading: false}))
             .catch(error => {
                 console.error(`Failed to fetch output data.\n${error.name}: ${error.message}`);

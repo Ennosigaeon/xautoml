@@ -103,6 +103,10 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
             window.setTimeout(() => this.setState({mounted: true}), 100)
     }
 
+    componentWillUnmount() {
+        this.props.jupyter.unmount()
+    }
+
     private switchTab(_: any, selectedTab: string) {
         this.setState({openTab: selectedTab})
     }

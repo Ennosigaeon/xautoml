@@ -1,25 +1,20 @@
-from xautoml.handlers import BaseHandler
 from xautoml.roc_auc import RocCurve
+from xautoml.tests import get_autosklearn
 
 
 def test_roc_curve():
-    model = {
-        "cids": "00:02:07",
-        "data_file": "res/autosklearn_categorical/dataset.pkl",
-        "model_files": "res/autosklearn_categorical/1.2.0.0.model"
-    }
+    main = get_autosklearn()
+    X, y, pipeline = main.get_pipeline('00:00:02')
 
-    micro = model.get('micro', False)
-    macro = model.get('macro', True)
-    cid = model.get('cids')
-    X, y, pipeline, _ = BaseHandler.load_model(model)
+    micro = False
+    macro = True
 
     result = {}
     roc = RocCurve(micro=micro, macro=macro)
     roc.score(pipeline, X, y)
 
     # Transform into format suited for recharts
-    for fpr, tpr, label in roc.get_data(cid):
+    for fpr, tpr, label in roc.get_data('00:00:02'):
         ls = []
         sample_rate = len(fpr) // 50
 
@@ -28,7 +23,3 @@ def test_roc_curve():
         result[label] = ls
 
     print(result)
-
-
-if __name__ == '__main__':
-    test_roc_curve()

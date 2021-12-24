@@ -1,28 +1,32 @@
 import {
-    CancelablePromise,
     ConfigSimilarityResponse,
     DecisionTreeResult,
     FANOVAResponse,
     FeatureImportance,
+    Label,
     LimeResult,
+    LinePoint,
+    LocalExplanation,
     OutputDescriptionData,
     PerformanceData,
-    requestConfigSimilarity,
-    requestFANOVA,
-    requestFeatureImportance,
-    requestGlobalSurrogate,
-    requestLimeApproximation,
-    requestOutputComplete,
-    requestOutputDescription,
-    requestPerformanceData,
-    requestSimulatedSurrogate
+    RocCurveData
 } from "./handler";
 import {INotebookTracker, Notebook, NotebookActions} from "@jupyterlab/notebook";
 import {TagTool} from "@jupyterlab/celltags";
 import {KernelMessage} from "@jupyterlab/services";
-import {IError, IExecuteResult, IMimeBundle, IStream} from '@jupyterlab/nbformat';
-import {PartialJSONValue} from "@lumino/coreutils/src/json";
-import {Config} from "./model";
+import {IError, IExecuteResult, IStream} from '@jupyterlab/nbformat';
+import {CandidateId, Config} from "./model";
+import {Components} from "./util";
+import memoizee from "memoizee";
+import SOURCE = Components.SOURCE;
+
+export class ServerError extends Error {
+
+    constructor(public name: string, message: string, public readonly traceback: string[]) {
+        super(message);
+        super.name = name
+    }
+}
 
 export class Jupyter {
 
@@ -34,13 +38,16 @@ export class Jupyter {
         this.previousCellContent = localStorage.getItem(this.LOCAL_STORAGE_CONTENT)
     }
 
-    executeCode(code: string): Promise<string | number | boolean | PartialJSONValue | IMimeBundle> {
+    unmount() {
+        this.memExecuteCode.clear()
+    }
+
+    executeCode<T>(code: string): Promise<T> {
         const sessionContext = this.notebooks.currentWidget.context.sessionContext
 
-        if (!sessionContext || !sessionContext.session?.kernel) {
-            // TODO error handling
-            return;
-        }
+        if (!sessionContext || !sessionContext.session?.kernel)
+            return new Promise((resolve, reject) => reject('Not connected to kernel'))
+
         const request = sessionContext.session?.kernel?.requestExecute({code})
 
         const outputBuffer: string[] = []
@@ -69,12 +76,15 @@ export class Jupyter {
         return request.done.then(() => {
             console.log(outputBuffer.join('\n'))
             if (error) {
-                console.error(error)
-                throw new Error(error.evalue)
+                throw new ServerError(error.ename, error.evalue, error.traceback)
             }
-            return result.data
+            return result.data['application/json'] as unknown as T
         })
     }
+
+    private memExecuteCode = memoizee(this.executeCode, {
+        promise: true, primitive: true, length: 1, max: 100
+    });
 
     createCell(content: string = ''): void {
         const current = this.notebooks.currentWidget
@@ -100,40 +110,78 @@ export class Jupyter {
         notebook.activeCell.editor.focus()
     }
 
-    requestPerformanceData(model_file: string, data_file: string, metric: string): Promise<PerformanceData> {
-        return requestPerformanceData(model_file, data_file, metric)
+    requestPerformanceData(cid: CandidateId): Promise<PerformanceData> {
+        return this.memExecuteCode<PerformanceData>(`xautoml.performance_data('${cid}')`)
     }
 
-    requestOutputComplete(model_file: string, data_file: string): Promise<OutputDescriptionData> {
-        return requestOutputComplete(model_file, data_file)
+    requestOutputComplete(cid: CandidateId): Promise<OutputDescriptionData> {
+        return this.memExecuteCode<OutputDescriptionData>(`xautoml.output_complete('${cid}')`)
+            .then(data => {
+                return {data: new Map<string, string>(Object.entries(data.data)), downsampled: data.downsampled}
+            })
     }
 
-    requestOutputDescription(model_file: string, data_file: string): Promise<OutputDescriptionData> {
-        return requestOutputDescription(model_file, data_file)
+    requestOutputDescription(cid: CandidateId): Promise<OutputDescriptionData> {
+        return this.memExecuteCode<OutputDescriptionData>(`xautoml.output_description('${cid}')`)
+            .then(data => {
+                return {data: new Map<string, string>(Object.entries(data.data)), downsampled: data.downsampled}
+            })
     }
 
-    requestLimeApproximation(model_file: string, idx: number, data_file: string, step: string): CancelablePromise<LimeResult> {
-        return requestLimeApproximation(model_file, idx, data_file, step)
+    requestLimeApproximation(cid: CandidateId, idx: number = 0, step: string = SOURCE): Promise<LimeResult> {
+        return this.memExecuteCode<LimeResult>(`xautoml.lime('${cid}', ${idx}, '${step}')`)
+            .then(data => {
+                return {
+                    idx: data.idx,
+                    label: data.label,
+                    categorical_input: data.categorical_input,
+                    additional_features: data.additional_features,
+                    expl: new Map<Label, LocalExplanation>(Object.entries(data.expl)),
+                    prob: new Map<Label, number>(Object.entries(data.prob))
+                }
+            })
     }
 
-    requestGlobalSurrogate(model_file: string, data_file: string, step: string, max_leaf_nodes: number = undefined): CancelablePromise<DecisionTreeResult> {
-        return requestGlobalSurrogate(model_file, data_file, step, max_leaf_nodes)
+    requestGlobalSurrogate(cid: CandidateId, step: string, max_leaf_nodes: number | 'None' = 'None'): Promise<DecisionTreeResult> {
+        return this.memExecuteCode<DecisionTreeResult>(
+            `xautoml.decision_tree_surrogate('${cid}', '${step}', ${max_leaf_nodes})`
+        )
     }
 
-    requestFeatureImportance(model_file: string, data_file: string, step: string): CancelablePromise<FeatureImportance> {
-        return requestFeatureImportance(model_file, data_file, step)
+    requestFeatureImportance(cid: CandidateId, step: string = SOURCE): Promise<FeatureImportance> {
+        return this.memExecuteCode<FeatureImportance>(
+            `xautoml.feature_importance('${cid}', '${step}')`
+        ).then(data => {
+            return {
+                data: new Map<string, number>(
+                    Object.entries(data.data).map(([key, value]) => [key, value['0']])
+                ),
+                additional_features: data.additional_features,
+                downsampled: data.downsampled
+            }
+        })
     }
 
-    requestFANOVA(cs: Config.ConfigSpace, configs: Config[], loss: number[], step?: string): Promise<FANOVAResponse> {
-        return requestFANOVA(cs, configs, loss, step)
+    requestFANOVA(sid: CandidateId, step: string = 'None'): Promise<FANOVAResponse> {
+        return this.memExecuteCode<FANOVAResponse>(
+            `xautoml.fanova('${sid}', '${step}')`
+        )
     }
 
-    requestSimulatedSurrogate(cs: Config.ConfigSpace, configs: Config[], loss: number[]): Promise<Config.Explanation> {
-        return requestSimulatedSurrogate(cs, configs, loss)
+    requestSimulatedSurrogate(sid: CandidateId, timestamp: number): Promise<Config.Explanation> {
+        return this.memExecuteCode<Config.Explanation>(
+            `xautoml.simulate_surrogate('${sid}', ${timestamp})`
+        ).then(data => new Config.Explanation(new Map<string, [number, number][]>(Object.entries(data))))
     }
 
-    requestConfigSimilarity(cs: Config.ConfigSpace[], configs: any[][], loss: number[], is_minimization: boolean): Promise<ConfigSimilarityResponse> {
-        return requestConfigSimilarity(cs, configs, loss, is_minimization)
+    requestConfigSimilarity(): Promise<ConfigSimilarityResponse> {
+        return this.memExecuteCode<ConfigSimilarityResponse>(`xautoml.config_similarity()`)
+    }
+
+    requestROCCurve(cid: CandidateId[]): Promise<RocCurveData> {
+        const list = cid.join('\', \'')
+        return this.memExecuteCode(`xautoml.roc_curve(['${list}'])`)
+            .then(data => new Map<string, LinePoint[]>(Object.entries(data)))
     }
 }
 

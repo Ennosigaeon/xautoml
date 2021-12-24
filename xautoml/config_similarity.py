@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from ConfigSpace import CategoricalHyperparameter
-from ConfigSpace.configuration_space import ConfigurationSpace
+from ConfigSpace.configuration_space import ConfigurationSpace, Configuration
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.manifold import MDS
 
@@ -12,11 +12,12 @@ from xautoml.util.constants import NUMBER_PRECISION
 class ConfigSimilarity:
 
     @staticmethod
-    def compute(model):
-        pruned_cs, configs = ConfigSimilarity._merge_config_spaces(model['configspace'], model['configs'])
+    def compute(configspaces: list[ConfigurationSpace], configs: list[list[Configuration]], loss: np.ndarray,
+                is_minimization: bool):
+        pruned_cs, configs = ConfigSimilarity._merge_config_spaces(configspaces, configs)
 
-        y = np.array(model['loss'], dtype=float)
-        accumulated_best = np.minmum.accumulate(y) if model['is_minimization'] else np.maximum.accumulate(y)
+        y = loss.astype(float)
+        accumulated_best = np.minmum.accumulate(y) if is_minimization else np.maximum.accumulate(y)
         incumbent_idx = np.nonzero(np.diff(accumulated_best))
         incumbent_idx = np.concatenate([[0], incumbent_idx[0] + 1])
 
@@ -37,30 +38,26 @@ class ConfigSimilarity:
         }
 
     @staticmethod
-    def _merge_config_spaces(configspace: list[dict], configs: list[dict]):
+    def _merge_config_spaces(configspaces: list[ConfigurationSpace], configs: list[list[Configuration]]):
         combined_cs = ConfigurationSpace()
 
-        choice = CategoricalHyperparameter('__structure__', list(range(len(configspace))), default_value=0)
+        choice = CategoricalHyperparameter('__structure__', list(range(len(configspaces))))
         combined_cs.add_hyperparameter(choice)
 
         combined_configs = []
-        combined_constants = []
 
-        for idx, (cs, configs) in enumerate(zip(configspace, configs)):
+        for idx, (cs, configs) in enumerate(zip(configspaces, configs)):
             name = 'structure_{}'.format(idx)
 
-            cs, constants = io_utils.deserialize_configuration_space(cs)
-            for constant in constants:
-                combined_constants.append('{}:{}'.format(name, constant))
-
             for config in configs:
-                padded_config = {'{}:{}'.format(name, k): v for k, v in config.items()}
+                padded_config = {'{}:{}'.format(name, k): v for k, v in config.get_dictionary().items()}
                 padded_config['__structure__'] = idx
                 combined_configs.append(padded_config)
 
             combined_cs.add_configuration_space(name, cs, parent_hyperparameter={'parent': choice, 'value': idx})
 
-        pruned_cs, configs = io_utils.configs_as_dataframe(combined_cs, combined_configs, set(combined_constants))
+        pruned_cs, configs = io_utils.configs_as_dataframe(combined_cs,
+                                                           [Configuration(combined_cs, d) for d in combined_configs])
         return pruned_cs, configs
 
     @staticmethod

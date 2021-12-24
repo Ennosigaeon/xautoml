@@ -1,15 +1,13 @@
 import React from "react";
-import {Candidate, CandidateId, MetaInformation} from "../../model";
-import {CancelablePromise, CanceledPromiseError, requestRocCurve, RocCurveData} from "../../handler";
+import {Candidate, CandidateId} from "../../model";
 import {LoadingIndicator} from "../../util/loading";
 import {ErrorIndicator} from "../../util/error";
 import {CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, XAxis, YAxis} from "recharts";
-import {Colors} from "../../util";
+import {Colors, JupyterContext} from "../../util";
 
 
 interface RocCurveProps {
     selectedCandidates: Set<CandidateId>
-    meta: MetaInformation
     candidateMap: Map<CandidateId, Candidate>
 
     height: number
@@ -18,7 +16,7 @@ interface RocCurveProps {
 interface RocCurveState {
     data: Map<string, any[]>
     pendingCount: number
-    pendingRequest: CancelablePromise<RocCurveData>
+    loading: boolean
     error: Error
 }
 
@@ -29,12 +27,15 @@ export class RocCurve extends React.Component<RocCurveProps, RocCurveState> {
         'its discrimination threshold is varied. The ROC curve is created by plotting the true positive rate (TPR) ' +
         'against the false positive rate (FPR) at various threshold settings.'
 
+    static contextType = JupyterContext;
+    context: React.ContextType<typeof JupyterContext>;
+
     constructor(props: RocCurveProps) {
         super(props)
 
         this.state = {
             data: new Map<string, any[]>(),
-            pendingRequest: undefined,
+            loading: false,
             error: undefined,
             pendingCount: 0
         }
@@ -43,14 +44,14 @@ export class RocCurve extends React.Component<RocCurveProps, RocCurveState> {
     componentDidMount() {
         if (this.props.selectedCandidates.size > 0) {
             const cids = Array.from(this.props.selectedCandidates)
-            this.queryROCCurve(cids, cids.map(cid => this.props.candidateMap.get(cid).model_file))
+            this.queryROCCurve(cids)
         }
     }
 
     componentDidUpdate(prevProps: Readonly<RocCurveProps>, prevState: Readonly<RocCurveState>, snapshot?: any) {
         if (prevProps.selectedCandidates.size !== this.props.selectedCandidates.size) {
             let newCandidates: CandidateId[]
-            if (this.state.pendingRequest === undefined) {
+            if (!this.state.loading) {
                 // Remove previously selected candidates
                 const superfluousCandidates = Array.from(prevProps.selectedCandidates).filter(c => !this.props.selectedCandidates.has(c))
                 const currentCandidates = this.state.data
@@ -66,43 +67,38 @@ export class RocCurve extends React.Component<RocCurveProps, RocCurveState> {
             } else {
                 // Request for data is currently still pending. Erase complete state and load everything from scratch to
                 // prevent incoherent states
-                this.state.pendingRequest.cancel()
-                this.setState({data: new Map<string, any[]>(), pendingRequest: undefined})
+                this.setState({data: new Map<string, any[]>(), loading: false})
                 newCandidates = Array.from(this.props.selectedCandidates)
             }
 
             // Fetch new selected candidates
             if (newCandidates.length > 0) {
-                this.queryROCCurve(newCandidates, newCandidates.map(cid => this.props.candidateMap.get(cid).model_file))
+                this.queryROCCurve(newCandidates)
             }
         }
     }
 
-    private queryROCCurve(candidates: CandidateId[], model_files: string[]) {
-        const promise = requestRocCurve(candidates, model_files, this.props.meta.data_file)
-        this.setState({pendingRequest: promise, error: undefined, pendingCount: candidates.length})
+    private queryROCCurve(candidates: CandidateId[]) {
+        const promise = this.context.requestROCCurve(candidates)
+        this.setState({loading: true, error: undefined, pendingCount: candidates.length})
 
         promise
             .then(data => {
                 const currentCandidates = this.state.data
                 data.forEach((v, k) => currentCandidates.set(k, v))
-                this.setState({data: currentCandidates, pendingRequest: undefined})
+                this.setState({data: currentCandidates, loading: false})
             })
             .catch(error => {
-                if (!(error instanceof CanceledPromiseError)) {
-                    console.error(`Failed to fetch Roc Curve data.\n${error.name}: ${error.message}`)
-                    this.setState({error: error, pendingRequest: undefined})
-                } else {
-                    console.log('Cancelled promise due to user request')
-                }
+                console.error(`Failed to fetch Roc Curve data.\n${error.name}: ${error.message}`)
+                this.setState({error: error, loading: false})
             });
     }
 
     render() {
-        const {data, pendingRequest, pendingCount, error} = this.state
+        const {data, loading, pendingCount, error} = this.state
 
         let content: JSX.Element
-        if (pendingRequest !== undefined && pendingCount > 2)
+        if (loading && pendingCount > 2)
             content = <LoadingIndicator loading={true}/>
         else if (data.size > 0) {
             const labels: string[] = []
