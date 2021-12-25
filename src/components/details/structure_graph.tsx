@@ -207,6 +207,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
                            isTerminal={node.data.id === Components.SINK}
                            nodeWidth={StructureGraphComponent.NODE_WIDTH}
                            nodeHeight={StructureGraphComponent.NODE_HEIGHT}
+                           className={'structure-graph_node'}
                            onClick={this.onComponentSelection}>
                     <SingleComponent step={node.data}
                                      error={error}

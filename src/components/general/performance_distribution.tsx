@@ -4,6 +4,7 @@ import {Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis} from "r
 import {LoadingIndicator} from "../../util/loading";
 import {TimelineRecord} from "./performance_timeline";
 import {bin} from "d3";
+import {Colors} from "../../util";
 
 interface PerformanceDistributionProps {
     data: TimelineRecord[]
@@ -33,7 +34,7 @@ export default class PerformanceDistribution extends React.Component<Performance
                             <XAxis dataKey="performance" label={{value: this.props.meta.metric, dy: 10}}/>
                             <YAxis label={{value: 'Frequency', angle: -90, dx: -25}}/>
 
-                            <Bar dataKey="frequency" fill="#82ca9d"/>
+                            <Bar dataKey="frequency" fill={Colors.DEFAULT}/>
                         </BarChart>
                     </ResponsiveContainer>
                 }

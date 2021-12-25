@@ -14,7 +14,7 @@ interface PCLineProps {
 }
 
 interface PCLineStats {
-    highlight: boolean
+    selected: boolean
 }
 
 interface Tooltip {
@@ -34,7 +34,7 @@ export class PCLine extends React.Component<PCLineProps, PCLineStats> {
 
     constructor(props: PCLineProps) {
         super(props)
-        this.state = {highlight: false}
+        this.state = {selected: false}
 
         this.onMouseEnter = this.onMouseEnter.bind(this)
         this.onMouseLeave = this.onMouseLeave.bind(this)
@@ -42,11 +42,11 @@ export class PCLine extends React.Component<PCLineProps, PCLineStats> {
     }
 
     private onMouseEnter() {
-        this.setState(() => ({highlight: true}));
+        this.setState(() => ({selected: true}));
     }
 
     private onMouseLeave() {
-        this.setState(() => ({highlight: false}));
+        this.setState(() => ({selected: false}));
     }
 
     private onClick(e: React.MouseEvent) {
@@ -122,7 +122,7 @@ export class PCLine extends React.Component<PCLineProps, PCLineStats> {
         const tooltipHeight = 20
 
         return (
-            <g className={`${this.state.highlight || this.props.highlight ? 'pc-highlighted' : ''} ${this.props.selected ? 'pc-selected' : ''}`}>
+            <g className={`${this.props.highlight ? 'pc-highlighted' : ''} ${this.state.selected || this.props.selected ? 'pc-selected' : ''}`}>
                 <path className={'pc-line'} d={path.toString()}/>
                 <path className={'pc-line pc-missing-line'} d={missingPath.toString()}/>
 

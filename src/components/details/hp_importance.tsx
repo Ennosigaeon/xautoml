@@ -253,10 +253,10 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
 
                     {[...Array(nColumns).keys()].map(j => (
                         <circle key={overview.hyperparameters[j]} cx={j * stepSize} cy={i * stepSize} r={radius}
-                                fill={activeColumns.includes(j) ? '#555' : '#ccc'}/>
+                                fill={activeColumns.includes(j) ? Colors.SELECTED_FEATURE : Colors.ADDITIONAL_FEATURE}/>
                     ))}
                     {d3.pairs<number>(activeColumns).map(([a, b]) => (
-                        <path d={`M ${a * stepSize} ${i * stepSize} H ${b * stepSize}`} stroke={'#555'}
+                        <path d={`M ${a * stepSize} ${i * stepSize} H ${b * stepSize}`} stroke={Colors.SELECTED_FEATURE}
                               strokeWidth={radius / 2}/>
                     ))}
                 </g>

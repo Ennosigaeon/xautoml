@@ -52,7 +52,7 @@ export class SurrogateExplanation extends React.Component<SurrogateExplanationPr
         const {explanation, error} = this.state
 
         return (
-            <>
+            <div className={'surrogate_explanation'}>
                 <ErrorIndicator error={error}/>
                 {!error &&
                     <>
@@ -72,7 +72,7 @@ export class SurrogateExplanation extends React.Component<SurrogateExplanationPr
                             </>
                         }
                     </>}
-            </>
+            </div>
 
         );
     }

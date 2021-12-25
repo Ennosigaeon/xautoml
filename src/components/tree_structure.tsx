@@ -69,11 +69,10 @@ export class GraphNode<Datum> extends React.Component<GraphNodeProps<Datum>, {}>
                 enter={{x: [node.x], y: [node.y], timing: {duration: 500, ease: easeExpInOut}}}
             >{({x: x, y: y}) =>
                 <g className={`hierarchical-tree_node ${className} ${highlight ? 'selected' : ''}`}
-                   transform={`translate(${y}, ${x})`}
-                   onClick={this.handleClick}>
+                   transform={`translate(${y}, ${x})`}>
                     <foreignObject x={offset} y={-nodeHeight / 2} width={size[0]} height={size[1]}>
                         <div className={`hierarchical-tree_node-container`}>
-                            <div
+                            <div onClick={this.handleClick}
                                 className={`hierarchical-tree_node-content ${round ? 'hierarchical-tree_node-content-round' : ''}`}>
                                 {this.props.children}
                             </div>

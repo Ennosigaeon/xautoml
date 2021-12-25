@@ -1,3 +1,10 @@
+:root {
+    --hover-color: #abe2fb;
+    --border-color: #b8b8b8;
+    --selectable-color: #eee;
+    --additional-feature-color: #aaa;
+}
+
 .jp-ReactWidget {
     color: var(--jp-ui-font-color1);
     background: var(--jp-layout-color1);
@@ -15,7 +22,7 @@
 }
 
 tr.MuiTableRow-root.MuiTableRow-hover:hover {
-    background-color: var(--jp-rendermime-table-row-hover-background);
+    background-color: var(--hover-color);
 }
 
 .MuiTableContainer-root {
@@ -46,7 +53,7 @@ tr.MuiTableRow-root.MuiTableRow-hover:hover {
 }
 
 .hyperlink {
-    color: rgb(16, 107, 163);
+    color: #106BA3;
 }
 
 .collapse-tooltip {
@@ -79,7 +86,6 @@ tr.MuiTableRow-root.MuiTableRow-hover:hover {
 
 /** Hierarchical Tree */
 .hierarchical-tree_node-container {
-    cursor: pointer;
     display: flex;
     align-items: center;
     height: 100%;
@@ -88,7 +94,8 @@ tr.MuiTableRow-root.MuiTableRow-hover:hover {
 }
 
 .hierarchical-tree_node-content {
-    border: 1px solid #b8b8b8;
+    cursor: pointer;
+    border: 1px solid var(--border-color);
     border-radius: 5px;
     padding: 2px 5px;
     width: 100%;
@@ -99,14 +106,13 @@ tr.MuiTableRow-root.MuiTableRow-hover:hover {
     box-sizing: border-box;
 }
 
-
 .selected .hierarchical-tree_node-content {
-    background-color: #abe2fb;
+    background-color: var(--jp-brand-color1) !important;
     border-width: 2px;
 }
 
 .highlight .hierarchical-tree_node-content {
-    background-color: #2196f3;
+    background-color: var(--hover-color);
     border-width: 2px;
 }
 
@@ -124,7 +130,7 @@ tr.MuiTableRow-root.MuiTableRow-hover:hover {
 
 .hierarchical-tree_link {
     fill: none;
-    stroke: #ccc;
+    stroke: var(--border-color);
     stroke-width: 2px;
 }
 
@@ -146,6 +152,25 @@ tr.MuiTableRow-root.MuiTableRow-hover:hover {
     display: grid;
     text-align: left;
     grid-template-columns: 40% 60%;
+    font-size: 8px;
+}
+
+.bandit-explanation.highlight .hierarchical-tree_node-content {
+    background-color: var(--hover-color);
+    border-width: 2px;
+}
+
+.failure .hierarchical-tree_node-content {
+    cursor: default;
+}
+
+.expandable .hierarchical-tree_node-content {
+    background-color: var(--selectable-color);
+}
+
+.expandable .hierarchical-tree_node-content:hover {
+    background-color: var(--hover-color);
+    border-width: 2px;
 }
 
 
@@ -174,6 +199,19 @@ tr.MuiTableRow-root.MuiTableRow-hover:hover {
     display: block;
 }
 
+.structure-graph_node .hierarchical-tree_node-content {
+    background-color: var(--selectable-color);
+}
+
+.structure-graph_node .hierarchical-tree_node-content:hover {
+    background-color: var(--hover-color);
+    border-width: 2px;
+}
+
+.structure-graph_node.selected .hierarchical-tree_node-content {
+    border-width: 2px;
+}
+
 div.structure-graph_tooltip {
     max-width: 800px;
     background-color: white;
@@ -190,12 +228,12 @@ div.structure-graph_tooltip {
 }
 
 .jp-Cell-outputWrapper .MuiTableCell-root,
-.jp-Cell-outputWrapper .MuiCollapse-wrapperInner{
+.jp-Cell-outputWrapper .MuiCollapse-wrapperInner {
     font-size: var(--jp-code-font-size);
 }
 
 .jp-Cell-outputWrapper .MuiTableCell-sizeSmall,
-.jp-Cell-outputWrapper .MuiTableCell-sizeSmall.MuiTableCell-paddingCheckbox{
+.jp-Cell-outputWrapper .MuiTableCell-sizeSmall.MuiTableCell-paddingCheckbox {
     padding: 6px;
 }
 
@@ -242,8 +280,12 @@ div.structure-graph_tooltip {
 
 
 /** Global Surrogate */
+.global-surrogate_node .hierarchical-tree_node-container {
+    cursor: default;
+}
+
 .global-surrogate_additional-feature .hierarchical-tree_node-content {
-    color: #aaa;
+    color: var(--additional-feature-color);
 }
 
 
@@ -281,13 +323,16 @@ div.structure-graph_tooltip {
     text-anchor: middle;
 }
 
+.pc-choice-expandable > circle {
+    fill: var(--selectable-color);
+}
+
 .pc-choice-expandable {
     cursor: pointer;
 }
 
 .pc-choice-expandable:hover > circle {
-    fill: rgb(198, 200, 224);
-    stroke: var(--jp-brand-color1) !important;
+    fill: var(--hover-color);
     stroke-width: 2px;
 }
 
@@ -338,7 +383,7 @@ text.pc-axis-label {
 .pc-selected .pc-line {
     stroke-opacity: 1;
     stroke-width: 3px;
-    stroke: #abe2fb;
+    stroke: var(--hover-color) !important;
 }
 
 .pc-highlighted .pc-line {
@@ -387,4 +432,10 @@ text.pc-axis-label {
     position: relative;
     font-size: 1rem;
     margin-left: 5px;
+}
+
+
+/** Surrogate Explanation **/
+.surrogate_explanation .pc-fat-line {
+    cursor: default;
 }

@@ -3,17 +3,21 @@ import * as d3 from "d3";
 import {CandidateId, Pipeline, RF, Structure} from "../../model";
 import 'rc-slider/assets/index.css';
 import {areSetInputsEqual, cidToSid, normalizeComponent, prettyPrint} from "../../util";
+import AddIcon from "@material-ui/icons/Add";
+import RemoveIcon from "@material-ui/icons/Remove";
 import {GraphEdge, GraphNode, HierarchicalTree} from "../tree_structure";
 import {Dag, DagNode} from "d3-dag";
 import memoizeOne from "memoize-one";
-import {CollapseComp} from "../../util/collapse";
 import {KeyValue} from "../../util/KeyValue";
+import {Collapse, IconButton} from "@material-ui/core";
 
 
 interface CollapsibleNode {
     data?: RF.PolicyExplanations;
     children?: this[];
     _children?: this[];
+    isExpandable?: boolean;
+    parent?: this;
 }
 
 namespace CollapsibleNodeActions {
@@ -38,6 +42,7 @@ namespace CollapsibleNodeActions {
             })
 
         node._children = hidden
+        node.isExpandable = hidden.length > 0
         if (visible.length > 0)
             node.children = visible.sort((a, b) => a.data.label.localeCompare(b.data.label))
         else
@@ -56,6 +61,89 @@ namespace CollapsibleNodeActions {
         return node.children.map(child => countNodes(child)).reduce((a, b) => a + b, 1)
     }
 
+}
+
+const NODE_HEIGHT = 70;
+const NODE_WIDTH = 190;
+
+interface SingleNodeProps {
+    node: DagNode<CollapsibleNode>
+    timestamp: string
+    selected: boolean
+
+    onToggleNode: (node: CollapsibleNode) => void
+    onSelectNode: (node: CollapsibleNode) => void
+}
+
+interface SingleNodeState {
+    show: boolean
+}
+
+class SingleNode extends React.Component<SingleNodeProps, SingleNodeState> {
+
+    constructor(props: SingleNodeProps) {
+        super(props);
+        this.state = {show: false}
+
+        this.toggleShow = this.toggleShow.bind(this)
+        this.clickIcon = this.clickIcon.bind(this)
+    }
+
+    private toggleShow(_: any, e: React.MouseEvent) {
+        this.setState((state) => ({show: !state.show}))
+        e.stopPropagation()
+    }
+
+    private clickIcon(e: React.MouseEvent) {
+        this.props.onToggleNode(this.props.node.data)
+        e.stopPropagation()
+    }
+
+    render() {
+        const {node, selected} = this.props
+
+        const data = node.data.data
+        const details = data.getDetails(this.props.timestamp)
+
+        return (
+            <GraphNode key={data.id}
+                       node={node}
+                       className={`bandit-explanation ${details.selected ? 'highlight' : ''} ${selected ? 'selected' : ''} ${details.isFailure() ? 'failure' : 'expandable'}`}
+                       nodeWidth={NODE_WIDTH}
+                       nodeHeight={NODE_HEIGHT}
+                       onClick={this.toggleShow}
+                       onAlternativeClick={this.props.onSelectNode}>
+                <div>
+                    <div style={{display: 'flex', alignItems: 'center'}}>
+                        <div style={{flexGrow: 1}}>
+                            <h3 style={{lineHeight: '25px'}}>
+                                {normalizeComponent(data.label)}: {details.isFailure() ? details.failure_message : prettyPrint(details.score)}
+                            </h3>
+                        </div>
+                        {node.data.isExpandable &&
+                            <IconButton style={{flexShrink: 1, maxHeight: '24px', padding: '0'}} size='small'
+                                        onClick={this.clickIcon}>
+                                {node.data._children?.length > 0 ? <AddIcon/> : <RemoveIcon/>}
+                            </IconButton>
+                        }
+                    </div>
+
+                    {!details.isFailure() &&
+                        <Collapse in={this.state.show}>
+                            <div className={'bandit-explanation_node-details'} style={{marginTop: "-5px"}}>
+                                <KeyValue key_={'Id'} value={data.id} tight={true}/>
+
+                                {Array.from(details.policy.keys()).map(k =>
+                                    <KeyValue key={k} key_={k} value={details.policy.get(k)} tight={true}
+                                              prec={2}/>
+                                )}
+                            </div>
+                        </Collapse>
+                    }
+                </div>
+            </GraphNode>
+        )
+    }
 }
 
 interface BanditExplanationsProps {
@@ -78,10 +166,6 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
 
     static HELP = "Visualizes the search procedure of a Monte-Carlo tree search. Each node contains the current " +
         "reward computed by MCTS. Additional details how the score is computed is available via reward decomposition."
-
-    private static readonly ROOT_ID = '0';
-    private static readonly NODE_HEIGHT = 75;
-    private static readonly NODE_WIDTH = 190;
 
     static defaultProps = {
         selectedCandidates: new Set<CandidateId>(),
@@ -116,26 +200,29 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
     }
 
     private selectNode(node: CollapsibleNode) {
-        const pipelines = new Map<CandidateId, Pipeline>(this.props.structures.map(s => [s.cid, s.pipeline]))
-        const reversePipelines = new Map<string, CandidateId[]>();
-        reversePipelines.set(BanditExplanationsComponent.ROOT_ID, [])
-        pipelines.forEach((v, k) => v.steps
-            .map(step => step.id)
-            .forEach(step => {
-                if (reversePipelines.has(step))
-                    reversePipelines.get(step).push(k)
-                else
-                    reversePipelines.set(step, [k])
+        let nodesOnPath = []
+        let current = node
+        while (current) {
+            nodesOnPath.push(current)
+            current = current.parent
+        }
 
-                // Always add to root
-                reversePipelines.get(BanditExplanationsComponent.ROOT_ID).push(k)
+        let structures = this.props.structures
+        nodesOnPath.reverse()
+            .slice(1) // Remove root node
+            .map((node, idx) => {
+                structures = structures.filter(structure => {
+                    if (structure.pipeline.steps.length <= idx)
+                        return false
+                    return structure.pipeline.steps[idx].label === node.data.label
+                })
             })
-        );
 
-        const candidates = reversePipelines.get(node.data.id)
-            .map(id => this.props.structures.filter(s => s.cid === id).pop().equivalentConfigs)
-            .reduce((acc, val) => acc.concat(val), [])
-            .map(c => c.id);
+        const candidates: CandidateId[] = []
+        structures
+            .map(structure => structure.configs)
+            .forEach(configs => configs.forEach(config => candidates.push(config.id)))
+
         const intersection = candidates.filter(c => this.props.selectedCandidates.has(c));
 
         if (intersection.length === candidates.length) {
@@ -162,34 +249,13 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
 
     renderNode(node: DagNode<CollapsibleNode>): JSX.Element {
         const data = node.data.data
-        const details = data.getDetails(this.props.timestamp)
-        const highlight = this.selectedNodes(this.props.selectedCandidates).has(data.id)
+        const selected = this.selectedNodes(this.props.selectedCandidates).has(data.id)
 
         return (
             <>
-                {(!this.props.hideUnselectedCandidates || highlight) &&
-                    <GraphNode key={data.id}
-                               node={node}
-                               className={`bandit-explanation ${details.selected ? 'selected' : ''} ${highlight ? 'highlight' : ''}`}
-                               nodeWidth={BanditExplanationsComponent.NODE_WIDTH}
-                               nodeHeight={BanditExplanationsComponent.NODE_HEIGHT}
-                               onClick={this.toggleNode}
-                               onAlternativeClick={this.selectNode}>
-                        <>
-                            <CollapseComp showInitial={false} className={''}>
-                                <h3>
-                                    {normalizeComponent(data.label)}: {details.isFailure() ? details.failure_message : prettyPrint(details.score)}
-                                </h3>
-                                <div className={'bandit-explanation_node-details'} style={{marginTop: "-10px"}}>
-                                    <KeyValue key_={'Id'} value={data.id} tight={true}/>
-
-                                    {Array.from(details.policy.keys()).map(k =>
-                                        <KeyValue key={k} key_={k} value={details.policy.get(k)} tight={true} prec={2}/>
-                                    )}
-                                </div>
-                            </CollapseComp>
-                        </>
-                    </GraphNode>
+                {(!this.props.hideUnselectedCandidates || selected) &&
+                    <SingleNode node={node} timestamp={this.props.timestamp} selected={selected}
+                                onSelectNode={this.selectNode} onToggleNode={this.toggleNode}/>
                 }
             </>
         )
@@ -210,8 +276,8 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
                         {(!this.props.hideUnselectedCandidates || highlight) &&
                             <GraphEdge key={key}
                                        link={link}
-                                       nodeWidth={BanditExplanationsComponent.NODE_WIDTH}
-                                       nodeHeight={BanditExplanationsComponent.NODE_HEIGHT}
+                                       nodeWidth={NODE_WIDTH}
+                                       nodeHeight={NODE_HEIGHT}
                                        highlight={details.selected || highlight}/>
                         }
                     </>
@@ -230,26 +296,34 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
 
     private getSelectedNodes(selectedCandidates: Set<CandidateId>) {
         const pipelines = new Map<CandidateId, Pipeline>(this.props.structures.map(s => [s.cid, s.pipeline]))
-        const selectedPipelines = new Set()
+        const selectedNodes = new Set()
+
 
         selectedCandidates.forEach(cid => {
             const sid = cidToSid(cid)
+            const root = this.state.root
+
+            selectedNodes.add(root.data.id)
+
+            let currentNode = root
             pipelines
                 .get(sid).steps
-                .map(step => selectedPipelines.add(step.id))
+                .forEach(step => currentNode.children
+                    .filter(n => n.data.label === step.label)
+                    .forEach(n => {
+                        selectedNodes.add(n.data.id)
+                        currentNode = n
+                    })
+                )
         })
 
-        // Also add root node if at least one candidate is selected
-        if (selectedPipelines.size > 0)
-            selectedPipelines.add(BanditExplanationsComponent.ROOT_ID)
-
-        return selectedPipelines
+        return selectedNodes
     }
 
     render() {
         return (
-            <HierarchicalTree nodeHeight={BanditExplanationsComponent.NODE_HEIGHT}
-                              nodeWidth={BanditExplanationsComponent.NODE_WIDTH}
+            <HierarchicalTree nodeHeight={NODE_HEIGHT}
+                              nodeWidth={NODE_WIDTH}
                               data={this.state.root}
                               count={CollapsibleNodeActions.countNodes(this.state.root)}
                               render={this.renderTree}/>

@@ -17,7 +17,7 @@ class CustomizedTick extends React.PureComponent<any> {
             additionalFeatures.filter((a: string) => payload.value.includes(` ${a} `)).length > 0
 
         return (
-            <text x={x} y={y} dy={0} textAnchor="end" fill={isAdditional ? '#AAA' : '#444'}>
+            <text x={x} y={y} dy={0} textAnchor="end" fill={isAdditional ? Colors.ADDITIONAL_FEATURE : Colors.SELECTED_FEATURE}>
                 {payload.value.toLocaleString().replace(/ /g, '\u00A0')}
             </text>
         );

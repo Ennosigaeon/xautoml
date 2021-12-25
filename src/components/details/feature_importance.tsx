@@ -17,7 +17,7 @@ class CustomizedAxisTick extends React.PureComponent<any> {
 
         return (
             <g transform={`translate(${x},${y})`}>
-                <text x={0} y={0} dy={16} textAnchor="end" fill={isAdditional ? '#aaa' : '#444'}
+                <text x={0} y={0} dy={16} textAnchor="end" fill={isAdditional ? Colors.ADDITIONAL_FEATURE : Colors.SELECTED_FEATURE}
                       transform="rotate(-35)">
                     {payload.value}
                 </text>
@@ -36,8 +36,8 @@ class CustomTooltip extends React.PureComponent<TooltipProps<any, any>> {
                 <div className="recharts-default-tooltip" style={{
                     margin: '0px',
                     padding: '10px',
-                    backgroundColor: 'rgb(255, 255, 255)',
-                    border: '1px solid rgb(204, 204, 204)',
+                    backgroundColor: '#fff',
+                    border: `1px solid ${Colors.ADDITIONAL_FEATURE}`,
                     whiteSpace: 'nowrap'
                 }}>
                     <p className="label">{prettyPrint(payload[0].value, 3)}</p>
@@ -108,7 +108,9 @@ export class FeatureImportanceComponent extends React.Component<FeatureImportanc
         const {data} = this.state
         const additionalFeatures = data.get(component).additional_features
 
+        // noinspection JSMismatchedCollectionQueryUpdate
         const entries: string[] = []
+        // noinspection JSMismatchedCollectionQueryUpdate
         const index: string[] = []
         const columns: string[] = ['\'importance\'', '\'additional_feature\'']
         data.get(component).data.forEach((value, key) => {

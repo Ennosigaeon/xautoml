@@ -84,8 +84,9 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
         const renderedNodes = root.descendants().map(node =>
             <GraphNode key={node.data.label}
                        node={node}
-                       className={additional_features.filter(a => node.data.label.startsWith(a))
-                           .length > 0 ? 'global-surrogate_additional-feature' : ''}
+                       className={`global-surrogate_node ${
+                           additional_features.filter(a => node.data.label.startsWith(a))
+                               .length > 0 ? 'global-surrogate_additional-feature' : ''}`}
                        nodeWidth={GlobalSurrogateComponent.NODE_WIDTH}
                        nodeHeight={GlobalSurrogateComponent.NODE_HEIGHT}>
                 <p title={node.data.label}>{node.data.label}</p>
