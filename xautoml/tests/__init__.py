@@ -3,7 +3,7 @@ import pickle
 import joblib
 import pandas as pd
 
-from xautoml.adapter import import_dswizard
+from xautoml.adapter import import_dswizard, import_auto_sklearn
 from xautoml.main import XAutoML
 
 
@@ -46,11 +46,21 @@ def get_168746() -> XAutoML:
 
 
 def get_autosklearn() -> XAutoML:
-    pass
+    with open('res/autosklearn/auto-sklearn.pkl', 'rb') as f:
+        raw = pickle.load(f)
+
+    rh = import_auto_sklearn(raw)
+    X, y = _load_data('res/autosklearn/dataset.pkl')
+    return XAutoML(rh, X, y)
 
 
 def get_autosklearn_categorical() -> XAutoML:
-    pass
+    with open('res/autosklearn_categorical/auto-sklearn.pkl', 'rb') as f:
+        raw = pickle.load(f)
+
+    rh = import_auto_sklearn(raw)
+    X, y = _load_data('res/autosklearn_categorical/dataset.pkl')
+    return XAutoML(rh, X, y)
 
 
 def _load_data(data_file) -> tuple[pd.DataFrame, pd.Series]:
