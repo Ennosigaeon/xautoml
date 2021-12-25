@@ -1,12 +1,14 @@
 from copy import deepcopy
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from typing import Optional
 
 import numpy as np
 import pandas as pd
 from ConfigSpace import ConfigurationSpace, Configuration
+from ConfigSpace.read_and_write import json as config_json
 from IPython.display import JSON
 from sklearn.pipeline import Pipeline
+import dswizard.components.util as component_util
 
 from xautoml.config_similarity import ConfigSimilarity
 from xautoml.hp_importance import HPImportance
@@ -45,6 +47,17 @@ class Candidate:
     origin: str
     model: Pipeline
 
+    def as_dict(self):
+        return {
+            'id': self.id,
+            'budget': self.budget,
+            'status': self.status,
+            'loss': self.loss,
+            'runtime': self.runtime,
+            'config': self.config.get_dictionary(),
+            'origin': self.origin
+        }
+
 
 @dataclass()
 class CandidateStructure:
@@ -60,6 +73,14 @@ class CandidateStructure:
         self.pipeline = pipeline
         self.configs = configs
         self.hash = hash(str(configspace))
+
+    def as_dict(self):
+        return {
+            'cid': self.cid,
+            'configspace': config_json.write(self.configspace) if self.configspace is not None else None,
+            'pipeline': component_util.serialize(self.pipeline),
+            'configs': [c.as_dict() for c in self.configs]
+        }
 
 
 @dataclass()
@@ -85,6 +106,15 @@ class RunHistory:
         for s in structures:
             for c in s.configs:
                 self.cid_to_candidate[c.id] = c
+
+    def as_dict(self):
+        return {
+            'meta': asdict(self.meta),
+            'default_configspace': config_json.write(self.default_configspace)
+            if self.default_configspace is not None else None,
+            'structures': [s.as_dict() for s in self.structures],
+            'explanations': asdict(self.explanations)
+        }
 
 
 def as_json(func):
@@ -308,16 +338,16 @@ class XAutoML:
         pipeline, X, _ = pipeline_utils.get_subpipeline(pipeline, step, X, y)
         return X, y, pipeline
 
-    # def _repr_mimebundle_(self, include, exclude):
-    #     return {
-    #         'application/xautoml+json': self.complete_data
-    #     }
-    #
-    # def explain(self):
-    #     try:
-    #         # noinspection PyPackageRequirements
-    #         from IPython.core.display import display
-    #         # noinspection PyTypeChecker
-    #         return display(self)
-    #     except ImportError:
-    #         return str(self)
+    def _repr_mimebundle_(self, include, exclude):
+        return {
+            'application/xautoml+json': self.run_history.as_dict()
+        }
+
+    def explain(self):
+        try:
+            # noinspection PyPackageRequirements
+            from IPython.core.display import display
+            # noinspection PyTypeChecker
+            return display(self)
+        except ImportError:
+            return str(self)
