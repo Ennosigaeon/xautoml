@@ -18,7 +18,7 @@ interface GlobalSurrogateProps {
 }
 
 interface GlobalSurrogateState {
-    pendingRequest: Promise<DecisionTreeResult>
+    loading: boolean
     data: DecisionTreeResult
     maxLeafNodes: number
     error: Error
@@ -42,7 +42,7 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
 
     constructor(props: GlobalSurrogateProps) {
         super(props);
-        this.state = {pendingRequest: undefined, data: undefined, maxLeafNodes: undefined, error: undefined}
+        this.state = {loading: true, data: undefined, maxLeafNodes: undefined, error: undefined}
 
         this.onMaxLeavesChange = this.onMaxLeavesChange.bind(this)
         this.exportTree = this.exportTree.bind(this)
@@ -54,8 +54,6 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
     }
 
     componentDidUpdate(prevProps: Readonly<GlobalSurrogateProps>, prevState: Readonly<GlobalSurrogateState>, snapshot?: any) {
-        if (prevState.maxLeafNodes !== this.state.maxLeafNodes)
-            this.queryDT(this.state.maxLeafNodes)
         if (prevProps.model.component !== this.props.model.component)
             this.queryDT(undefined)
     }
@@ -66,15 +64,15 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
             return
 
         const promise = this.context.requestGlobalSurrogate(candidate.id, component, maxLeafNodes)
-        this.setState({data: undefined, error: undefined})
+        this.setState({loading: true})
 
         promise
             .then(data => {
-                this.setState({data: data, pendingRequest: undefined, maxLeafNodes: data.max_leaf_nodes})
+                this.setState({data: data, loading: false, maxLeafNodes: data.max_leaf_nodes})
             })
             .catch(error => {
                 console.error(`Failed to fetch DecisionTreeResult data.\n${error.name}: ${error.message}`)
-                this.setState({error: error, pendingRequest: undefined})
+                this.setState({error: error, loading: false})
             });
     }
 
@@ -108,7 +106,7 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
     }
 
     private onMaxLeavesChange(idx: number) {
-        this.setState({maxLeafNodes: this.ticks[idx]})
+        this.queryDT(this.ticks[idx])
     }
 
     private exportTree() {
@@ -126,7 +124,7 @@ ${ID}_dt
     }
 
     render() {
-        const {data, pendingRequest, error} = this.state
+        const {data, loading, error} = this.state
 
         const marks: any = {}
         this.ticks.forEach((v, idx) => marks[idx] = v)
@@ -135,7 +133,7 @@ ${ID}_dt
             <>
                 <ErrorIndicator error={error}/>
                 {!error && <>
-                    <LoadingIndicator loading={!!pendingRequest}/>
+                    {data === undefined && <LoadingIndicator loading={true}/>}
 
                     {data?.root.children.length === 0 &&
                         <p>Decision Tree approximation not available for the actual predictions.</p>
@@ -162,12 +160,16 @@ ${ID}_dt
                                 <JupyterButton style={{float: "right"}} onClick={this.exportTree}/>
                             </div>
                         </div>
-                        <CommonWarnings additionalFeatures={data.additional_features.length > 0}
-                                        downsampled={data.downsampled}/>
-                        <HierarchicalTree nodeHeight={GlobalSurrogateComponent.NODE_HEIGHT}
-                                          nodeWidth={GlobalSurrogateComponent.NODE_WIDTH}
-                                          data={data.root}
-                                          render={this.renderNodes}/>
+                        {loading ? <LoadingIndicator loading={loading}/> :
+                            <>
+                                <CommonWarnings additionalFeatures={data.additional_features.length > 0}
+                                                downsampled={data.downsampled}/>
+                                <HierarchicalTree nodeHeight={GlobalSurrogateComponent.NODE_HEIGHT}
+                                                  nodeWidth={GlobalSurrogateComponent.NODE_WIDTH}
+                                                  data={data.root}
+                                                  render={this.renderNodes}/>
+                            </>
+                        }
                     </>
                     }
                 </>}
