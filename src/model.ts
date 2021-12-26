@@ -99,7 +99,6 @@ export namespace Config {
     export type Explanations = Map<CandidateId, Config.Explanation>
 }
 
-
 export namespace RF {
     export class StateDetails {
 
@@ -309,23 +308,10 @@ export class Pipeline {
 
 export class Structure {
 
-    // auto-sklearn can produce different structures that, in reality, have all an identical config space.
-    // Aggregate candidates from those structures in this array
-    private allConfigs_: Candidate[]
-
     constructor(public readonly cid: CandidateId,
                 public readonly pipeline: Pipeline,
                 public readonly configspace: Config.ConfigSpace,
                 public readonly configs: Candidate[]) {
-        this.allConfigs_ = [...configs]
-    }
-
-    public get equivalentConfigs() {
-        return this.allConfigs_
-    }
-
-    public set equivalentConfigs(configs: Candidate[]) {
-        this.allConfigs_ = configs
     }
 
     static fromJson(structure: Structure, defaultConfigSpace: Config.ConfigSpace): Structure {
@@ -342,7 +328,7 @@ export class Structure {
     }
 }
 
-export class Runhistory {
+export class RunHistory {
 
     public readonly candidateMap = new Map<CandidateId, Candidate>()
 
@@ -353,18 +339,14 @@ export class Runhistory {
         structures.map(s => s.configs.forEach(c => this.candidateMap.set(c.id, c)))
     }
 
-    static fromJson(runhistory: Runhistory): Runhistory {
+    static fromJson(runhistory: RunHistory): RunHistory {
         const default_configspace = runhistory.default_configspace ?
             Config.ConfigSpace.fromJson(runhistory.default_configspace as any) : undefined
 
         const structures = runhistory.structures.map(s => Structure.fromJson(s, default_configspace))
-        const equivalentStructures = structures.filter(s => s.configspace === default_configspace)
-        const extendedCandidates = [].concat(...equivalentStructures.map(s => s.configs))
-        equivalentStructures.forEach(s => s.equivalentConfigs = extendedCandidates)
-
         const losses = [].concat(...structures.map(s => s.configs.map(c => c.loss)))
 
-        return new Runhistory(MetaInformation.fromJson(runhistory.meta, losses),
+        return new RunHistory(MetaInformation.fromJson(runhistory.meta, losses),
             structures,
             Explanations.fromJson(runhistory.explanations),
             default_configspace)

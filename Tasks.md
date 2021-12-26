@@ -2,7 +2,6 @@
 
 ## Bugs
 
-
 ## New Features
 
 - PC Explanations for Hyperopt
@@ -18,17 +17,14 @@
 - Individual Conditional Expectation Plots
 - Store which details were opened/closed
 
-
-## Improvements
-- Execute python code in user kernel
-
-
 ## Data Sets for Evaluation
 
-###Overview
+### Overview
+
 https://www.openml.org/search?q=tags.tag%3Astudy_218&type=data&table=1&size=39
 
-###Candidates
+### Candidates
+
 - https://www.openml.org/d/1169
 - https://www.openml.org/d/1590
 - https://www.openml.org/d/1596

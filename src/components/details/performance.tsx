@@ -73,6 +73,12 @@ export class PerformanceComponent extends React.Component<PerformanceComponentPr
                                           value={`${prettyPrint(model.candidate.runtime.training_time)} sec`}/>
                                 <KeyValue key_={'Prediction Duration'}
                                           value={`${prettyPrint(data.duration)} sec`}/>
+
+                                <hr/>
+
+                                <h5>Information</h5>
+                                <KeyValue key_={'Status'} value={model.candidate.status}/>
+                                <KeyValue key_={'Budget'} value={model.candidate.budget}/>
                             </div>
 
                             <div style={{flexGrow: 1, margin: "0 10px", flexBasis: "40%"}}>

@@ -1,7 +1,7 @@
 import React from "react";
 import {ReactWidget} from "@jupyterlab/apputils";
 import {IRenderMime} from "@jupyterlab/rendermime-interfaces";
-import {CandidateId, Runhistory} from "./model";
+import {CandidateId, RunHistory} from "./model";
 import {Colors, JupyterContext} from "./util";
 import {CandidateTable} from "./components/candidate_table";
 import {Jupyter} from "./jupyter";
@@ -24,7 +24,7 @@ const CLASS_NAME = 'mimerenderer-xautoml';
 export class JupyterWidget extends ReactWidget implements IRenderMime.IRenderer {
     private readonly _mimeType: string;
     private readonly jupyter: Jupyter;
-    private runhistory: Runhistory = undefined;
+    private runHistory: RunHistory = undefined;
 
     constructor(options: IRenderMime.IRendererOptions, jupyter: Jupyter) {
         super();
@@ -36,9 +36,9 @@ export class JupyterWidget extends ReactWidget implements IRenderMime.IRenderer 
 
     renderModel(model: IRenderMime.IMimeModel): Promise<void> {
         try {
-            this.runhistory = Runhistory.fromJson(model.data[this._mimeType] as unknown as Runhistory);
+            this.runHistory = RunHistory.fromJson(model.data[this._mimeType] as unknown as RunHistory);
         } catch (e) {
-            console.error('Failed to parse runhistory', e)
+            console.error('Failed to parse runHistory', e)
         }
 
         // Trigger call of render().
@@ -47,14 +47,14 @@ export class JupyterWidget extends ReactWidget implements IRenderMime.IRenderer 
     }
 
     protected render() {
-        if (!this.runhistory)
+        if (!this.runHistory)
             return <p>Error loading data...</p>
-        return <ReactRoot runhistory={this.runhistory} jupyter={this.jupyter}/>
+        return <ReactRoot runHistory={this.runHistory} jupyter={this.jupyter}/>
     }
 }
 
 interface ReactRootProps {
-    runhistory: Runhistory;
+    runHistory: RunHistory;
     jupyter: Jupyter;
 }
 
@@ -116,7 +116,7 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
     }
 
     render() {
-        const {runhistory, jupyter} = this.props
+        const {runHistory, jupyter} = this.props
         const {selectedCandidates, showCandidate, mounted, openTab, hideUnselected} = this.state
 
         class DivInTabs extends React.Component<any> {
@@ -136,16 +136,16 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
             )
         }
 
-        if (!runhistory) {
+        if (!runHistory) {
             return <p>Error loading data...</p>
         }
         return (
             <JupyterContext.Provider value={jupyter}>
                 <div style={{display: 'flex'}}>
                     <div style={{flexGrow: 0, flexShrink: 0, flexBasis: '300px', marginRight: '20px'}}>
-                        <GeneralInformation structures={runhistory.structures}
-                                            meta={runhistory.meta}
-                                            candidateMap={runhistory.candidateMap}
+                        <GeneralInformation structures={runHistory.structures}
+                                            meta={runHistory.meta}
+                                            candidateMap={runHistory.candidateMap}
                                             selectedCandidates={selectedCandidates}
                                             onCandidateSelection={this.onCandidateSelection}/>
                     </div>
@@ -161,7 +161,7 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
 
                                     <DivInTabs style={{marginLeft: 'auto', cursor: 'default'}}>
                                         <span className={'MuiTab-wrapper'}>
-                                            Selected Candidates: {selectedCandidates.size} / {runhistory.meta.n_configs}
+                                            Selected Candidates: {selectedCandidates.size} / {runHistory.meta.n_configs}
                                         </span>
                                     </DivInTabs>
                                     <DivInTabs>
@@ -175,18 +175,18 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
                             </Box>
 
                             <TabPanel value={'1'}>
-                                <CandidateTable structures={runhistory.structures}
+                                <CandidateTable structures={runHistory.structures}
                                                 selectedCandidates={selectedCandidates}
                                                 hideUnselectedCandidates={hideUnselected}
-                                                meta={runhistory.meta}
-                                                explanations={runhistory.explanations}
+                                                meta={runHistory.meta}
+                                                explanations={runHistory.explanations}
                                                 showCandidate={showCandidate}
                                                 onCandidateSelection={this.onCandidateSelection}/>
                             </TabPanel>
                             <TabPanel value={'2'}>
-                                <SearchSpace structures={runhistory.structures}
-                                             meta={runhistory.meta}
-                                             explanations={runhistory.explanations}
+                                <SearchSpace structures={runHistory.structures}
+                                             meta={runHistory.meta}
+                                             explanations={runHistory.explanations}
                                              selectedCandidates={selectedCandidates}
                                              hideUnselectedCandidates={hideUnselected}
                                              onCandidateSelection={this.onCandidateSelection}/>

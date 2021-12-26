@@ -26,8 +26,11 @@ export default class MetaInformationTable extends React.Component<MetaInformatio
                               help={'View the most important settings and statistics for this optimization run.'}>
                     <h4>Optimization Overview</h4>
                     <>
-                        <KeyValue key_={'Data Set'} value={`Task ${meta.openml_task} on Fold ${meta.openml_fold}`}
-                                  href={`https://www.openml.org/t/${meta.openml_task}`}/>
+                        <KeyValue key_={'Framework'} value={meta.framework}/>
+                        {meta.openml_task !== undefined && meta.openml_fold !== undefined &&
+                            <KeyValue key_={'Data Set'} value={`Task ${meta.openml_task} on Fold ${meta.openml_fold}`}
+                                      href={`https://www.openml.org/t/${meta.openml_task}`}/>
+                        }
                         <KeyValue key_={'Start Time'} value={start}/>
                         <KeyValue key_={'End Time'} value={end}/>
                         <KeyValue key_={'Metric'} value={meta.metric}/>
