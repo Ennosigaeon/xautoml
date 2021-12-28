@@ -10,7 +10,7 @@ import {
     OutputDescriptionData,
     PerformanceData,
     RocCurveData
-} from "./handler";
+} from "./dao";
 import {INotebookTracker, Notebook, NotebookActions} from "@jupyterlab/notebook";
 import {TagTool} from "@jupyterlab/celltags";
 import {KernelMessage} from "@jupyterlab/services";
@@ -117,14 +117,14 @@ export class Jupyter {
     requestOutputComplete(cid: CandidateId): Promise<OutputDescriptionData> {
         return this.memExecuteCode<OutputDescriptionData>(`XAutoMLManager.get_active().output_complete('${cid}')`)
             .then(data => {
-                return {data: new Map<string, string>(Object.entries(data.data)), downsampled: data.downsampled}
+                return new Map<string, string>(Object.entries(data))
             })
     }
 
     requestOutputDescription(cid: CandidateId): Promise<OutputDescriptionData> {
         return this.memExecuteCode<OutputDescriptionData>(`XAutoMLManager.get_active().output_description('${cid}')`)
             .then(data => {
-                return {data: new Map<string, string>(Object.entries(data.data)), downsampled: data.downsampled}
+                return new Map<string, string>(Object.entries(data))
             })
     }
 
@@ -156,8 +156,7 @@ export class Jupyter {
                 data: new Map<string, number>(
                     Object.entries(data.data).map(([key, value]) => [key, value['0']])
                 ),
-                additional_features: data.additional_features,
-                downsampled: data.downsampled
+                additional_features: data.additional_features
             }
         })
     }

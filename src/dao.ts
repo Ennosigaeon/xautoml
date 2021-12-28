@@ -1,7 +1,6 @@
 import {URLExt} from '@jupyterlab/coreutils';
 
 import {ServerConnection} from '@jupyterlab/services';
-import memoizee from "memoizee";
 
 /**
  * Call the API extension
@@ -72,7 +71,6 @@ export interface DecisionTreeResult {
     root: DecisionTreeNode,
     max_leaf_nodes: number,
     additional_features: string[],
-    downsampled: boolean
 }
 
 export type LocalExplanation = Array<[string, number]>
@@ -80,13 +78,9 @@ export type LocalExplanation = Array<[string, number]>
 export interface FeatureImportance {
     data: Map<string, number>,
     additional_features: string[],
-    downsampled: boolean
 }
 
-export interface OutputDescriptionData {
-    data: Map<string, string>
-    downsampled: boolean
-}
+export type OutputDescriptionData = Map<string, string>
 
 export interface PerformanceData {
     duration: number

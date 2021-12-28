@@ -1,5 +1,5 @@
 import React from "react";
-import {Label, LimeResult} from "../../handler";
+import {Label, LimeResult} from "../../dao";
 import {Colors, JupyterContext} from "../../util";
 import {LoadingIndicator} from "../../util/loading";
 import {DetailsModel} from "./model";
@@ -153,7 +153,7 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
                     }
 
                     {data?.expl.size > 0 && <div style={{minWidth: "350px"}}>
-                        <CommonWarnings additionalFeatures={data.additional_features.length > 0} downsampled={false}/>
+                        <CommonWarnings additionalFeatures={data.additional_features.length > 0}/>
                         <CollapseComp showInitial={true}>
                             <h5>Predicted Class Probabilities</h5>
                             <>

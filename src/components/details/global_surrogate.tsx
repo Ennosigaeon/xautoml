@@ -1,6 +1,6 @@
 import React from "react";
 import {DetailsModel} from "./model";
-import {DecisionTreeNode, DecisionTreeResult} from "../../handler";
+import {DecisionTreeNode, DecisionTreeResult} from "../../dao";
 import {LoadingIndicator} from "../../util/loading";
 import {GraphEdge, GraphNode, HierarchicalTree} from "../tree_structure";
 import Slider from "rc-slider";
@@ -162,8 +162,7 @@ ${ID}_dt
                         </div>
                         {loading ? <LoadingIndicator loading={loading}/> :
                             <>
-                                <CommonWarnings additionalFeatures={data.additional_features.length > 0}
-                                                downsampled={data.downsampled}/>
+                                <CommonWarnings additionalFeatures={data.additional_features.length > 0}/>
                                 <HierarchicalTree nodeHeight={GlobalSurrogateComponent.NODE_HEIGHT}
                                                   nodeWidth={GlobalSurrogateComponent.NODE_WIDTH}
                                                   data={data.root}

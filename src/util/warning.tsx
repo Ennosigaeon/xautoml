@@ -27,13 +27,12 @@ export class WarningIndicator extends React.PureComponent<WarningIndicatorProps>
 
 interface CommonWarningsProps {
     additionalFeatures: boolean
-    downsampled: boolean
 }
 
 export class CommonWarnings extends React.PureComponent<CommonWarningsProps> {
 
     render() {
-        const {additionalFeatures, downsampled} = this.props
+        const {additionalFeatures} = this.props
 
         const warnings = []
 
@@ -41,8 +40,6 @@ export class CommonWarnings extends React.PureComponent<CommonWarningsProps> {
             warnings.push('You have selected a component inside either a FeatureUnion or ColumnTransformer. ' +
                 'In order to still have a functional pipeline, the output of the corresponding sibling components has to be passed to all subsequent components. ' +
                 'Additional features are displayed in lighter colors.')
-        if (downsampled)
-            warnings.push('To increase the performance, the data set has been downsampled to 5000 samples.')
 
         return (
             <>

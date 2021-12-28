@@ -1,5 +1,5 @@
 import React from "react";
-import {ConfigSimilarityResponse} from "../../handler";
+import {ConfigSimilarityResponse} from "../../dao";
 import {
     CartesianGrid,
     Cell,

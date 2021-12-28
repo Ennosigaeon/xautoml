@@ -5,7 +5,7 @@ import {JupyterContext, prettyPrint} from "../../util";
 import {ConfusionMatrix} from "./confusion_matrix";
 import {RocCurve} from "../general/roc_curve";
 import {Candidate, CandidateId, MetaInformation} from "../../model";
-import {PerformanceData} from "../../handler";
+import {PerformanceData} from "../../dao";
 import {ErrorIndicator} from "../../util/error";
 import {LoadingIndicator} from "../../util/loading";
 

@@ -143,8 +143,6 @@ def as_json(func):
     return wrapper
 
 
-# TODO downsampling
-
 class XAutoML:
     MAX_SAMPLES = 5000
 
@@ -156,6 +154,10 @@ class XAutoML:
             idx = np.random.choice(X.shape[0], size=n_samples, replace=False)
             X = X.loc[idx, :].reset_index(drop=True)
             y = y.loc[idx].reset_index(drop=True)
+            warnings.warn(
+                'The data set exceeds the maximum number of samples with {}. Selecting {} random samples...'.format(
+                    X.shape, n_samples)
+            )
         self.X: pd.DataFrame = X
         self.y: pd.Series = y
 
@@ -187,7 +189,7 @@ class XAutoML:
     def _calculate_output(self, cid: CandidateId, method: str):
         X, y, pipeline = self._load_model(cid)
         steps = self._get_intermediate_output(X, y, pipeline, method=method)
-        return {'data': steps, 'downsampled': False}
+        return steps
 
     def _get_equivalent_configs(self,
                                 structure: CandidateStructure,
@@ -245,7 +247,7 @@ class XAutoML:
             pipeline, X, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X, y)
             details = ModelDetails()
             res = details.calculate_feature_importance(X, y, pipeline)
-        return {'data': res.to_dict(), 'additional_features': additional_features, 'downsampled': False}
+        return {'data': res.to_dict(), 'additional_features': additional_features}
 
     @as_json
     def fanova(self, sid: CandidateId, step: str):

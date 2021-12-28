@@ -1,4 +1,4 @@
-import {ConfusionMatrixData} from "../../handler";
+import {ConfusionMatrixData} from "../../dao";
 import React from "react";
 import {Table, TableBody, TableCell, TableRow} from "@material-ui/core";
 import {prettyPrint} from "../../util";

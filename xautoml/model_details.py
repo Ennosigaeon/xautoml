@@ -42,15 +42,14 @@ class DecisionTreeResult:
     n_leaves: int
     max_leaf_nodes: int
 
-    def as_dict(self, additional_features: list[str], downsampled: bool):
+    def as_dict(self, additional_features: list[str]):
         return {
             'root': self.root.as_dict(),
             'fidelity': float(self.fidelity),
             'n_pred': int(self.n_pred),
             'n_leaves': int(self.n_leaves),
             'max_leaf_nodes': int(self.max_leaf_nodes),
-            'additional_features': additional_features,
-            'downsampled': downsampled
+            'additional_features': additional_features
         }
 
 

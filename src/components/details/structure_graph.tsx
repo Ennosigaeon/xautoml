@@ -2,7 +2,7 @@ import React from "react";
 import {Candidate, Config, ConfigValue, Pipeline, PipelineStep, Structure} from "../../model";
 import {Components, JupyterContext, prettyPrint} from "../../util";
 import {Table, TableBody, TableCell, TableRow, Tooltip, Typography} from "@material-ui/core";
-import {OutputDescriptionData} from "../../handler";
+import {OutputDescriptionData} from "../../dao";
 import {LoadingIndicator} from "../../util/loading";
 import {ErrorIndicator} from "../../util/error";
 import {GraphEdge, GraphNode, HierarchicalTree} from "../tree_structure";
@@ -141,7 +141,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
 
     constructor(props: StructureGraphProps) {
         super(props);
-        this.state = {loading: false, outputs: {data: new Map<string, string>(), downsampled: false}, error: undefined}
+        this.state = {loading: false, outputs: new Map<string, string>(), error: undefined}
 
         this.fetchOutputs = this.fetchOutputs.bind(this)
         this.renderNodes = this.renderNodes.bind(this)
@@ -152,7 +152,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
         if (this.state.loading)
             // Loading already in progress
             return
-        if (this.state.outputs.data.size > 0)
+        if (this.state.outputs.size > 0)
             // Outputs already cached
             return
 
@@ -212,7 +212,7 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
                     <SingleComponent step={node.data}
                                      error={error}
                                      loading={loading}
-                                     output={outputs.data.get(node.data.id)}
+                                     output={outputs.get(node.data.id)}
                                      onHover={this.fetchOutputs}/>
                 </GraphNode>
             )

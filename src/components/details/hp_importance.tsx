@@ -1,5 +1,5 @@
 import React from "react";
-import {ContinuousHPImportance, HPImportance, HPImportanceDetails} from "../../handler";
+import {ContinuousHPImportance, HPImportance, HPImportanceDetails} from "../../dao";
 
 
 import * as d3 from 'd3'

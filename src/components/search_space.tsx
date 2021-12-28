@@ -5,7 +5,7 @@ import {ParallelCoordinates} from "./pc/parallel_corrdinates";
 import {BO, CandidateId, ConfigValue, Explanations, MetaInformation, Structure} from "../model";
 import Slider from "rc-slider";
 import {ConfigSimilarity} from "./search_space/config_similarity";
-import {ConfigSimilarityResponse} from "../handler";
+import {ConfigSimilarityResponse} from "../dao";
 import {SamplingHistory} from "./search_space/sampling_history";
 import * as d3 from "d3";
 import {HyperparameterHistory} from "./search_space/model";

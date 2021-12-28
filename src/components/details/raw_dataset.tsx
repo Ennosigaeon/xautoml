@@ -1,5 +1,5 @@
 import React from "react";
-import {OutputDescriptionData} from "../../handler";
+import {OutputDescriptionData} from "../../dao";
 import {LoadingIndicator} from "../../util/loading";
 import {DetailsModel} from "./model";
 import {TwoColumnLayout} from "../../util/layout";
@@ -7,7 +7,6 @@ import {JupyterButton} from "../../util/jupyter-button";
 import {JupyterContext} from "../../util";
 import {ErrorIndicator} from "../../util/error";
 import {ID} from "../../jupyter";
-import {CommonWarnings} from "../../util/warning";
 
 
 interface RawDatasetProps {
@@ -37,7 +36,7 @@ export class RawDataset extends React.Component<RawDatasetProps, RawDatasetState
         super(props);
         this.state = {
             loadingDf: false,
-            outputs: {data: new Map<string, string>(), downsampled: false},
+            outputs: new Map<string, string>(),
             error: undefined
         }
 
@@ -72,7 +71,7 @@ export class RawDataset extends React.Component<RawDatasetProps, RawDatasetState
             // Loading already in progress
             return
         }
-        if (this.state.outputs.data.size == 0) {
+        if (this.state.outputs.size == 0) {
             const {candidate} = this.props.model
 
             // Outputs not cached yet
@@ -117,10 +116,10 @@ ${ID}_X
         const {component, algorithm} = this.props.model
         const {loadingDf, outputs, error} = this.state
 
-        const outputRender = outputs.data.has(component) ?
+        const outputRender = outputs.has(component) ?
             <div style={{overflowX: 'auto'}}>
                 <div className={'jp-RenderedHTMLCommon raw-dataset'} ref={this.dfTableRef}
-                     dangerouslySetInnerHTML={{__html: outputs.data.get(component)}}/>
+                     dangerouslySetInnerHTML={{__html: outputs.get(component)}}/>
             </div> :
             <div>Missing</div>
 
@@ -128,14 +127,13 @@ ${ID}_X
             <>
                 <TwoColumnLayout>
                     <h4>Output of <i>{algorithm} ({component})</i></h4>
-                    {(!loadingDf && outputs.data.has(component)) &&
+                    {(!loadingDf && outputs.has(component)) &&
                         <JupyterButton style={{marginTop: 0, float: 'right'}} onClick={this.handleLoadDataframe}/>
                     }
                 </TwoColumnLayout>
                 <ErrorIndicator error={error}/>
                 {!error &&
                     <>
-                        <CommonWarnings additionalFeatures={false} downsampled={outputs.downsampled}/>
                         <LoadingIndicator loading={loadingDf}/>
                         {!loadingDf && outputRender}
                     </>}
