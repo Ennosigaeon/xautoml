@@ -101,6 +101,8 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
             // Jupyter renders all components before output containers are rendered.
             // Delay rendering to get the container width.
             window.setTimeout(() => this.setState({mounted: true}), 100)
+
+        this.props.jupyter.executeCode('from xautoml._helper import XAutoMLManager')
     }
 
     componentWillUnmount() {

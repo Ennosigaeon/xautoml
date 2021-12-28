@@ -3,14 +3,15 @@ from copy import deepcopy
 from dataclasses import dataclass, asdict
 from typing import Optional, Any
 
+import dswizard.components.util as component_util
 import numpy as np
 import pandas as pd
 from ConfigSpace import ConfigurationSpace, Configuration
 from ConfigSpace.read_and_write import json as config_json
 from IPython.display import JSON
 from sklearn.pipeline import Pipeline
-import dswizard.components.util as component_util
 
+from xautoml._helper import XAutoMLManager
 from xautoml.config_similarity import ConfigSimilarity
 from xautoml.hp_importance import HPImportance
 from xautoml.model_details import ModelDetails, DecisionTreeResult, LimeResult
@@ -157,6 +158,8 @@ class XAutoML:
             y = y.loc[idx].reset_index(drop=True)
         self.X: pd.DataFrame = X
         self.y: pd.Series = y
+
+        XAutoMLManager.open(self)
 
     # Helper Methods
 

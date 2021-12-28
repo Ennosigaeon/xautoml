@@ -154,7 +154,7 @@ class CandidateTableRow extends React.Component<CandidateTableRowProps, Candidat
 
     private openCandidateInJupyter(e: React.MouseEvent) {
         this.context.createCell(`
-${ID}_X, ${ID}_y, ${ID}_pipeline = xautoml.get_pipeline('${this.props.candidate.candidate[1].id}')
+${ID}_X, ${ID}_y, ${ID}_pipeline = XAutoMLManager.get_active().get_pipeline('${this.props.candidate.candidate[1].id}')
 ${ID}_pipeline
         `.trim())
         e.stopPropagation()

@@ -37,8 +37,8 @@ def get_168746() -> XAutoML:
 
     structure = raw.data[(0, 0, None)]
     structure.results[0].model_file = 'res/168746/models_0-0-0.pkl'
-    structure.results[6].model_file = 'res/168746/models_0-0-0.pkl'
-    structure.results[103].model_file = 'res/168746/models_0-0-0.pkl'
+    structure.results[6].model_file = 'res/168746/models_0-0-6.pkl'
+    structure.results[103].model_file = 'res/168746/models_0-0-103.pkl'
 
     rh = import_dswizard(raw)
     X, y = _load_data('res/168746/dataset.pkl')

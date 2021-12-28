@@ -116,7 +116,7 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
         this.context.createCell(`
 from xautoml.util import pipeline_utils
 
-${ID}_X, ${ID}_y, ${ID}_pipeline = xautoml.get_sub_pipeline('${candidate.id}', '${component}')
+${ID}_X, ${ID}_y, ${ID}_pipeline = XAutoMLManager.get_active().get_sub_pipeline('${candidate.id}', '${component}')
 
 ${ID}_dt = pipeline_utils.fit_decision_tree(${ID}_X, ${ID}_pipeline.predict(${ID}_X), max_leaf_nodes=${maxLeafNodes})
 ${ID}_dt

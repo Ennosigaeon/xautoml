@@ -111,25 +111,25 @@ export class Jupyter {
     }
 
     requestPerformanceData(cid: CandidateId): Promise<PerformanceData> {
-        return this.memExecuteCode<PerformanceData>(`xautoml.performance_data('${cid}')`)
+        return this.memExecuteCode<PerformanceData>(`XAutoMLManager.get_active().performance_data('${cid}')`)
     }
 
     requestOutputComplete(cid: CandidateId): Promise<OutputDescriptionData> {
-        return this.memExecuteCode<OutputDescriptionData>(`xautoml.output_complete('${cid}')`)
+        return this.memExecuteCode<OutputDescriptionData>(`XAutoMLManager.get_active().output_complete('${cid}')`)
             .then(data => {
                 return {data: new Map<string, string>(Object.entries(data.data)), downsampled: data.downsampled}
             })
     }
 
     requestOutputDescription(cid: CandidateId): Promise<OutputDescriptionData> {
-        return this.memExecuteCode<OutputDescriptionData>(`xautoml.output_description('${cid}')`)
+        return this.memExecuteCode<OutputDescriptionData>(`XAutoMLManager.get_active().output_description('${cid}')`)
             .then(data => {
                 return {data: new Map<string, string>(Object.entries(data.data)), downsampled: data.downsampled}
             })
     }
 
     requestLimeApproximation(cid: CandidateId, idx: number = 0, step: string = SOURCE): Promise<LimeResult> {
-        return this.memExecuteCode<LimeResult>(`xautoml.lime('${cid}', ${idx}, '${step}')`)
+        return this.memExecuteCode<LimeResult>(`XAutoMLManager.get_active().lime('${cid}', ${idx}, '${step}')`)
             .then(data => {
                 return {
                     idx: data.idx,
@@ -144,13 +144,13 @@ export class Jupyter {
 
     requestGlobalSurrogate(cid: CandidateId, step: string, max_leaf_nodes: number | 'None' = 'None'): Promise<DecisionTreeResult> {
         return this.memExecuteCode<DecisionTreeResult>(
-            `xautoml.decision_tree_surrogate('${cid}', '${step}', ${max_leaf_nodes})`
+            `XAutoMLManager.get_active().decision_tree_surrogate('${cid}', '${step}', ${max_leaf_nodes})`
         )
     }
 
     requestFeatureImportance(cid: CandidateId, step: string = SOURCE): Promise<FeatureImportance> {
         return this.memExecuteCode<FeatureImportance>(
-            `xautoml.feature_importance('${cid}', '${step}')`
+            `XAutoMLManager.get_active().feature_importance('${cid}', '${step}')`
         ).then(data => {
             return {
                 data: new Map<string, number>(
@@ -164,13 +164,13 @@ export class Jupyter {
 
     requestFANOVA(sid: CandidateId, step: string = 'None'): Promise<FANOVAResponse> {
         return this.memExecuteCode<FANOVAResponse>(
-            `xautoml.fanova('${sid}', '${step}')`
+            `XAutoMLManager.get_active().fanova('${sid}', '${step}')`
         )
     }
 
     requestSimulatedSurrogate(sid: CandidateId, timestamp: number): Promise<BO.Explanation> {
         return this.memExecuteCode<Map<string, Map<string, [number, number][]>>>(
-            `xautoml.simulate_surrogate('${sid}', ${timestamp})`
+            `XAutoMLManager.get_active().simulate_surrogate('${sid}', ${timestamp})`
         ).then(data => {
                 // @ts-ignore
                 return BO.Explanation.fromJson({
@@ -185,12 +185,12 @@ export class Jupyter {
     }
 
     requestConfigSimilarity(): Promise<ConfigSimilarityResponse> {
-        return this.memExecuteCode<ConfigSimilarityResponse>(`xautoml.config_similarity()`)
+        return this.memExecuteCode<ConfigSimilarityResponse>(`XAutoMLManager.get_active().config_similarity()`)
     }
 
     requestROCCurve(cid: CandidateId[]): Promise<RocCurveData> {
         const list = cid.join('\', \'')
-        return this.memExecuteCode(`xautoml.roc_curve(['${list}'])`)
+        return this.memExecuteCode(`XAutoMLManager.get_active().roc_curve(['${list}'])`)
             .then(data => new Map<string, LinePoint[]>(Object.entries(data)))
     }
 }
