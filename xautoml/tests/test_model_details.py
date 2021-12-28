@@ -4,10 +4,10 @@ from xautoml.util import pipeline_utils
 
 
 def test_decision_tree():
-    main = get_168746()
-    X, y, pipeline = main.get_pipeline('00:00:06')
+    main = get_7306()
+    X, y, pipeline = main.get_pipeline('00:00:00')
 
-    step = 'data_preprocessing:categorical:ordinal_encoder'
+    step = 'SOURCE'
     pipeline, X, _ = pipeline_utils.get_subpipeline(pipeline, step, X, y)
     details = ModelDetails()
     res = details.calculate_decision_tree(X, pipeline, max_leaf_nodes=None)
@@ -16,7 +16,7 @@ def test_decision_tree():
 
 
 def test_decision_tree_without_max_leaf_nodes():
-    main = get_168746()
+    main = get_7306()
     X, y, pipeline = main.get_pipeline('00:00:00')
 
     step = 'SOURCE'

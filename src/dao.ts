@@ -62,11 +62,12 @@ export interface LimeResult {
 export interface DecisionTreeNode {
     label: string,
     children: DecisionTreeNode[]
+    child_labels: string[]
+    impurity: number
 }
 
 export interface DecisionTreeResult {
     fidelity: number,
-    n_pred: number,
     n_leaves: number,
     root: DecisionTreeNode,
     max_leaf_nodes: number,

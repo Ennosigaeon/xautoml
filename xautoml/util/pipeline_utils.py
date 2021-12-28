@@ -1,5 +1,6 @@
 import math
 from copy import deepcopy
+from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
@@ -169,16 +170,19 @@ class DataFrameImputer(TransformerMixin):
         return X.fillna(self.fill)
 
 
+@dataclass()
 class Node:
-
-    def __init__(self, label: str, children: list['Node']):
-        self.label = label
-        self.children = children
+    label: str
+    impurity: float
+    children: list['Node']
+    child_labels: list[str]
 
     def as_dict(self):
         return {
             'label': self.label,
-            'children': [c.as_dict() for c in self.children]
+            'children': [c.as_dict() for c in self.children],
+            'child_labels': self.child_labels,
+            'impurity': float(self.impurity)
         }
 
 
@@ -186,8 +190,6 @@ def export_tree(ordinal_encoder, decision_tree, cat_features, num_names, max_dep
     check_is_fitted(decision_tree)
     tree_ = decision_tree.tree_
     class_names = decision_tree.classes_
-    num_fmt = "{} <= {}\n"
-    cat_fmt = "{} in [{}]\n"
     truncation_fmt = "{}\n"
     value_fmt = " class: {}\n"
 
@@ -215,6 +217,7 @@ def export_tree(ordinal_encoder, decision_tree, cat_features, num_names, max_dep
             value = tree_.value[node][0]
         else:
             value = tree_.value[node].T[0]
+        impurity = tree_.impurity[node]
         class_name = np.argmax(value)
 
         if (tree_.n_classes[0] != 1 and
@@ -229,23 +232,24 @@ def export_tree(ordinal_encoder, decision_tree, cat_features, num_names, max_dep
                 if name in cat_features:
                     cat_values = ordinal_encoder.categories_[cat_features.index(name)]
                     threshold = int(math.ceil(threshold))
-                    label = cat_fmt.format(name, ', '.join(cat_values[:threshold].tolist()))
+                    child_labels = ['[{}]'.format(', '.join(cat_values[:threshold].tolist())),
+                                    '[{}]'.format(', '.join(cat_values[threshold:].tolist()))]
                 else:
                     threshold = "{1:.{0}f}".format(decimals, threshold)
-                    label = num_fmt.format(name, threshold)
+                    child_labels = ['<= {}'.format(threshold), '> {}'.format(threshold)]
 
-                return Node(label, [
+                return Node(name, impurity, [
                     export_tree_recurse(tree_.children_left[node], depth + 1),
                     export_tree_recurse(tree_.children_right[node], depth + 1)
-                ])
+                ], child_labels)
             else:  # leaf
-                return Node(value_fmt.format(str(class_name)), [])
+                return Node(value_fmt.format(str(class_name)), impurity, [], [])
         else:
             subtree_depth = _compute_depth(tree_, node)
             if subtree_depth == 1:
-                return Node(value_fmt.format(str(class_name)), [])
+                return Node(value_fmt.format(str(class_name)), impurity, [], [])
             else:
-                return Node(truncation_fmt.format('truncated branch of depth %d' % subtree_depth), [])
+                return Node(truncation_fmt.format('truncated branch of depth %d' % subtree_depth), impurity, [], [])
 
     root = export_tree_recurse(0, 1)
     return root

@@ -227,7 +227,7 @@ class XAutoML:
         X, y, pipeline = self._load_model(cid)
 
         if step == pipeline.steps[-1][0] or step == SINK:
-            res = GlobalSurrogateResult([DecisionTreeResult(pipeline_utils.Node('empty', []), 0, 0, 0, 2)], 0)
+            res = GlobalSurrogateResult([DecisionTreeResult(pipeline_utils.Node('empty', 0, [], []), 0, 0, 2)], 0)
             additional_features = False
         else:
             pipeline, X, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X, y)

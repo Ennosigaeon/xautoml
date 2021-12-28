@@ -82,22 +82,27 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
         const {additional_features} = this.state.data
 
         const renderedNodes = root.descendants().map(node =>
-            <GraphNode key={node.data.label}
-                       node={node}
+            <GraphNode node={node}
+                       key={`${node.data.label}-${node.data.impurity}`}
                        className={`global-surrogate_node ${
                            additional_features.filter(a => node.data.label.startsWith(a))
                                .length > 0 ? 'global-surrogate_additional-feature' : ''}`}
                        nodeWidth={GlobalSurrogateComponent.NODE_WIDTH}
                        nodeHeight={GlobalSurrogateComponent.NODE_HEIGHT}>
                 <p title={node.data.label}>{node.data.label}</p>
+                <KeyValue key_={'Impurity'} value={node.data.impurity}/>
             </GraphNode>
         )
-        const renderedEdges = root.links().map(link =>
-            <GraphEdge key={link.source.data.label + '-' + link.target.data.label}
-                       link={link}
-                       label={link.target.data.label === link.source.data.children[0].label}
-                       nodeWidth={GlobalSurrogateComponent.NODE_WIDTH}
-                       nodeHeight={GlobalSurrogateComponent.NODE_HEIGHT}/>
+        const renderedEdges = root.links().map(link => {
+                const edgeLabel = link.source.data.child_labels[
+                    link.source.data.children.map(l => `${l.label}-${l.impurity}`)
+                        .indexOf(`${link.target.data.label}-${link.target.data.impurity}`)
+                    ]
+                return <GraphEdge key={`${link.source.data.label}-${edgeLabel}-${link.target.data.label}`}
+                                  link={link} label={edgeLabel}
+                                  nodeWidth={GlobalSurrogateComponent.NODE_WIDTH}
+                                  nodeHeight={GlobalSurrogateComponent.NODE_HEIGHT}/>
+            }
         )
         return (
             <>

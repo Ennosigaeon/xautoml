@@ -38,7 +38,6 @@ class LimeResult:
 class DecisionTreeResult:
     root: Node
     fidelity: float
-    n_pred: int
     n_leaves: int
     max_leaf_nodes: int
 
@@ -46,7 +45,6 @@ class DecisionTreeResult:
         return {
             'root': self.root.as_dict(),
             'fidelity': float(self.fidelity),
-            'n_pred': int(self.n_pred),
             'n_leaves': int(self.n_leaves),
             'max_leaf_nodes': int(self.max_leaf_nodes),
         }
@@ -160,7 +158,6 @@ class ModelDetails:
         return DecisionTreeResult(
             export_tree(encoder.named_transformers_['cat'], dt, cat_columns(df), num_columns(df)),
             score,
-            dt.tree_.node_count - dt.tree_.n_leaves,
             dt.get_n_leaves(),
             max_leaf_nodes
         )
