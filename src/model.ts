@@ -5,7 +5,7 @@ export type CandidateId = string
 export type ConfigValue = number | string | boolean
 export type Config = Map<string, ConfigValue>
 
-export namespace Config {
+export namespace BO {
     export class ConfigSpace {
         constructor(public readonly conditions: Condition[],
                     public readonly hyperparameters: HyperParameter[]) {
@@ -88,18 +88,39 @@ export namespace Config {
 
     export class Explanation {
 
-        constructor(public readonly performances: Map<string, [number, number][]>) {
+        public readonly candidates: Candidate[]
+
+        constructor(candidates: Config[],
+                    public readonly loss: number[],
+                    public readonly marginalization: Map<string, Map<string, [number, number][]>>,
+                    public readonly selected: number,
+                    public readonly metric: string = 'Expected Improvement') {
+            this.candidates = candidates.map((c, idx) =>
+                new Candidate(idx.toString(), undefined, undefined, loss[idx], undefined, c, undefined)
+            )
         }
 
         get(id: string): [number, number][] | undefined {
-            return this.performances.get(id)
+            const map = this.marginalization.get(id)
+            if (map === undefined || map.size === 0)
+                return undefined
+
+            return map.values().next().value
+        }
+
+        public static fromJson(explanation: Explanation): Explanation {
+            return new Explanation(
+                explanation.candidates.map(c => new Map<string, ConfigValue>(Object.entries(c))),
+                explanation.loss,
+                new Map(Object.entries(explanation.marginalization).map(([key, value]) => [key, new Map(Object.entries(value))])),
+                explanation.selected,
+                explanation.metric
+            )
         }
     }
-
-    export type Explanations = Map<CandidateId, Config.Explanation>
 }
 
-export namespace RF {
+export namespace RL {
     export class StateDetails {
 
         constructor(public readonly failure_message: string,
@@ -126,14 +147,14 @@ export namespace RF {
         }
     }
 
-    export class PolicyExplanations {
+    export class Explanation {
         constructor(public readonly id: string,
                     public readonly label: string,
                     public readonly details: Map<string, StateDetails>,
-                    public readonly children?: PolicyExplanations[]) {
+                    public readonly children?: Explanation[]) {
         }
 
-        static fromJson(graphNode: PolicyExplanations): PolicyExplanations {
+        static fromJson(graphNode: Explanation): Explanation {
             if (Object.keys(graphNode).length === 0)
                 return undefined
 
@@ -141,10 +162,10 @@ export namespace RF {
             Object.entries<StateDetails>(graphNode.details as {})
                 .forEach(k => details.set(k[0], StateDetails.fromJson(k[1])));
 
-            return new PolicyExplanations(graphNode.id,
+            return new Explanation(graphNode.id,
                 graphNode.label,
                 details,
-                graphNode.children?.map(d => PolicyExplanations.fromJson(d)))
+                graphNode.children?.map(d => Explanation.fromJson(d)))
         }
 
         getDetails(key: string): StateDetails {
@@ -159,15 +180,14 @@ export namespace RF {
 }
 
 export class Explanations {
-    constructor(public readonly structures: RF.PolicyExplanations,
-                public readonly configs: Config.Explanations) {
+    constructor(public readonly structures: RL.Explanation,
+                public readonly configs: Map<CandidateId, BO.Explanation>) {
     }
 
-    static fromJson(xai: Explanations) {
-        // TODO load real structure explanations once available
-        const configs = new Map<CandidateId, Config.Explanation>()
-
-        return new Explanations(RF.PolicyExplanations.fromJson(xai.structures), configs)
+    static fromJson(xai: Explanations): Explanations {
+        return new Explanations(RL.Explanation.fromJson(xai.structures),
+            xai.configs !== undefined ? new Map(Object.entries(xai.configs).map(([key, value]) => [key, BO.Explanation.fromJson(value)])) : new Map()
+        )
     }
 }
 
@@ -180,7 +200,14 @@ export class Runtime {
     }
 }
 
-export type ConfigOrigin = 'Default' | 'Initial design' | 'Sobol' | 'Local Search' | 'Random Search (sorted)' | 'Random Search' | 'Hyperopt'
+export type ConfigOrigin =
+    'Default'
+    | 'Initial design'
+    | 'Sobol'
+    | 'Local Search'
+    | 'Random Search (sorted)'
+    | 'Random Search'
+    | 'Hyperopt'
 
 export class Candidate {
 
@@ -310,21 +337,26 @@ export class Structure {
 
     constructor(public readonly cid: CandidateId,
                 public readonly pipeline: Pipeline,
-                public readonly configspace: Config.ConfigSpace,
-                public readonly configs: Candidate[]) {
+                public readonly configspace: BO.ConfigSpace,
+                public readonly configs: Candidate[],
+                public readonly config_explanations: Map<CandidateId, BO.Explanation>) {
     }
 
-    static fromJson(structure: Structure, defaultConfigSpace: Config.ConfigSpace): Structure {
+    static fromJson(structure: Structure, defaultConfigSpace: BO.ConfigSpace): Structure {
         // raw pipeline data is list of tuple and not object
         const pipeline = Pipeline.fromJson(structure.pipeline as any)
         const configs = structure.configs.map(c => Candidate.fromJson(c))
         const configSpace = structure.configspace ?
-            Config.ConfigSpace.fromJson(structure.configspace as any) : defaultConfigSpace
+            BO.ConfigSpace.fromJson(structure.configspace as any) : defaultConfigSpace
+        const config_explanations = structure.config_explanations ? new Map(
+            Object.entries(structure.config_explanations)
+                .map(([key, value]) => [key, BO.Explanation.fromJson(value)])
+        ) : new Map()
 
         if (!configSpace)
             throw new Error(`Neither configspace nor default_configspace provided for structure ${structure.cid}`)
 
-        return new Structure(structure.cid, pipeline, configSpace, configs)
+        return new Structure(structure.cid, pipeline, configSpace, configs, config_explanations)
     }
 }
 
@@ -335,13 +367,13 @@ export class RunHistory {
     constructor(public readonly meta: MetaInformation,
                 public readonly structures: Structure[],
                 public readonly explanations: Explanations,
-                private readonly default_configspace: Config.ConfigSpace) {
+                private readonly default_configspace: BO.ConfigSpace) {
         structures.map(s => s.configs.forEach(c => this.candidateMap.set(c.id, c)))
     }
 
     static fromJson(runhistory: RunHistory): RunHistory {
         const default_configspace = runhistory.default_configspace ?
-            Config.ConfigSpace.fromJson(runhistory.default_configspace as any) : undefined
+            BO.ConfigSpace.fromJson(runhistory.default_configspace as any) : undefined
 
         const structures = runhistory.structures.map(s => Structure.fromJson(s, default_configspace))
         const losses = [].concat(...structures.map(s => s.configs.map(c => c.loss)))

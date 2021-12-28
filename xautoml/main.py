@@ -1,6 +1,7 @@
+import warnings
 from copy import deepcopy
 from dataclasses import dataclass, asdict
-from typing import Optional
+from typing import Optional, Any
 
 import numpy as np
 import pandas as pd
@@ -84,8 +85,25 @@ class CandidateStructure:
 
 
 @dataclass()
+class ConfigExplanation:
+    candidates: dict
+    loss: list[float]
+    marginalization: dict[str, dict[str, list[tuple[float, float]]]]
+
+
+StructureExplanation = Any
+
+
+@dataclass()
 class Explanations:
-    structures: dict
+    structures: dict[CandidateId, StructureExplanation]
+    configs: dict[CandidateId, ConfigExplanation]
+
+    def as_dict(self):
+        return {
+            'structures': self.structures,
+            'configs': {key: asdict(value) for key, value in self.configs.items()}
+        }
 
 
 @dataclass()
@@ -113,7 +131,7 @@ class RunHistory:
             'default_configspace': config_json.write(self.default_configspace)
             if self.default_configspace is not None else None,
             'structures': [s.as_dict() for s in self.structures],
-            'explanations': asdict(self.explanations)
+            'explanations': self.explanations.as_dict()
         }
 
 

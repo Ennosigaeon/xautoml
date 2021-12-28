@@ -50,7 +50,7 @@ export class ConfigOriginComp extends React.Component<ConfigOriginProps, any> {
                                                  structures={structures}
                                                  timestamp={cidToSid(candidate.id)}/>
                 }
-                <SurrogateExplanation meta={meta} structure={structure} candidate={candidate}
+                <SurrogateExplanation structure={structure} candidate={candidate}
                                       explanation={explanations.configs.get(candidate.id)}/>
             </>
         )

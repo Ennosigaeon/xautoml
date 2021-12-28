@@ -1,8 +1,14 @@
-import {CandidateId, Config, ConfigValue} from "../../model";
+import {CandidateId, BO, ConfigValue} from "../../model";
 import {ParCord} from "./util";
 import * as d3 from "d3";
 import {Constants} from "./constants";
 import {prettyPrint} from "../../util";
+
+export interface PerformanceAxis {
+    domain: [number, number],
+    label: string,
+    log: boolean
+}
 
 export class Model {
 
@@ -54,12 +60,12 @@ export class Axis {
         this.choices = choices
     }
 
-    static Numerical(id: string, name: string, domain: Domain, explanations?: Config.Explanation): Axis {
+    static Numerical(id: string, name: string, domain: Domain, explanations?: BO.Explanation): Axis {
         const tokens = name.split(':')
         return new Axis(id, tokens[tokens.length - 1], Type.NUMERICAL, explanations?.get(name), domain)
     }
 
-    static Categorical(id: string, name: string, choices: Array<Choice>, explanations?: Config.Explanation): Axis {
+    static Categorical(id: string, name: string, choices: Array<Choice>, explanations?: BO.Explanation): Axis {
         let name_ = name
         if (choices.length === 1) {
             name_ = prettyPrint(choices[0].label)
@@ -221,7 +227,7 @@ export class Domain {
     asScale(range: [number, number]): d3.ScaleContinuousNumeric<any, any> {
         const domain = [this.max, this.min]
 
-        if (this.log)
+        if (this.log && this.min > 0 && this.max > 0)
             return d3.scaleLog(domain, range)
         else
             return d3.scaleLinear(domain, range)

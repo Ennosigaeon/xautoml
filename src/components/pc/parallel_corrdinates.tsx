@@ -1,7 +1,7 @@
 import * as cpc from "./model";
 import React from "react";
 import * as d3 from "d3";
-import {Candidate, CandidateId, Config, MetaInformation, Structure} from "../../model";
+import {Candidate, CandidateId, BO, Structure} from "../../model";
 import {ParCord} from "./util";
 import {PCChoice} from "./pc_choice";
 import {PCLine} from "./pc_line";
@@ -9,10 +9,10 @@ import {RefableFlexibleSvg} from "../../util/flexible-svg";
 
 
 interface PCProps {
-    meta: MetaInformation
+    perfAxis: cpc.PerformanceAxis
     structures: Structure[]
     candidates?: [Candidate, Structure][]
-    explanation?: Config.Explanation
+    explanation?: BO.Explanation
     selectedCandidates?: Set<CandidateId>
     hideUnselectedCandidates?: boolean
     onCandidateSelection?: (cid: Set<CandidateId>, show?: boolean) => void
@@ -43,7 +43,7 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
 
     static defaultProps = {
         candidates: (undefined as [Candidate, Structure][]),
-        explanation: (undefined as Config.Explanation),
+        explanation: (undefined as BO.Explanation),
         selectedCandidates: new Set<CandidateId>(),
         hideUnselectedCandidates: false,
         onCandidateSelection: () => {
@@ -77,7 +77,7 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
         const candidates: [Candidate, Structure][] = this.props.candidates !== undefined ?
             this.props.candidates : [].concat(...this.props.structures.map(s => s.configs.map(c => [c, s])))
 
-        const model = ParCord.parseRunhistory(this.props.meta, this.props.structures, candidates, this.props.explanation)
+        const model = ParCord.parseRunhistory(this.props.perfAxis, this.props.structures, candidates, this.props.explanation)
         const filter = new Map<cpc.Axis, cpc.Choice | [number, number]>()
 
         return [model, filter]

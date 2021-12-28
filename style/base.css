@@ -403,7 +403,8 @@ text.pc-axis-label {
     font-size: 11px;
 }
 
-.pc-highlighted:hover .pc-tooltip {
+.pc-highlighted:hover .pc-tooltip,
+.pc-selected:hover .pc-tooltip {
     display: initial;
 }
 

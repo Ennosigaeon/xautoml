@@ -102,10 +102,11 @@ class HPImportance:
                 data = HPImportance._get_plot_data(vis, i, resolution=resolution)
                 name, mode, data = data['name'][0], data['mode'], data['data']
 
+                res[name] = {}
                 if mode == 'continuous':
-                    res[name] = [[d['x'], d['y']] for d in data]
+                    res[name]['simulated'] = [[d['x'], d['y']] for d in data]
                 elif mode == 'discrete':
-                    res[name] = [[i, d[0]] for i, d in enumerate(data.values())]
+                    res[name]['simulated'] = [[i, d[0]] for i, d in enumerate(data.values())]
                 else:
                     raise ValueError('Unknown mode {}'.format(mode))
 

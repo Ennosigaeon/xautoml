@@ -15,7 +15,7 @@ import {INotebookTracker, Notebook, NotebookActions} from "@jupyterlab/notebook"
 import {TagTool} from "@jupyterlab/celltags";
 import {KernelMessage} from "@jupyterlab/services";
 import {IError, IExecuteResult, IStream} from '@jupyterlab/nbformat';
-import {CandidateId, Config} from "./model";
+import {CandidateId, BO} from "./model";
 import {Components} from "./util";
 import memoizee from "memoizee";
 import SOURCE = Components.SOURCE;
@@ -168,10 +168,20 @@ export class Jupyter {
         )
     }
 
-    requestSimulatedSurrogate(sid: CandidateId, timestamp: number): Promise<Config.Explanation> {
-        return this.memExecuteCode<Config.Explanation>(
+    requestSimulatedSurrogate(sid: CandidateId, timestamp: number): Promise<BO.Explanation> {
+        return this.memExecuteCode<Map<string, Map<string, [number, number][]>>>(
             `xautoml.simulate_surrogate('${sid}', ${timestamp})`
-        ).then(data => new Config.Explanation(new Map<string, [number, number][]>(Object.entries(data))))
+        ).then(data => {
+                // @ts-ignore
+                return BO.Explanation.fromJson({
+                    candidates: [],
+                    loss: [],
+                    marginalization: data,
+                    selected: undefined,
+                    metric: 'Performance'
+                })
+            }
+        )
     }
 
     requestConfigSimilarity(): Promise<ConfigSimilarityResponse> {

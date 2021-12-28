@@ -1,6 +1,6 @@
 import React from "react";
 import * as d3 from "d3";
-import {CandidateId, Pipeline, RF, Structure} from "../../model";
+import {CandidateId, Pipeline, RL, Structure} from "../../model";
 import 'rc-slider/assets/index.css';
 import {areSetInputsEqual, cidToSid, normalizeComponent, prettyPrint} from "../../util";
 import AddIcon from "@material-ui/icons/Add";
@@ -13,7 +13,7 @@ import {Collapse, IconButton} from "@material-ui/core";
 
 
 interface CollapsibleNode {
-    data?: RF.PolicyExplanations;
+    data?: RL.Explanation;
     children?: this[];
     _children?: this[];
     isExpandable?: boolean;
@@ -147,7 +147,7 @@ class SingleNode extends React.Component<SingleNodeProps, SingleNodeState> {
 }
 
 interface BanditExplanationsProps {
-    explanations: RF.PolicyExplanations;
+    explanations: RL.Explanation;
     structures: Structure[];
 
     selectedCandidates?: Set<CandidateId>;

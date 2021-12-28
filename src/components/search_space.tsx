@@ -2,15 +2,15 @@ import React from "react";
 import {CollapseComp} from "../util/collapse";
 import {BanditExplanationsComponent} from "./search_space/bandit_explanation";
 import {ParallelCoordinates} from "./pc/parallel_corrdinates";
-import {CandidateId, Config, ConfigValue, Explanations, MetaInformation, Structure} from "../model";
+import {BO, CandidateId, ConfigValue, Explanations, MetaInformation, Structure} from "../model";
 import Slider from "rc-slider";
 import {ConfigSimilarity} from "./search_space/config_similarity";
 import {ConfigSimilarityResponse} from "../handler";
 import {SamplingHistory} from "./search_space/sampling_history";
 import * as d3 from "d3";
 import {HyperparameterHistory} from "./search_space/model";
-import CategoricalHyperparameter = Config.CategoricalHyperparameter;
-import NumericalHyperparameter = Config.NumericalHyperparameter;
+import CategoricalHyperparameter = BO.CategoricalHyperparameter;
+import NumericalHyperparameter = BO.NumericalHyperparameter;
 
 interface SearchSpaceProps {
     structures: Structure[],
@@ -137,7 +137,12 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
                     </CollapseComp>}
                 <CollapseComp showInitial={true} help={ParallelCoordinates.HELP}>
                     <h4>Bayesian Optimization</h4>
-                    <ParallelCoordinates structures={structures} meta={meta}
+                    <ParallelCoordinates structures={structures}
+                                         perfAxis={{
+                                             domain: [meta.bestPerformance, meta.worstPerformance],
+                                             log: false,
+                                             label: meta.metric
+                                         }}
                                          hideUnselectedCandidates={hideUnselectedCandidates}
                                          selectedCandidates={selectedCandidates}
                                          onCandidateSelection={onCandidateSelection}

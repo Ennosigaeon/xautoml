@@ -1,14 +1,14 @@
 import * as cpc from "./model";
 import * as d3 from "d3";
-import {Candidate, Config, ConfigValue, MetaInformation, Structure} from "../../model";
+import {BO, Candidate, ConfigValue, Structure} from "../../model";
 
 export namespace ParCord {
 
 
-    import HyperParameter = Config.HyperParameter;
-    import Condition = Config.Condition;
-    import CategoricalHyperparameter = Config.CategoricalHyperparameter;
-    import NumericalHyperparameter = Config.NumericalHyperparameter;
+    import HyperParameter = BO.HyperParameter;
+    import Condition = BO.Condition;
+    import CategoricalHyperparameter = BO.CategoricalHyperparameter;
+    import NumericalHyperparameter = BO.NumericalHyperparameter;
 
     export function guessMinimum(value: number): number {
         const pos = getPositionOfMostSignificantDecimal(value);
@@ -56,10 +56,10 @@ export namespace ParCord {
         return d3.scaleBand(ids, range)
     }
 
-    export function parseRunhistory(meta: MetaInformation,
+    export function parseRunhistory(perfAxis: cpc.PerformanceAxis,
                                     structures: Structure[],
                                     candidates: [Candidate, Structure][],
-                                    explanation: Config.Explanation): cpc.Model {
+                                    explanation: BO.Explanation): cpc.Model {
         function parseHyperparameter(hp: HyperParameter, conditions: Condition[]): cpc.Axis {
             const id = hp.name
             if (hp instanceof NumericalHyperparameter) {
@@ -101,11 +101,10 @@ export namespace ParCord {
                 return cpc.Axis.Categorical(`${idx}`, name, [...steps.values()], explanation)
             })
 
-            const lowerPerf = Math.min(meta.worstPerformance, meta.bestPerformance)
-            const upperPerf = Math.max(meta.worstPerformance, meta.bestPerformance)
-            const padding = (upperPerf - lowerPerf) * 0.05
-            axes.push(cpc.Axis.Numerical('__performance__', meta.metric,
-                new cpc.Domain(lowerPerf - padding, upperPerf + padding, false)))
+            const lowerPerf = Math.min(...perfAxis.domain)
+            const upperPerf = Math.max(...perfAxis.domain)
+            axes.push(cpc.Axis.Numerical('__performance__', perfAxis.label,
+                new cpc.Domain(lowerPerf, upperPerf, perfAxis.log)))
 
             return axes
         }

@@ -1,3 +1,4 @@
+import warnings
 from collections import OrderedDict
 
 import joblib
@@ -5,7 +6,8 @@ from ConfigSpace import ConfigurationSpace
 from ConfigSpace.read_and_write import json as config_json
 from sklearn.pipeline import Pipeline
 
-from xautoml.main import RunHistory, MetaInformation, Explanations, CandidateStructure, Candidate, CandidateId
+from xautoml.main import RunHistory, MetaInformation, Explanations, CandidateStructure, Candidate, CandidateId, \
+    ConfigExplanation
 
 
 def import_dswizard(dswizard: any) -> RunHistory:
@@ -14,8 +16,8 @@ def import_dswizard(dswizard: any) -> RunHistory:
                            tmp['n_structures'], tmp['n_configs'], tmp['incumbent'], tmp['openml_task'],
                            tmp['openml_fold'], tmp['config'])
     default_cs = config_json.read(dswizard.complete_data['default_configspace']) \
-        if dswizard.complete_data['default_configspace'] is not None else None
-    explanations = Explanations(dswizard.complete_data['explanations']['structures'])
+        if 'default_configspace' in dswizard.complete_data and dswizard.complete_data['default_configspace'] is not None \
+        else None
 
     structures = []
     for struct in dswizard.data.values():
@@ -31,9 +33,14 @@ def import_dswizard(dswizard: any) -> RunHistory:
                                          res.config.origin if res.config is not None else None,
                                          pipeline))
             except FileNotFoundError:
-                pass
+                warnings.warn('Model {} does not exist. Skipping it'.format(res.model_file))
         structures.append(CandidateStructure(struct.cid.without_config().external_name,
                                              struct.configspace, struct.pipeline, configs))
+
+    config_explanations = {}
+    for cid, exp in dswizard.complete_data['explanations']['configs'].items():
+        config_explanations[cid] = ConfigExplanation(exp['candidates'], exp['loss'], exp['marginalization'])
+    explanations = Explanations(dswizard.complete_data['explanations']['structures'], config_explanations)
 
     return RunHistory(meta, default_cs, structures, explanations)
 
@@ -182,4 +189,5 @@ def import_auto_sklearn(automl: any):
     meta_information = build_meta_information()
     structures = build_structures()
 
-    return RunHistory(meta_information, automl.automl_.configuration_space, list(structures.values()), Explanations({}))
+    return RunHistory(meta_information, automl.automl_.configuration_space, list(structures.values()),
+                      Explanations({}, {}))
