@@ -162,7 +162,6 @@ class Axis extends React.Component<AxisProps, {}> {
 interface CPCAxisProps {
     axis: cpc.Axis
     parent: cpc.Choice
-    svg: React.RefObject<SVGSVGElement>
 
     onExpand: (choice: cpc.Choice) => void
     onCollapse: (choice: cpc.Choice) => void
@@ -175,6 +174,9 @@ interface CPCAxisState {
 }
 
 export class PCAxis extends React.Component<CPCAxisProps, CPCAxisState> {
+
+    static contextType = cpc.CPCContext;
+    context: React.ContextType<typeof cpc.CPCContext>;
 
     constructor(props: CPCAxisProps) {
         super(props);
@@ -203,11 +205,13 @@ export class PCAxis extends React.Component<CPCAxisProps, CPCAxisState> {
     }
 
     render() {
-        const {axis, onExpand, onCollapse, onHighlight, onClick, svg} = this.props
+        const {axis, onExpand, onCollapse, onHighlight, onClick} = this.props
         const {x, y, width, yScale} = axis.getLayout()
-        const xScale = axis.getLayout().perfEstScale(axis.explanation)
+        const explanation = this.context.model.getExplanations(axis)
 
-        const choices = axis.choices.map(c => <PCChoice choice={c} parent={axis} svg={svg}
+        const xScale = axis.getLayout().perfEstScale(explanation)
+
+        const choices = axis.choices.map(c => <PCChoice choice={c} parent={axis}
                                                         onExpand={onExpand}
                                                         onCollapse={onCollapse}
                                                         onHighlight={onHighlight}
@@ -221,18 +225,18 @@ export class PCAxis extends React.Component<CPCAxisProps, CPCAxisState> {
             <>
                 <g id={`axis-${axis.id}`} className={'pc-axis'} onClick={this.collapse}>
                     <Axis direction={'y'} layout={axis.getLayout()} showTicks={this.isNumerical()} xScale={xScale}/>
-                    {axis.explanation && <>
+                    {(this.context.showExplanations && explanation) && <>
                         <Axis direction={'x'} layout={axis.getLayout()} showTicks={true} xScale={xScale}/>
                         {this.isNumerical() ?
                             <ContinuousPerfEstimate xScale={xScale}
                                                     yScale={(yScale as d3.ScaleContinuousNumeric<number, number>)}
                                                     layout={axis.getLayout()}
-                                                    perfEstimate={axis.explanation}/> :
+                                                    perfEstimate={explanation}/> :
                             <DiscretePerfEstimates xScale={xScale} choices={axis.choices}
-                                                   perfEstimate={axis.explanation}/>}
+                                                   perfEstimate={explanation}/>}
                     </>}
 
-                    {this.isNumerical() && <SVGBrush svg={svg}
+                    {this.isNumerical() && <SVGBrush svg={this.context.svg}
                                                      layout={axis.getLayout()}
                                                      onBrushEnd={this.onBrushEnd}
                     />}

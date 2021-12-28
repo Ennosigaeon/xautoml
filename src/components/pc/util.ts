@@ -56,16 +56,12 @@ export namespace ParCord {
         return d3.scaleBand(ids, range)
     }
 
-    export function parseRunhistory(perfAxis: cpc.PerformanceAxis,
-                                    structures: Structure[],
-                                    candidates: [Candidate, Structure][],
-                                    explanation: BO.Explanation): cpc.Model {
+    export function parseConfigSpace(structures: Structure[], perfAxis: cpc.PerformanceAxis): cpc.Axis[] {
         function parseHyperparameter(hp: HyperParameter, conditions: Condition[]): cpc.Axis {
             const id = hp.name
-            if (hp instanceof NumericalHyperparameter) {
-                const domain = new cpc.Domain(hp.lower, hp.upper, hp.log)
-                return cpc.Axis.Numerical(id, hp.name, domain, explanation)
-            } else {
+            if (hp instanceof NumericalHyperparameter)
+                return cpc.Axis.Numerical(id, hp.name, new cpc.Domain(hp.lower, hp.upper, hp.log))
+            else {
                 const choices = (hp as CategoricalHyperparameter).choices
                     .map(choice => new cpc.Choice(choice as ConfigValue, []))
 
@@ -76,42 +72,40 @@ export namespace ParCord {
                                 .forEach(c => c.axes.push(parseHyperparameter(child, conditions)))
                         )
                 })
-                return cpc.Axis.Categorical(id, hp.name, choices, explanation)
+                return cpc.Axis.Categorical(id, hp.name, choices)
             }
         }
 
-        function parseConfigSpace() {
-            const components: Map<string, cpc.Choice>[] = []
-            structures.forEach(structure => {
-                structure.pipeline.steps.forEach((step, idx) => {
-                    if (components.length === idx)
-                        components.push(new Map<string, cpc.Choice>())
+        const components: Map<string, cpc.Choice>[] = []
+        structures.forEach(structure => {
+            structure.pipeline.steps.forEach((step, idx) => {
+                if (components.length === idx)
+                    components.push(new Map<string, cpc.Choice>())
 
-                    if (!components[idx].has(step.id)) {
-                        const axes = structure.configspace.getHyperparameters(step.id)
-                            .map((hp: HyperParameter) => parseHyperparameter(hp, structure.configspace.conditions))
+                if (!components[idx].has(step.id)) {
+                    const axes = structure.configspace.getHyperparameters(step.id)
+                        .map((hp: HyperParameter) => parseHyperparameter(hp, structure.configspace.conditions))
 
-                        const label = !Number.isNaN(Number.parseInt(step.name)) || !step.name ? step.label : undefined
-                        components[idx].set(step.id, new cpc.Choice(step.name, axes, true, label))
-                    }
-                })
+                    const label = !Number.isNaN(Number.parseInt(step.name)) || !step.name ? step.label : undefined
+                    components[idx].set(step.id, new cpc.Choice(step.name, axes, true, label))
+                }
             })
-            const axes = components.map((steps, idx) => {
-                const name = steps.size === 1 ? steps.keys().next().value : `Component ${idx}`
-                return cpc.Axis.Categorical(`${idx}`, name, [...steps.values()], explanation)
-            })
+        })
+        const axes = components.map((steps, idx) => {
+            const name = steps.size === 1 ? steps.keys().next().value : `Component ${idx}`
+            return cpc.Axis.Categorical(`${idx}`, name, [...steps.values()])
+        })
 
-            const lowerPerf = Math.min(...perfAxis.domain)
-            const upperPerf = Math.max(...perfAxis.domain)
-            axes.push(cpc.Axis.Numerical('__performance__', perfAxis.label,
-                new cpc.Domain(lowerPerf, upperPerf, perfAxis.log)))
+        const lowerPerf = Math.min(...perfAxis.domain)
+        const upperPerf = Math.max(...perfAxis.domain)
+        axes.push(cpc.Axis.Numerical('__performance__', perfAxis.label,
+            new cpc.Domain(lowerPerf, upperPerf, perfAxis.log)))
 
-            return axes
-        }
+        return axes
+    }
 
-        const axes = parseConfigSpace()
-
-        const lines = candidates.map(([candidate, structure]) => {
+    export function parseCandidates(candidates: [Candidate, Structure][], axes: cpc.Axis[]): cpc.Line[] {
+        return candidates.map(([candidate, structure]) => {
             const points = new Array<cpc.LinePoint>()
             structure.pipeline.steps.map((step, idx) => {
                 points.push(new cpc.LinePoint(idx.toString(), step.name))
@@ -129,7 +123,5 @@ export namespace ParCord {
             })
             return new cpc.Line(candidate.id, points)
         })
-
-        return new cpc.Model(axes, lines)
     }
 }

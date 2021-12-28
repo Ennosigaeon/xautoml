@@ -5,7 +5,6 @@ import {fixedPrec} from "../../util";
 import {CandidateId} from "../../model";
 
 interface PCLineProps {
-    model: cpc.Model
     line: cpc.Line
     selected: boolean
     highlight: boolean
@@ -31,6 +30,9 @@ export class PCLine extends React.Component<PCLineProps, PCLineStats> {
         onAlternativeClick: () => {
         }
     }
+
+    static contextType = cpc.CPCContext;
+    context: React.ContextType<typeof cpc.CPCContext>;
 
     constructor(props: PCLineProps) {
         super(props)
@@ -58,7 +60,8 @@ export class PCLine extends React.Component<PCLineProps, PCLineStats> {
     }
 
     private renderPath(): [d3.Path, d3.Path, Array<Tooltip>] {
-        const {line, model} = this.props
+        const {line} = this.props
+        const {model} = this.context
 
         const path = d3.path()
         const missingPath = d3.path()

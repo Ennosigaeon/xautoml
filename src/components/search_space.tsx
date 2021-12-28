@@ -147,6 +147,7 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
                                          selectedCandidates={selectedCandidates}
                                          onCandidateSelection={onCandidateSelection}
                                          onAxisSelection={this.onHyperparameterSelection}
+                                         explanation={explanations.configs.get(this.cids[this.state.timestamp])}
                                          timestamp={this.state.timestamp}/>
                 </CollapseComp>
 

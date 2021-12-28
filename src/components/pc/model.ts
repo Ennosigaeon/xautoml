@@ -3,6 +3,7 @@ import {ParCord} from "./util";
 import * as d3 from "d3";
 import {Constants} from "./constants";
 import {prettyPrint} from "../../util";
+import React from "react";
 
 export interface PerformanceAxis {
     domain: [number, number],
@@ -10,9 +11,19 @@ export interface PerformanceAxis {
     log: boolean
 }
 
+export interface CPCContext {
+    svg: React.RefObject<SVGSVGElement>
+    showExplanations: boolean
+    model: Model
+}
+
+export const CPCContext = React.createContext<CPCContext>(undefined);
+
+
 export class Model {
 
     private axesMap: Map<string, Axis>
+    private explanations_: BO.Explanation
 
     constructor(
         public readonly axes: Array<Axis>,
@@ -23,6 +34,14 @@ export class Model {
 
     getAxis(id: string): Axis {
         return this.axesMap.get(id)
+    }
+
+    set explanations(explanation: BO.Explanation) {
+        this.explanations_ = explanation
+    }
+
+    getExplanations(axis: Axis) {
+        return this.explanations_?.get(axis.name)
     }
 
     private cacheAxes(axes: Array<Axis>) {
@@ -42,9 +61,9 @@ export class Axis {
 
     private constructor(
         public readonly id: string,
+        public readonly name: string,
         public readonly label: string,
         public readonly type: Type,
-        public readonly explanation?: [number, number][],
         domain?: Domain,
         choices?: Array<Choice>) {
         if (this.isNumerical()) {
@@ -60,19 +79,19 @@ export class Axis {
         this.choices = choices
     }
 
-    static Numerical(id: string, name: string, domain: Domain, explanations?: BO.Explanation): Axis {
+    static Numerical(id: string, name: string, domain: Domain): Axis {
         const tokens = name.split(':')
-        return new Axis(id, tokens[tokens.length - 1], Type.NUMERICAL, explanations?.get(name), domain)
+        return new Axis(id, name, tokens[tokens.length - 1], Type.NUMERICAL, domain)
     }
 
-    static Categorical(id: string, name: string, choices: Array<Choice>, explanations?: BO.Explanation): Axis {
+    static Categorical(id: string, name: string, choices: Array<Choice>): Axis {
         let name_ = name
         if (choices.length === 1) {
             name_ = prettyPrint(choices[0].label)
             choices[0].expand()
         }
         const tokens = name_.split(':')
-        return new Axis(id, tokens[tokens.length - 1], Type.CATEGORICAL, explanations?.get(name), undefined, choices)
+        return new Axis(id, name, tokens[tokens.length - 1], Type.CATEGORICAL, undefined, choices)
     }
 
     isNumerical(): boolean {

@@ -6,6 +6,8 @@ import {ParCord} from "./util";
 import {PCChoice} from "./pc_choice";
 import {PCLine} from "./pc_line";
 import {RefableFlexibleSvg} from "../../util/flexible-svg";
+import {Checkbox} from "@material-ui/core";
+import {WarningIndicator} from "../../util/warning";
 
 
 interface PCProps {
@@ -13,6 +15,7 @@ interface PCProps {
     structures: Structure[]
     candidates?: [Candidate, Structure][]
     explanation?: BO.Explanation
+    showExplanations?: boolean
     selectedCandidates?: Set<CandidateId>
     hideUnselectedCandidates?: boolean
     onCandidateSelection?: (cid: Set<CandidateId>, show?: boolean) => void
@@ -26,6 +29,8 @@ interface PCState {
     highlightedLines: Set<string>
     container: React.RefObject<any>
     filter: Map<cpc.Axis, cpc.Choice | [number, number]>
+    showExplanations: boolean
+    showCandidates: boolean
 }
 
 export class ParallelCoordinates extends React.Component<PCProps, PCState> {
@@ -46,6 +51,7 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
         explanation: (undefined as BO.Explanation),
         selectedCandidates: new Set<CandidateId>(),
         hideUnselectedCandidates: false,
+        showExplanations: false,
         onCandidateSelection: () => {
         },
         onAxisSelection: () => {
@@ -61,7 +67,9 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
             model: model,
             filter: filter,
             highlightedLines: this.props.selectedCandidates,
-            container: undefined
+            container: undefined,
+            showCandidates: true,
+            showExplanations: this.props.showExplanations,
         }
 
         this.onCollapse = this.onCollapse.bind(this)
@@ -77,10 +85,11 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
         const candidates: [Candidate, Structure][] = this.props.candidates !== undefined ?
             this.props.candidates : [].concat(...this.props.structures.map(s => s.configs.map(c => [c, s])))
 
-        const model = ParCord.parseRunhistory(this.props.perfAxis, this.props.structures, candidates, this.props.explanation)
+        const axes = ParCord.parseConfigSpace(this.props.structures, this.props.perfAxis)
+        const lines = ParCord.parseCandidates(candidates, axes)
         const filter = new Map<cpc.Axis, cpc.Choice | [number, number]>()
 
-        return [model, filter]
+        return [new cpc.Model(axes, lines), filter]
     }
 
     componentDidUpdate(prevProps: Readonly<PCProps>, prevState: Readonly<PCState>, snapshot?: any) {
@@ -162,23 +171,48 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
         const yScale = d3.scaleBand([root.value.toString()], [0, height / root.getHeightWeight()])
         root.layout([0, width], yScale)
 
+        model.explanations = this.props.explanation
+
         return (
-            <RefableFlexibleSvg height={height} onContainerChange={this.updateContainer} ref={this.svg}>
-                <PCChoice choice={root} parent={undefined}
-                          svg={model.lines.length > 1 ? this.svg : undefined} // Disable brushing when only when line present
-                          onCollapse={this.onCollapse}
-                          onExpand={this.onExpand}
-                          onHighlight={this.highlightLines}
-                          onAxisSelection={this.onAxisSelection}/>
-                {this.state.model.lines
-                    .slice(0, this.props.timestamp + 1)
-                    .filter(line => !this.props.hideUnselectedCandidates || this.props.selectedCandidates.has(line.id))
-                    .map((line, idx) => <PCLine key={line.id} model={model} line={line}
-                                                selected={idx == this.props.timestamp}
-                                                highlight={highlightedLines.has(line.id)}
-                                                onClick={this.onShowCandidate}
-                                                onAlternativeClick={this.onSelectLine}/>)}
-            </RefableFlexibleSvg>
+            <>
+                {this.props.explanation &&
+                    <div style={{float: 'right', height: '53px'}}>
+                        <label className={'MuiFormControlLabel-root'}>
+                            <Checkbox checked={this.state.showExplanations}
+                                      onChange={(_, checked) => this.setState({showExplanations: checked})}/>
+                            <span>Show&nbsp;Surrogate&nbsp;Model</span>
+                        </label>
+                        <label className={'MuiFormControlLabel-root'}>
+                            <Checkbox checked={this.state.showCandidates}
+                                      onChange={(_, checked) => this.setState({showCandidates: checked})}/>
+                            <span>Show&nbsp;Candidates</span>
+                        </label>
+                    </div>
+                }
+                {!this.props.explanation && <WarningIndicator message={'Surrogate model visualization not available'}/>}
+                <RefableFlexibleSvg height={height} onContainerChange={this.updateContainer} ref={this.svg}>
+                    <cpc.CPCContext.Provider value={{
+                        svg: model.lines.length > 1 ? this.svg : undefined, // Disable brushing when only when line present
+                        showExplanations: this.state.showExplanations,
+                        model: this.state.model
+                    }}>
+                        <PCChoice choice={root} parent={undefined}
+                                  onCollapse={this.onCollapse}
+                                  onExpand={this.onExpand}
+                                  onHighlight={this.highlightLines}
+                                  onAxisSelection={this.onAxisSelection}/>
+                        {this.state.showCandidates && this.state.model.lines
+                            .slice(0, this.props.timestamp + 1)
+                            .filter(line => !this.props.hideUnselectedCandidates || this.props.selectedCandidates.has(line.id))
+                            .map((line, idx) => <PCLine key={line.id} line={line}
+                                                        selected={idx == this.props.timestamp}
+                                                        highlight={highlightedLines.has(line.id)}
+                                                        onClick={this.onShowCandidate}
+                                                        onAlternativeClick={this.onSelectLine}/>)}
+                    </cpc.CPCContext.Provider>
+                </RefableFlexibleSvg>
+            </>
+
         )
     }
 }

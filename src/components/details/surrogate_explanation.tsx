@@ -78,6 +78,7 @@ export class SurrogateExplanation extends React.Component<SurrogateExplanationPr
                                              candidates={candidates}
                                              selectedCandidates={selected}
                                              explanation={explanation}
+                                             showExplanations={true}
                                              perfAxis={{
                                                  label: label, domain: [Math.min(...loss), Math.max(...loss)], log: true
                                              }}/>
