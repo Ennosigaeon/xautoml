@@ -70,7 +70,12 @@ export interface DecisionTreeResult {
     n_leaves: number,
     root: DecisionTreeNode,
     max_leaf_nodes: number,
-    additional_features: string[],
+}
+
+export interface GlobalSurrogateResult {
+    candidates: DecisionTreeResult[]
+    best: number
+    additional_features: string[]
 }
 
 export type LocalExplanation = Array<[string, number]>

@@ -14,7 +14,7 @@ from sklearn.pipeline import Pipeline
 from xautoml._helper import XAutoMLManager
 from xautoml.config_similarity import ConfigSimilarity
 from xautoml.hp_importance import HPImportance
-from xautoml.model_details import ModelDetails, DecisionTreeResult, LimeResult
+from xautoml.model_details import ModelDetails, DecisionTreeResult, LimeResult, GlobalSurrogateResult
 from xautoml.output import DESCRIPTION, OutputCalculator, COMPLETE
 from xautoml.roc_auc import RocCurve
 from xautoml.util import pipeline_utils
@@ -227,14 +227,14 @@ class XAutoML:
         X, y, pipeline = self._load_model(cid)
 
         if step == pipeline.steps[-1][0] or step == SINK:
-            res = DecisionTreeResult(pipeline_utils.Node('empty', []), 0, 0, 0, 2)
+            res = GlobalSurrogateResult([DecisionTreeResult(pipeline_utils.Node('empty', []), 0, 0, 0, 2)], 0)
             additional_features = False
         else:
             pipeline, X, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X, y)
             details = ModelDetails()
             res = details.calculate_decision_tree(X, pipeline, max_leaf_nodes=max_leaf_nodes)
 
-        return res.as_dict(additional_features, False)
+        return res.as_dict(additional_features)
 
     @as_json
     def feature_importance(self, cid: CandidateId, step: str):

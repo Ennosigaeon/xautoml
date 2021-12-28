@@ -1,8 +1,8 @@
 import {
     ConfigSimilarityResponse,
-    DecisionTreeResult,
     FANOVAResponse,
     FeatureImportance,
+    GlobalSurrogateResult,
     Label,
     LimeResult,
     LinePoint,
@@ -15,7 +15,7 @@ import {INotebookTracker, Notebook, NotebookActions} from "@jupyterlab/notebook"
 import {TagTool} from "@jupyterlab/celltags";
 import {KernelMessage} from "@jupyterlab/services";
 import {IError, IExecuteResult, IStream} from '@jupyterlab/nbformat';
-import {CandidateId, BO} from "./model";
+import {BO, CandidateId} from "./model";
 import {Components} from "./util";
 import memoizee from "memoizee";
 import SOURCE = Components.SOURCE;
@@ -142,8 +142,8 @@ export class Jupyter {
             })
     }
 
-    requestGlobalSurrogate(cid: CandidateId, step: string, max_leaf_nodes: number | 'None' = 'None'): Promise<DecisionTreeResult> {
-        return this.memExecuteCode<DecisionTreeResult>(
+    requestGlobalSurrogate(cid: CandidateId, step: string, max_leaf_nodes: number | 'None' = 'None'): Promise<GlobalSurrogateResult> {
+        return this.memExecuteCode<GlobalSurrogateResult>(
             `XAutoMLManager.get_active().decision_tree_surrogate('${cid}', '${step}', ${max_leaf_nodes})`
         )
     }

@@ -42,15 +42,24 @@ class DecisionTreeResult:
     n_leaves: int
     max_leaf_nodes: int
 
-    def as_dict(self, additional_features: list[str]):
+    def as_dict(self):
         return {
             'root': self.root.as_dict(),
             'fidelity': float(self.fidelity),
             'n_pred': int(self.n_pred),
             'n_leaves': int(self.n_leaves),
             'max_leaf_nodes': int(self.max_leaf_nodes),
-            'additional_features': additional_features
         }
+
+
+@dataclass()
+class GlobalSurrogateResult:
+    candidates: list[DecisionTreeResult]
+    best: int
+
+    def as_dict(self, additional_features: list[str]):
+        return {'candidates': [c.as_dict() for c in self.candidates], 'best': self.best,
+                'additional_features': additional_features}
 
 
 class ModelDetails:
@@ -109,15 +118,15 @@ class ModelDetails:
         return LimeResult(idx, all_explanations, probabilities, getattr(y[idx], "tolist", lambda: y[idx])())
 
     @staticmethod
-    def calculate_decision_tree(df: pd.DataFrame, model, max_leaf_nodes: int = None) -> DecisionTreeResult:
+    def calculate_decision_tree(df: pd.DataFrame, model, max_leaf_nodes: int = None) -> GlobalSurrogateResult:
         y_pred = model.predict(df)
 
         if max_leaf_nodes is not None:
-            return ModelDetails._fit_single_dt(df, y_pred, max_leaf_nodes)
+            return GlobalSurrogateResult([ModelDetails._fit_single_dt(df, y_pred, max_leaf_nodes)], 0)
         else:
             # Heuristic to select good value for max_leaf_numbers based on
             # https://www.datasciencecentral.com/profiles/blogs/how-to-automatically-determine-the-number-of-clusters-in-your-dat
-            max_leaf_node_candidates = [2, 3, 5, 7, 10, 15, 25]
+            max_leaf_node_candidates = [2, 3, 5, 7, 10, 15, 25, 50, 100]
             strength = -1 * np.ones((len(max_leaf_node_candidates), 3))
             candidates = []
             for idx, candidate in enumerate(max_leaf_node_candidates):
@@ -128,7 +137,7 @@ class ModelDetails:
             strength[1:, 1] = np.diff(strength[:, 0])
             strength[1:, 2] = np.diff(strength[:, 1])
 
-            return candidates[np.argmax(strength[:, 2])]
+            return GlobalSurrogateResult(candidates, int(np.argmax(strength[:, 2])))
 
     @staticmethod
     def _fit_single_dt(df: pd.DataFrame, y_pred: np.ndarray, max_leaf_nodes: int):

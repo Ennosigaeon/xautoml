@@ -1,6 +1,6 @@
 import React from "react";
 import {DetailsModel} from "./model";
-import {DecisionTreeNode, DecisionTreeResult} from "../../dao";
+import {DecisionTreeNode, DecisionTreeResult, GlobalSurrogateResult} from "../../dao";
 import {LoadingIndicator} from "../../util/loading";
 import {GraphEdge, GraphNode, HierarchicalTree} from "../tree_structure";
 import Slider from "rc-slider";
@@ -19,7 +19,8 @@ interface GlobalSurrogateProps {
 
 interface GlobalSurrogateState {
     loading: boolean
-    data: DecisionTreeResult
+    data: GlobalSurrogateResult
+    dt: DecisionTreeResult
     maxLeafNodes: number
     error: Error
 }
@@ -42,7 +43,7 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
 
     constructor(props: GlobalSurrogateProps) {
         super(props);
-        this.state = {loading: true, data: undefined, maxLeafNodes: undefined, error: undefined}
+        this.state = {loading: true, data: undefined, dt: undefined, maxLeafNodes: undefined, error: undefined}
 
         this.onMaxLeavesChange = this.onMaxLeavesChange.bind(this)
         this.exportTree = this.exportTree.bind(this)
@@ -68,7 +69,8 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
 
         promise
             .then(data => {
-                this.setState({data: data, loading: false, maxLeafNodes: data.max_leaf_nodes})
+                const dt = data.candidates[data.best]
+                this.setState({data: data, dt: dt, loading: false, maxLeafNodes: dt.max_leaf_nodes})
             })
             .catch(error => {
                 console.error(`Failed to fetch DecisionTreeResult data.\n${error.name}: ${error.message}`)
@@ -106,7 +108,7 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
     }
 
     private onMaxLeavesChange(idx: number) {
-        this.queryDT(this.ticks[idx])
+        this.setState({dt: this.state.data.candidates[idx]})
     }
 
     private exportTree() {
@@ -124,7 +126,7 @@ ${ID}_dt
     }
 
     render() {
-        const {data, loading, error} = this.state
+        const {data, dt, loading, error} = this.state
 
         const marks: any = {}
         this.ticks.forEach((v, idx) => marks[idx] = v)
@@ -135,24 +137,24 @@ ${ID}_dt
                 {!error && <>
                     {data === undefined && <LoadingIndicator loading={true}/>}
 
-                    {data?.root.children.length === 0 &&
+                    {dt?.root.children.length === 0 &&
                         <p>Decision Tree approximation not available for the actual predictions.</p>
                     }
 
-                    {data?.root.children.length > 0 && <>
+                    {dt?.root.children.length > 0 && <>
                         <div style={{display: 'flex'}}>
                             <div style={{flexGrow: 1}}>
                                 <div style={{
                                     display: "flex", flexDirection: "column", justifyContent: "space-between"
                                 }}>
-                                    <KeyValue key_={'Fidelity'} value={data.fidelity}/>
-                                    <KeyValue key_={'Leave Nodes'} value={data.n_leaves}/>
+                                    <KeyValue key_={'Fidelity'} value={dt.fidelity}/>
+                                    <KeyValue key_={'Leave Nodes'} value={dt.n_leaves}/>
                                 </div>
                             </div>
                             <div style={{padding: '0 10px 1em', flexGrow: 2}}>
                                 <span>Max. Leaf Nodes</span>
                                 <Slider min={0} max={this.ticks.length - 1}
-                                        defaultValue={this.ticks.indexOf(data.max_leaf_nodes)}
+                                        defaultValue={this.ticks.indexOf(dt.max_leaf_nodes)}
                                         step={null} marks={marks}
                                         onAfterChange={this.onMaxLeavesChange}/>
                             </div>
@@ -165,7 +167,8 @@ ${ID}_dt
                                 <CommonWarnings additionalFeatures={data.additional_features.length > 0}/>
                                 <HierarchicalTree nodeHeight={GlobalSurrogateComponent.NODE_HEIGHT}
                                                   nodeWidth={GlobalSurrogateComponent.NODE_WIDTH}
-                                                  data={data.root}
+                                                  data={dt.root}
+                                                  count={dt.max_leaf_nodes} // Force recalculation of tree
                                                   render={this.renderNodes}/>
                             </>
                         }
