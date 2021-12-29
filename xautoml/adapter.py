@@ -99,8 +99,7 @@ def import_auto_sklearn(automl: any):
                 elif name in suffix:
                     return name
                 else:
-                    return name
-                    # return '{}:{}'.format(name, suffix)
+                    return '{}:{}'.format(name, suffix)
 
             def convert_component(component):
                 suffix = component.__class__.__module__.split('.')[-1]
@@ -123,9 +122,6 @@ def import_auto_sklearn(automl: any):
                 if hasattr(component, 'steps'):
                     steps = []
                     for name, s in component.steps:
-                        if isinstance(s, DataPreprocessorChoice):
-                            name = '{}:{}'.format(name, s.choice.__class__.__module__.split('.')[-1])
-
                         s_, suffix = convert_component(s)
                         steps.append((suffix_name(name, suffix), s_))
                     return FlexiblePipeline(steps), None

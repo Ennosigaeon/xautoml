@@ -111,13 +111,13 @@ export interface HPImportanceDetails {
 
 export interface HPImportance {
     hyperparameters: string[]
-    keys: number[][]
+    keys: [string, string][]
     importance: any[]
 }
 
 export interface FANOVAResponse {
     overview: HPImportance,
-    details?: Map<number, Map<number, HPImportanceDetails>>
+    details?: Map<string, Map<string, HPImportanceDetails>>
     error?: string
 }
 

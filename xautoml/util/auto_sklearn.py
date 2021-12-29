@@ -1,6 +1,6 @@
 import pandas as pd
 
-from sklearn.base import TransformerMixin
+from sklearn.base import TransformerMixin, BaseEstimator
 
 
 class AutoSklearnUtils:

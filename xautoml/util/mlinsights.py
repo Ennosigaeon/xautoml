@@ -246,8 +246,7 @@ def get_component(coordinate: Tuple[int], step):
             n, step = step.transformer_list[idx]
             step_name = update_name(n)
         elif AutoSklearnUtils.isChoice(step):
-            if AutoSklearnUtils.isDataPreprocessorChoice(step):
-                step_name = update_name(step.choice.__class__.__module__.split('.')[-1])
+            step_name = update_name(step.choice.__class__.__module__.split('.')[-1])
             step = step.choice
         elif AutoSklearnUtils.isFeatTypeSplit(step):
             n, step, _ = step.column_transformer.transformers_[idx]

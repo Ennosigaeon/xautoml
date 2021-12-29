@@ -24,7 +24,7 @@ import {
 import {ErrorIndicator} from "../../util/error";
 import {LoadingIndicator} from "../../util/loading";
 import {Structure} from "../../model";
-import {Heatbar} from "../../util/recharts";
+import {Heatbar, MinimalisticTooltip} from "../../util/recharts";
 
 
 interface SingleHPProps {
@@ -49,6 +49,9 @@ class SingleHP extends React.Component<SingleHPProps> {
                     <CartesianGrid strokeDasharray="3 3"/>
                     <XAxis dataKey="label" label={{value: data.name[0], dy: 10}}/>
                     <YAxis label={{value: 'Marginal Performance', angle: -90, dx: -40}} domain={['auto', 'auto']}/>
+
+                    <Tooltip content={<MinimalisticTooltip/>}/>
+
                     <Bar dataKey="y" fill={Colors.DEFAULT}/>
                 </BarChart>
             )
@@ -57,7 +60,7 @@ class SingleHP extends React.Component<SingleHPProps> {
                 plot = (
                     <ComposedChart data={(data.data as ContinuousHPImportance)} margin={{left: 30, bottom: 5}}>
                         <CartesianGrid strokeDasharray="3 3"/>
-                        <XAxis dataKey="x" label={{value: data.name[0]}} type={'number'}
+                        <XAxis dataKey="x" label={{value: data.name[0], dy: 10}} type={'number'}
                                domain={['dataMin', 'dataMax']}/>
                         <YAxis label={{value: 'Marginal Performance', angle: -90, dx: -40}} domain={['auto', 'auto']}/>
                         <Area type="monotone" dataKey="area" fill={Colors.DEFAULT} stroke={Colors.DEFAULT}/>
@@ -162,7 +165,7 @@ interface HPImportanceProps {
 
 interface HPImportanceState {
     overview: HPImportance
-    details: Map<number, Map<number, HPImportanceDetails>>
+    details: Map<string, Map<string, HPImportanceDetails>>
     error: Error
     selectedRow: number
 }
@@ -197,7 +200,7 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
 
     private queryHPImportance() {
         const {structure, component} = this.props;
-        this.setState({error: undefined});
+        this.setState({error: undefined, overview: undefined, details: undefined});
 
         this.context.requestFANOVA(structure.cid, component)
             .then(resp => {
@@ -222,9 +225,7 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
         if (selectedRow === undefined)
             return undefined
 
-        const keys = this.state.overview.keys[selectedRow]
-        if (isNaN(keys[1]))
-            keys[1] = keys[0]
+        const keys: [string, string] = this.state.overview.keys[selectedRow]
         // @ts-ignore
         return this.state.details[keys[0]][keys[1]]
     }
@@ -243,31 +244,38 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
         const height = nRows * stepSize
 
         const rows = [...Array(nRows).keys()].map(i => {
-            const activeColumns = overview.keys[i].filter(a => !isNaN(a))
+            const activeColumns = overview.keys[i]
             return (
-                <g key={overview.hyperparameters[i]} onClick={() => this.selectRow(i)} className={'hp-importance_row'}>
+                <g key={`${activeColumns[0]}-${activeColumns[1]}`} onClick={() => this.selectRow(i)} className={'hp-importance_row'}>
                     {selectedRow === i &&
                         <rect x={-1.25 * radius} width={width + radius}
                               y={i * stepSize - 1.25 * radius} height={2.5 * radius}
                               fill={'var(--md-grey-300)'}/>}
 
-                    {[...Array(nColumns).keys()].map(j => (
-                        <circle key={overview.hyperparameters[j]} cx={j * stepSize} cy={i * stepSize} r={radius}
-                                fill={activeColumns.includes(j) ? Colors.SELECTED_FEATURE : Colors.ADDITIONAL_FEATURE}/>
-                    ))}
-                    {d3.pairs<number>(activeColumns).map(([a, b]) => (
-                        <path d={`M ${a * stepSize} ${i * stepSize} H ${b * stepSize}`} stroke={Colors.SELECTED_FEATURE}
-                              strokeWidth={radius / 2}/>
-                    ))}
+                    {[...Array(nColumns).keys()].map(j => {
+                        const name = overview.hyperparameters[j]
+                        return <circle key={name} cx={j * stepSize} cy={i * stepSize} r={radius}
+                                       fill={activeColumns.includes(name) ? Colors.SELECTED_FEATURE : Colors.ADDITIONAL_FEATURE}/>
+                    })}
+                    {d3.pairs<string>(activeColumns)
+                        .map(([a, b]) => [overview.hyperparameters.indexOf(a), overview.hyperparameters.indexOf(b)])
+                        .map(([a, b]) => (
+                            <path d={`M ${a * stepSize} ${i * stepSize} H ${b * stepSize}`}
+                                  stroke={Colors.SELECTED_FEATURE}
+                                  strokeWidth={radius / 2}/>
+                        ))}
                 </g>
             )
         })
 
-        const boldHeaders = selectedRow !== undefined ? this.state.overview.keys[selectedRow] : []
-        const headers = [...Array(nRows).keys()].map(i => (
+        const boldHeaders = selectedRow !== undefined ? overview.keys[selectedRow] : ['', '']
+        const headers = [...Array(nColumns).keys()].map(i => (
             <g transform={`translate(${i * stepSize + (radius / 2)}, ${marginTop - 20})`}>
-                <text transform={'rotate(-50)'} className={boldHeaders.includes(i) ? 'selected-header' : ''}>
-                    {overview.hyperparameters[i]}</text>
+                <text transform={'rotate(-50)'}
+                      className={boldHeaders.includes(overview.hyperparameters[i]) ? 'selected-header' : ''}>
+                    {overview.hyperparameters[i]
+                        .replace('data_preprocessor:feature_type:numerical_transformer:', '')
+                        .replace('data_preprocessor:feature_type:categorical_transformer:', '')}</text>
             </g>))
 
         return (
@@ -306,7 +314,10 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
         const {error, overview, selectedRow} = this.state
 
         const maxLabelLength = overview?.hyperparameters ?
-            Math.max(...overview.hyperparameters.map(d => d.length)) * 6 : 0
+            Math.max(...overview.hyperparameters.map(d => d
+                .replace('data_preprocessor:feature_type:numerical_transformer:', '')
+                .replace('data_preprocessor:feature_type:categorical_transformer:', '')
+                .length)) * 6 : 0
 
         return (
             <>

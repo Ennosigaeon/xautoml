@@ -192,13 +192,15 @@ class XAutoML:
         return steps
 
     def _get_equivalent_configs(self,
-                                structure: CandidateStructure,
+                                structure: Optional[CandidateStructure],
                                 timestamp: float = np.inf) -> tuple[list[Configuration], np.ndarray]:
         configs = []
         loss = []
+        hash_ = structure.hash if structure is not None else hash(str(None))
+
         # join equivalent structures
         for s in self.run_history.structures:
-            if s.hash == structure.hash:
+            if s.hash == hash_:
                 configs += [c.config for c in s.configs if c.runtime['timestamp'] < timestamp]
                 loss += [c.loss for c in s.configs if c.runtime['timestamp'] < timestamp]
         return configs, np.array(loss)
@@ -250,13 +252,24 @@ class XAutoML:
         return {'data': res.to_dict(), 'additional_features': additional_features}
 
     @as_json
-    def fanova(self, sid: CandidateId, step: str):
-        matches = filter(lambda s: s.cid == sid, self.run_history.structures)
-        structure = next(matches)
+    def fanova(self, sid: Optional[CandidateId], step: str):
+        if sid is not None:
+            matches = filter(lambda s: s.cid == sid, self.run_history.structures)
+            structure = next(matches)
+        else:
+            structure = None
 
-        cs = structure.configspace
-        loss = np.array([c.loss for c in structure.configs])
-        configs = [c.config for c in structure.configs]
+        actual_cs = None
+        configs, loss = self._get_equivalent_configs(structure)
+        if structure is not None and structure.configspace is not None:
+            cs = structure.configspace
+        else:
+            cs = self.run_history.default_configspace
+            try:
+                # noinspection PyUnresolvedReferences
+                actual_cs = structure.pipeline.configuration_space
+            except AttributeError:
+                pass
 
         f, X = HPImportance.construct_fanova(cs, configs, loss)
         if X.shape[0] < 2:
@@ -264,8 +277,8 @@ class XAutoML:
                 'error': 'Not enough evaluated configurations to calculate hyperparameter importance.'
             }
 
-        overview = HPImportance.calculate_fanova_overview(f, X, step=step)
-        details = HPImportance.calculate_fanova_details(f, X)
+        overview = HPImportance.calculate_fanova_overview(f, X, step=step, filter_=actual_cs)
+        details = HPImportance.calculate_fanova_details(f, X, hps=overview['keys'])
 
         return {'overview': overview, 'details': details}
 

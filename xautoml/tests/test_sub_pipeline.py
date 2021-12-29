@@ -1,6 +1,6 @@
 from sklearn.utils.validation import check_is_fitted
 
-from xautoml.tests import get_168746, get_autosklearn_categorical
+from xautoml.tests import get_168746, get_autosklearn_categorical, get_autosklearn_hearts
 from xautoml.util.mlinsights import enumerate_pipeline_models
 
 
@@ -37,3 +37,31 @@ def test_subpipeline_autosklearn():
 
         sub_X, y, sub_pipeline = main.get_sub_pipeline('00:00:02', step)
         sub_pipeline.predict(sub_X)
+
+
+def test_subpipeline_autosklearn_hearts():
+    main = get_autosklearn_hearts()
+    for step in ['SOURCE', 'data_preprocessor', 'data_preprocessor:feature_type',
+                 'data_preprocessor:feature_type:numerical_transformer',
+                 'data_preprocessor:feature_type:numerical_transformer:imputation',
+                 'data_preprocessor:feature_type:numerical_transformer:variance_threshold',
+                 'data_preprocessor:feature_type:numerical_transformer:rescaling',
+                 'data_preprocessor:feature_type:categorical_transformer',
+                 'data_preprocessor:feature_type:categorical_transformer:imputation',
+                 'data_preprocessor:feature_type:categorical_transformer:encoding',
+                 'data_preprocessor:feature_type:categorical_transformer:category_shift',
+                 'data_preprocessor:feature_type:categorical_transformer:category_coalescence',
+                 'data_preprocessor:feature_type:categorical_transformer:categorical_encoding',
+                 'balancing', 'feature_preprocessor', 'classifier', 'SINK']:
+        print(step)
+
+        sub_X, y, sub_pipeline = main.get_sub_pipeline('00:06:25', step)
+        sub_pipeline.predict(sub_X)
+
+
+def test_enumerate_autosklearn():
+    main = get_autosklearn_hearts()
+    sub_X, y, sub_pipeline = main.get_pipeline('00:06:25')
+
+    for selected_coordinate, model, subset in enumerate_pipeline_models(sub_pipeline):
+        print(model)

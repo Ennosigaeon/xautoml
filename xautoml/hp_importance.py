@@ -5,7 +5,7 @@ from collections import defaultdict
 import numpy as np
 import pandas as pd
 from ConfigSpace import CategoricalHyperparameter, ConfigurationSpace, Configuration
-from ConfigSpace.hyperparameters import OrdinalHyperparameter, NumericalHyperparameter
+from ConfigSpace.hyperparameters import OrdinalHyperparameter, NumericalHyperparameter, Optional
 from fanova import fANOVA, visualizer
 
 from xautoml.util import io_utils
@@ -15,28 +15,38 @@ from xautoml.util.constants import NUMBER_PRECISION, SOURCE, SINK
 class HPImportance:
 
     @staticmethod
-    def calculate_fanova_overview(f: fANOVA, X: pd.DataFrame, step: str = None, n_head: int = 14):
+    def calculate_fanova_overview(f: fANOVA, X: pd.DataFrame, step: str = None,
+                                  filter_: Optional[ConfigurationSpace] = None, n_head: int = 14):
         res = {}
 
-        keys = list(zip(range(len(X.columns)), range(len(X.columns))))
-        if len(keys) < 20:
-            keys = keys + list(it.combinations(range(len(X.columns)), 2))
+        keys = list(zip(range(len(X.columns)), range(len(X.columns)))) + list(it.combinations(range(len(X.columns)), 2))
 
         for i, j in keys:
+            i_name = f.cs.get_hyperparameter_by_idx(i)
+            j_name = f.cs.get_hyperparameter_by_idx(j)
             try:
-                d = f.quantify_importance((i, j))
+                if (
+                    filter_ is None or (
+                    filter_.get_hyperparameter(i_name) and
+                    filter_.get_hyperparameter(j_name))
+                ):
+                    d = f.quantify_importance((i, j))
+                else:
+                    d = {}  # Never reached, only for typechecker
+            except KeyError:
+                continue
             except RuntimeError:
                 imp = {'individual importance': 0.5, 'individual std': 0, 'total importance': 0.5, 'total std': 0}
                 d = {(i,): imp, (j,): imp, (i, j): imp}
-            res[(i, i)] = {
+            res[(i_name, i_name)] = {
                 'importance': d[(i,)]['individual importance'],
                 'std': d[(i,)]['individual std']
             }
-            res[(j, j)] = {
+            res[(j_name, j_name)] = {
                 'importance': d[(j,)]['individual importance'],
                 'std': d[(j,)]['individual std']
             }
-            res[(i, j)] = {
+            res[(i_name, j_name)] = {
                 'importance': d[(i, j)]['total importance'],
                 'std': d[(i, j)]['total std']
             }
@@ -51,11 +61,10 @@ class HPImportance:
                              (df['upper'] - df['importance']).round(NUMBER_PRECISION)))
 
         df = df.sort_values('importance', ascending=False)
-        df['idx'] = range(0, df.shape[0])
 
         if step is not None and step not in (SOURCE, SINK):
             # Move all rows with hyperparameters from the selected step to top of DataFrame
-            active_columns = [i for i, col in enumerate(X.columns) if step in col.split(':')]
+            active_columns = [col for col in X.columns if col.startswith(step)]
             top_rows = df.index.map(lambda t: t[0] in active_columns or t[1] in active_columns) \
                 .astype(float).to_series().reset_index(drop=True)
             df = df.iloc[top_rows.sort_values(ascending=False, kind='stable').index, :]
@@ -63,33 +72,37 @@ class HPImportance:
         else:
             df = df.head(n_head)
 
+        df['idx'] = range(0, df.shape[0])
+        remaining_hp_names = np.unique(np.array(df.index.to_list()).flatten())
+
         return {
-            'hyperparameters': list(
-                map(lambda n: n.replace('data_preprocessor:feature_type:numerical_transformer:', '').replace(
-                    'data_preprocessor:feature_type:categorical_transformer:', ''),
-                    X.columns.tolist())
-            ),
+            'hyperparameters': remaining_hp_names.tolist(),
             'keys': df.index.tolist(),
             'importance': df[['importance', 'std', 'idx']].to_dict('records'),
         }
 
     @staticmethod
-    def calculate_fanova_details(f: fANOVA, X: pd.DataFrame, resolution: int = 10, keys: list[tuple[int, int]] = None):
+    def calculate_fanova_details(f: fANOVA, X: pd.DataFrame, resolution: int = 10, hps: list[tuple[str, str]] = None):
         with tempfile.TemporaryDirectory() as tmp:
             vis = visualizer.Visualizer(f, f.cs, tmp)
 
-            if keys is None:
-                keys = list(zip(range(len(X.columns)), range(len(X.columns))))
-                if len(keys) < 20:
-                    keys = keys + list(it.combinations(range(len(X.columns)), 2))
+            if hps is None:
+                keys = list(zip(range(len(X.columns)), range(len(X.columns)))) + list(
+                    it.combinations(range(len(X.columns)), 2))
+            else:
+                keys = list(map(lambda t: (f.cs.get_idx_by_hyperparameter_name(t[0]),
+                                           f.cs.get_idx_by_hyperparameter_name(t[1])), hps))
 
             res: dict[int, dict[int, dict]] = defaultdict(dict)
             for i, j in keys:
+                i_name = f.cs.get_hyperparameter_by_idx(i)
+                j_name = f.cs.get_hyperparameter_by_idx(j)
+
                 if i == j:
-                    res[i][j] = HPImportance._get_plot_data(vis, i, resolution=resolution)
+                    res[i_name][j_name] = HPImportance._get_plot_data(vis, i, resolution=resolution)
                 else:
-                    res[i][j] = HPImportance._get_pairwise_plot_data(vis, (i, j), resolution=resolution)
-                    res[j][i] = res[i][j]
+                    res[i_name][j_name] = HPImportance._get_pairwise_plot_data(vis, (i, j), resolution=resolution)
+                    res[j_name][i_name] = res[i_name][j_name]
             return res
 
     @staticmethod
