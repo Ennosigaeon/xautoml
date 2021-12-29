@@ -67,10 +67,9 @@ export class PerformanceComponent extends React.Component<PerformanceComponentPr
                         <div style={{display: "flex"}}>
                             <div style={{flexGrow: 1, flexShrink: 1, flexBasis: "19%"}}>
                                 <h5>Metrics</h5>
-                                <KeyValue key_={`Training ${meta.metric}`}
-                                          value={model.candidate.loss}/>
-                                <KeyValue key_={`Validation ${meta.metric}`} value={data.val_score}/>
-                                <KeyValue key_={`Validation Accuracy`} value={data.accuracy}/>
+                                <KeyValue key_={`Training ${meta.metric}`} value={model.candidate.loss} prec={4}/>
+                                <KeyValue key_={`Validation ${meta.metric}`} value={data.val_score} prec={4}/>
+                                <KeyValue key_={`Validation Accuracy`} value={data.accuracy} prec={4}/>
                                 <KeyValue key_={'Training Duration'}
                                           value={`${prettyPrint(model.candidate.runtime.training_time)} sec`}/>
                                 <KeyValue key_={'Prediction Duration'}
@@ -97,9 +96,9 @@ export class PerformanceComponent extends React.Component<PerformanceComponentPr
                                         {Array.from(data.report.keys()).map(clazz =>
                                             <TableRow key={clazz}>
                                                 <TableCell component="th" scope="col">{clazz}</TableCell>
-                                                <TableCell align="right">{prettyPrint(data.report.get(clazz).precision)}</TableCell>
-                                                <TableCell align="right">{prettyPrint(data.report.get(clazz).recall)}</TableCell>
-                                                <TableCell align="right">{prettyPrint(data.report.get(clazz).support)}</TableCell>
+                                                <TableCell>{prettyPrint(data.report.get(clazz).precision)}</TableCell>
+                                                <TableCell>{prettyPrint(data.report.get(clazz).recall)}</TableCell>
+                                                <TableCell>{prettyPrint(data.report.get(clazz).support)}</TableCell>
                                             </TableRow>
                                         )}
                                     </TableBody>

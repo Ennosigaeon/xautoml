@@ -1,8 +1,22 @@
 from typing import Union
 
+import openml
 import pandas as pd
 from ConfigSpace import ConfigurationSpace, Configuration, CategoricalHyperparameter
 from ConfigSpace.util import impute_inactive_values
+from openml import OpenMLClassificationTask
+
+
+def openml_task(task: int, fold: int):
+    # noinspection PyTypeChecker
+    task: OpenMLClassificationTask = openml.tasks.get_task(task)
+    train_indices, test_indices = task.get_train_test_split_indices(fold=fold)
+
+    X, y = task.get_X_and_y(dataset_format='dataframe')
+    X_test = X.iloc[test_indices, :]
+    y_test = y.iloc[test_indices]
+
+    return X_test, y_test
 
 
 def configs_as_dataframe(cs: ConfigurationSpace,
