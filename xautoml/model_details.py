@@ -6,11 +6,11 @@ import pandas as pd
 from sklearn import metrics
 from sklearn.compose import ColumnTransformer, make_column_selector
 from sklearn.inspection import permutation_importance
-from sklearn.metrics import confusion_matrix, get_scorer
+from sklearn.metrics import confusion_matrix, get_scorer, roc_auc_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OrdinalEncoder
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.utils.multiclass import unique_labels
+from sklearn.utils.multiclass import unique_labels, type_of_target
 
 from xautoml.util.pipeline_utils import export_tree, DataFrameImputer, Node
 
@@ -63,12 +63,19 @@ class GlobalSurrogateResult:
 class ModelDetails:
 
     @staticmethod
-    def calculate_performance_data(X: pd.DataFrame, y: pd.Series, model, scoreing: str):
+    def calculate_performance_data(X: pd.DataFrame, y: pd.Series, model: Pipeline, scoreing: str):
         start = time.time()
         y_pred = model.predict(X)
         duration = time.time() - start
 
-        validation_score = get_scorer(scoreing)(model, X, y)
+        if scoreing == 'roc_auc':
+            y_prob = model.predict_proba(X)
+            y_type = type_of_target(y)
+            if y_type == "binary" and y_prob.ndim > 1:
+                y_prob = y_prob[:, 1]
+            validation_score = roc_auc_score(y, y_prob, average='weighted', multi_class='ovr')
+        else:
+            validation_score = get_scorer(scoreing)(model, X, y)
 
         cm = confusion_matrix(y, y_pred)
         labels = unique_labels(y, y_pred)
@@ -98,14 +105,15 @@ class ModelDetails:
         categorical_names = {idx: encoder.categories_[idx] for idx in categorical_features}
 
         class_names = np.unique(y)
+        feature_names = list(map(lambda c: c[:20], cat_columns + num_columns))  # Truncate names
 
         explainer = lime.lime_tabular.LimeTabularExplainer(X,
-                                                           feature_names=cat_columns + num_columns,
+                                                           feature_names=feature_names,
                                                            discretize_continuous=True,
                                                            categorical_features=categorical_features,
                                                            categorical_names=categorical_names,
                                                            class_names=class_names)
-        explanation = explainer.explain_instance(X[idx], model.predict_proba, num_features=10,
+        explanation = explainer.explain_instance(X[idx], model.predict_proba, num_features=10, num_samples=1000,
                                                  top_labels=np.unique(y).shape[0])
 
         all_explanations = {}
@@ -164,5 +172,6 @@ class ModelDetails:
 
     @staticmethod
     def calculate_feature_importance(X: pd.DataFrame, y: pd.Series, model):
-        result = permutation_importance(model, X, y, scoring='f1_weighted', random_state=0)
-        return pd.DataFrame(np.stack((result.importances_mean, result.importances_std)), columns=X.columns)
+        result = permutation_importance(model, X, y, scoring='f1_weighted', random_state=0, n_jobs=-1)
+        return pd.DataFrame(np.stack((result.importances_mean, result.importances_std)),
+                            columns=X.columns.map(lambda c: c[:20]))

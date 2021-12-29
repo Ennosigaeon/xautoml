@@ -1,6 +1,7 @@
 :root {
     --hover-color: #abe2fb;
     --border-color: #b8b8b8;
+    --select-color: #2196f3;
     --selectable-color: #eee;
     --additional-feature-color: #aaa;
 }
@@ -125,7 +126,7 @@ tr.MuiTableRow-root.MuiTableRow-hover:hover {
 
 .hierarchical-tree_node-content h3 {
     margin: 0;
-    padding: 0;
+    padding: 5px 0;
 }
 
 .hierarchical-tree_link {
@@ -151,7 +152,7 @@ tr.MuiTableRow-root.MuiTableRow-hover:hover {
 .bandit-explanation_node-details {
     display: grid;
     text-align: left;
-    grid-template-columns: 40% 60%;
+    grid-template-columns: 60% 40%;
     font-size: 8px;
 }
 
@@ -243,6 +244,10 @@ div.structure-graph_tooltip {
 
 
 /** Raw Dataset */
+.raw-dataset tr {
+    cursor: pointer;
+}
+
 .raw-dataset tr th:nth-last-child(2),
 .raw-dataset tr td:nth-last-child(2) {
     border-left: var(--jp-border-width) solid var(--jp-border-color1);
@@ -272,6 +277,13 @@ div.structure-graph_tooltip {
     font-size: larger;
 }
 
+.lime-class .recharts-rectangle:hover {
+    cursor: pointer;
+}
+
+.lime-explanation .recharts-rectangle:hover {
+    cursor: default;
+}
 
 /** fANOVA */
 .selected-header {
@@ -361,6 +373,11 @@ text.pc-axis-label {
     cursor: pointer;
 }
 
+text.pc-axis-label:hover {
+    font-weight: bold;
+    fill: var(--select-color);
+}
+
 .pc-line {
     stroke: black;
     stroke-width: 1px;
@@ -439,4 +456,20 @@ text.pc-axis-label {
 /** Surrogate Explanation **/
 .surrogate_explanation .pc-fat-line {
     cursor: default;
+}
+
+
+/** HP Importance **/
+.hp-importance .recharts-rectangle:hover {
+    cursor: pointer;
+}
+
+.hp-importance_row:hover {
+    cursor: pointer;
+}
+
+
+/** Performance Overview **/
+.MuiTab-root.tab-small {
+    min-width: 120px;
 }

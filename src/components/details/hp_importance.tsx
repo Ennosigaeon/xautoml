@@ -24,7 +24,7 @@ import {
 import {ErrorIndicator} from "../../util/error";
 import {LoadingIndicator} from "../../util/loading";
 import {Structure} from "../../model";
-import {Heatbar} from "../../util/heatbar";
+import {Heatbar} from "../../util/recharts";
 
 
 interface SingleHPProps {
@@ -245,11 +245,11 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
         const rows = [...Array(nRows).keys()].map(i => {
             const activeColumns = overview.keys[i].filter(a => !isNaN(a))
             return (
-                <g key={overview.hyperparameters[i]} onClick={() => this.selectRow(i)}>
+                <g key={overview.hyperparameters[i]} onClick={() => this.selectRow(i)} className={'hp-importance_row'}>
                     {selectedRow === i &&
-                    <rect x={-1.25 * radius} width={width + radius}
-                          y={i * stepSize - 1.25 * radius} height={2.5 * radius}
-                          fill={'var(--md-grey-300)'}/>}
+                        <rect x={-1.25 * radius} width={width + radius}
+                              y={i * stepSize - 1.25 * radius} height={2.5 * radius}
+                              fill={'var(--md-grey-300)'}/>}
 
                     {[...Array(nColumns).keys()].map(j => (
                         <circle key={overview.hyperparameters[j]} cx={j * stepSize} cy={i * stepSize} r={radius}
@@ -278,8 +278,8 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
                         <g>{headers}</g>
                     </g>
                 </svg>
-                <BarChart data={overview.importance} layout={'vertical'} width={width}
-                          height={height + marginTop}
+                <BarChart data={overview.importance} layout={'vertical'} className={'hp-importance'}
+                          width={width} height={height + marginTop}
                           margin={{top: marginTop - 32, bottom: 0, left: 5, right: 5}}
                           barSize={2 * radius} barGap={margin} style={{overflow: "visible"}}>
                     <text x={width / 2} y={marginTop - 30} textAnchor={'middle'}>Importance</text>
@@ -311,12 +311,10 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
         return (
             <>
                 <ErrorIndicator error={error}/>
-                {!error &&
-                <div style={{display: 'flex'}}>
+                {!error && <div style={{display: 'flex'}}>
                     <LoadingIndicator loading={overview === undefined}/>
                     {overview?.keys.length === 0 && <p>The selected component does not have any hyperparameters. </p>}
-                    {overview?.keys.length > 0 &&
-                    <>
+                    {overview?.keys.length > 0 && <>
                         {this.renderOverview(maxLabelLength)}
                         <div style={{marginTop: maxLabelLength, marginLeft: '20px', flexGrow: 1, flexShrink: 1}}>
                             {selectedRow === undefined ?

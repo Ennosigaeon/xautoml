@@ -15,7 +15,7 @@ import {Colors, JupyterContext, prettyPrint} from "../../util";
 import * as d3 from "d3";
 import {CandidateId, MetaInformation, Structure} from "../../model";
 import {LoadingIndicator} from "../../util/loading";
-import {Heatbar} from "../../util/heatbar";
+import {Heatbar} from "../../util/recharts";
 import {ErrorIndicator} from "../../util/error";
 
 interface ConfigSimilarityProps {

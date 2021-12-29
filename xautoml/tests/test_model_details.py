@@ -1,5 +1,5 @@
 from xautoml.model_details import ModelDetails
-from xautoml.tests import get_168746, get_31, get_7306, get_autosklearn
+from xautoml.tests import get_168746, get_31, get_7306, get_autosklearn, get_1823
 from xautoml.util import pipeline_utils
 
 
@@ -72,6 +72,16 @@ def test_lime_for_auto_sklearn():
 def test_performance_data():
     main = get_31()
     X, y, pipeline = main.get_pipeline('00:02:02')
+
+    details = ModelDetails()
+    cm = details.calculate_performance_data(X, y, pipeline, 'roc_auc')
+
+    print(cm)
+
+
+def test_performance_multiclass():
+    main = get_1823()
+    X, y, pipeline = main.get_pipeline('00:00:00')
 
     details = ModelDetails()
     cm = details.calculate_performance_data(X, y, pipeline, 'roc_auc')

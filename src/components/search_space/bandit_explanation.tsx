@@ -116,7 +116,7 @@ class SingleNode extends React.Component<SingleNodeProps, SingleNodeState> {
                 <div>
                     <div style={{display: 'flex', alignItems: 'center'}}>
                         <div style={{flexGrow: 1}}>
-                            <h3 style={{lineHeight: '25px'}}>
+                            <h3>
                                 {normalizeComponent(data.label)}: {details.isFailure() ? details.failure_message : prettyPrint(details.score)}
                             </h3>
                         </div>
@@ -131,8 +131,6 @@ class SingleNode extends React.Component<SingleNodeProps, SingleNodeState> {
                     {!details.isFailure() &&
                         <Collapse in={this.state.show}>
                             <div className={'bandit-explanation_node-details'} style={{marginTop: "-5px"}}>
-                                <KeyValue key_={'Visits'} value={details.visits} tight={true}/>
-
                                 {Array.from(details.policy.keys()).map(k =>
                                     <KeyValue key={k} key_={k} value={details.policy.get(k)} tight={true}
                                               prec={2}/>

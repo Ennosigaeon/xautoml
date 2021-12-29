@@ -19,6 +19,18 @@ def get_31() -> XAutoML:
     return XAutoML(rh, X, y)
 
 
+def get_1823() -> XAutoML:
+    with open('res/1823/runhistory_1823.pkl', 'rb') as f:
+        raw = pickle.load(f)
+
+    structure = raw.data[(0, 0, None)]
+    structure.results[0].model_file = 'res/1823/models_0-0-0.pkl'
+
+    rh = import_dswizard(raw)
+    X, y = _load_data('res/7306/dataset.pkl')
+    return XAutoML(rh, X, y)
+
+
 def get_7306() -> XAutoML:
     with open('res/7306/runhistory_7306.pkl', 'rb') as f:
         raw = pickle.load(f)

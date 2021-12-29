@@ -63,11 +63,11 @@ export class SamplingHistory extends React.Component<SamplingHistoryProps, Sampl
     }
 
     private calcData(history: HyperparameterHistory) {
-        if (history === undefined)
+        if (history === undefined || history.data.length === 0)
             return {
                 yAxisProps: {},
                 marginLeft: 0,
-                data: undefined,
+                data: history ? [] : undefined,
                 bins: [],
                 name: ''
             }

@@ -144,7 +144,7 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
         return (
             <JupyterContext.Provider value={jupyter}>
                 <div style={{display: 'flex'}}>
-                    <div style={{flexGrow: 0, flexShrink: 0, flexBasis: '300px', marginRight: '20px'}}>
+                    <div style={{flexGrow: 0, flexShrink: 0, flexBasis: '275px', marginRight: '20px'}}>
                         <GeneralInformation structures={runHistory.structures}
                                             meta={runHistory.meta}
                                             candidateMap={runHistory.candidateMap}

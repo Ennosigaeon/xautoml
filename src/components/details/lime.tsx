@@ -6,8 +6,9 @@ import {DetailsModel} from "./model";
 import {ErrorIndicator} from "../../util/error";
 import {CollapseComp} from "../../util/collapse";
 import {CommonWarnings} from "../../util/warning";
-import {Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, XAxis, YAxis} from "recharts";
+import {Bar, BarChart, CartesianGrid, Cell, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis} from "recharts";
 import ResizeObserver from "resize-observer-polyfill";
+import {MinimalisticTooltip} from "../../util/recharts";
 
 class CustomizedTick extends React.PureComponent<any> {
     render() {
@@ -17,7 +18,8 @@ class CustomizedTick extends React.PureComponent<any> {
             additionalFeatures.filter((a: string) => payload.value.includes(` ${a} `)).length > 0
 
         return (
-            <text x={x} y={y} dy={0} textAnchor="end" fill={isAdditional ? Colors.ADDITIONAL_FEATURE : Colors.SELECTED_FEATURE}>
+            <text x={x} y={y} dy={0} textAnchor="end"
+                  fill={isAdditional ? Colors.ADDITIONAL_FEATURE : Colors.SELECTED_FEATURE}>
                 {payload.value.toLocaleString().replace(/ /g, '\u00A0')}
             </text>
         );
@@ -157,13 +159,14 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
                         <CollapseComp showInitial={true}>
                             <h5>Predicted Class Probabilities</h5>
                             <>
-                                <div style={{height: 400}}>
+                                <div style={{height: 300}}>
                                     <ResponsiveContainer>
                                         <BarChart data={probs}>
                                             <CartesianGrid strokeDasharray="3 3"/>
                                             <XAxis dataKey="label" type={"category"}/>
                                             <YAxis/>
-                                            <Bar dataKey="y" fill={Colors.DEFAULT} onClick={this.onLabelClick}>
+                                            <Bar dataKey="y" fill={Colors.DEFAULT} onClick={this.onLabelClick}
+                                                 className={'lime-class'}>
                                                 {probs.map((d, index) => (
                                                     <Cell key={`cell-${index}`}
                                                           fill={selectedLabel === d.label ? Colors.HIGHLIGHT : Colors.DEFAULT}/>
@@ -186,12 +189,17 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
                                         <XAxis type={'number'}/>
                                         <YAxis dataKey="label" type={"category"} interval={0}
                                                tick={<CustomizedTick additionalFeatures={data.additional_features}/>}/>
-                                        <Bar dataKey="x" fill={Colors.DEFAULT}/>
+
+                                        <Tooltip content={<MinimalisticTooltip/>}/>
+
+                                        <Bar dataKey="x" fill={Colors.DEFAULT} className={'lime-explanation'}/>
                                         {this.state.x1 &&
                                             <text x={this.state.x1} y={15}>{`Not ${selectedLabel}`}</text>}
                                         {this.state.x2 &&
                                             <text x={this.state.x2} textAnchor="end"
                                                   y={15}>{selectedLabel.toString()}</text>}
+
+                                        <ReferenceLine x="0" stroke="#666666"/>
                                     </BarChart>
                                 </ResponsiveContainer>
                             </div>

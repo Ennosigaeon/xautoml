@@ -1,7 +1,8 @@
 import React from "react";
-import {prettyPrint} from "../util";
+import {Colors, prettyPrint} from "../util";
 
 import * as d3 from 'd3'
+import {TooltipProps} from "recharts";
 
 interface HeatbarProps {
     scale: d3.ScaleSequential<string>
@@ -40,5 +41,27 @@ export class Heatbar extends React.Component<HeatbarProps, any> {
                 </svg>
             </div>
         )
+    }
+}
+
+
+export class MinimalisticTooltip extends React.PureComponent<TooltipProps<any, any>> {
+    render() {
+        const {active, payload} = this.props
+
+        if (active && payload && payload.length) {
+            return (
+                <div className="recharts-default-tooltip" style={{
+                    margin: '0px',
+                    padding: '10px',
+                    backgroundColor: '#fff',
+                    border: `1px solid ${Colors.ADDITIONAL_FEATURE}`,
+                    whiteSpace: 'nowrap'
+                }}>
+                    <p className="label">{prettyPrint(payload[0].value, 3)}</p>
+                </div>
+            )
+        }
+        return null
     }
 }

@@ -8,6 +8,7 @@ import {CommonWarnings} from "../../util/warning";
 import {Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, TooltipProps, XAxis, YAxis} from "recharts";
 import {JupyterButton} from "../../util/jupyter-button";
 import {ID} from "../../jupyter";
+import {MinimalisticTooltip} from "../../util/recharts";
 
 
 class CustomizedAxisTick extends React.PureComponent<any> {
@@ -23,28 +24,6 @@ class CustomizedAxisTick extends React.PureComponent<any> {
                 </text>
             </g>
         );
-    }
-}
-
-
-class CustomTooltip extends React.PureComponent<TooltipProps<any, any>> {
-    render() {
-        const {active, payload} = this.props
-
-        if (active && payload && payload.length) {
-            return (
-                <div className="recharts-default-tooltip" style={{
-                    margin: '0px',
-                    padding: '10px',
-                    backgroundColor: '#fff',
-                    border: `1px solid ${Colors.ADDITIONAL_FEATURE}`,
-                    whiteSpace: 'nowrap'
-                }}>
-                    <p className="label">{prettyPrint(payload[0].value, 3)}</p>
-                </div>
-            )
-        }
-        return null
     }
 }
 
@@ -159,8 +138,8 @@ ${ID}_feature_importance
                                     <CartesianGrid strokeDasharray="3 3"/>
                                     <XAxis dataKey="feature" type={"category"} interval={0}
                                            tick={<CustomizedAxisTick additionalFeatures={additionalFeatures}/>}/>
-                                    <YAxis/>
-                                    <Tooltip content={<CustomTooltip/>}/>
+                                    <YAxis domain={['0', 'dataMax']} tickFormatter={y => prettyPrint(y, 4)}/>
+                                    <Tooltip content={<MinimalisticTooltip/>}/>
                                     <Bar dataKey="y" fill={Colors.DEFAULT}/>
                                 </BarChart>
                             </ResponsiveContainer>

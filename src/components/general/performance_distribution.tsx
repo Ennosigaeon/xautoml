@@ -1,10 +1,11 @@
 import React from 'react';
 import {MetaInformation} from "../../model";
-import {Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis} from "recharts";
+import {Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis} from "recharts";
 import {LoadingIndicator} from "../../util/loading";
 import {TimelineRecord} from "./performance_timeline";
 import {bin} from "d3";
 import {Colors} from "../../util";
+import {MinimalisticTooltip} from "../../util/recharts";
 
 interface PerformanceDistributionProps {
     data: TimelineRecord[]
@@ -33,6 +34,8 @@ export default class PerformanceDistribution extends React.Component<Performance
 
                             <XAxis dataKey="performance" label={{value: this.props.meta.metric, dy: 10}}/>
                             <YAxis label={{value: 'Frequency', angle: -90, dx: -25}}/>
+
+                            <Tooltip content={<MinimalisticTooltip/>}/>
 
                             <Bar dataKey="frequency" fill={Colors.DEFAULT}/>
                         </BarChart>
