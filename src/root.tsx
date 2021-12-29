@@ -6,7 +6,7 @@ import {Colors, JupyterContext} from "./util";
 import {CandidateTable} from "./components/candidate_table";
 import {Jupyter} from "./jupyter";
 import {LoadingIndicator} from "./util/loading";
-import {Box, Checkbox, Tab, Tabs} from "@material-ui/core";
+import {Box, Button, Checkbox, Tab, Tabs} from "@material-ui/core";
 import {TabContext} from "@material-ui/lab";
 import {TabPanel} from "./util/tabpanel";
 import {SearchSpace} from "./components/search_space";
@@ -60,6 +60,7 @@ interface ReactRootProps {
 
 interface ReactRootState {
     selectedCandidates: Set<CandidateId>
+    hiddenCandidates: Set<CandidateId>
     showCandidate: CandidateId
     openTab: string
     mounted: boolean
@@ -74,6 +75,7 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
         super(props);
         this.state = {
             selectedCandidates: new Set<CandidateId>(),
+            hiddenCandidates: new Set<CandidateId>(),
             mounted: false,
             openTab: '1',
             showCandidate: undefined,
@@ -81,8 +83,10 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
         }
 
         this.onCandidateSelection = this.onCandidateSelection.bind(this)
+        this.onCandidateHide = this.onCandidateHide.bind(this)
+        this.resetHidden = this.resetHidden.bind(this)
         this.switchTab = this.switchTab.bind(this)
-        this.toggleShowAllCandidates = this.toggleShowAllCandidates.bind(this)
+        this.toggleHideUnselected = this.toggleHideUnselected.bind(this)
     }
 
     private onCandidateSelection(cids: Set<CandidateId>, show: boolean = false) {
@@ -92,6 +96,16 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
         } else {
             this.setState({selectedCandidates: cids})
         }
+    }
+
+    private onCandidateHide(cid: CandidateId) {
+        this.state.hiddenCandidates.add(cid)
+        this.setState({hiddenCandidates: this.state.hiddenCandidates})
+    }
+
+    private resetHidden() {
+        this.state.hiddenCandidates.clear()
+        this.setState({hiddenCandidates: this.state.hiddenCandidates})
     }
 
     componentDidMount() {
@@ -113,8 +127,8 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
         this.setState({openTab: selectedTab})
     }
 
-    private toggleShowAllCandidates(_: React.ChangeEvent, checked: boolean) {
-        this.setState({hideUnselected: !checked})
+    private toggleHideUnselected(_: React.ChangeEvent, checked: boolean) {
+        this.setState({hideUnselected: checked})
     }
 
     render() {
@@ -163,15 +177,18 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
 
                                     <DivInTabs style={{marginLeft: 'auto', cursor: 'default'}}>
                                         <span className={'MuiTab-wrapper'}>
-                                            Selected Candidates: {selectedCandidates.size} / {runHistory.meta.n_configs}
+                                            Selected Candidates: {selectedCandidates.size} / {runHistory.meta.n_configs - this.state.hiddenCandidates.size}
                                         </span>
                                     </DivInTabs>
                                     <DivInTabs>
                                         <label className={'MuiFormControlLabel-root'}>
-                                            <Checkbox checked={!hideUnselected}
-                                                      onChange={this.toggleShowAllCandidates}/>
-                                            <span>Show&nbsp;All&nbsp;Candidates</span>
+                                            <Checkbox checked={hideUnselected}
+                                                      onChange={this.toggleHideUnselected}/>
+                                            <span>Hide&nbsp;Unselected</span>
                                         </label>
+                                    </DivInTabs>
+                                    <DivInTabs>
+                                        <Button onClick={this.resetHidden}>Clear Hidden</Button>
                                     </DivInTabs>
                                 </Tabs>
                             </Box>
@@ -179,11 +196,13 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
                             <TabPanel value={'1'}>
                                 <CandidateTable structures={runHistory.structures}
                                                 selectedCandidates={selectedCandidates}
+                                                hiddenCandidates={this.state.hiddenCandidates}
                                                 hideUnselectedCandidates={hideUnselected}
                                                 meta={runHistory.meta}
                                                 explanations={runHistory.explanations}
                                                 showCandidate={showCandidate}
-                                                onCandidateSelection={this.onCandidateSelection}/>
+                                                onCandidateSelection={this.onCandidateSelection}
+                                                onCandidateHide={this.onCandidateHide}/>
                             </TabPanel>
                             <TabPanel value={'2'}>
                                 <SearchSpace structures={runHistory.structures}

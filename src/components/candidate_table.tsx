@@ -6,7 +6,7 @@ import TablePagination from '@material-ui/core/TablePagination';
 import TableRow from '@material-ui/core/TableRow';
 import TableSortLabel from '@material-ui/core/TableSortLabel';
 import Checkbox from '@material-ui/core/Checkbox';
-import {Box, IconButton, Table, TableContainer} from '@material-ui/core';
+import {Box, IconButton, Menu, MenuItem, Table, TableContainer} from '@material-ui/core';
 import {Candidate, CandidateId, Explanations, MetaInformation, Structure} from '../model';
 import {Components, JupyterContext, prettyPrint} from '../util';
 import {StepWithConfig, StructureGraphComponent} from './details/structure_graph';
@@ -16,6 +16,7 @@ import Collapse from '@material-ui/core/Collapse';
 import {DataSetDetailsComponent} from './dataset_details';
 import {JupyterButton} from "../util/jupyter-button";
 import {ID} from "../jupyter";
+import {MoreVert} from "@material-ui/icons";
 
 interface SingleCandidate {
     id: CandidateId;
@@ -87,7 +88,7 @@ class CandidateTableHead extends React.Component<CandidateTableHeadProps, {}> {
                                 : headCell.label}
                         </TableCell>
                     ))}
-                    <TableCell style={{width: '175px'}}/>
+                    <TableCell style={{width: '205px'}}/>
                 </TableRow>
             </TableHead>
         )
@@ -100,6 +101,7 @@ interface CandidateTableRowProps {
     meta: MetaInformation
     selected: boolean
     onRowClick: (id: CandidateId) => void
+    onRowHide: (id: CandidateId) => void
 
     structures: Structure[]
     explanations: Explanations
@@ -126,6 +128,7 @@ class CandidateTableRow extends React.Component<CandidateTableRowProps, Candidat
         this.openCandidateInJupyter = this.openCandidateInJupyter.bind(this)
         this.onRowClick = this.onRowClick.bind(this)
         this.onCheckBoxClick = this.onCheckBoxClick.bind(this)
+        this.onHide = this.onHide.bind(this)
     }
 
     componentDidUpdate(prevProps: Readonly<CandidateTableRowProps>, prevState: Readonly<CandidateTableRowState>, snapshot?: any) {
@@ -172,6 +175,10 @@ ${ID}_pipeline
         e.stopPropagation()
     }
 
+    private onHide() {
+        this.props.onRowHide(this.props.candidate.id)
+    }
+
     render() {
         const {candidate, meta, selected, structures, explanations} = this.props
         const {open} = this.state
@@ -205,6 +212,7 @@ ${ID}_pipeline
                         <IconButton aria-label='expand row' size='small' onClick={this.toggleDetails}>
                             {this.state.open ? <KeyboardArrowUpIcon/> : <KeyboardArrowDownIcon/>}
                         </IconButton>
+                        <BasicMenu onHide={this.onHide}/>
                     </TableCell>
                 </TableRow>
                 <TableRow>
@@ -228,14 +236,66 @@ ${ID}_pipeline
     }
 }
 
+interface BasicMenuProps {
+    onHide: () => void
+}
+
+class BasicMenu extends React.Component<BasicMenuProps, { open: boolean }> {
+
+    private readonly ref: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
+
+    constructor(props: BasicMenuProps) {
+        super(props)
+        this.state = {open: false}
+
+        this.handleClick = this.handleClick.bind(this)
+        this.handleClose = this.handleClose.bind(this)
+        this.handleHide = this.handleHide.bind(this)
+    }
+
+    private handleClick(e: React.MouseEvent<HTMLButtonElement>) {
+        this.setState((state) => ({open: !state.open}))
+        e.stopPropagation()
+    }
+
+    private handleClose(e: React.MouseEvent) {
+        this.setState({open: false})
+        e.stopPropagation()
+    }
+
+    private handleHide(e: React.MouseEvent) {
+        this.props.onHide()
+        this.handleClose(e)
+    }
+
+    render() {
+        return (
+            <div ref={this.ref} style={{display: 'inline'}}>
+                <IconButton aria-label='expand row' size='small' onClick={this.handleClick}>
+                    <MoreVert/>
+                </IconButton>
+                <Menu
+                    anchorEl={this.ref?.current}
+                    open={this.state.open}
+                    onClose={this.handleClose}>
+                    <MenuItem onClick={this.handleHide}>Hide</MenuItem>
+                </Menu>
+            </div>
+        )
+    }
+}
+
+
 interface CandidateTableProps {
     structures: Structure[];
     selectedCandidates: Set<CandidateId>;
+    hiddenCandidates: Set<CandidateId>;
     hideUnselectedCandidates: boolean;
     showCandidate: CandidateId;
     meta: MetaInformation;
     explanations: Explanations;
-    onCandidateSelection?: (cid: Set<CandidateId>) => void;
+    onCandidateSelection: (cid: Set<CandidateId>) => void;
+    onCandidateHide: (cid: CandidateId) => void;
 }
 
 interface CandidateTableState {
@@ -247,11 +307,6 @@ interface CandidateTableState {
 }
 
 export class CandidateTable extends React.Component<CandidateTableProps, CandidateTableState> {
-
-    static defaultProps = {
-        onCandidateSelection: (_: CandidateId[]) => {
-        }
-    }
 
     constructor(props: CandidateTableProps) {
         super(props);
@@ -338,7 +393,7 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
     }
 
     render() {
-        const {structures, explanations} = this.props
+        const {structures, explanations, hiddenCandidates} = this.props
         const {rows, order, orderBy, page, rowsPerPage} = this.state
         const comp = (a: SingleCandidate, b: SingleCandidate) => {
             const sign = order === 'desc' ? 1 : -1
@@ -376,7 +431,9 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
                             onRequestSort={this.handleRequestSort}
                             rowCount={rows.length}/>
                         <TableBody>
-                            {rows.sort(comp)
+                            {rows
+                                .filter(s => !hiddenCandidates.has(s.id))
+                                .sort(comp)
                                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                                 .map(row => {
                                     return (
@@ -385,6 +442,7 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
                                                            meta={this.props.meta}
                                                            selected={this.props.selectedCandidates.has(row.id)}
                                                            onRowClick={this.handleRowClick}
+                                                           onRowHide={this.props.onCandidateHide}
                                                            structures={structures}
                                                            explanations={explanations}
                                                            open={row.id === this.props.showCandidate}/>
@@ -396,7 +454,7 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
                 <TablePagination
                     rowsPerPageOptions={[10, 20, 30]}
                     component='div'
-                    count={rows.length}
+                    count={rows.length - hiddenCandidates.size}
                     rowsPerPage={rowsPerPage}
                     page={page}
                     onPageChange={this.handleChangePage}
