@@ -78,7 +78,9 @@ export class Jupyter {
             if (error) {
                 throw new ServerError(error.ename, error.evalue, error.traceback)
             }
-            return result.data['application/json'] as unknown as T
+            if (result !== undefined)
+                return result.data['application/json'] as unknown as T
+            return undefined
         })
     }
 

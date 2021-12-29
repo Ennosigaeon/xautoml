@@ -1,12 +1,13 @@
 import React from "react";
 import {Candidate, Config, ConfigValue, Pipeline, PipelineStep, Structure} from "../../model";
-import {Components, JupyterContext, prettyPrint} from "../../util";
-import {Table, TableBody, TableCell, TableRow, Tooltip, Typography} from "@material-ui/core";
+import {Components, JupyterContext} from "../../util";
+import {Tooltip, Typography} from "@material-ui/core";
 import {OutputDescriptionData} from "../../dao";
 import {LoadingIndicator} from "../../util/loading";
 import {ErrorIndicator} from "../../util/error";
 import {GraphEdge, GraphNode, HierarchicalTree} from "../tree_structure";
 import {Dag} from "d3-dag";
+import {ConfigurationTable} from "./configuration";
 
 
 export class StepWithConfig extends PipelineStep {
@@ -47,57 +48,21 @@ class SingleComponent extends React.Component<SingleComponentProps, any> {
     render() {
         const {step, error, loading, output, onHover} = this.props
 
-        const configTable: [[string, ConfigValue][], [string, ConfigValue][]] = [[], []]
-        Array.from(step.config.entries())
-            .forEach(([name, value], idx) => {
-                configTable[idx % 2].push([name, value])
-            })
-        // Ensure that left and right array have exactly the same amount of elements
-        if (configTable[0].length != configTable[1].length)
-            configTable[1].push(["", ""])
-
-        const configuration = <>
-            <Typography color="inherit" component={'h4'}>Configuration</Typography>
-            <Table>
-                <TableBody>
-                    {configTable[0]
-                        .map(([name, value], idx) => {
-                            const name2 = configTable[1][idx][0]
-                            const value2 = configTable[1][idx][1]
-
-                            return (
-                                <TableRow key={name}>
-                                    <TableCell component="th"
-                                               scope="row">{name}</TableCell>
-                                    <TableCell align="right">{prettyPrint(value, 5)}</TableCell>
-
-                                    <TableCell component="th"
-                                               scope="row">{name2}</TableCell>
-                                    <TableCell align="right">{prettyPrint(value2, 5)}</TableCell>
-                                </TableRow>
-                            )
-                        })
-                    }
-                </TableBody>
-            </Table>
-        </>
-
         const tooltipContent = <>
-            {step.config.size > 0 ?
-                configuration :
-                <Typography color="inherit" component={'h4'}>No Configuration</Typography>}
-            <hr/>
+            <Typography color="inherit" component={'h4'}>Configuration</Typography>
+            <ConfigurationTable config={step.config} twoColumns={true}/>
             <Typography color="inherit" component={'h4'}>Output</Typography>
 
             <ErrorIndicator error={error}/>
             {!error &&
-            <>
-                <LoadingIndicator loading={loading}/>
-                {!loading && (output ?
-                    <div style={{overflowX: "auto", marginBottom: 0}}
-                         dangerouslySetInnerHTML={{__html: output}}/> : <div>Missing</div>)
-                }
-            </>}
+                <>
+                    <LoadingIndicator loading={loading}/>
+                    {!loading && (output ?
+                        <div style={{overflowX: "auto", marginBottom: 0}}
+                             dangerouslySetInnerHTML={{__html: output}}/> : <div>Missing</div>)
+                    }
+                </>
+            }
         </>
 
         return (

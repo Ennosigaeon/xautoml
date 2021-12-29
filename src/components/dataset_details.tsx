@@ -99,7 +99,6 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
                     <h4>Configuration Origin</h4>
                     <ConfigOriginComp candidate={candidate}
                                   structure={structure}
-                                  meta={meta}
                                   structures={structures}
                                   explanations={explanations}/>
                 </CollapseComp>

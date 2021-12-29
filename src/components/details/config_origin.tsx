@@ -4,12 +4,12 @@ import {cidToSid, JupyterContext} from "../../util";
 import {SurrogateExplanation} from "./surrogate_explanation";
 import React from "react";
 import {KeyValue} from "../../util/KeyValue";
+import {ConfigurationComp} from "./configuration";
 
 
 interface ConfigOriginProps {
     candidate: Candidate
     structure: Structure
-    meta: MetaInformation
 
     structures: Structure[]
     explanations: Explanations
@@ -40,7 +40,7 @@ export class ConfigOriginComp extends React.Component<ConfigOriginProps, any> {
     }
 
     render() {
-        const {explanations, structures, candidate, structure, meta} = this.props
+        const {explanations, structures, candidate, structure} = this.props
 
         return (
             <>
@@ -52,6 +52,8 @@ export class ConfigOriginComp extends React.Component<ConfigOriginProps, any> {
                 }
                 <SurrogateExplanation structure={structure} candidate={candidate}
                                       explanation={explanations.configs.get(candidate.id)}/>
+
+                <ConfigurationComp candidate={candidate} structure={structure}/>
             </>
         )
     }
