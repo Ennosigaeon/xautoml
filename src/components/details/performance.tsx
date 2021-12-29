@@ -8,6 +8,7 @@ import {Candidate, CandidateId, MetaInformation} from "../../model";
 import {PerformanceData} from "../../dao";
 import {ErrorIndicator} from "../../util/error";
 import {LoadingIndicator} from "../../util/loading";
+import {Table, TableBody, TableCell, TableRow} from "@material-ui/core";
 
 
 interface PerformanceComponentProps {
@@ -64,11 +65,12 @@ export class PerformanceComponent extends React.Component<PerformanceComponentPr
                     <LoadingIndicator loading={loading}/>
                     {data &&
                         <div style={{display: "flex"}}>
-                            <div style={{flexGrow: 1, flexShrink: 1, flexBasis: "20%"}}>
+                            <div style={{flexGrow: 1, flexShrink: 1, flexBasis: "19%"}}>
                                 <h5>Metrics</h5>
                                 <KeyValue key_={`Training ${meta.metric}`}
                                           value={model.candidate.loss}/>
                                 <KeyValue key_={`Validation ${meta.metric}`} value={data.val_score}/>
+                                <KeyValue key_={`Validation Accuracy`} value={data.accuracy}/>
                                 <KeyValue key_={'Training Duration'}
                                           value={`${prettyPrint(model.candidate.runtime.training_time)} sec`}/>
                                 <KeyValue key_={'Prediction Duration'}
@@ -81,12 +83,35 @@ export class PerformanceComponent extends React.Component<PerformanceComponentPr
                                 <KeyValue key_={'Budget'} value={model.candidate.budget}/>
                             </div>
 
-                            <div style={{flexGrow: 1, margin: "0 10px", flexBasis: "40%"}}>
+                            <div style={{flexGrow: 1, margin: "0 10px", flexBasis: "27%"}}>
+                                <h5>Class Report</h5>
+                                <Table className={'jp-RenderedHTMLCommon'}>
+                                    <TableBody>
+                                        <TableRow>
+                                            <TableCell component="th"/>
+                                            <TableCell component="th" scope="row">Precision</TableCell>
+                                            <TableCell component="th" scope="row">Recall</TableCell>
+                                            <TableCell component="th" scope="row">Support</TableCell>
+                                        </TableRow>
+
+                                        {Array.from(data.report.keys()).map(clazz =>
+                                            <TableRow key={clazz}>
+                                                <TableCell component="th" scope="col">{clazz}</TableCell>
+                                                <TableCell align="right">{prettyPrint(data.report.get(clazz).precision)}</TableCell>
+                                                <TableCell align="right">{prettyPrint(data.report.get(clazz).recall)}</TableCell>
+                                                <TableCell align="right">{prettyPrint(data.report.get(clazz).support)}</TableCell>
+                                            </TableRow>
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
+
+                            <div style={{flexGrow: 1, margin: "0 10px", flexBasis: "27%"}}>
                                 <h5>Confusion Matrix</h5>
                                 <ConfusionMatrix cm={data.cm}/>
                             </div>
 
-                            <div style={{flexGrow: 1, flexBasis: "40%"}}>
+                            <div style={{flexGrow: 1, flexBasis: "27%"}}>
                                 <h5>Receiver Operating Characteristic (ROC) Curve</h5>
                                 <RocCurve selectedCandidates={new Set([model.candidate.id])}
                                           candidateMap={candidateMap}

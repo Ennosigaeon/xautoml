@@ -112,20 +112,25 @@ export class Jupyter {
 
     requestPerformanceData(cid: CandidateId): Promise<PerformanceData> {
         return this.memExecuteCode<PerformanceData>(`XAutoMLManager.get_active().performance_data('${cid}')`)
+            .then(data => {
+                return {
+                    duration: data.duration,
+                    val_score: data.val_score,
+                    accuracy: data.accuracy,
+                    cm: data.cm,
+                    report: new Map(Object.entries(data.report))
+                }
+            })
     }
 
     requestOutputComplete(cid: CandidateId): Promise<OutputDescriptionData> {
         return this.memExecuteCode<OutputDescriptionData>(`XAutoMLManager.get_active().output_complete('${cid}')`)
-            .then(data => {
-                return new Map<string, string>(Object.entries(data))
-            })
+            .then(data => new Map<string, string>(Object.entries(data)))
     }
 
     requestOutputDescription(cid: CandidateId): Promise<OutputDescriptionData> {
         return this.memExecuteCode<OutputDescriptionData>(`XAutoMLManager.get_active().output_description('${cid}')`)
-            .then(data => {
-                return new Map<string, string>(Object.entries(data))
-            })
+            .then(data => new Map<string, string>(Object.entries(data)))
     }
 
     requestLimeApproximation(cid: CandidateId, idx: number = 0, step: string = SOURCE): Promise<LimeResult> {

@@ -6,7 +6,7 @@ import pandas as pd
 from sklearn import metrics
 from sklearn.compose import ColumnTransformer, make_column_selector
 from sklearn.inspection import permutation_importance
-from sklearn.metrics import confusion_matrix, get_scorer, roc_auc_score
+from sklearn.metrics import confusion_matrix, get_scorer, roc_auc_score, classification_report
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OrdinalEncoder
 from sklearn.tree import DecisionTreeClassifier
@@ -81,7 +81,14 @@ class ModelDetails:
         labels = unique_labels(y, y_pred)
         df = pd.DataFrame(cm, columns=labels, index=labels)
 
+        report = classification_report(y, y_pred, target_names=labels, output_dict=True)
+        accuracy = report['accuracy']
+        del report['accuracy']
+        del report['macro avg']
+        del report['weighted avg']
+
         return {'duration': duration, 'val_score': validation_score,
+                'report': report, 'accuracy': accuracy,
                 'cm': {"classes": df.columns.to_list(), "values": df.values.tolist()}}
 
     @staticmethod

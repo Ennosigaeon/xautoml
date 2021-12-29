@@ -91,7 +91,9 @@ export type OutputDescriptionData = Map<string, string>
 export interface PerformanceData {
     duration: number
     val_score: number
+    accuracy: number
     cm: ConfusionMatrixData
+    report: Map<string, {precision: number, recall: number, 'f1-support': number, support: number}>
 }
 
 export interface ConfusionMatrixData {
