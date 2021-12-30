@@ -58,7 +58,7 @@ def get_168746() -> XAutoML:
 
 
 def get_autosklearn() -> XAutoML:
-    with open('res/autosklearn/auto-sklearn.pkl', 'rb') as f:
+    with open('res/autosklearn/auto-sklearn_breast_cancer.pkl', 'rb') as f:
         raw = pickle.load(f)
 
     rh = import_auto_sklearn(raw)
@@ -67,11 +67,30 @@ def get_autosklearn() -> XAutoML:
 
 
 def get_autosklearn_categorical() -> XAutoML:
-    with open('res/autosklearn_categorical/auto-sklearn.pkl', 'rb') as f:
+    with open('res/autosklearn_categorical/auto-sklearn_1461.pkl', 'rb') as f:
         raw = pickle.load(f)
 
     rh = import_auto_sklearn(raw)
     X, y = _load_data('res/autosklearn_categorical/dataset.pkl')
+    return XAutoML(rh, X, y)
+
+
+def get_autosklearn_hearts() -> XAutoML:
+    with open('res/autosklearn_hearts/auto-sklearn.pkl', 'rb') as f:
+        raw = joblib.load(f)
+
+    rh = import_auto_sklearn(raw)
+
+    data = pd.read_csv('res/autosklearn_hearts/dataset.csv')
+    X = data[data.columns[:-1]]
+    y = data[data.columns[-1]]
+
+    X.loc[:, 'Sex'] = X.Sex.astype('category')
+    X.loc[:, 'ChestPainType'] = X.ChestPainType.astype('category')
+    X.loc[:, 'RestingECG'] = X.RestingECG.astype('category')
+    X.loc[:, 'ExerciseAngina'] = X.ExerciseAngina.astype('category')
+    X.loc[:, 'ST_Slope'] = X.ST_Slope.astype('category')
+
     return XAutoML(rh, X, y)
 
 

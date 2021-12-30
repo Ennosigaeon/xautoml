@@ -151,13 +151,13 @@ class XAutoML:
 
         down_sample = X.shape[0] > n_samples
         if down_sample:
-            idx = np.random.choice(X.shape[0], size=n_samples, replace=False)
-            X = X.loc[idx, :].reset_index(drop=True)
-            y = y.loc[idx].reset_index(drop=True)
             warnings.warn(
                 'The data set exceeds the maximum number of samples with {}. Selecting {} random samples...'.format(
                     X.shape, n_samples)
             )
+            idx = np.random.choice(X.shape[0], size=n_samples, replace=False)
+            X = X.loc[idx, :].reset_index(drop=True)
+            y = y.loc[idx].reset_index(drop=True)
         self.X: pd.DataFrame = X
         self.y: pd.Series = y
 
@@ -228,7 +228,8 @@ class XAutoML:
     def decision_tree_surrogate(self, cid: CandidateId, step: str, max_leaf_nodes: Optional[int]):
         X, y, pipeline = self._load_model(cid)
 
-        if step == pipeline.steps[-1][0] or step == SINK:
+        last_step = pipeline.steps[-1][0]
+        if step == last_step or step.startswith('{}:'.format(last_step)) or step == SINK:
             res = GlobalSurrogateResult([DecisionTreeResult(pipeline_utils.Node('empty', 0, [], []), 0, 0, 2)], 0)
             additional_features = False
         else:
@@ -242,7 +243,8 @@ class XAutoML:
     def feature_importance(self, cid: CandidateId, step: str):
         X, y, pipeline = self._load_model(cid)
 
-        if step == pipeline.steps[-1][0] or step == SINK:
+        last_step = pipeline.steps[-1][0]
+        if step == last_step or step.startswith('{}:'.format(last_step)) or step == SINK:
             res = pd.DataFrame(data={'0': {'0': 1, '1': 0}})
             additional_features = []
         else:

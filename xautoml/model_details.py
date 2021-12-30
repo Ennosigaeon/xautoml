@@ -87,8 +87,8 @@ class ModelDetails:
         del report['macro avg']
         del report['weighted avg']
 
-        return {'duration': duration, 'val_score': validation_score,
-                'report': report, 'accuracy': accuracy,
+        return {'duration': duration, 'val_score': float(validation_score),
+                'report': {np.asscalar(key): value for key, value in report.items()}, 'accuracy': accuracy,
                 'cm': {"classes": df.columns.to_list(), "values": df.values.tolist()}}
 
     @staticmethod
@@ -179,6 +179,6 @@ class ModelDetails:
 
     @staticmethod
     def calculate_feature_importance(X: pd.DataFrame, y: pd.Series, model):
-        result = permutation_importance(model, X, y, scoring='f1_weighted', random_state=0, n_jobs=-1)
+        result = permutation_importance(model, X, y, scoring='f1_weighted', random_state=0)
         return pd.DataFrame(np.stack((result.importances_mean, result.importances_std)),
                             columns=X.columns.map(lambda c: c[:20]))

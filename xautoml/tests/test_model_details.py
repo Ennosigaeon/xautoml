@@ -1,5 +1,7 @@
+import json
+
 from xautoml.model_details import ModelDetails
-from xautoml.tests import get_168746, get_31, get_7306, get_autosklearn, get_1823
+from xautoml.tests import get_168746, get_31, get_7306, get_autosklearn, get_1823, get_autosklearn_hearts
 from xautoml.util import pipeline_utils
 
 
@@ -12,7 +14,7 @@ def test_decision_tree():
     details = ModelDetails()
     res = details.calculate_decision_tree(X, pipeline, max_leaf_nodes=None)
 
-    print(res)
+    print(json.dumps(res.as_dict([])))
 
 
 def test_decision_tree_without_max_leaf_nodes():
@@ -24,7 +26,7 @@ def test_decision_tree_without_max_leaf_nodes():
     details = ModelDetails()
     res = details.calculate_decision_tree(X, pipeline, max_leaf_nodes=None)
 
-    print(res)
+    print(json.dumps(res.as_dict([])))
 
 
 def test_lime_for_step():
@@ -38,7 +40,7 @@ def test_lime_for_step():
     details = ModelDetails()
     res = details.calculate_lime(X, y, pipeline, idx)
 
-    print(res)
+    print(json.dumps(res.to_dict([])))
 
 
 def test_lime_string_class():
@@ -52,7 +54,7 @@ def test_lime_string_class():
     details = ModelDetails()
     res = details.calculate_lime(X, y, pipeline, idx)
 
-    print(res)
+    print(json.dumps(res.to_dict([])))
 
 
 def test_lime_for_auto_sklearn():
@@ -66,7 +68,7 @@ def test_lime_for_auto_sklearn():
     details = ModelDetails()
     res = details.calculate_lime(X, y, pipeline, idx)
 
-    print(res)
+    print(json.dumps(res.to_dict([])))
 
 
 def test_performance_data():
@@ -76,7 +78,7 @@ def test_performance_data():
     details = ModelDetails()
     cm = details.calculate_performance_data(X, y, pipeline, 'roc_auc')
 
-    print(cm)
+    print(json.dumps(cm))
 
 
 def test_performance_multiclass():
@@ -86,4 +88,14 @@ def test_performance_multiclass():
     details = ModelDetails()
     cm = details.calculate_performance_data(X, y, pipeline, 'roc_auc')
 
-    print(cm)
+    print(json.dumps(cm))
+
+
+def test_performance_hearts():
+    main = get_autosklearn_hearts()
+    X, y, pipeline = main.get_pipeline('00:13:58')
+
+    details = ModelDetails()
+    cm = details.calculate_performance_data(X, y, pipeline, 'accuracy')
+
+    print(json.dumps(cm))

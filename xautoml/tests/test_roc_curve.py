@@ -1,3 +1,5 @@
+import json
+
 from xautoml.roc_auc import RocCurve
 from xautoml.tests import get_autosklearn
 
@@ -22,4 +24,4 @@ def test_roc_curve():
             ls.append({'x': f, 'y': t})
         result[label] = ls
 
-    print(result)
+    print(json.dumps(result))

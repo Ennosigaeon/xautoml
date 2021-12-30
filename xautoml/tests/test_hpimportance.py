@@ -4,7 +4,8 @@ import numpy as np
 from fanova import visualizer
 
 from xautoml.hp_importance import HPImportance
-from xautoml.tests import get_168746, get_autosklearn
+from xautoml.output import RAW, OutputCalculator
+from xautoml.tests import get_168746, get_autosklearn, get_autosklearn_hearts
 
 
 def test_overview():
@@ -17,7 +18,7 @@ def test_overview():
 
     f, X = HPImportance.construct_fanova(cs, configs, loss)
     overview = HPImportance.calculate_fanova_overview(f, X)
-    print(overview)
+    print(json.dumps(overview))
 
 
 def test_for_step():
@@ -32,8 +33,8 @@ def test_for_step():
     overview = HPImportance.calculate_fanova_overview(f, X, '1.1')
     print(overview)
 
-    details = HPImportance.calculate_fanova_details(f, X, keys=overview['keys'])
-    print(details)
+    details = HPImportance.calculate_fanova_details(f, X, hps=overview['keys'])
+    print(json.dumps(details))
 
 
 def test_details():
@@ -46,7 +47,7 @@ def test_details():
 
     f, X = HPImportance.construct_fanova(cs, configs, loss)
     details = HPImportance.calculate_fanova_details(f, X)
-    print(details)
+    print(json.dumps(details))
 
     vis = visualizer.Visualizer(f, f.cs, '/tmp')
 
@@ -100,7 +101,18 @@ def test_auto_sklearn():
     f, X = HPImportance.construct_fanova(cs, configs, loss)
 
     overview = HPImportance.calculate_fanova_overview(f, X)
-    print(overview)
+    print(json.dumps(overview))
 
     details = HPImportance.calculate_fanova_details(f, X)
-    print(details)
+    print(json.dumps(details))
+
+
+def test_all_auto_sklearn_steps():
+    main = get_autosklearn_hearts()
+
+    X, y, pipeline = main.get_pipeline('00:06:25')
+
+    inputs, outputs = OutputCalculator.calculate_outputs(pipeline, X, y, method=RAW)
+
+    for step_name in inputs.keys():
+        res = main.fanova('00:06', step_name)
