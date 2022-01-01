@@ -169,6 +169,52 @@ class DataFrameImputer(TransformerMixin):
     def transform(self, X, y=None):
         return X.fillna(self.fill)
 
+    def inverse_transform(self, X):
+        return X
+
+
+class InplaceOrdinalEncoder(ColumnTransformer):
+
+    def __init__(self, cat_columns, all_columns):
+        self.cat_columns = cat_columns
+        self.all_columns = all_columns
+
+        super().__init__(transformers=[('cat', OrdinalEncoder(), cat_columns)], remainder='passthrough')
+
+    def _sort_columns(self, X):
+        n_cat = len(self._transformer_to_input_indices['cat'])
+        cat_input = pd.DataFrame(X[:, :n_cat],
+                                 columns=self.all_columns[self._transformer_to_input_indices['cat']])
+        num_input = pd.DataFrame(X[:, n_cat:],
+                                 columns=self.all_columns[self._transformer_to_input_indices['remainder']])
+        return cat_input.join(num_input)[self.all_columns]
+
+    def transform(self, X):
+        X_trans = super().transform(X)
+        return self._sort_columns(X_trans)
+
+    def fit_transform(self, X, y=None):
+        X_trans = super().fit_transform(X, y)
+        return self._sort_columns(X_trans)
+
+    def inverse_transform(self, X: np.ndarray):
+        encoder = self.transformers_[0][1]
+
+        cat_columns = self._transformer_to_input_indices['cat']
+        num_columns = self._transformer_to_input_indices['remainder']
+
+        if len(cat_columns) == 0:
+            return pd.DataFrame(X, columns=self.all_columns)
+
+        encoded_input = X[:, cat_columns]
+        cat_input = pd.DataFrame(encoder.inverse_transform(encoded_input), columns=self.all_columns[cat_columns])
+        num_input = pd.DataFrame(X[:, num_columns], columns=self.all_columns[num_columns])
+        return cat_input.join(num_input)[self.all_columns]
+
+    @property
+    def encoder(self):
+        return self.transformers_[0][1]
+
 
 @dataclass()
 class Node:
@@ -259,12 +305,10 @@ def fit_decision_tree(df: pd.DataFrame, y: np.ndarray, **dt_kwargs):
     cat_columns = make_column_selector(dtype_exclude=np.number)
 
     # Use simple pipeline being able to handle categorical and missing input
-    encoder = ColumnTransformer(transformers=[('cat', OrdinalEncoder(), cat_columns)], remainder='passthrough')
-    dt = DecisionTreeClassifier(**dt_kwargs)
     clf = Pipeline(steps=[
         ('imputation', DataFrameImputer()),
-        ('encoding', encoder),
-        ('classifier', dt)])
+        ('encoding', InplaceOrdinalEncoder(cat_columns, df.columns)),
+        ('classifier', DecisionTreeClassifier(**dt_kwargs))])
 
     clf.fit(df, y)
     return clf

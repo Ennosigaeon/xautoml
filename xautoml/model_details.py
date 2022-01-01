@@ -4,15 +4,14 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 from sklearn import metrics
-from sklearn.compose import ColumnTransformer, make_column_selector
+from sklearn.compose import make_column_selector
 from sklearn.inspection import permutation_importance
 from sklearn.metrics import confusion_matrix, get_scorer, roc_auc_score, classification_report
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OrdinalEncoder
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.utils.multiclass import unique_labels, type_of_target
 
-from xautoml.util.pipeline_utils import export_tree, DataFrameImputer, Node
+from xautoml.util.pipeline_utils import export_tree, DataFrameImputer, Node, InplaceOrdinalEncoder
 
 
 @dataclass
@@ -98,29 +97,32 @@ class ModelDetails:
         except ImportError:
             raise ValueError('Local explanations not possible. Please install LIME first.')
 
-        # TODO check if this preprocessing pipeline is really useful. Maybe just abort for categorical input
-        num_columns = make_column_selector(dtype_include=np.number)(df)
+        def invert_categorial_encoding(X: np.ndarray):
+            inverted_input = encoder.inverse_transform(X)
+            return model.predict_proba(inverted_input)
+
         cat_columns = make_column_selector(dtype_exclude=np.number)(df)
         pipeline = Pipeline(steps=[
             ('imputation', DataFrameImputer()),
-            ('encoding',
-             ColumnTransformer(transformers=[('cat', OrdinalEncoder(), cat_columns)], remainder='passthrough'))])
-        X = pipeline.fit_transform(df)
+            ('encoding', InplaceOrdinalEncoder(cat_columns, df.columns))
+        ])
+        X = pipeline.fit_transform(df).values
 
-        encoder = pipeline.steps[1][1].transformers_[0][1]
-        categorical_features = range(0, len(cat_columns))
-        categorical_names = {idx: encoder.categories_[idx] for idx in categorical_features}
+        encoder = pipeline.steps[1][1]
+        categorical_features = df.columns.get_indexer(cat_columns)
+        categorical_names = {idx: name for idx, name in zip(categorical_features, cat_columns)}
 
-        class_names = np.unique(y)
-        feature_names = list(map(lambda c: c[:20], cat_columns + num_columns))  # Truncate names
+        class_names = np.unique(y).tolist()
+        feature_names = list(map(lambda c: c[:20], df.columns))  # Truncate names
 
         explainer = lime.lime_tabular.LimeTabularExplainer(X,
                                                            feature_names=feature_names,
                                                            discretize_continuous=True,
                                                            categorical_features=categorical_features,
                                                            categorical_names=categorical_names,
-                                                           class_names=class_names)
-        explanation = explainer.explain_instance(X[idx], model.predict_proba, num_features=10, num_samples=1000,
+                                                           class_names=class_names,
+                                                           random_state=1)
+        explanation = explainer.explain_instance(X[idx], invert_categorial_encoding, num_features=10, num_samples=1000,
                                                  top_labels=np.unique(y).shape[0])
 
         all_explanations = {}
@@ -158,7 +160,7 @@ class ModelDetails:
         cat_columns = make_column_selector(dtype_exclude=np.number)
 
         # Use simple pipeline being able to handle categorical and missing input
-        encoder = ColumnTransformer(transformers=[('cat', OrdinalEncoder(), cat_columns)], remainder='passthrough')
+        encoder = InplaceOrdinalEncoder(cat_columns, df.columns)
         dt = DecisionTreeClassifier(max_leaf_nodes=max_leaf_nodes)
         clf = Pipeline(steps=[
             ('imputation', DataFrameImputer()),
@@ -171,7 +173,7 @@ class ModelDetails:
         score = metrics.accuracy_score(y_pred, y_pred_pred)
 
         return DecisionTreeResult(
-            export_tree(encoder.named_transformers_['cat'], dt, cat_columns(df), num_columns(df)),
+            export_tree(encoder.encoder, dt, cat_columns(df), num_columns(df)),
             score,
             dt.get_n_leaves(),
             max_leaf_nodes

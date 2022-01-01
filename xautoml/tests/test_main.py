@@ -20,54 +20,54 @@ def test_serialization_autosklearn():
 
 def test_output_description():
     main = get_autosklearn_hearts()
-    print(main.output_description('00:06:25'))
+    print(main.output_description('00:06:25').data)
 
 
 def test_output_complete():
     main = get_autosklearn_hearts()
-    print(main.output_complete('00:06:25'))
+    print(main.output_complete('00:06:25').data)
 
 
 def test_performance_data():
     main = get_autosklearn_hearts()
-    print(main.performance_data('00:06:25'))
+    print(main.performance_data('00:06:25').data)
 
 
 def test_decision_tree_surrogate():
     main = get_autosklearn_hearts()
-    print(main.decision_tree_surrogate('00:06:25', 'SOURCE', None))
+    print(main.decision_tree_surrogate('00:06:25', 'SOURCE', None).data)
 
 
 def test_decision_tree_surrogate_last_step():
     main = get_autosklearn_hearts()
-    print(main.decision_tree_surrogate('00:06:25', 'classifier:gradient_boosting', None))
+    print(main.decision_tree_surrogate('00:06:25', 'classifier:gradient_boosting', None).data)
 
 
 def test_feature_importance():
     main = get_autosklearn_hearts()
-    print(main.feature_importance('00:06:25', 'SOURCE'))
+    print(main.feature_importance('00:06:25', 'SOURCE').data)
 
 
 def test_fanova():
     main = get_autosklearn_hearts()
-    print(main.fanova('00:06', 'SOURCE'))
+    print(main.fanova('00:06', 'SOURCE').data)
 
 
 def test_simulate_surrogate():
     main = get_autosklearn_hearts()
-    print(main.simulate_surrogate('00:06', 200))
+    print(main.simulate_surrogate('00:06', 200).data)
 
 
 def test_config_similarity():
     main = get_autosklearn_hearts()
-    print(main.config_similarity())
+    print(main.config_similarity().data)
 
 
 def test_lime():
     main = get_autosklearn_hearts()
-    print(main.lime('00:06:25', 1, 'SOURCE'))
+    print(main.lime('00:06:25', 1, 'SOURCE').data)
 
 
 def test_roc_curve():
     main = get_autosklearn_hearts()
-    print(main.roc_curve(['00:06:25']))
+    print(main.roc_curve(['00:06:25']).data)

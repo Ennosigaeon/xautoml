@@ -71,6 +71,20 @@ def test_lime_for_auto_sklearn():
     print(json.dumps(res.to_dict([])))
 
 
+def test_lime_for_auto_sklearn_hearts():
+    main = get_autosklearn_hearts()
+    X, y, pipeline = main.get_pipeline('00:06:25')
+
+    step = 'SOURCE'
+    idx = 3
+
+    pipeline, X, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X, y)
+    details = ModelDetails()
+    res = details.calculate_lime(X, y, pipeline, idx)
+
+    print(json.dumps(res.to_dict([])))
+
+
 def test_performance_data():
     main = get_31()
     X, y, pipeline = main.get_pipeline('00:02:02')
