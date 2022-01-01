@@ -8,6 +8,8 @@ from ConfigSpace.read_and_write import json as config_json
 from sklearn.ensemble import VotingClassifier
 from sklearn.pipeline import Pipeline
 
+from dswizard.components.pipeline import ConfigurablePipeline
+from dswizard.components.sklearn import ColumnTransformerComponent
 from xautoml.models import RunHistory, MetaInformation, Explanations, CandidateStructure, Candidate, CandidateId, \
     ConfigExplanation, Ensemble
 
@@ -51,10 +53,6 @@ def import_dswizard(dswizard: Any, ensemble: VotingClassifier) -> RunHistory:
 
 
 def import_auto_sklearn(automl: Any):
-    from autosklearn.pipeline.components.data_preprocessing import DataPreprocessorChoice
-    from dswizard.components.sklearn import ColumnTransformerComponent
-    from dswizard.pipeline.pipeline import FlexiblePipeline
-
     def build_meta_information() -> MetaInformation:
         try:
             start_time = backend.load_start_time(automl.seed)
@@ -97,7 +95,7 @@ def import_auto_sklearn(automl: Any):
         return meta
 
     def build_structures() -> tuple[dict[CandidateId, CandidateStructure], dict[CandidateId, float]]:
-        def as_flexible_pipeline(simple_pipeline: Pipeline) -> FlexiblePipeline:
+        def as_configurable_pipeline(simple_pipeline: Pipeline) -> ConfigurablePipeline:
             def suffix_name(name, suffix) -> str:
                 if suffix is None:
                     return name
@@ -129,7 +127,7 @@ def import_auto_sklearn(automl: Any):
                     for name, s in component.steps:
                         s_, suffix = convert_component(s)
                         steps.append((suffix_name(name, suffix), s_))
-                    return FlexiblePipeline(steps), None
+                    return ConfigurablePipeline(steps), None
 
                 return component, suffix
 
@@ -145,14 +143,14 @@ def import_auto_sklearn(automl: Any):
             t = (automl.seed, key.config_id, key.budget)
             try:
                 pipeline = automl.automl_.models_[t]
-                flexible_pipeline = as_flexible_pipeline(pipeline)
+                config_pipeline = as_configurable_pipeline(pipeline)
             except KeyError:
                 # Skip results without fitted model for now
                 # TODO also load failed configurations
                 continue
 
             try:
-                struct_key = str(flexible_pipeline.get_hyperparameter_search_space())
+                struct_key = str(config_pipeline.get_hyperparameter_search_space())
                 cs = None
             except AttributeError:
                 # Fallback for DummyClassifier
@@ -160,7 +158,7 @@ def import_auto_sklearn(automl: Any):
                 struct_key = str(cs)
 
             if struct_key not in structures:
-                structure = CandidateStructure('00:{:02d}'.format(len(structures)), cs, flexible_pipeline, [])
+                structure = CandidateStructure('00:{:02d}'.format(len(structures)), cs, config_pipeline, [])
                 structures[struct_key] = structure
             else:
                 structure = structures[struct_key]

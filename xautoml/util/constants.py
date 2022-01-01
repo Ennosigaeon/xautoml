@@ -1,5 +1,3 @@
-DSWIZARD = 'dswizard'
-
 SINK = 'SINK'
 SOURCE = 'SOURCE'
 

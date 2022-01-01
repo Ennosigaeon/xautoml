@@ -48,7 +48,8 @@ setup_args = dict(
         "jupyterlab~=3.0",
         "mlinsights~=0.3",
         "lime~=0.2",
-        "fanova~=2.0"
+        "fanova~=2.0",
+        "dswizard-components~=0.1"
     ],
     zip_safe=False,
     include_package_data=True,
