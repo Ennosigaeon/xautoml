@@ -5,7 +5,7 @@ import {DetailsModel} from "./model";
 import {ErrorIndicator} from "../../util/error";
 import {Colors, JupyterContext, prettyPrint} from "../../util";
 import {CommonWarnings} from "../../util/warning";
-import {Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, TooltipProps, XAxis, YAxis} from "recharts";
+import {Bar, BarChart, CartesianGrid, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis} from "recharts";
 import {JupyterButton} from "../../util/jupyter-button";
 import {ID} from "../../jupyter";
 import {MinimalisticTooltip} from "../../util/recharts";
@@ -139,6 +139,7 @@ ${ID}_feature_importance
                                     <XAxis dataKey="feature" type={"category"} interval={0}
                                            tick={<CustomizedAxisTick additionalFeatures={additionalFeatures}/>}/>
                                     <YAxis domain={['0', 'dataMax']} tickFormatter={y => prettyPrint(y, 4)}/>
+                                    <ReferenceLine y="0" stroke="#666666"/>
                                     <Tooltip content={<MinimalisticTooltip/>}/>
                                     <Bar dataKey="y" fill={Colors.DEFAULT}/>
                                 </BarChart>
