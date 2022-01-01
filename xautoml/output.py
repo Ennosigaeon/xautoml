@@ -15,17 +15,23 @@ RAW = 2
 class OutputCalculator:
 
     @staticmethod
-    def _load_data(d: dict, y: pd.Series, confidence: pd.Series, method: int) -> Union[str, pd.DataFrame]:
-        if len(d) == 0:
-            if method != RAW:
-                return ''
-            else:
-                return pd.DataFrame()
+    def _load_data(d: Union[dict, pd.DataFrame],
+                   y: pd.Series,
+                   confidence: np.ndarray,
+                   method: int) -> Union[str, pd.DataFrame]:
 
-        data = d['predict'] if 'predict' in d else d['transform']
-        feature_names = d.get('get_feature_names_out', None)
+        if isinstance(d, dict):
+            if len(d) == 0:
+                if method != RAW:
+                    return ''
+                else:
+                    return pd.DataFrame()
 
-        df = pd.DataFrame(data, columns=feature_names)
+            data = d['predict'] if 'predict' in d else d['transform']
+            df = pd.DataFrame(data, columns=d.get('get_feature_names_out', None))
+        else:
+            df = d
+
         if method == COMPLETE:
             # Add target column for displaying in raw_dataset.tsx
             df['TARGET'] = y
@@ -46,7 +52,7 @@ class OutputCalculator:
             alter_pipeline_for_debugging(pipeline)
             pipeline.predict(X)
             y_proba = pipeline.predict_proba(X)
-            confidence = pd.Series(np.max(y_proba, axis=1))
+            confidence = np.max(y_proba, axis=1)
 
             try:
                 pipeline.get_feature_names_out(X.columns)

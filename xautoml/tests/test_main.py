@@ -1,6 +1,6 @@
 import json
 
-from xautoml.tests import get_31, get_autosklearn, get_168746, get_autosklearn_hearts
+from xautoml.tests import get_31, get_autosklearn, get_168746, get_autosklearn_hearts, get_autosklearn_iris
 
 
 def test_serialization_fixed_structure():
@@ -71,3 +71,18 @@ def test_lime():
 def test_roc_curve():
     main = get_autosklearn_hearts()
     print(main.roc_curve(['00:06:25']).data)
+
+
+def test_ensemble_decision_surface():
+    main = get_autosklearn_iris()
+    print(main.ensemble_decision_surface().data)
+
+
+def test_ensemble_overview():
+    main = get_autosklearn_iris()
+    print(main.ensemble_overview().data)
+
+
+def test_ensemble_predictions():
+    main = get_autosklearn_iris()
+    print(main.ensemble_predictions(15).data)

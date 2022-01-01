@@ -1,6 +1,7 @@
 import {URLExt} from '@jupyterlab/coreutils';
 
 import {ServerConnection} from '@jupyterlab/services';
+import {CandidateId, Prediction} from "./model";
 
 /**
  * Call the API extension
@@ -93,7 +94,7 @@ export interface PerformanceData {
     val_score: number
     accuracy: number
     cm: ConfusionMatrixData
-    report: Map<string, {precision: number, recall: number, 'f1-support': number, support: number}>
+    report: Map<string, { precision: number, recall: number, 'f1-support': number, support: number }>
 }
 
 export interface ConfusionMatrixData {
@@ -125,4 +126,22 @@ export interface ConfigSimilarityResponse {
     config: { x: number, y: number, idx: number }[],
     incumbents: { x: number, y: number, idx: number }[],
     surface: { x1: number, x2: number, y1: number, y2: number, z: number }[]
+}
+
+export interface EnsembleMemberStats {
+    consensus: number
+    weight: number
+}
+
+export interface EnsembleOverview {
+    df: string,
+    metrics: Map<CandidateId, EnsembleMemberStats>
+}
+
+
+export interface DecisionSurfaceResponse {
+    colors: string[]
+    contours: Map<CandidateId, string>
+    X: { x: number, y: number }[]
+    y: Prediction[]
 }

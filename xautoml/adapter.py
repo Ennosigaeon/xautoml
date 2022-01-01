@@ -1,16 +1,18 @@
 import warnings
 from collections import OrderedDict
+from typing import Any
 
 import joblib
 from ConfigSpace import ConfigurationSpace
 from ConfigSpace.read_and_write import json as config_json
+from sklearn.ensemble import VotingClassifier
 from sklearn.pipeline import Pipeline
 
 from xautoml.models import RunHistory, MetaInformation, Explanations, CandidateStructure, Candidate, CandidateId, \
     ConfigExplanation, Ensemble
 
 
-def import_dswizard(dswizard: any) -> RunHistory:
+def import_dswizard(dswizard: Any, ensemble: VotingClassifier) -> RunHistory:
     tmp = dswizard.complete_data['meta']
     meta = MetaInformation('dswizard', tmp['start_time'], tmp['end_time'], tmp['metric'], tmp['is_minimization'],
                            tmp['n_structures'], tmp['n_configs'], tmp['incumbent'], tmp['openml_task'],
@@ -42,10 +44,13 @@ def import_dswizard(dswizard: any) -> RunHistory:
         config_explanations[cid] = ConfigExplanation(exp['candidates'], exp['loss'], exp['marginalization'])
     explanations = Explanations(dswizard.complete_data['explanations']['structures'], config_explanations)
 
-    return RunHistory(meta, default_cs, structures, explanations)
+    # noinspection PyTypeChecker
+    ens = Ensemble(ensemble, {cid: ensemble.weights[i] for i, (cid, _) in enumerate(ensemble.estimators)})
+
+    return RunHistory(meta, default_cs, structures, ens, explanations)
 
 
-def import_auto_sklearn(automl: any):
+def import_auto_sklearn(automl: Any):
     from autosklearn.pipeline.components.data_preprocessing import DataPreprocessorChoice
     from dswizard.components.sklearn import ColumnTransformerComponent
     from dswizard.pipeline.pipeline import FlexiblePipeline
@@ -91,7 +96,7 @@ def import_auto_sklearn(automl: any):
 
         return meta
 
-    def build_structures() -> dict[CandidateId, CandidateStructure]:
+    def build_structures() -> tuple[dict[CandidateId, CandidateStructure], dict[CandidateId, float]]:
         def as_flexible_pipeline(simple_pipeline: Pipeline) -> FlexiblePipeline:
             def suffix_name(name, suffix) -> str:
                 if suffix is None:
@@ -131,10 +136,15 @@ def import_auto_sklearn(automl: any):
             a = convert_component(simple_pipeline)[0]
             return a
 
+        ensemble_members: list[tuple] = automl.automl_.ensemble_.get_selected_model_identifiers()
+        ensemble_weights = [w for w in automl.automl_.ensemble_.weights_ if w > 0]
+        mapped_ensemble_member = {}
+
         structures = OrderedDict()
         for key, value in runhistory.data.items():
+            t = (automl.seed, key.config_id, key.budget)
             try:
-                pipeline = automl.automl_.models_[(automl.seed, key.config_id, key.budget)]
+                pipeline = automl.automl_.models_[t]
                 flexible_pipeline = as_flexible_pipeline(pipeline)
             except KeyError:
                 # Skip results without fitted model for now
@@ -161,8 +171,9 @@ def import_auto_sklearn(automl: any):
                 config = cs.get_default_configuration()
                 config.origin = 'Default'
 
+            cid = '{}:{:02d}'.format(structure.cid, key.config_id)
             candidate = Candidate(
-                '{}:{:02d}'.format(structure.cid, key.config_id),
+                cid,
                 key.budget,
                 'SUCCESS' if value.status.name == 'SUCCESS' else 'CRASHED',
                 value.cost if metric._sign != 1.0 else metric._optimum - value.cost,
@@ -175,7 +186,13 @@ def import_auto_sklearn(automl: any):
             )
             structure.configs.append(candidate)
 
-        return {s.cid: s for s in structures.values()}
+            try:
+                idx = ensemble_members.index(t)
+                mapped_ensemble_member[cid] = ensemble_weights[idx]
+            except ValueError:
+                pass
+
+        return {s.cid: s for s in structures.values()}, mapped_ensemble_member
 
     metric = automl.automl_._metric
     backend = automl.automl_._backend
@@ -183,7 +200,7 @@ def import_auto_sklearn(automl: any):
     trajectory = automl.trajectory_
 
     meta_information = build_meta_information()
-    structures = build_structures()
+    structures, ensemble = build_structures()
 
     return RunHistory(meta_information, automl.automl_.configuration_space, list(structures.values()),
-                      Explanations({}, {}))
+                      Ensemble(automl, ensemble), Explanations({}, {}))

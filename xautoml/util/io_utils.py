@@ -14,8 +14,8 @@ def openml_task(task: int, fold: int):
     train_indices, test_indices = task.get_train_test_split_indices(fold=fold)
 
     X, y = task.get_X_and_y(dataset_format='dataframe')
-    X_test = X.iloc[test_indices, :]
-    y_test = y.iloc[test_indices]
+    X_test = X.iloc[test_indices, :].reset_index(drop=True)
+    y_test = y.iloc[test_indices].reset_index(drop=True)
 
     return X_test, y_test
 
@@ -50,8 +50,9 @@ def configs_as_dataframe(cs: ConfigurationSpace,
 
 
 def down_sample(X: pd.DataFrame, y: pd.Series, n_samples: int) -> tuple[pd.DataFrame, pd.Series]:
-    idx = np.random.choice(X.shape[0], size=n_samples, replace=False)
-    X = X.loc[idx, :].reset_index(drop=True)
-    y = y.loc[idx].reset_index(drop=True)
+    if X.shape[0] > n_samples:
+        idx = np.random.choice(X.shape[0], size=n_samples, replace=False)
+        X = X.loc[idx, :].reset_index(drop=True)
+        y = y.loc[idx].reset_index(drop=True)
 
     return X, y

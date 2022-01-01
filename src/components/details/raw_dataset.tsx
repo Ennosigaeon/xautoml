@@ -7,6 +7,7 @@ import {JupyterButton} from "../../util/jupyter-button";
 import {JupyterContext} from "../../util";
 import {ErrorIndicator} from "../../util/error";
 import {ID} from "../../jupyter";
+import {DatasetTable} from "./dataset_table";
 
 
 interface RawDatasetProps {
@@ -26,11 +27,9 @@ export class RawDataset extends React.Component<RawDatasetProps, RawDatasetState
         'transfer the previewed data set into a new Jupyter cell to continue with further analysis. By selecting a ' +
         'single record a LIME analysis can be calculated.'
 
-    private static selectedClassName = 'selected-config'
+
     static contextType = JupyterContext;
     context: React.ContextType<typeof JupyterContext>;
-
-    private readonly dfTableRef = React.createRef<HTMLDivElement>()
 
     constructor(props: RawDatasetProps) {
         super(props);
@@ -40,7 +39,6 @@ export class RawDataset extends React.Component<RawDatasetProps, RawDatasetState
             error: undefined
         }
 
-        this.handleSampleClick = this.handleSampleClick.bind(this)
         this.handleLoadDataframe = this.handleLoadDataframe.bind(this)
     }
 
@@ -49,21 +47,9 @@ export class RawDataset extends React.Component<RawDatasetProps, RawDatasetState
     }
 
     componentDidUpdate(prevProps: Readonly<RawDatasetProps>, prevState: Readonly<RawDatasetState>, snapshot?: any) {
-        if (prevProps.model.component !== this.props.model.component) {
+        if (prevProps.model.component !== this.props.model.component)
             this.queryOutputs()
-        }
 
-        if (!!this.dfTableRef.current) {
-            [...this.dfTableRef.current.getElementsByTagName('tr')].forEach(tr => {
-                tr.onclick = this.handleSampleClick
-
-                // Highlight previously selected row
-                if (this.props.model.selectedSample !== undefined &&
-                    this.props.model.selectedSample === Number.parseInt(tr.firstElementChild.textContent)) {
-                    tr.classList.add(RawDataset.selectedClassName)
-                }
-            })
-        }
     }
 
     private queryOutputs() {
@@ -85,22 +71,6 @@ export class RawDataset extends React.Component<RawDatasetProps, RawDatasetState
         }
     }
 
-    private handleSampleClick(event: MouseEvent) {
-        const row = event.target instanceof HTMLTableRowElement ? event.target : (event.target as HTMLTableCellElement).parentElement
-        const idx = Number.parseInt(row.firstElementChild.textContent)
-
-        if (isNaN(idx))
-            // Abort processing as no valid row selected
-            return
-
-        // Highlight selected row
-        row.parentElement.querySelectorAll(`.${RawDataset.selectedClassName}`)
-            .forEach(el => el.classList.remove(RawDataset.selectedClassName))
-        row.classList.add(RawDataset.selectedClassName)
-
-        this.props.onSampleClick(idx)
-    }
-
     private handleLoadDataframe() {
         const {candidate, component} = this.props.model
 
@@ -113,15 +83,8 @@ ${ID}_X
     }
 
     render() {
-        const {component, algorithm} = this.props.model
+        const {component, algorithm, selectedSample} = this.props.model
         const {loadingDf, outputs, error} = this.state
-
-        const outputRender = outputs.has(component) ?
-            <div style={{overflowX: 'auto'}}>
-                <div className={'jp-RenderedHTMLCommon raw-dataset'} ref={this.dfTableRef}
-                     dangerouslySetInnerHTML={{__html: outputs.get(component)}}/>
-            </div> :
-            <div>Missing</div>
 
         return (
             <>
@@ -135,9 +98,15 @@ ${ID}_X
                 {!error &&
                     <>
                         <LoadingIndicator loading={loadingDf}/>
-                        {!loadingDf && outputRender}
+                        {!loadingDf &&
+                            <>
+                                {outputs.has(component) ?
+                                    <DatasetTable data={outputs.get(component)}
+                                                  selectedSample={selectedSample}
+                                                  onSampleClick={this.props.onSampleClick}/> :
+                                    <div>Missing</div>}
+                            </>}
                     </>}
-
             </>
         )
     }

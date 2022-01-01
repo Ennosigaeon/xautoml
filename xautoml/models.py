@@ -21,7 +21,7 @@ class MetaInformation:
     incumbent: float
     openml_task: Optional[int]
     openml_fold: Optional[int]
-    config: dict[str, any]
+    config: dict[str, Any]
 
 
 @dataclass()

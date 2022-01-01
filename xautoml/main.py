@@ -10,6 +10,7 @@ from sklearn.pipeline import Pipeline
 
 from xautoml._helper import XAutoMLManager
 from xautoml.config_similarity import ConfigSimilarity
+from xautoml.ensemble import EnsembleInspection
 from xautoml.hp_importance import HPImportance
 from xautoml.model_details import ModelDetails, DecisionTreeResult, LimeResult, GlobalSurrogateResult
 from xautoml.models import RunHistory, CandidateId, CandidateStructure
@@ -243,6 +244,52 @@ class XAutoML:
             except ValueError as ex:
                 print('Failed to calculate ROC for {}'.format(cid))
         return result
+
+    @as_json
+    def ensemble_decision_surface(self):
+        ensemble = self.run_history.ensemble
+        if len(ensemble.members) == 0:
+            return {}
+
+        members = [self.run_history.cid_to_candidate[cid] for cid in ensemble.members]
+        X, y = self.get_data_set()
+
+        return EnsembleInspection.plot_decision_surface(ensemble, members, X, y)
+
+    @as_json
+    def ensemble_overview(self):
+        ensemble = self.run_history.ensemble
+        if len(ensemble.members) == 0:
+            return {}
+
+        members = [self.run_history.cid_to_candidate[cid] for cid in ensemble.members]
+        X, y = self.get_data_set()
+
+        y_pred = ensemble.model.predict(X)
+        confidence = ensemble.model.predict_proba(X)
+
+        metrics, idx = EnsembleInspection.ensemble_overview(ensemble, members, X, y_pred)
+
+        with pd.option_context('display.max_columns', 1024, 'display.max_rows', 30, 'display.min_rows', 20):
+            df = OutputCalculator._load_data(X.loc[idx, :], y_pred[idx], np.max(confidence[idx], axis=1), COMPLETE)
+            return {'df': df, 'metrics': metrics}
+
+    @as_json
+    def ensemble_predictions(self, idx: int):
+        ensemble = self.run_history.ensemble
+        if len(ensemble.members) == 0:
+            return {}
+
+        X, _ = self.get_data_set()
+        X = X.loc[[idx], :]
+
+        members = [self.run_history.cid_to_candidate[cid] for cid in ensemble.members]
+
+        predictions = EnsembleInspection.member_predictions(members, X)
+        res = {cid: pred.tolist()[0] for cid, pred in zip(ensemble.members, predictions)}
+        res['Ensemble'] = ensemble.model.predict(X).tolist()[0]
+
+        return res
 
     # Endpoints for external communication
 

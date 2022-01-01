@@ -5,7 +5,6 @@
 ## New Features
 
 - PC Explanations for SMAC
-- Ensemble Introspections
 - More "Continue in Jupyter" Buttons
 - Improve help texts
 - Help texts for components. Link to sklearn

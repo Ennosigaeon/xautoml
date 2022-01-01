@@ -3,6 +3,7 @@ import {normalizeComponent} from "./util";
 export type PolicyData = Map<string, number>
 export type CandidateId = string
 export type ConfigValue = number | string | boolean
+export type Prediction = number | string | boolean
 export type Config = Map<string, ConfigValue>
 
 export namespace BO {

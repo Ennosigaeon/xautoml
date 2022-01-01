@@ -11,6 +11,7 @@ import {TabContext} from "@material-ui/lab";
 import {TabPanel} from "./util/tabpanel";
 import {SearchSpace} from "./components/search_space";
 import {GeneralInformation} from "./components/general_information";
+import {Ensemble} from "./components/ensemble";
 
 
 /**
@@ -115,8 +116,6 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
             // Jupyter renders all components before output containers are rendered.
             // Delay rendering to get the container width.
             window.setTimeout(() => this.setState({mounted: true}), 100)
-
-        this.props.jupyter.executeCode('from xautoml._helper import XAutoMLManager')
     }
 
     componentWillUnmount() {
@@ -213,7 +212,7 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
                                              onCandidateSelection={this.onCandidateSelection}/>
                             </TabPanel>
                             <TabPanel value={'3'}>
-                                <p>TODO: missing</p>
+                                <Ensemble onCandidateSelection={this.onCandidateSelection}/>
                             </TabPanel>
                         </TabContext>
                     </div>

@@ -6,6 +6,10 @@
     --additional-feature-color: #aaa;
 }
 
+* {
+    min-width: 0;
+}
+
 .jp-ReactWidget {
     color: var(--jp-ui-font-color1);
     background: var(--jp-layout-color1);
@@ -472,4 +476,12 @@ text.pc-axis-label:hover {
 /** Performance Overview **/
 .MuiTab-root.tab-small {
     min-width: 120px;
+}
+
+
+/** Decision Surface **/
+.decision-surface {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
 }

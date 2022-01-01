@@ -1,5 +1,7 @@
 import {
     ConfigSimilarityResponse,
+    DecisionSurfaceResponse,
+    EnsembleOverview,
     FANOVAResponse,
     FeatureImportance,
     GlobalSurrogateResult,
@@ -15,7 +17,7 @@ import {INotebookTracker, Notebook, NotebookActions} from "@jupyterlab/notebook"
 import {TagTool} from "@jupyterlab/celltags";
 import {KernelMessage} from "@jupyterlab/services";
 import {IError, IExecuteResult, IStream} from '@jupyterlab/nbformat';
-import {BO, CandidateId} from "./model";
+import {BO, CandidateId, Prediction} from "./model";
 import {Components} from "./util";
 import memoizee from "memoizee";
 import SOURCE = Components.SOURCE;
@@ -34,15 +36,25 @@ export class Jupyter {
     private readonly TAG_NAME = 'xautoml-generated'
     private previousCellContent: string = undefined;
 
+    private initialized: boolean
+
     constructor(private notebooks: INotebookTracker, private tags: TagTool) {
         this.previousCellContent = localStorage.getItem(this.LOCAL_STORAGE_CONTENT)
+
+        this.initialized = false
     }
 
     unmount() {
         this.memExecuteCode.clear()
+        this.initialized = false
     }
 
     executeCode<T>(code: string): Promise<T> {
+        if (!this.initialized) {
+            this.initialized = true
+            return this.executeCode('from xautoml._helper import XAutoMLManager')
+                .then(() => this.executeCode(code))
+        }
         const sessionContext = this.notebooks.currentWidget.context.sessionContext
 
         if (!sessionContext || !sessionContext.session?.kernel)
@@ -196,8 +208,36 @@ export class Jupyter {
 
     requestROCCurve(cid: CandidateId[]): Promise<RocCurveData> {
         const list = cid.join('\', \'')
-        return this.memExecuteCode(`XAutoMLManager.get_active().roc_curve(['${list}'])`)
+        return this.memExecuteCode<RocCurveData>(`XAutoMLManager.get_active().roc_curve(['${list}'])`)
             .then(data => new Map<string, LinePoint[]>(Object.entries(data)))
+    }
+
+    requestEnsembleOverview(): Promise<EnsembleOverview> {
+        return this.memExecuteCode<EnsembleOverview>(`XAutoMLManager.get_active().ensemble_overview()`)
+            .then(data => {
+                return {
+                    df: data.df,
+                    metrics: new Map(Object.entries(data.metrics))
+                }
+            })
+    }
+
+    requestEnsemblePredictions(idx: number): Promise<Map<CandidateId, Prediction>> {
+        return this.memExecuteCode<Map<CandidateId, Prediction>>(`XAutoMLManager.get_active().ensemble_predictions(${idx})`)
+            .then(data => new Map<CandidateId, Prediction>(Object.entries(data)))
+    }
+
+
+    requestEnsembleDecisionSurface(): Promise<DecisionSurfaceResponse> {
+        return this.memExecuteCode<DecisionSurfaceResponse>(`XAutoMLManager.get_active().ensemble_decision_surface()`)
+            .then(data => {
+                return {
+                    colors: data.colors,
+                    contours: new Map(Object.entries(data.contours)),
+                    X: data.X,
+                    y: data.y
+                }
+            })
     }
 }
 
