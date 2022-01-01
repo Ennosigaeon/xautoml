@@ -1,5 +1,6 @@
 from typing import Union
 
+import numpy as np
 import openml
 import pandas as pd
 from ConfigSpace import ConfigurationSpace, Configuration, CategoricalHyperparameter
@@ -46,3 +47,11 @@ def configs_as_dataframe(cs: ConfigurationSpace,
             pass
 
     return pruned_cs, X
+
+
+def down_sample(X: pd.DataFrame, y: pd.Series, n_samples: int) -> tuple[pd.DataFrame, pd.Series]:
+    idx = np.random.choice(X.shape[0], size=n_samples, replace=False)
+    X = X.loc[idx, :].reset_index(drop=True)
+    y = y.loc[idx].reset_index(drop=True)
+
+    return X, y

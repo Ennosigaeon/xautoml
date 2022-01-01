@@ -1,13 +1,10 @@
 import warnings
 from copy import deepcopy
-from dataclasses import dataclass, asdict
-from typing import Optional, Any
+from typing import Optional
 
-import dswizard.components.util as component_util
 import numpy as np
 import pandas as pd
-from ConfigSpace import ConfigurationSpace, Configuration
-from ConfigSpace.read_and_write import json as config_json
+from ConfigSpace import Configuration
 from IPython.display import JSON
 from sklearn.pipeline import Pipeline
 
@@ -15,125 +12,12 @@ from xautoml._helper import XAutoMLManager
 from xautoml.config_similarity import ConfigSimilarity
 from xautoml.hp_importance import HPImportance
 from xautoml.model_details import ModelDetails, DecisionTreeResult, LimeResult, GlobalSurrogateResult
-from xautoml.output import DESCRIPTION, OutputCalculator, COMPLETE
+from xautoml.models import RunHistory, CandidateId, CandidateStructure
+from xautoml.output import DESCRIPTION, OutputCalculator, COMPLETE, RAW
 from xautoml.roc_auc import RocCurve
 from xautoml.util import pipeline_utils
 from xautoml.util.constants import SINK
-
-CandidateId = str
-
-
-@dataclass()
-class MetaInformation:
-    framework: str
-    start_time: float
-    end_time: float
-    metric: str
-    is_minimization: bool
-    n_structures: int
-    n_configs: int
-    incumbent: float
-    openml_task: Optional[int]
-    openml_fold: Optional[int]
-    config: dict[str, any]
-
-
-@dataclass()
-class Candidate:
-    id: str
-    budget: float
-    status: str
-    loss: float
-    runtime: dict[str, float]
-    config: Configuration
-    origin: str
-    model: Pipeline
-
-    def as_dict(self):
-        return {
-            'id': self.id,
-            'budget': self.budget,
-            'status': self.status,
-            'loss': self.loss,
-            'runtime': self.runtime,
-            'config': self.config.get_dictionary(),
-            'origin': self.origin
-        }
-
-
-@dataclass()
-class CandidateStructure:
-    cid: CandidateId
-    configspace: Optional[ConfigurationSpace]
-    pipeline: Pipeline
-    configs: list[Candidate]
-
-    def __init__(self, cid: CandidateId, configspace: Optional[ConfigurationSpace],
-                 pipeline: Pipeline, configs: list[Candidate]):
-        self.cid = cid
-        self.configspace = configspace
-        self.pipeline = pipeline
-        self.configs = configs
-        self.hash = hash(str(configspace))
-
-    def as_dict(self):
-        return {
-            'cid': self.cid,
-            'configspace': config_json.write(self.configspace) if self.configspace is not None else None,
-            'pipeline': component_util.serialize(self.pipeline),
-            'configs': [c.as_dict() for c in self.configs]
-        }
-
-
-@dataclass()
-class ConfigExplanation:
-    candidates: dict
-    loss: list[float]
-    marginalization: dict[str, dict[str, list[tuple[float, float]]]]
-
-
-StructureExplanation = Any
-
-
-@dataclass()
-class Explanations:
-    structures: dict[CandidateId, StructureExplanation]
-    configs: dict[CandidateId, ConfigExplanation]
-
-    def as_dict(self):
-        return {
-            'structures': self.structures,
-            'configs': {key: asdict(value) for key, value in self.configs.items()}
-        }
-
-
-@dataclass()
-class RunHistory:
-    meta: MetaInformation
-    default_configspace: Optional[ConfigurationSpace]
-    structures: list[CandidateStructure]
-    explanations: Explanations
-
-    def __init__(self, meta: MetaInformation, default_configspace: Optional[ConfigurationSpace],
-                 structures: list[CandidateStructure], explanations: Explanations):
-        self.meta = meta
-        self.default_configspace = default_configspace
-        self.structures = structures
-        self.explanations = explanations
-
-        self.cid_to_candidate = {}
-        for s in structures:
-            for c in s.configs:
-                self.cid_to_candidate[c.id] = c
-
-    def as_dict(self):
-        return {
-            'meta': asdict(self.meta),
-            'default_configspace': config_json.write(self.default_configspace)
-            if self.default_configspace is not None else None,
-            'structures': [s.as_dict() for s in self.structures],
-            'explanations': self.explanations.as_dict()
-        }
+from xautoml.util.io_utils import down_sample
 
 
 def as_json(func):
@@ -149,15 +33,12 @@ class XAutoML:
     def __init__(self, run_history: RunHistory, X: pd.DataFrame, y: pd.Series, n_samples: int = 5000):
         self.run_history = run_history
 
-        down_sample = X.shape[0] > n_samples
-        if down_sample:
+        if X.shape[0] > n_samples:
             warnings.warn(
                 'The data set exceeds the maximum number of samples with {}. Selecting {} random samples...'.format(
                     X.shape, n_samples)
             )
-            idx = np.random.choice(X.shape[0], size=n_samples, replace=False)
-            X = X.loc[idx, :].reset_index(drop=True)
-            y = y.loc[idx].reset_index(drop=True)
+            X, y = down_sample(X, y, n_samples)
         self.X: pd.DataFrame = X
         self.y: pd.Series = y
 

@@ -6,8 +6,8 @@ from ConfigSpace import ConfigurationSpace
 from ConfigSpace.read_and_write import json as config_json
 from sklearn.pipeline import Pipeline
 
-from xautoml.main import RunHistory, MetaInformation, Explanations, CandidateStructure, Candidate, CandidateId, \
-    ConfigExplanation
+from xautoml.models import RunHistory, MetaInformation, Explanations, CandidateStructure, Candidate, CandidateId, \
+    ConfigExplanation, Ensemble
 
 
 def import_dswizard(dswizard: any) -> RunHistory:
