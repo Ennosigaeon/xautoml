@@ -87,7 +87,7 @@ def import_auto_sklearn(automl: Any):
         meta = MetaInformation('auto-sklearn',
                                start_time, start_time + automl.time_left_for_this_task,
                                metric.name, metric._sign == -1,
-                               1, len(automl.automl_.models_),
+                               1, len(automl.automl_.runhistory_.data),
                                trajectory[-1][0] if metric._sign == -1. else metric._optimum - trajectory[-1][0],
                                None, None, arguments
                                )
@@ -145,9 +145,14 @@ def import_auto_sklearn(automl: Any):
                 pipeline = automl.automl_.models_[t]
                 config_pipeline = as_configurable_pipeline(pipeline)
             except KeyError:
-                # Skip results without fitted model for now
-                # TODO also load failed configurations
-                continue
+                try:
+                    pipeline = automl.automl_._backend.load_model_by_seed_and_id_and_budget(automl.seed,
+                                                                                            key.config_id,
+                                                                                            key.budget)
+                    config_pipeline = as_configurable_pipeline(pipeline)
+                except FileNotFoundError:
+                    warnings.warn('Skipping {} without fitted model'.format(t))
+                    continue
 
             try:
                 struct_key = str(config_pipeline.get_hyperparameter_search_space())

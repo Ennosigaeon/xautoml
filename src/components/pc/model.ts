@@ -301,7 +301,7 @@ export class Line {
             return this.choices.has(`${axis.id}_${filter.value}`)
         else {
             const value = this.pointMap.get(axis.id) as number
-            return filter[0] <= value && value < filter[1]
+            return filter[0] <= value && value <= filter[1]
         }
     }
 }

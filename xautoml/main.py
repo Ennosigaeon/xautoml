@@ -40,8 +40,8 @@ class XAutoML:
                     X.shape, n_samples)
             )
             X, y = down_sample(X, y, n_samples)
-        self.X: pd.DataFrame = X
-        self.y: pd.Series = y
+        self.X: pd.DataFrame = X.reset_index(drop=True)
+        self.y: pd.Series = y.reset_index(drop=True)
 
         XAutoMLManager.open(self)
 

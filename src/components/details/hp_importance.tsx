@@ -246,7 +246,8 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
         const rows = [...Array(nRows).keys()].map(i => {
             const activeColumns = overview.keys[i]
             return (
-                <g key={`${activeColumns[0]}-${activeColumns[1]}`} onClick={() => this.selectRow(i)} className={'hp-importance_row'}>
+                <g key={`${activeColumns[0]}-${activeColumns[1]}`} onClick={() => this.selectRow(i)}
+                   className={'hp-importance_row'}>
                     {selectedRow === i &&
                         <rect x={-1.25 * radius} width={width + radius}
                               y={i * stepSize - 1.25 * radius} height={2.5 * radius}
@@ -327,7 +328,13 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
                     {overview?.keys.length === 0 && <p>The selected component does not have any hyperparameters. </p>}
                     {overview?.keys.length > 0 && <>
                         {this.renderOverview(maxLabelLength)}
-                        <div style={{marginTop: maxLabelLength, marginLeft: '20px', flexGrow: 1, flexShrink: 1}}>
+                        <div style={{
+                            marginTop: maxLabelLength,
+                            marginLeft: '20px',
+                            flexGrow: 1,
+                            flexShrink: 1,
+                            minWidth: 'auto'
+                        }}>
                             {selectedRow === undefined ?
                                 <p>Select a hyperparameter (pair) on the left side to get a detailed visualization of
                                     the correlation of the selected hyperparameter with the marginal performance.</p> :
