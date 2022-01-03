@@ -40,6 +40,7 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
         this.cids = [].concat(...this.props.structures.map(s => s.configs.map(c => c.id)))
 
         let keys: string[]
+        let timestamp =  this.cids.length - 1
         if (this.cids.length <= 10)
             keys = this.cids
         else if (this.cids.length <= 50)
@@ -52,12 +53,13 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
                 .map((c, idx) => idx)
                 .filter(idx => idx % stepSize === 0)
                 .map(idx => idx.toString())
+            timestamp = Number.parseInt(keys.slice(-1)[0])
         }
 
         keys.forEach((k, idx) => sliderMarks[idx] = k)
         this.state = {
             sliderMarks: sliderMarks,
-            timestamp: keys.length - 1,
+            timestamp: timestamp,
             configSimilarity: undefined,
             hpHistory: undefined
         }
@@ -67,7 +69,10 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
     }
 
     private changeTimestamp(v: number) {
-        this.setState({timestamp: v})
+        if (this.cids.length <= 100)
+            this.setState({timestamp: v})
+        else
+            this.setState({timestamp: Number.parseInt(this.state.sliderMarks[v])})
     }
 
     private onHyperparameterSelection(hyperparameter: string) {

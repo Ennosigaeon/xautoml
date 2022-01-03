@@ -311,10 +311,13 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
     constructor(props: CandidateTableProps) {
         super(props);
 
+        const order = this.props.meta.is_minimization ? 'asc' : 'desc'
+        const orderBy = 'performance'
+
         this.state = {
-            rows: this.calculateData(),
-            order: this.props.meta.is_minimization ? 'asc' : 'desc',
-            orderBy: 'performance',
+            rows: this.calculateData(order, orderBy),
+            order: order,
+            orderBy: orderBy,
             page: 0,
             rowsPerPage: 10
         }
@@ -328,7 +331,8 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
 
     private handleRequestSort(_: React.MouseEvent<unknown>, property: keyof SingleCandidate): void {
         const isAsc = this.state.orderBy === property && this.state.order === 'asc';
-        this.setState({order: isAsc ? 'desc' : 'asc', orderBy: property})
+        const order = isAsc ? 'desc' : 'asc'
+        this.setState({rows: this.calculateData(order, property), order: order, orderBy: property})
     }
 
     private handleSelectAllClick(event: React.ChangeEvent<HTMLInputElement>): void {
@@ -360,10 +364,8 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
     }
 
     componentDidUpdate(prevProps: Readonly<CandidateTableProps>, prevState: Readonly<CandidateTableState>, snapshot?: any) {
-        if (prevProps.structures !== this.props.structures || prevProps.hideUnselectedCandidates !== this.props.hideUnselectedCandidates) {
-            const rows = this.calculateData()
-            this.setState({rows: rows})
-        }
+        if (prevProps.structures !== this.props.structures || prevProps.hideUnselectedCandidates !== this.props.hideUnselectedCandidates)
+            this.setState({rows: this.calculateData(this.state.order, this.state.orderBy)})
 
         if (prevProps.showCandidate !== this.props.showCandidate && this.props.showCandidate !== undefined) {
             const idx = this.state.rows.map(c => c.id).indexOf(this.props.showCandidate)
@@ -372,8 +374,17 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
         }
     }
 
-    private calculateData(): SingleCandidate[] {
+    private calculateData(order: 'desc' | 'asc', orderBy: keyof SingleCandidate): SingleCandidate[] {
         const rows: SingleCandidate[] = []
+
+        const comp = (a: SingleCandidate, b: SingleCandidate) => {
+            const sign = order === 'desc' ? 1 : -1
+            if (b[orderBy] < a[orderBy])
+                return sign * -1;
+            if (b[orderBy] > a[orderBy])
+                return sign * 1;
+            return 0;
+        }
 
         this.props.structures.forEach(structure => {
             structure.configs
@@ -389,20 +400,12 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
                     )
                 })
         })
-        return rows
+        return rows.sort(comp)
     }
 
     render() {
         const {structures, explanations, hiddenCandidates} = this.props
         const {rows, order, orderBy, page, rowsPerPage} = this.state
-        const comp = (a: SingleCandidate, b: SingleCandidate) => {
-            const sign = order === 'desc' ? 1 : -1
-            if (b[orderBy] < a[orderBy])
-                return sign * -1;
-            if (b[orderBy] > a[orderBy])
-                return sign * 1;
-            return 0;
-        }
 
         const headCells: HeadCell[] = [
             {id: 'id', numeric: false, sortable: true, label: 'Id', width: '40px'},
@@ -433,7 +436,6 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
                         <TableBody>
                             {rows
                                 .filter(s => !hiddenCandidates.has(s.id))
-                                .sort(comp)
                                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                                 .map(row => {
                                     return (
