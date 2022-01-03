@@ -198,7 +198,7 @@ ${ID}_pipeline
                                   color='primary'
                                   onClick={this.onCheckBoxClick}/>
                     </TableCell>
-                    <TableCell id={candidate.id} scope='row' padding='none'>{candidate.id}</TableCell>
+                    <TableCell scope='row' padding='none'>{candidate.id}</TableCell>
                     <TableCell align='right'>{prettyPrint(candidate.timestamp, 2)}</TableCell>
                     <TableCell align='right'>{prettyPrint(candidate.performance, 4)}</TableCell>
                     <TableCell align='right' style={{height: '50px'}} padding='none'>

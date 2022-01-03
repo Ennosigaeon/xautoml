@@ -219,48 +219,45 @@ export class PCAxis extends React.Component<CPCAxisProps, CPCAxisState> {
                                                         onAxisSelection={onClick}/>)
 
         const id = `path-${uuidv4()}`
-
         const selectableTitle = axis.isNumerical() || choices.length > 1
 
         return (
-            <>
-                <g id={`axis-${axis.id}`} className={'pc-axis'} onClick={this.collapse}>
-                    <Axis direction={'y'} layout={axis.getLayout()} showTicks={this.isNumerical()} xScale={xScale}/>
-                    {(this.context.showExplanations && explanation) && <>
-                        <Axis direction={'x'} layout={axis.getLayout()} showTicks={true} xScale={xScale}/>
-                        {this.isNumerical() ?
-                            <ContinuousPerfEstimate xScale={xScale}
-                                                    yScale={(yScale as d3.ScaleContinuousNumeric<number, number>)}
-                                                    layout={axis.getLayout()}
-                                                    perfEstimate={explanation}/> :
-                            <DiscretePerfEstimates xScale={xScale} choices={axis.choices}
-                                                   perfEstimate={explanation}/>}
-                    </>}
+            <g className={'pc-axis'} onClick={this.collapse}>
+                <Axis direction={'y'} layout={axis.getLayout()} showTicks={this.isNumerical()} xScale={xScale}/>
+                {(this.context.showExplanations && explanation) && <>
+                    <Axis direction={'x'} layout={axis.getLayout()} showTicks={true} xScale={xScale}/>
+                    {this.isNumerical() ?
+                        <ContinuousPerfEstimate xScale={xScale}
+                                                yScale={(yScale as d3.ScaleContinuousNumeric<number, number>)}
+                                                layout={axis.getLayout()}
+                                                perfEstimate={explanation}/> :
+                        <DiscretePerfEstimates xScale={xScale} choices={axis.choices}
+                                               perfEstimate={explanation}/>}
+                </>}
 
-                    {this.isNumerical() && <SVGBrush svg={this.context.svg}
-                                                     layout={axis.getLayout()}
-                                                     onBrushEnd={this.onBrushEnd}
-                    />}
+                {this.isNumerical() && <SVGBrush svg={this.context.svg}
+                                                 layout={axis.getLayout()}
+                                                 onBrushEnd={this.onBrushEnd}
+                />}
 
-                    <text className={selectableTitle ? 'pc-axis-label' : ''} onClick={(e) => {
-                        if (selectableTitle)
-                            onClick(axis)
-                        e.stopPropagation()
-                    }}>
-                        <path id={id} d={
-                            linkHorizontal().x(d => d[0]).y(d => d[1])({
-                                source: [x, y - 0.5 * Constants.TEXT_HEIGHT],
-                                target: [x + width, y - 0.5 * Constants.TEXT_HEIGHT]
-                            })}/>
-                        <textPath xlinkHref={`#${id}`} startOffset={'50%'} textAnchor={'middle'}>
-                            {axis.label}
-                            <title>{axis.label}</title>
-                        </textPath>
-                    </text>
+                <text className={selectableTitle ? 'pc-axis-label' : ''} onClick={(e) => {
+                    if (selectableTitle)
+                        onClick(axis)
+                    e.stopPropagation()
+                }}>
+                    <path id={id} d={
+                        linkHorizontal().x(d => d[0]).y(d => d[1])({
+                            source: [x, y - 0.5 * Constants.TEXT_HEIGHT],
+                            target: [x + width, y - 0.5 * Constants.TEXT_HEIGHT]
+                        })}/>
+                    <textPath xlinkHref={`#${id}`} startOffset={'50%'} textAnchor={'middle'}>
+                        {axis.label}
+                        <title>{axis.label}</title>
+                    </textPath>
+                </text>
 
-                    {choices}
-                </g>
-            </>
+                {choices}
+            </g>
         )
     };
 }
