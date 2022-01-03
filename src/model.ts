@@ -101,12 +101,15 @@ export namespace BO {
             )
         }
 
-        get(id: string): [number, number][] | undefined {
+        get(id: string, key: string = 'bad'): [number, number][] | undefined {
             const map = this.marginalization.get(id)
             if (map === undefined || map.size === 0)
                 return undefined
 
-            return map.values().next().value
+            if (key === undefined || !map.has(key))
+                return map.values().next().value
+            else
+                return map.get(key)
         }
 
         public static fromJson(explanation: Explanation): Explanation {

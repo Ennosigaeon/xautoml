@@ -22,9 +22,10 @@ class DiscretePerfEstimates extends React.Component<DiscretePerfEstProps, {}> {
         const {y, height} = layout
         const centeredX = layout.centeredX()
 
+        const perf = performance === undefined ? [0, scale.domain()[0]] : performance
         return (
-            <rect key={performance[0]} className={'pc-importance'} fill={Colors.DEFAULT}
-                  x={centeredX} y={y + height * 0.1} width={scale(performance[1])} height={height * 0.8}/>
+            <rect key={perf[0]} className={'pc-importance'} fill={Colors.DEFAULT}
+                  x={centeredX} y={y + height * 0.1} width={scale(perf[1])} height={height * 0.8}/>
         )
     }
 
