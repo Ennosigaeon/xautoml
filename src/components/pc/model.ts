@@ -271,12 +271,8 @@ export class Layout {
     }
 
     perfEstScale(domain: [number, number][] = [[0, 1]]): d3.ScaleLinear<number, number> {
-        const values = domain.map(([_, v]) => v)
-        const min = Math.min(...values)
-        const max = Math.max(...values)
-        const padding = (max - min) * 0.1
-
-        return d3.scaleLinear([min - padding, max + padding], [0, this.width / 2])
+        const max = Math.max(...domain.map(([_, v]) => v))
+        return d3.scaleLinear([0, max * 1.1], [0, this.width / 2])
     }
 }
 
