@@ -15,3 +15,4 @@ node_modules/
 hypertendril/
 *.pkl
 *.ipynb
+user_study/**/output/
