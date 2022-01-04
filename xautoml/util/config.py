@@ -1,23 +1,9 @@
 from typing import Union
 
 import numpy as np
-import openml
 import pandas as pd
 from ConfigSpace import ConfigurationSpace, Configuration, CategoricalHyperparameter
 from ConfigSpace.util import impute_inactive_values
-from openml import OpenMLClassificationTask
-
-
-def openml_task(task: int, fold: int):
-    # noinspection PyTypeChecker
-    task: OpenMLClassificationTask = openml.tasks.get_task(task)
-    train_indices, test_indices = task.get_train_test_split_indices(fold=fold)
-
-    X, y = task.get_X_and_y(dataset_format='dataframe')
-    X_test = X.iloc[test_indices, :].reset_index(drop=True)
-    y_test = y.iloc[test_indices].reset_index(drop=True)
-
-    return X_test, y_test
 
 
 def configs_as_dataframe(cs: ConfigurationSpace,
@@ -49,10 +35,12 @@ def configs_as_dataframe(cs: ConfigurationSpace,
     return pruned_cs, X
 
 
-def down_sample(X: pd.DataFrame, y: pd.Series, n_samples: int) -> tuple[pd.DataFrame, pd.Series]:
-    if X.shape[0] > n_samples:
-        idx = np.random.choice(X.shape[0], size=n_samples, replace=False)
-        X = X.loc[idx, :].reset_index(drop=True)
-        y = y.loc[idx].reset_index(drop=True)
+def plot_runhistory(plot_data: np.ndarray):
+    import matplotlib.pyplot as plt
 
-    return X, y
+    start = plot_data[0, 0]
+    plt.scatter(plot_data[:, 0] - start, plot_data[:, 1])
+    plt.plot(plot_data[:, 0] - start, np.maximum.accumulate(plot_data[:, 1]))
+    plt.ylabel('Performance')
+    plt.xlabel('Timestamp')
+    plt.title('Performance over Time')

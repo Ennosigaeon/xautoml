@@ -14,11 +14,11 @@ from xautoml.ensemble import EnsembleInspection
 from xautoml.hp_importance import HPImportance
 from xautoml.model_details import ModelDetails, DecisionTreeResult, LimeResult, GlobalSurrogateResult
 from xautoml.models import RunHistory, CandidateId, CandidateStructure
-from xautoml.output import DESCRIPTION, OutputCalculator, COMPLETE, RAW
+from xautoml.output import DESCRIPTION, OutputCalculator, COMPLETE
 from xautoml.roc_auc import RocCurve
 from xautoml.util import pipeline_utils
 from xautoml.util.constants import SINK
-from xautoml.util.io_utils import down_sample
+from xautoml.util.datasets import down_sample
 
 
 def as_json(func):

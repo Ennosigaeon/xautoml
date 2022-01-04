@@ -5,7 +5,7 @@ from ConfigSpace.configuration_space import ConfigurationSpace, Configuration
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.manifold import MDS
 
-from xautoml.util import io_utils
+from xautoml.util.config import configs_as_dataframe
 from xautoml.util.constants import NUMBER_PRECISION
 
 
@@ -56,8 +56,8 @@ class ConfigSimilarity:
 
             combined_cs.add_configuration_space(name, cs, parent_hyperparameter={'parent': choice, 'value': idx})
 
-        pruned_cs, configs = io_utils.configs_as_dataframe(combined_cs,
-                                                           [Configuration(combined_cs, d) for d in combined_configs])
+        pruned_cs, configs = configs_as_dataframe(combined_cs,
+                                                  [Configuration(combined_cs, d) for d in combined_configs])
         return pruned_cs, configs
 
     @staticmethod

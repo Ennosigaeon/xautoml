@@ -55,13 +55,13 @@ def test_subpipeline_autosklearn_hearts():
                  'balancing', 'feature_preprocessor', 'classifier', 'SINK']:
         print(step)
 
-        sub_X, y, sub_pipeline = main.get_sub_pipeline('00:06:25', step)
+        sub_X, y, sub_pipeline = main.get_sub_pipeline('00:01:03', step)
         sub_pipeline.predict(sub_X)
 
 
 def test_enumerate_autosklearn():
     main = get_autosklearn_hearts()
-    sub_X, y, sub_pipeline = main.get_pipeline('00:06:25')
+    sub_X, y, sub_pipeline = main.get_pipeline('00:01:03')
 
     for selected_coordinate, model, subset in enumerate_pipeline_models(sub_pipeline):
         print(model)

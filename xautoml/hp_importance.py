@@ -8,7 +8,7 @@ from ConfigSpace import CategoricalHyperparameter, ConfigurationSpace, Configura
 from ConfigSpace.hyperparameters import OrdinalHyperparameter, NumericalHyperparameter, Optional
 from fanova import fANOVA, visualizer
 
-from xautoml.util import io_utils
+from xautoml.util.config import configs_as_dataframe
 from xautoml.util.constants import NUMBER_PRECISION, SOURCE, SINK
 
 
@@ -187,6 +187,6 @@ class HPImportance:
     @staticmethod
     def construct_fanova(cs: ConfigurationSpace, configs: list[Configuration], performances: np.ndarray):
         y = performances.astype(float)
-        pruned_cs, X = io_utils.configs_as_dataframe(cs, configs)
+        pruned_cs, X = configs_as_dataframe(cs, configs)
         f = fANOVA(X, y, config_space=pruned_cs)
         return f, X

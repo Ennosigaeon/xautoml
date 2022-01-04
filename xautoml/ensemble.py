@@ -11,7 +11,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelEncoder
 
 from xautoml.models import Candidate, Ensemble
-from xautoml.util.io_utils import down_sample
+from xautoml.util.datasets import down_sample
 from xautoml.util.pipeline_utils import DataFrameImputer, InplaceOrdinalEncoder
 
 

@@ -110,9 +110,9 @@ def test_auto_sklearn():
 def test_all_auto_sklearn_steps():
     main = get_autosklearn_hearts()
 
-    X, y, pipeline = main.get_pipeline('00:06:25')
+    X, y, pipeline = main.get_pipeline('00:01:03')
 
     inputs, outputs = OutputCalculator.calculate_outputs(pipeline, X, y, method=RAW)
 
     for step_name in inputs.keys():
-        res = main.fanova('00:06', step_name)
+        res = main.fanova('00:01', step_name)

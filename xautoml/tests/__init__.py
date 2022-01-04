@@ -3,10 +3,10 @@ import pickle
 import joblib
 import pandas as pd
 from sklearn.datasets import load_iris
-from sklearn.model_selection import train_test_split
 
 from xautoml.adapter import import_dswizard, import_auto_sklearn
 from xautoml.main import XAutoML
+from xautoml.util.datasets import hearts
 
 
 def get_31() -> XAutoML:
@@ -99,23 +99,11 @@ def get_autosklearn_iris() -> XAutoML:
 
 
 def get_autosklearn_hearts() -> XAutoML:
-    with open('/home/marc/phd/code/xautoml/user_study/auto-sklearn_hearts.pkl', 'rb') as f:
+    with open('/home/marc/phd/code/xautoml/user_study/auto-sklearn/output/autosklearn.pkl', 'rb') as f:
         raw = joblib.load(f)
 
     rh = import_auto_sklearn(raw)
-
-    data = pd.read_csv('/home/marc/phd/code/xautoml/xautoml/tests/res/autosklearn_hearts/dataset.csv')
-    X = data.loc[:, data.columns[:-1]]
-    y = data.loc[:, data.columns[-1]]
-
-    X.loc[:, 'Sex'] = X.Sex.astype('category')
-    X.loc[:, 'ChestPainType'] = X.ChestPainType.astype('category')
-    X.loc[:, 'RestingECG'] = X.RestingECG.astype('category')
-    X.loc[:, 'ExerciseAngina'] = X.ExerciseAngina.astype('category')
-    X.loc[:, 'ST_Slope'] = X.ST_Slope.astype('category')
-
-    X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=1)
-
+    X_test, y_test = hearts('/home/marc/phd/code/xautoml/xautoml/tests/res/autosklearn_hearts/dataset.csv', test=True)
     return XAutoML(rh, X_test, y_test)
 
 

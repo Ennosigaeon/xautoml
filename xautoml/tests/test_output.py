@@ -24,7 +24,7 @@ def test_outputs_auto_sklearn():
 
 def test_outputs_auto_sklearn_hearts():
     main = get_autosklearn_hearts()
-    X, y, pipeline = main.get_pipeline('00:06:25')
+    X, y, pipeline = main.get_pipeline('00:01:03')
 
     df_handler = OutputCalculator()
     inputs, outputs = df_handler.calculate_outputs(pipeline, X, y, method=RAW)
