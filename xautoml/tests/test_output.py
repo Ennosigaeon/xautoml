@@ -1,5 +1,5 @@
 from xautoml.output import OutputCalculator, RAW
-from xautoml.tests import get_168746, get_autosklearn, get_autosklearn_hearts
+from xautoml.tests import get_168746, get_autosklearn, get_autosklearn_hearts, get_fixed_hearts
 
 
 def test_outputs():
@@ -11,6 +11,15 @@ def test_outputs():
 
     print(outputs)
 
+
+def test_outputs_fixed():
+    main = get_fixed_hearts()
+    X, y, pipeline = main.get_pipeline('00:00:161')
+
+    df_handler = OutputCalculator()
+    inputs, outputs = df_handler.calculate_outputs(pipeline, X, y, method=RAW)
+
+    print(outputs)
 
 def test_outputs_auto_sklearn():
     main = get_autosklearn()

@@ -71,6 +71,15 @@ def get_168746() -> XAutoML:
     return XAutoML(rh, X, y)
 
 
+def get_fixed_hearts() -> XAutoML:
+    with open('/home/marc/phd/code/xautoml/user_study/dswizard/output/mcts/dswizard.pkl', 'rb') as f:
+        (raw, ensemble) = joblib.load(f)
+
+    rh = import_dswizard(raw, ensemble)
+    X_test, y_test = hearts('/home/marc/phd/code/xautoml/xautoml/tests/res/autosklearn_hearts/heart.csv', test=True)
+    return XAutoML(rh, X_test, y_test)
+
+
 def get_autosklearn() -> XAutoML:
     with open('res/autosklearn/auto-sklearn_breast_cancer.pkl', 'rb') as f:
         raw = pickle.load(f)
@@ -103,7 +112,7 @@ def get_autosklearn_hearts() -> XAutoML:
         raw = joblib.load(f)
 
     rh = import_auto_sklearn(raw)
-    X_test, y_test = hearts('/home/marc/phd/code/xautoml/xautoml/tests/res/autosklearn_hearts/dataset.csv', test=True)
+    X_test, y_test = hearts('/home/marc/phd/code/xautoml/xautoml/tests/res/autosklearn_hearts/heart.csv', test=True)
     return XAutoML(rh, X_test, y_test)
 
 
