@@ -21,6 +21,7 @@ def test_outputs_fixed():
 
     print(outputs)
 
+
 def test_outputs_auto_sklearn():
     main = get_autosklearn()
     X, y, pipeline = main.get_pipeline('00:00:02')

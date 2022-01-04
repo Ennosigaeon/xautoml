@@ -72,7 +72,7 @@ def get_168746() -> XAutoML:
 
 
 def get_fixed_hearts() -> XAutoML:
-    with open('/home/marc/phd/code/xautoml/user_study/dswizard/output/mcts/dswizard.pkl', 'rb') as f:
+    with open('/home/marc/phd/code/xautoml/user_study/dswizard/output/fixed/dswizard.pkl', 'rb') as f:
         (raw, ensemble) = joblib.load(f)
 
     rh = import_dswizard(raw, ensemble)

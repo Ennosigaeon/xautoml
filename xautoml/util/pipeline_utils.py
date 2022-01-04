@@ -155,6 +155,8 @@ class DataFrameImputer(TransformerMixin):
         """
 
     def fit(self, X: pd.DataFrame, y=None):
+        self.nan_fraction_ = pd.isna(X).sum(axis=0) / X.shape[0]
+
         fill = []
         for c in X:
             if X[c].dtype.name in ['category', 'object', 'string']:
@@ -170,6 +172,11 @@ class DataFrameImputer(TransformerMixin):
         return X.fillna(self.fill)
 
     def inverse_transform(self, X):
+        for c, fraction in zip(X, self.nan_fraction_):
+            if fraction > 0:
+                idx = np.random.randint(0, X.shape[0], int(math.ceil(X.shape[0] * fraction)))
+                X.loc[idx, c] = np.nan
+
         return X
 
 

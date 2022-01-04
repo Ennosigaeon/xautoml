@@ -1,7 +1,8 @@
 import json
 
 from xautoml.model_details import ModelDetails
-from xautoml.tests import get_168746, get_31, get_7306, get_autosklearn, get_1823, get_autosklearn_hearts
+from xautoml.tests import get_168746, get_31, get_7306, get_autosklearn, get_1823, get_autosklearn_hearts, \
+    get_fixed_hearts
 from xautoml.util import pipeline_utils
 
 
@@ -34,6 +35,20 @@ def test_lime_for_step():
     X, y, pipeline = main.get_pipeline('00:00:00')
 
     step = 'data_preprocessing:categorical'
+    idx = 3
+
+    pipeline, X, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X, y)
+    details = ModelDetails()
+    res = details.calculate_lime(X, y, pipeline, idx)
+
+    print(json.dumps(res.to_dict([])))
+
+
+def test_outputs_fixed():
+    main = get_fixed_hearts()
+    X, y, pipeline = main.get_pipeline('00:00:161')
+
+    step = 'SOURCE'
     idx = 3
 
     pipeline, X, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X, y)

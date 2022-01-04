@@ -82,7 +82,7 @@ class HPImportance:
         }
 
     @staticmethod
-    def calculate_fanova_details(f: fANOVA, X: pd.DataFrame, resolution: int = 10, hps: list[tuple[str, str]] = None):
+    def calculate_fanova_details(f: fANOVA, X: pd.DataFrame, resolution: int = 20, hps: list[tuple[str, str]] = None):
         with tempfile.TemporaryDirectory() as tmp:
             vis = visualizer.Visualizer(f, f.cs, tmp)
 

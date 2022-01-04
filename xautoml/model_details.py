@@ -98,7 +98,7 @@ class ModelDetails:
             raise ValueError('Local explanations not possible. Please install LIME first.')
 
         def invert_categorial_encoding(X: np.ndarray):
-            inverted_input = encoder.inverse_transform(X)
+            inverted_input = pipeline.inverse_transform(X)
             return model.predict_proba(inverted_input)
 
         cat_columns = make_column_selector(dtype_exclude=np.number)(df)
@@ -108,7 +108,6 @@ class ModelDetails:
         ])
         X = pipeline.fit_transform(df).values
 
-        encoder = pipeline.steps[1][1]
         categorical_features = df.columns.get_indexer(cat_columns)
         categorical_names = {idx: name for idx, name in zip(categorical_features, cat_columns)}
 
