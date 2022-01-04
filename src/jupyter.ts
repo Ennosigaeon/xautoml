@@ -30,6 +30,35 @@ export class ServerError extends Error {
     }
 }
 
+
+export class OpenedCache {
+    private cache: Map<string, boolean> = new Map()
+
+    public setIfNotPresent(key: string, value: boolean) {
+        if (key === undefined)
+            return
+
+        if (!this.cache.has(key))
+            this.cache.set(key, value)
+    }
+
+    public get(key: string) {
+        if (key === undefined)
+            return false
+        if (!this.cache.has(key))
+            return true
+
+        return this.cache.get(key)
+    }
+
+    public set(key: string, value: boolean) {
+        if (key === undefined)
+            return
+
+        this.cache.set(key, value)
+    }
+}
+
 export class Jupyter {
 
     private readonly LOCAL_STORAGE_CONTENT = 'xautoml-previousCellContent'
@@ -37,6 +66,7 @@ export class Jupyter {
     private previousCellContent: string = undefined;
 
     private initialized: boolean
+    public readonly collapsedState = new OpenedCache()
 
     constructor(private notebooks: INotebookTracker, private tags: TagTool) {
         this.previousCellContent = localStorage.getItem(this.LOCAL_STORAGE_CONTENT)

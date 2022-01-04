@@ -156,7 +156,7 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
 
                     {data?.expl.size > 0 && <div style={{minWidth: "350px"}}>
                         <CommonWarnings additionalFeatures={data.additional_features.length > 0}/>
-                        <CollapseComp showInitial={true}>
+                        <CollapseComp name={'lime-classes'} showInitial={true}>
                             <h5>Predicted Class Probabilities</h5>
                             <>
                                 <div style={{height: 300}}>
@@ -179,7 +179,7 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
                             </>
                         </CollapseComp>
 
-                        <CollapseComp showInitial={true}>
+                        <CollapseComp name={'lime-explanations'} showInitial={true}>
                             <h5>Explanations for Class {selectedLabel}</h5>
                             <div style={{height: explHeight}} ref={this.container}>
                                 <ResponsiveContainer>

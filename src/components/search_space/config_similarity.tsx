@@ -36,6 +36,7 @@ interface ConfigSimilarityState {
 
 export class ConfigSimilarity extends React.Component<ConfigSimilarityProps, ConfigSimilarityState> {
 
+    static HELP = ''
 
     static contextType = JupyterContext;
     context: React.ContextType<typeof JupyterContext>;

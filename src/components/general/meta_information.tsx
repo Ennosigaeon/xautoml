@@ -22,7 +22,7 @@ export default class MetaInformationTable extends React.Component<MetaInformatio
 
         return (
             <>
-                <CollapseComp showInitial={true}
+                <CollapseComp name={'optimization-statistics'} showInitial={true}
                               help={'View the most important settings and statistics for this optimization run.'}>
                     <h4>Optimization Overview</h4>
                     <>
@@ -40,7 +40,8 @@ export default class MetaInformationTable extends React.Component<MetaInformatio
                     </>
                 </CollapseComp>
 
-                <CollapseComp showInitial={false} help={'View additional settings for this optimization run.'}>
+                <CollapseComp name={'optimization-settings'} showInitial={false}
+                              help={'View additional settings for this optimization run.'}>
                     <h4>Optimization Configuration</h4>
                     <>
                         {configValues.map(([key, value]) =>

@@ -51,7 +51,7 @@ export class GeneralInformation extends React.Component<GeneralInformationProps,
         return (
             <>
                 <MetaInformationTable meta={meta}/>
-                <CollapseComp showInitial={true} help={PerformanceTimeline.HELP}>
+                <CollapseComp name={'performance-overview'} showInitial={true} help={PerformanceTimeline.HELP}>
                     <h4>Performance Overview</h4>
                     <TabContext value={openTab}>
                         <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
@@ -73,7 +73,7 @@ export class GeneralInformation extends React.Component<GeneralInformationProps,
                         </TabPanel>
                     </TabContext>
                 </CollapseComp>
-                <CollapseComp showInitial={true} help={RocCurve.HELP}>
+                <CollapseComp name={'roc-curve'} showInitial={true} help={RocCurve.HELP}>
                     <h4>ROC Curve</h4>
                     <RocCurve selectedCandidates={selectedCandidates}
                               candidateMap={candidateMap}

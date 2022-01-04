@@ -40,7 +40,7 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
         this.cids = [].concat(...this.props.structures.map(s => s.configs.map(c => c.id)))
 
         let keys: string[]
-        let timestamp =  this.cids.length - 1
+        let timestamp = this.cids.length - 1
         if (this.cids.length <= 10)
             keys = this.cids
         else if (this.cids.length <= 50)
@@ -131,7 +131,8 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
         return (
             <>
                 {explanations.structures &&
-                    <CollapseComp showInitial={true} help={BanditExplanationsComponent.HELP}>
+                    <CollapseComp name={'reinforcement-explanations'} showInitial={true}
+                                  help={BanditExplanationsComponent.HELP}>
                         <h4>Reinforcement Learning</h4>
                         <BanditExplanationsComponent explanations={explanations.structures}
                                                      selectedCandidates={selectedCandidates}
@@ -140,7 +141,7 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
                                                      timestamp={this.cids[this.state.timestamp].split(':').slice(0, -1).join(':')}
                                                      onCandidateSelection={onCandidateSelection}/>
                     </CollapseComp>}
-                <CollapseComp showInitial={true} help={ParallelCoordinates.HELP}>
+                <CollapseComp name={'bayesian-explanations'} showInitial={true} help={ParallelCoordinates.HELP}>
                     <h4>Bayesian Optimization</h4>
                     <ParallelCoordinates structures={structures}
                                          perfAxis={{
@@ -159,7 +160,7 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
                 {structures.length > 0 &&
                     <div style={{display: 'flex'}}>
                         <div style={{flex: '1', overflowX: 'hidden', margin: 0, marginRight: '5px'}}>
-                            <CollapseComp showInitial={true} help={''}>
+                            <CollapseComp name={'config-similarity'} showInitial={true} help={ConfigSimilarity.HELP}>
                                 <h4>Candidate Distribution</h4>
                                 <ConfigSimilarity structures={structures}
                                                   selectedCandidates={selectedCandidates}
@@ -171,7 +172,7 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
                             </CollapseComp>
                         </div>
                         <div style={{flex: '1', margin: 0, marginLeft: '5px'}}>
-                            <CollapseComp showInitial={true} help={SamplingHistory.HELP}>
+                            <CollapseComp name={'sampling-history'} showInitial={true} help={SamplingHistory.HELP}>
                                 <h4>Sampling History</h4>
                                 <SamplingHistory history={this.state.hpHistory}
                                                  meta={meta}

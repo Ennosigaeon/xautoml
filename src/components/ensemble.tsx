@@ -87,7 +87,7 @@ export class Ensemble extends React.Component<EnsembleProps, EnsembleState> {
 
         return (
             <>
-                <CollapseComp showInitial={true}>
+                <CollapseComp name={'ensemble'} showInitial={true}>
                     <h4>Ensemble Overview</h4>
                     <>
                         <ErrorIndicator error={overviewError}/>
@@ -111,7 +111,7 @@ export class Ensemble extends React.Component<EnsembleProps, EnsembleState> {
                     </>
                 </CollapseComp>
 
-                <CollapseComp showInitial={true}>
+                <CollapseComp name={'decision-surface'} showInitial={true}>
                     <h4>Decision Surface</h4>
                     <>
                         <ErrorIndicator error={surfaceError}/>

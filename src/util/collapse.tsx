@@ -3,9 +3,11 @@ import KeyboardArrowUpIcon from "@material-ui/icons/KeyboardArrowUp";
 import KeyboardArrowDownIcon from "@material-ui/icons/KeyboardArrowDown";
 import React from "react";
 import {HelpIcon} from "./help";
+import {JupyterContext} from "../util";
 
 interface CollapseProps {
     showInitial: boolean
+    name?: string
     className?: string
     help?: string
 }
@@ -17,19 +19,28 @@ interface CollapseState {
 export class CollapseComp extends React.Component<CollapseProps, CollapseState> {
 
     static defaultProps = {
-        className: 'container'
+        className: 'container',
+        name: undefined as string,
+        showInitial: false
     }
 
-    constructor(props: CollapseProps) {
-        super(props);
-        this.state = {show: props.showInitial}
+    static contextType = JupyterContext;
+    context: React.ContextType<typeof JupyterContext>;
+
+    constructor(props: CollapseProps, context: React.ContextType<typeof JupyterContext>) {
+        super(props, context);
+        this.context.collapsedState.setIfNotPresent(this.props.name, this.props.showInitial)
+        this.state = {show: this.context.collapsedState.get(this.props.name)}
 
         this.toggleShow = this.toggleShow.bind(this)
     }
 
 
     private toggleShow(e: React.MouseEvent) {
-        this.setState((state) => ({show: !state.show}))
+        this.setState((state) => {
+            this.context.collapsedState.set(this.props.name, !state.show)
+            return {show: !state.show}
+        })
         e.stopPropagation()
     }
 
