@@ -173,7 +173,7 @@ class ModelDetails:
         score = metrics.accuracy_score(y_pred, y_pred_pred)
 
         return DecisionTreeResult(
-            export_tree(encoder.encoder, dt, cat_columns(df), num_columns(df)),
+            export_tree(encoder.encoder, dt, df.columns.tolist(), cat_columns(df)),
             score,
             dt.get_n_leaves(),
             max_leaf_nodes

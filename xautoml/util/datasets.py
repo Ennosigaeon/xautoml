@@ -38,7 +38,6 @@ def hearts(file: str, train: bool = False, test: bool = False):
     X.loc[:, 'RestingECG'] = X.RestingECG.astype('category')
     X.loc[:, 'ExerciseAngina'] = X.ExerciseAngina.astype('category')
     X.loc[:, 'ST_Slope'] = X.ST_Slope.astype('category')
-    X.drop(columns=['Oldpeak'], inplace=True)
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=1)
 

@@ -232,7 +232,7 @@ class Node:
         }
 
 
-def export_tree(ordinal_encoder, decision_tree, cat_features, num_names, max_depth=10, decimals=2) -> Node:
+def export_tree(ordinal_encoder, decision_tree, feature_names, cat_features, max_depth=10, decimals=2) -> Node:
     check_is_fitted(decision_tree)
     tree_ = decision_tree.tree_
     class_names = decision_tree.classes_
@@ -242,7 +242,6 @@ def export_tree(ordinal_encoder, decision_tree, cat_features, num_names, max_dep
     if max_depth < 0:
         raise ValueError("max_depth bust be >= 0, given %d" % max_depth)
 
-    feature_names = cat_features + num_names
     if (feature_names is not None and
         len(feature_names) != tree_.n_features):
         raise ValueError("feature_names must contain "
