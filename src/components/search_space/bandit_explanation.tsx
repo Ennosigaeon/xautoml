@@ -35,7 +35,7 @@ namespace CollapsibleNodeActions {
             .filter(child => child.data.shouldDisplay(key))
             .forEach(child => {
                 const details = child.data.getDetails(key)
-                if (details.isUnvisited() && !details.selected)
+                if ((details.isUnvisited() || details.isFailure()) && !details.selected)
                     hidden.push(child);
                 else
                     visible.push(child);

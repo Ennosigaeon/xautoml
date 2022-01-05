@@ -105,7 +105,7 @@ export namespace ParCord {
     }
 
     export function parseCandidates(candidates: [Candidate, Structure][], axes: cpc.Axis[]): cpc.Line[] {
-        return candidates.map(([candidate, structure]) => {
+        const lines = candidates.map(([candidate, structure]) => {
             const points = new Array<cpc.LinePoint>()
             structure.pipeline.steps.map((step, idx) => {
                 points.push(new cpc.LinePoint(idx.toString(), step.name))
@@ -121,7 +121,8 @@ export namespace ParCord {
                 const value = axis.id === '__performance__' ? candidate.loss : undefined
                 points.push(new cpc.LinePoint(axis.id, value))
             })
-            return new cpc.Line(candidate.id, points)
-        })
+            return new cpc.Line(candidate.id, points, candidate.runtime? candidate.runtime.timestamp : 0)
+        }).sort((a, b) => a.timestamp - b.timestamp)
+        return lines
     }
 }

@@ -132,7 +132,7 @@ class XAutoML:
         else:
             pipeline, X, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X, y)
             details = ModelDetails()
-            res = details.calculate_feature_importance(X, y, pipeline)
+            res = details.calculate_feature_importance(X, y, pipeline, self.run_history.meta.metric)
         return {'data': res.to_dict(), 'additional_features': additional_features}
 
     @as_json

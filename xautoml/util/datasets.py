@@ -73,12 +73,12 @@ def stroke(file: str, train: bool = False, test: bool = False):
     if train:
         try:
             from imblearn.over_sampling import SMOTENC
-            X_train.bmi[pd.isna(X_train.bmi)] = -1
+            X_train.loc[pd.isna(X_train.bmi), 'bmi'] = -1
 
             smote = SMOTENC([1, 4, 5, 6, 9], random_state=1)
             X, y = smote.fit_resample(X_train, y_train)
 
-            X.bmi[X.bmi < 11.5] = np.nan
+            X.loc[X.bmi < 11.5, 'bmi'] = np.nan
         except ImportError:
             from sklearn.utils import resample
             X_train['stroke'] = y_train

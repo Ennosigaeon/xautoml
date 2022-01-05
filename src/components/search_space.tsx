@@ -2,7 +2,7 @@ import React from "react";
 import {CollapseComp} from "../util/collapse";
 import {BanditExplanationsComponent} from "./search_space/bandit_explanation";
 import {ParallelCoordinates} from "./pc/parallel_corrdinates";
-import {BO, CandidateId, ConfigValue, Explanations, MetaInformation, Structure} from "../model";
+import {BO, Candidate, CandidateId, ConfigValue, Explanations, MetaInformation, Structure} from "../model";
 import Slider from "rc-slider";
 import {ConfigSimilarity} from "./search_space/config_similarity";
 import {ConfigSimilarityResponse} from "../dao";
@@ -30,14 +30,16 @@ interface SearchSpaceState {
 
 export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceState> {
 
-    private readonly cids: string[]
+    private readonly cids: CandidateId[]
 
     constructor(props: SearchSpaceProps) {
         super(props);
 
         const sliderMarks: { [key: string]: string; } = {}
 
-        this.cids = [].concat(...this.props.structures.map(s => s.configs.map(c => c.id)))
+        this.cids = [].concat(...this.props.structures.map(s => s.configs))
+            .sort((a: Candidate, b: Candidate) => a.runtime.timestamp - b.runtime.timestamp)
+            .map(c => c.id)
 
         let keys: string[]
         let timestamp = this.cids.length - 1

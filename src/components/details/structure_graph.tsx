@@ -1,7 +1,7 @@
 import React from "react";
 import {Candidate, Config, ConfigValue, Pipeline, PipelineStep, Structure} from "../../model";
 import {Components, JupyterContext} from "../../util";
-import {Tooltip, Typography} from "@material-ui/core";
+import {Typography} from "@material-ui/core";
 import {OutputDescriptionData} from "../../dao";
 import {LoadingIndicator} from "../../util/loading";
 import {ErrorIndicator} from "../../util/error";
@@ -46,39 +46,41 @@ interface SingleComponentProps {
 class SingleComponent extends React.Component<SingleComponentProps, any> {
 
     render() {
-        const {step, error, loading, output, onHover} = this.props
-
-        const tooltipContent = <>
-            <Typography color="inherit" component={'h4'}>Configuration</Typography>
-            <ConfigurationTable config={step.config} twoColumns={true}/>
-            <Typography color="inherit" component={'h4'}>Output</Typography>
-
-            <ErrorIndicator error={error}/>
-            {!error &&
-                <>
-                    <LoadingIndicator loading={loading}/>
-                    {!loading && (output ?
-                        <div style={{overflowX: "auto", marginBottom: 0}}
-                             dangerouslySetInnerHTML={{__html: output}}/> : <div>Missing</div>)
-                    }
-                </>
-            }
-        </>
+        // const {step, error, loading, output, onHover} = this.props
+        //
+        // const tooltipContent = <>
+        //     <Typography color="inherit" component={'h4'}>Configuration</Typography>
+        //     <ConfigurationTable config={step.config} twoColumns={true}/>
+        //     <Typography color="inherit" component={'h4'}>Output</Typography>
+        //
+        //     <ErrorIndicator error={error}/>
+        //     {!error &&
+        //         <>
+        //             <LoadingIndicator loading={loading}/>
+        //             {!loading && (output ?
+        //                 <div style={{overflowX: "auto", marginBottom: 0}}
+        //                      dangerouslySetInnerHTML={{__html: output}}/> : <div>Missing</div>)
+        //             }
+        //         </>
+        //     }
+        // </>
 
         return (
-            <Tooltip placement={'top'}
-                     classes={{tooltip: 'structure-graph_tooltip jp-RenderedHTMLCommon'}}
-                     title={tooltipContent}
-                     enterDelay={500}
-                     enterNextDelay={500}
-                     leaveDelay={500}
-                     interactive={true}
-                     onOpen={onHover}>
-                {Components.isPipEnd(step.id) ?
+            // <Tooltip placement={'top'}
+            //          classes={{tooltip: 'structure-graph_tooltip jp-RenderedHTMLCommon'}}
+            //          title={tooltipContent}
+            //          enterDelay={500}
+            //          enterNextDelay={500}
+            //          leaveDelay={500}
+            //          interactive={true}
+            //          onOpen={onHover}>
+            <>
+                {Components.isPipEnd(this.props.step.id) ?
                     <p className={'structure-graph_end-node'}/> :
-                    <p>{step.label}</p>
+                    <p>{this.props.step.label}</p>
                 }
-            </Tooltip>
+            </>
+            // </Tooltip>
         )
     }
 }

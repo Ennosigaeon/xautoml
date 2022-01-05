@@ -14,4 +14,7 @@ class XAutoMLManager:
 
 
 def gcx():
-    return XAutoMLManager.get_active()
+    main = XAutoMLManager.get_active()
+    if main is None:
+        raise ValueError('XAutoML not initilized')
+    return main

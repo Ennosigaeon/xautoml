@@ -342,8 +342,7 @@ export class Structure {
     constructor(public readonly cid: CandidateId,
                 public readonly pipeline: Pipeline,
                 public readonly configspace: BO.ConfigSpace,
-                public readonly configs: Candidate[],
-                public readonly config_explanations: Map<CandidateId, BO.Explanation>) {
+                public readonly configs: Candidate[]) {
     }
 
     static fromJson(structure: Structure, defaultConfigSpace: BO.ConfigSpace): Structure {
@@ -352,15 +351,11 @@ export class Structure {
         const configs = structure.configs.map(c => Candidate.fromJson(c))
         const configSpace = structure.configspace ?
             BO.ConfigSpace.fromJson(structure.configspace as any) : defaultConfigSpace
-        const config_explanations = structure.config_explanations ? new Map(
-            Object.entries(structure.config_explanations)
-                .map(([key, value]) => [key, BO.Explanation.fromJson(value)])
-        ) : new Map()
 
         if (!configSpace)
             throw new Error(`Neither configspace nor default_configspace provided for structure ${structure.cid}`)
 
-        return new Structure(structure.cid, pipeline, configSpace, configs, config_explanations)
+        return new Structure(structure.cid, pipeline, configSpace, configs)
     }
 }
 
@@ -370,21 +365,18 @@ export class RunHistory {
 
     constructor(public readonly meta: MetaInformation,
                 public readonly structures: Structure[],
-                public readonly explanations: Explanations,
-                private readonly default_configspace: BO.ConfigSpace) {
+                public readonly explanations: Explanations) {
         structures.map(s => s.configs.forEach(c => this.candidateMap.set(c.id, c)))
     }
 
     static fromJson(runhistory: RunHistory): RunHistory {
-        const default_configspace = runhistory.default_configspace ?
-            BO.ConfigSpace.fromJson(runhistory.default_configspace as any) : undefined
+        // @ts-ignore
+        const default_configspace = runhistory.default_configspace ? BO.ConfigSpace.fromJson(runhistory.default_configspace as any) : undefined
 
         const structures = runhistory.structures.map(s => Structure.fromJson(s, default_configspace))
         const losses = [].concat(...structures.map(s => s.configs.map(c => c.loss)))
 
         return new RunHistory(MetaInformation.fromJson(runhistory.meta, losses),
-            structures,
-            Explanations.fromJson(runhistory.explanations),
-            default_configspace)
+            structures, Explanations.fromJson(runhistory.explanations))
     }
 }

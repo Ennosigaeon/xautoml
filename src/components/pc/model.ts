@@ -281,7 +281,7 @@ export class Line {
     private choices: Set<string>
     private pointMap: Map<string, ConfigValue>
 
-    constructor(public readonly id: CandidateId, public readonly points: Array<LinePoint>) {
+    constructor(public readonly id: CandidateId, public readonly points: Array<LinePoint>, public readonly timestamp: number) {
         this.choices = new Set<string>()
         points
             .filter(p => typeof p.value === 'string' || typeof p.value === 'boolean')

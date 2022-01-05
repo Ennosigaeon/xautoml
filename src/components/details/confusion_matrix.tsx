@@ -18,7 +18,7 @@ export class ConfusionMatrix extends React.Component<ConfusionMatrixProps> {
                 <TableBody>
                     <TableRow>
                         <TableCell component="th" rowSpan={cm.values.length + 2}
-                                   style={{writingMode: "vertical-rl"}}>
+                                   style={{writingMode: "vertical-rl", minWidth: "16px"}}>
                             True Classes
                         </TableCell>
                         <TableCell component="th" scope="row" colSpan={cm.classes.length + 1}>

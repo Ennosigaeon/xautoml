@@ -83,7 +83,6 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
 
         const renderedNodes = root.descendants().map(node =>
             <GraphNode node={node}
-                       key={`${node.data.label}-${node.data.impurity}`}
                        className={`global-surrogate_node ${
                            additional_features.filter(a => node.data.label.startsWith(a))
                                .length > 0 ? 'global-surrogate_additional-feature' : ''}`}
@@ -98,8 +97,7 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
                     link.source.data.children.map(l => `${l.label}-${l.impurity}`)
                         .indexOf(`${link.target.data.label}-${link.target.data.impurity}`)
                     ]
-                return <GraphEdge key={`${link.source.data.label}-${edgeLabel}-${link.target.data.label}`}
-                                  link={link} label={edgeLabel}
+                return <GraphEdge link={link} label={edgeLabel}
                                   nodeWidth={GlobalSurrogateComponent.NODE_WIDTH}
                                   nodeHeight={GlobalSurrogateComponent.NODE_HEIGHT}/>
             }

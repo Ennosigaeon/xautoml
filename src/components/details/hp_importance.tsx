@@ -190,7 +190,7 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
     }
 
     componentDidMount() {
-        this.queryHPImportance()
+        window.setTimeout(() => this.queryHPImportance(), 100)
     }
 
     componentDidUpdate(prevProps: Readonly<HPImportanceProps>, prevState: Readonly<HPImportanceState>, snapshot?: any) {
