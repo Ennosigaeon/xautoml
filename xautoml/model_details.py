@@ -3,14 +3,18 @@ from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
+from joblib import Parallel
 from sklearn import metrics
 from sklearn.compose import make_column_selector
-from sklearn.inspection import permutation_importance
+from sklearn.inspection import permutation_importance, partial_dependence
 from sklearn.metrics import confusion_matrix, get_scorer, roc_auc_score, classification_report
 from sklearn.pipeline import Pipeline
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.utils import check_random_state
+from sklearn.utils.fixes import delayed
 from sklearn.utils.multiclass import unique_labels, type_of_target
 
+from xautoml.util.constants import NUMBER_PRECISION
 from xautoml.util.pipeline_utils import export_tree, DataFrameImputer, Node, InplaceOrdinalEncoder
 
 
@@ -179,10 +183,65 @@ class ModelDetails:
         )
 
     @staticmethod
-    def calculate_feature_importance(X: pd.DataFrame, y: pd.Series, model: Pipeline, metric: str):
+    def calculate_feature_importance(X: pd.DataFrame, y: pd.Series, model: Pipeline, metric: str, n_head: int = 14):
         try:
             result = permutation_importance(model, X, y, scoring=metric, random_state=0)
         except ValueError:
             result = permutation_importance(model, X, y, scoring='f1_micro', random_state=0)
-        return pd.DataFrame(np.stack((result.importances_mean, result.importances_std)),
-                            columns=X.columns.map(lambda c: c[:20]))
+        df = pd.DataFrame(np.stack((result.importances_mean, result.importances_std)),
+                          columns=X.columns.map(lambda c: c[:20]), index=['mean', 'std'])
+
+        df = df.round(NUMBER_PRECISION).T.sort_values('mean', ascending=False)
+        return df.head(n_head)
+
+    @staticmethod
+    def calculate_pdp(X: pd.DataFrame, y: pd.Series, model: Pipeline, features: list[str] = None, subsample: int = 50,
+                      n_jobs: int = 1):
+        targets = np.unique(y)
+        if len(targets) == 2:
+            targets = [targets[0]]
+
+        # convert features into a seq of int tuples
+        if features is None:
+            features = X.columns
+
+        features = [(X.columns.get_indexer([c])[0],) for c in features]
+
+        pd_results = Parallel(n_jobs=n_jobs, verbose=0)(
+            delayed(partial_dependence)(model, X, fxs, grid_resolution=20, kind='both')
+            for fxs in features
+        )
+
+        # get global min and max average predictions of PD grouped by plot type
+        pdp_lim = {}
+        for target_idx, target in enumerate(targets):
+            for pdp in pd_results:
+                preds = pdp.individual
+                min_pd = float(preds[target_idx].min())
+                max_pd = float(preds[target_idx].max())
+                old_min_pd, old_max_pd = pdp_lim.get(target, (min_pd, max_pd))
+                min_pd = min(min_pd, old_min_pd)
+                max_pd = max(max_pd, old_max_pd)
+                pdp_lim[target] = (min_pd, max_pd)
+
+        result = {}
+        for target_idx, target in enumerate(targets):
+            result[target] = {'y_range': pdp_lim[target], 'features': {}}
+            for feature_idx, pd_result in zip(features, pd_results):
+                feature = {}
+                rng = check_random_state(1)
+                feature_values = pd_result["values"][0].tolist()
+
+                preds = pd_result.individual[target_idx]
+                ice_lines_idx = rng.choice(preds.shape[0], subsample, replace=False)
+                ice_lines = []
+                for ice in preds[ice_lines_idx, :]:
+                    ice_lines.append([{'x': x, 'y': y} for x, y in zip(feature_values, ice.ravel())])
+
+                feature['ice'] = ice_lines
+                feature['avg'] = [{'x': x, 'y': y} for x, y in
+                                  zip(feature_values, pd_result.average[target_idx].tolist())]
+
+                result[target]['features'][X.columns[feature_idx]] = feature
+
+        return result

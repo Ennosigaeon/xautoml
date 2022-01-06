@@ -8,7 +8,7 @@ from xautoml.util import pipeline_utils
 
 def test_decision_tree():
     main = get_autosklearn_hearts()
-    X, y, pipeline = main.get_pipeline('00:01:03')
+    X, y, pipeline = main.get_pipeline('00:03:17')
 
     step = 'SOURCE'
     pipeline, X, _ = pipeline_utils.get_subpipeline(pipeline, step, X, y)
@@ -88,7 +88,7 @@ def test_lime_for_auto_sklearn():
 
 def test_lime_for_auto_sklearn_hearts():
     main = get_autosklearn_hearts()
-    X, y, pipeline = main.get_pipeline('00:01:03')
+    X, y, pipeline = main.get_pipeline('00:03:17')
 
     step = 'SOURCE'
     idx = 3
@@ -122,7 +122,7 @@ def test_performance_multiclass():
 
 def test_performance_hearts():
     main = get_autosklearn_hearts()
-    X, y, pipeline = main.get_pipeline('00:01:03')
+    X, y, pipeline = main.get_pipeline('00:03:17')
 
     details = ModelDetails()
     cm = details.calculate_performance_data(X, y, pipeline, 'accuracy')

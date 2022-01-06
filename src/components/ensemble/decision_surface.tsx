@@ -2,6 +2,7 @@ import {CartesianGrid, Cell, ComposedChart, Scatter, XAxis, YAxis} from "rechart
 import React from "react";
 import {Prediction} from "../../model";
 import {Colors, prettyPrint} from "../../util";
+import {LinePoint} from "../../dao";
 
 
 class LabelEncoder {
@@ -21,7 +22,7 @@ class LabelEncoder {
 interface DecisionSurfaceProps {
     contour: string
     colors: string[]
-    X: { x: number, y: number }[]
+    X: LinePoint[]
     y: Prediction[]
 
     showScatter: boolean

@@ -46,6 +46,14 @@ export function areSetInputsEqual(
 }
 
 
+export function maxLabelLength(labels: string[]) {
+    return Math.max(...labels.map(d => d
+        .replace('data_preprocessor:feature_type:numerical_transformer:', '')
+        .replace('data_preprocessor:feature_type:categorical_transformer:', '')
+        .length)) * 6
+}
+
+
 export namespace Colors {
     export const DEFAULT: string = '#abe2fb'
     export const HIGHLIGHT: string = '#2196f3'

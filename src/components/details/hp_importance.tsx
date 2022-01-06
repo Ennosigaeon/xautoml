@@ -1,17 +1,16 @@
 import React from "react";
-import {ContinuousHPImportance, HPImportance, HPImportanceDetails} from "../../dao";
+import {ContinuousHPImportance, HPImportanceDetails, ImportanceOverview} from "../../dao";
 
 
 import * as d3 from 'd3'
 
-import {Colors, JupyterContext, prettyPrint} from "../../util";
+import {Colors, JupyterContext, maxLabelLength, prettyPrint} from "../../util";
 import {
     Area,
     Bar,
     BarChart,
     CartesianGrid,
     ComposedChart,
-    ErrorBar,
     Legend,
     Line,
     LineChart,
@@ -25,12 +24,17 @@ import {ErrorIndicator} from "../../util/error";
 import {LoadingIndicator} from "../../util/loading";
 import {Structure} from "../../model";
 import {Heatbar, MinimalisticTooltip} from "../../util/recharts";
-
+import {ImportanceOverviewComp} from "./importance_overview";
+import {ID} from "../../jupyter";
+import {DetailsModel} from "./model";
+import {JupyterButton} from "../../util/jupyter-button";
 
 interface SingleHPProps {
     data: HPImportanceDetails
     maxLabelLength: number
     metric: string
+
+    onExportClick: () => void
 }
 
 class SingleHP extends React.Component<SingleHPProps> {
@@ -159,7 +163,10 @@ class SingleHP extends React.Component<SingleHPProps> {
         return (
             <div>
                 <div style={{minHeight: this.props.maxLabelLength, display: "flex", alignItems: "center"}}>
-                    <p>{description}</p>
+                    <div>
+                        <p>{description}</p>
+                        <JupyterButton onClick={this.props.onExportClick}/>
+                    </div>
                 </div>
 
                 <div style={{height: '300px', width: '100%'}}>
@@ -190,17 +197,16 @@ class SingleHP extends React.Component<SingleHPProps> {
 
 interface HPImportanceProps {
     structure: Structure
-    component: string
+    model: DetailsModel
     metric: string
 }
 
 interface HPImportanceState {
-    overview: HPImportance
+    overview: ImportanceOverview
     details: Map<string, Map<string, HPImportanceDetails>>
     error: Error
     selectedRow: number
 }
-
 
 export class HPImportanceComp extends React.Component<HPImportanceProps, HPImportanceState> {
 
@@ -218,6 +224,8 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
         this.state = {overview: undefined, details: undefined, error: undefined, selectedRow: undefined}
 
         this.selectRow = this.selectRow.bind(this)
+        this.exportOverview = this.exportOverview.bind(this)
+        this.exportDetails = this.exportDetails.bind(this)
     }
 
     componentDidMount() {
@@ -225,15 +233,15 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
     }
 
     componentDidUpdate(prevProps: Readonly<HPImportanceProps>, prevState: Readonly<HPImportanceState>, snapshot?: any) {
-        if (prevProps.component !== this.props.component)
+        if (prevProps.model.component !== this.props.model.component)
             this.queryHPImportance()
     }
 
     private queryHPImportance() {
-        const {structure, component} = this.props;
+        const {structure, model} = this.props;
         this.setState({error: undefined, overview: undefined, details: undefined});
 
-        this.context.requestFANOVA(structure.cid, component)
+        this.context.requestFANOVA(structure.cid, model.component)
             .then(resp => {
                 if (resp.error)
                     this.setState({error: new Error(resp.error)})
@@ -261,96 +269,29 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
         return this.state.details[keys[0]][keys[1]]
     }
 
-    private renderOverview(marginTop: number) {
-        const {overview, selectedRow} = this.state
-        const radius = 10
-        const margin = 5
+    private exportOverview() {
+        const {model, structure} = this.props
 
-        const stepSize = (2 * radius) + margin
-
-        const nColumns = overview.hyperparameters.length
-        const nRows = overview.keys.length
-
-        const width = nColumns * stepSize
-        const height = nRows * stepSize
-
-        const rows = [...Array(nRows).keys()].map(i => {
-            const activeColumns = overview.keys[i]
-            return (
-                <g key={`${activeColumns[0]}-${activeColumns[1]}`} onClick={() => this.selectRow(i)}
-                   className={'hp-importance_row'}>
-                    {selectedRow === i &&
-                        <rect x={-1.25 * radius} width={width + radius}
-                              y={i * stepSize - 1.25 * radius} height={2.5 * radius}
-                              fill={'var(--md-grey-300)'}/>}
-
-                    {[...Array(nColumns).keys()].map(j => {
-                        const name = overview.hyperparameters[j]
-                        return <circle key={name} cx={j * stepSize} cy={i * stepSize} r={radius}
-                                       fill={activeColumns.includes(name) ? Colors.SELECTED_FEATURE : Colors.ADDITIONAL_FEATURE}/>
-                    })}
-                    {d3.pairs<string>(activeColumns)
-                        .map(([a, b]) => [overview.hyperparameters.indexOf(a), overview.hyperparameters.indexOf(b)])
-                        .map(([a, b]) => (
-                            <path d={`M ${a * stepSize} ${i * stepSize} H ${b * stepSize}`}
-                                  stroke={Colors.SELECTED_FEATURE}
-                                  strokeWidth={radius / 2}/>
-                        ))}
-                </g>
-            )
-        })
-
-        const boldHeaders = selectedRow !== undefined ? overview.keys[selectedRow] : ['', '']
-        const headers = [...Array(nColumns).keys()].map(i => (
-            <g transform={`translate(${i * stepSize + (radius / 2)}, ${marginTop - 20})`}>
-                <text transform={'rotate(-50)'}
-                      className={boldHeaders.includes(overview.hyperparameters[i]) ? 'selected-header' : ''}>
-                    {overview.hyperparameters[i]
-                        .replace('data_preprocessor:feature_type:numerical_transformer:', '')
-                        .replace('data_preprocessor:feature_type:categorical_transformer:', '')}</text>
-            </g>))
-
-        return (
-            <>
-                <svg width={width} height={height + marginTop} style={{overflow: "visible"}}>
-                    <g transform={'translate(10, 10)'}>
-                        <g transform={`translate(0, ${marginTop})`}>{rows}</g>
-                        <g>{headers}</g>
-                    </g>
-                </svg>
-                <BarChart data={overview.importance} layout={'vertical'} className={'hp-importance'}
-                          width={width} height={height + marginTop}
-                          margin={{top: marginTop - 32, bottom: 0, left: 5, right: 5}}
-                          barSize={2 * radius} barGap={margin} style={{overflow: "visible"}}>
-                    <text x={width / 2} y={marginTop - 30} textAnchor={'middle'}>Importance</text>
-                    <CartesianGrid strokeDasharray="3 3"/>
-                    <XAxis dataKey={'importance'} type={'number'} orientation={'top'} domain={[0, 1]}
-                           ticks={[0, 0.25, 0.5, 0.75, 1]}/>
-                    <YAxis dataKey="idx" type={"category"} interval={0} hide/>
-
-                    {selectedRow !== undefined && <ReferenceArea x1={0} x2={1} y1={selectedRow} y2={selectedRow}
-                                                                 fill={'var(--md-grey-300)'} fillOpacity={1}/>}
-
-                    <Bar dataKey="importance"
-                         fill={Colors.DEFAULT}
-                         onClick={(d) => this.selectRow(d.idx)}
-                         isAnimationActive={selectedRow === undefined}>
-                        <ErrorBar dataKey="std" height={radius / 2} strokeWidth={2} stroke={Colors.HIGHLIGHT}
-                                  direction="x"/>
-                    </Bar>
-                </BarChart>
-            </>
-        )
+        this.context.createCell(`
+${ID}_hp_importance = XAutoMLManager.get_active().get_hp_importance('${structure.cid}', '${model.component}')
+${ID}_hp_importance
+        `.trim())
     }
+
+    private exportDetails() {
+        const {model, structure} = this.props
+        const [hp1, hp2] = this.state.overview.keys[this.state.selectedRow]
+
+        this.context.createCell(`
+${ID}_hp_interactions = XAutoMLManager.get_active().get_hp_interactions('${structure.cid}', '${model.component}', '${hp1}', '${hp2}')
+${ID}_hp_interactions
+        `.trim())
+    }
+
 
     render() {
         const {error, overview, selectedRow} = this.state
-
-        const maxLabelLength = overview?.hyperparameters ?
-            Math.max(...overview.hyperparameters.map(d => d
-                .replace('data_preprocessor:feature_type:numerical_transformer:', '')
-                .replace('data_preprocessor:feature_type:categorical_transformer:', '')
-                .length)) * 6 : 0
+        const marginTop = overview?.column_names ? maxLabelLength(overview.column_names) : 0
 
         return (
             <>
@@ -359,7 +300,9 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
                     <LoadingIndicator loading={overview === undefined}/>
                     {overview?.keys.length === 0 && <p>The selected component does not have any hyperparameters. </p>}
                     {overview?.keys.length > 0 && <>
-                        {this.renderOverview(maxLabelLength)}
+                        <ImportanceOverviewComp overview={overview} selectedRow={selectedRow}
+                                                onExportClick={this.exportOverview}
+                                                onSelectRow={this.selectRow}/>
                         <div style={{
                             marginLeft: '20px',
                             flexGrow: 1,
@@ -367,14 +310,15 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
                             minWidth: 'auto'
                         }}>
                             {selectedRow === undefined ?
-                                <p style={{marginTop: maxLabelLength}}>
+                                <p style={{marginTop: marginTop}}>
                                     Select a hyperparameter (pair) on the left side to get a detailed visualization of
                                     the correlation of the selected hyperparameter (pairs) in combination with the
                                     marginal performance.
                                 </p> :
                                 <SingleHP data={this.getDetails(selectedRow)}
-                                          maxLabelLength={maxLabelLength}
-                                          metric={this.props.metric}/>
+                                          maxLabelLength={marginTop}
+                                          metric={this.props.metric}
+                                          onExportClick={this.exportDetails}/>
                             }
                         </div>
                     </>}

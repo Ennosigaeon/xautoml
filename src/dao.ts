@@ -43,7 +43,7 @@ export async function requestAPI<T>(
 }
 
 export interface LinePoint {
-    x: number
+    x: number | string
     y: number
 }
 
@@ -82,11 +82,6 @@ export interface GlobalSurrogateResult {
 
 export type LocalExplanation = Array<[string, number]>
 
-export interface FeatureImportance {
-    data: Map<string, number>,
-    additional_features: string[],
-}
-
 export type OutputDescriptionData = Map<string, string>
 
 export interface PerformanceData {
@@ -110,14 +105,29 @@ export interface HPImportanceDetails {
     data: any[] | any
 }
 
-export interface HPImportance {
-    hyperparameters: string[]
+export interface ImportanceOverview {
+    column_names: string[]
     keys: [string, string][]
-    importance: any[]
+    importance: { mean: number, std: number, idx: number, errorBars?: [number, number] }[]
+}
+
+export interface FeatureImportance {
+    data: ImportanceOverview,
+    additional_features: string[],
+}
+
+export interface PDPResponse {
+    y_range: [number, number]
+    features: Map<string, SinglePDP>
+}
+
+export interface SinglePDP {
+    ice: LinePoint[][]
+    avg: LinePoint[]
 }
 
 export interface FANOVAResponse {
-    overview: HPImportance,
+    overview: ImportanceOverview,
     details?: Map<string, Map<string, HPImportanceDetails>>
     error?: string
 }
@@ -142,6 +152,6 @@ export interface EnsembleOverview {
 export interface DecisionSurfaceResponse {
     colors: string[]
     contours: Map<CandidateId, string>
-    X: { x: number, y: number }[]
+    X: LinePoint[]
     y: Prediction[]
 }

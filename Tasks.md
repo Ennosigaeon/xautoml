@@ -6,13 +6,9 @@
 
 - PC Explanations for SMAC
 - More "Continue in Jupyter" Buttons
-- Improve help texts
 - Help texts for components. Link to sklearn
 
 - Feature Correlation
-- Partial Dependency Plots
-- Individual Conditional Expectation Plots
-- Store which details were opened/closed
 
 ## Data Sets for Evaluation
 

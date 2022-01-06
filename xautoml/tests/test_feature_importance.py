@@ -12,7 +12,7 @@ def test_source():
 
     pipeline, X, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X, y)
     details = ModelDetails()
-    res = details.calculate_feature_importance(X, y, pipeline)
+    res = details.calculate_feature_importance(X, y, pipeline, main.run_history.meta.metric)
     print(json.dumps(res.to_dict()))
 
 
@@ -23,5 +23,5 @@ def test_step():
 
     pipeline, X, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X, y)
     details = ModelDetails()
-    res = details.calculate_feature_importance(X, y, pipeline)
+    res = details.calculate_feature_importance(X, y, pipeline, main.run_history.meta.metric)
     print(json.dumps(res.to_dict()))

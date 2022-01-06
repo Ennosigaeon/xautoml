@@ -9,9 +9,9 @@ import {
     LimeResult,
     LinePoint,
     LocalExplanation,
-    OutputDescriptionData,
+    OutputDescriptionData, PDPResponse,
     PerformanceData,
-    RocCurveData
+    RocCurveData, SinglePDP
 } from "./dao";
 import {INotebookTracker, Notebook, NotebookActions} from "@jupyterlab/notebook";
 import {TagTool} from "@jupyterlab/celltags";
@@ -200,13 +200,23 @@ export class Jupyter {
     requestFeatureImportance(cid: CandidateId, step: string = SOURCE): Promise<FeatureImportance> {
         return this.memExecuteCode<FeatureImportance>(
             `XAutoMLManager.get_active().feature_importance('${cid}', '${step}')`
+        )
+    }
+
+    requestPDP(cid: CandidateId, step: string = SOURCE, features: string[] = undefined): Promise<Map<string, PDPResponse>> {
+        const list = features.join('\', \'')
+        return this.memExecuteCode<Map<string, PDPResponse>>(
+            `XAutoMLManager.get_active().pdp('${cid}', '${step}', ['${list}'])`
         ).then(data => {
-            return {
-                data: new Map<string, number>(
-                    Object.entries(data.data).map(([key, value]) => [key, value['0']])
-                ),
-                additional_features: data.additional_features
-            }
+            console.log(data)
+            const x: [string, PDPResponse][] = Object.entries(data as Map<string, PDPResponse>)
+                .map(([clazz, pdpResponse]) => {
+                    return [clazz, {
+                        y_range: pdpResponse.y_range,
+                        features: new Map<string, SinglePDP>(Object.entries(pdpResponse.features))
+                    }]
+                });
+            return new Map<string, PDPResponse>(x)
         })
     }
 

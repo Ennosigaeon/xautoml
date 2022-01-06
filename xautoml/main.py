@@ -28,6 +28,15 @@ def as_json(func):
     return wrapper
 
 
+def no_warnings(func):
+    def wrapper(*args, **kwargs):
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            return func(*args, **kwargs)
+
+    return wrapper
+
+
 class XAutoML:
     MAX_SAMPLES = 5000
 
@@ -87,6 +96,31 @@ class XAutoML:
                 loss += [c.loss for c in s.configs if c.runtime['timestamp'] < timestamp]
         return configs, np.array(loss)
 
+    def _construct_fanova(self, sid: Optional[str], step: str):
+        if sid is not None:
+            matches = filter(lambda s: s.cid == sid, self.run_history.structures)
+            structure = next(matches)
+        else:
+            structure = None
+
+        actual_cs = None
+        configs, loss = self._get_equivalent_configs(structure)
+        if structure is not None and structure.configspace is not None:
+            cs = structure.configspace
+        else:
+            cs = self.run_history.default_configspace
+            try:
+                # noinspection PyUnresolvedReferences
+                actual_cs = structure.pipeline.configuration_space
+            except AttributeError:
+                pass
+
+        f, X = HPImportance.construct_fanova(cs, configs, loss)
+        if X.shape[0] < 2:
+            raise ValueError('Not enough evaluated configurations to calculate hyperparameter importance.')
+
+        return f, X, actual_cs
+
     # Endpoints for internal communication
 
     @as_json
@@ -127,44 +161,42 @@ class XAutoML:
 
         last_step = pipeline.steps[-1][0]
         if step == last_step or step.startswith('{}:'.format(last_step)) or step == SINK:
-            res = pd.DataFrame(data={'0': {'0': 1, '1': 0}})
+            res = pd.DataFrame()
             additional_features = []
         else:
             pipeline, X, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X, y)
-            details = ModelDetails()
-            res = details.calculate_feature_importance(X, y, pipeline, self.run_history.meta.metric)
-        return {'data': res.to_dict(), 'additional_features': additional_features}
+            res = ModelDetails.calculate_feature_importance(X, y, pipeline, self.run_history.meta.metric)
+
+        res['idx'] = range(len(res))
+        return {
+            'data': {
+                'column_names': res.index.to_list(),
+                'keys': [(c, c) for c in res.index],
+                'importance': res.to_dict('records')
+            },
+            'additional_features': additional_features
+        }
+
+    @as_json
+    def pdp(self, cid: CandidateId, step: str, features: list[str] = None):
+        return self.get_pdp(cid, step, features)
 
     @as_json
     def fanova(self, sid: Optional[CandidateId], step: str):
-        if sid is not None:
-            matches = filter(lambda s: s.cid == sid, self.run_history.structures)
-            structure = next(matches)
-        else:
-            structure = None
+        try:
+            f, X, actual_cs = self._construct_fanova(sid, step)
 
-        actual_cs = None
-        configs, loss = self._get_equivalent_configs(structure)
-        if structure is not None and structure.configspace is not None:
-            cs = structure.configspace
-        else:
-            cs = self.run_history.default_configspace
-            try:
-                # noinspection PyUnresolvedReferences
-                actual_cs = structure.pipeline.configuration_space
-            except AttributeError:
-                pass
-
-        f, X = HPImportance.construct_fanova(cs, configs, loss)
-        if X.shape[0] < 2:
-            return {
-                'error': 'Not enough evaluated configurations to calculate hyperparameter importance.'
+            overview = HPImportance.calculate_fanova_overview(f, X, step=step, filter_=actual_cs)
+            overview = {
+                'column_names': np.unique(np.array(overview.index.to_list()).flatten()).tolist(),
+                'keys': overview.index.tolist(),
+                'importance': overview[['mean', 'std', 'idx']].to_dict('records'),
             }
 
-        overview = HPImportance.calculate_fanova_overview(f, X, step=step, filter_=actual_cs)
-        details = HPImportance.calculate_fanova_details(f, X, hps=overview['keys'])
-
-        return {'overview': overview, 'details': details}
+            details = HPImportance.calculate_fanova_details(f, X, hps=overview['keys'])
+            return {'overview': overview, 'details': details}
+        except ValueError as ex:
+            return {'error': str(ex)}
 
     @as_json
     def simulate_surrogate(self, sid: CandidateId, timestamp: float):
@@ -299,10 +331,40 @@ class XAutoML:
     def get_pipeline(self, cid: CandidateId) -> tuple[pd.DataFrame, pd.Series, Pipeline]:
         return self._load_model(cid)
 
+    @no_warnings
     def get_sub_pipeline(self, cid: CandidateId, step: str) -> tuple[pd.DataFrame, pd.Series, Pipeline]:
         X, y, pipeline = self._load_model(cid)
         pipeline, X, _ = pipeline_utils.get_subpipeline(pipeline, step, X, y)
         return X, y, pipeline
+
+    @no_warnings
+    def get_feature_importance(self, cid: CandidateId, step: str):
+        X, y, pipeline = XAutoMLManager.get_active().get_sub_pipeline(cid, step)
+        pipeline, X, _ = pipeline_utils.get_subpipeline(pipeline, step, X, y)
+        return ModelDetails.calculate_feature_importance(X, y, pipeline, self.run_history.meta.metric, n_head=10000)
+
+    @no_warnings
+    def get_pdp(self, cid: CandidateId, step: str, features: list[str]):
+        X, y, pipeline = self._load_model(cid)
+
+        pipeline, X, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X, y)
+        details = ModelDetails()
+        return details.calculate_pdp(X, y, pipeline, features=features)
+
+    @no_warnings
+    def get_global_surrogate(self, cid: CandidateId, step: str, max_leaf_nodes: int):
+        X, y, pipeline = XAutoMLManager.get_active().get_sub_pipeline(cid, step)
+        return pipeline_utils.fit_decision_tree(X, pipeline.predict(X), max_leaf_nodes=max_leaf_nodes)
+
+    @no_warnings
+    def get_hp_importance(self, sid: Optional[str], step: str):
+        f, X, actual_cs = self._construct_fanova(sid, step)
+        return HPImportance.calculate_fanova_overview(f, X, step=step, filter_=actual_cs, n_head=10000)
+
+    @no_warnings
+    def get_hp_interactions(self, sid: Optional[str], step: str, hp1: str, hp2: str):
+        f, X, actual_cs = self._construct_fanova(sid, step)
+        return pd.DataFrame(HPImportance.calculate_fanova_details(f, X, hps=[(hp1, hp2)])[hp1][hp2]['data'])
 
     def _repr_mimebundle_(self, include, exclude):
         return {

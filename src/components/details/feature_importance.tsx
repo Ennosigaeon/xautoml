@@ -1,30 +1,186 @@
 import React from 'react';
-import {FeatureImportance} from "../../dao";
+import {FeatureImportance, PDPResponse} from "../../dao";
 import {LoadingIndicator} from "../../util/loading";
 import {DetailsModel} from "./model";
 import {ErrorIndicator} from "../../util/error";
-import {Colors, JupyterContext, prettyPrint} from "../../util";
+import {Colors, JupyterContext, maxLabelLength, prettyPrint} from "../../util";
 import {CommonWarnings} from "../../util/warning";
-import {Bar, BarChart, CartesianGrid, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis} from "recharts";
 import {JupyterButton} from "../../util/jupyter-button";
+import {ImportanceOverviewComp} from "./importance_overview";
+import {CartesianGrid, Line, LineChart, ResponsiveContainer, Scatter, ScatterChart, XAxis, YAxis} from "recharts";
+import {Heading} from "../../util/heading";
+import {FormControl, MenuItem, Select} from '@material-ui/core';
+import {CandidateId} from "../../model";
 import {ID} from "../../jupyter";
-import {MinimalisticTooltip} from "../../util/recharts";
+
+class LabelEncoder {
+
+    public labels: string[]
+
+    fit(data: string[]): LabelEncoder {
+        this.labels = [...new Set(data)]
+        return this
+    }
+
+    transform(x: string): number {
+        return this.labels.indexOf(x)
+    }
+
+    inverse(i: number): string {
+        return this.labels[i]
+    }
+}
 
 
-class CustomizedAxisTick extends React.PureComponent<any> {
-    render() {
-        const {x, y, payload, additionalFeatures} = this.props;
-        const isAdditional = additionalFeatures.includes(payload.value)
+interface PDPCompProps {
+    data: Map<string, PDPResponse>
+    feature: string
+    cid: CandidateId
+    component: string
+}
+
+interface PDPCompState {
+    clazz: string
+}
+
+class PDPComp extends React.Component<PDPCompProps, PDPCompState> {
+
+    static readonly HELP = 'Partial dependence plots (PDP) and individual conditional expectation (ICE) plots can be ' +
+        'used to visualize and analyze interaction between the target class and a input feature of  interest. PDPs ' +
+        'are calculated by, marginalizing over the values of all other input features (the ‘complement’ features). ' +
+        'Intuitively, you can interpret the partial dependence as the expected target response as a function of the ' +
+        'input features of interest.' +
+        '\n\n' +
+        'Similar to a PDP, an ICE plot shows the dependence between the target function and an input feature of ' +
+        'interest. However, unlike a PDP, which shows the average effect of the input feature, an ICE plot ' +
+        'visualizes the dependence of the prediction on a feature for each sample separately with one line per ' +
+        'sample.' +
+        '\n\n' +
+        'The PDP line for the selected component is rendered in dark blue while a subset of the ICE lines is ' +
+        'rendered in light blue. The x axis contains the possible range of the selected feature while the y axis ' +
+        'contains the partial dependence on the target class.'
+
+    static contextType = JupyterContext;
+    context: React.ContextType<typeof JupyterContext>;
+
+    constructor(props: PDPCompProps) {
+        super(props);
+        this.state = {clazz: undefined}
+
+        this.handleClassChange = this.handleClassChange.bind(this)
+        this.exportDataFrame = this.exportDataFrame.bind(this)
+    }
+
+    componentDidUpdate(prevProps: Readonly<PDPCompProps>, prevState: Readonly<PDPCompState>, snapshot?: any) {
+        if (prevProps.data === undefined && this.props.data !== undefined)
+            this.setState({clazz: this.props.data.keys().next().value})
+    }
+
+    handleClassChange(event: any) {
+        this.setState({clazz: event.target.value})
+    }
+
+    private exportDataFrame() {
+        const {cid, component, feature} = this.props
+
+        this.context.createCell(`
+${ID}_pdp = XAutoMLManager.get_active().get_pdp('${cid}', '${component}', ['${feature}'])
+${ID}_pdp
+        `.trim())
+    }
+
+    renderNumerical(data: PDPResponse) {
+        const yRange = data.y_range
+        const pdp = data.features.get(this.props.feature)
 
         return (
-            <g transform={`translate(${x},${y})`}>
-                <text x={0} y={0} dy={16} textAnchor="end"
-                      fill={isAdditional ? Colors.ADDITIONAL_FEATURE : Colors.SELECTED_FEATURE}
-                      transform="rotate(-35)">
-                    {payload.value}
-                </text>
-            </g>
-        );
+            <ResponsiveContainer>
+                <LineChart data={pdp.avg} margin={{left: 30}}>
+                    <CartesianGrid strokeDasharray="3 3"/>
+                    <XAxis type="number" dataKey="x" label={{value: this.props.feature, dy: 10}}
+                           domain={['dataMin', 'dataMax']} tickFormatter={prettyPrint}/>
+                    <YAxis type="number" dataKey="y" label={{value: `Partial dependence`, angle: -90, dx: -40}}
+                           domain={yRange} tickFormatter={prettyPrint}/>
+
+                    {pdp.ice.map((points, idx) => (
+                        <Line key={idx} data={points} type="monotone" dataKey="y"
+                              stroke={Colors.DEFAULT} strokeWidth={1} dot={false}/>
+                    ))}
+                    {pdp.avg && <Line data={pdp.avg} type="monotone" dataKey="y"
+                                      stroke={Colors.HIGHLIGHT} strokeWidth={2} dot={false}/>
+                    }
+                </LineChart>
+            </ResponsiveContainer>
+        )
+    }
+
+    renderCategorical(data: PDPResponse) {
+        const yRange = data.y_range
+        const pdp = data.features.get(this.props.feature)
+        const ice = [].concat(...pdp.ice)
+        const avg = pdp.avg
+
+        const encoder = new LabelEncoder().fit(avg.map(i => i.x as string))
+
+        return (
+            <ResponsiveContainer>
+                <ScatterChart margin={{left: 30}}>
+                    <CartesianGrid strokeDasharray="3 3"/>
+                    <XAxis type="number" dataKey="x" label={{value: this.props.feature, dy: 10}}
+                           domain={[-0.5, encoder.labels.length - 0.5]}
+                           ticks={[...Array(encoder.labels.length).keys()].map((_, i) => i)}
+                           tickFormatter={(i: number) => encoder.inverse(i)}/>
+                    <YAxis type="number" dataKey="y" label={{value: `Partial dependence`, angle: -90, dx: -40}}
+                           domain={yRange} tickFormatter={prettyPrint}/>
+
+                    {ice && <Scatter data={ice.map(i => ({x: encoder.transform(i.x as string), y: i.y}))}
+                                     fill={Colors.DEFAULT}
+                                     radius={1}/>}
+                    {avg && <Scatter data={avg.map(i => ({x: encoder.transform(i.x as string), y: i.y}))}
+                                     fill={Colors.HIGHLIGHT}
+                                     radius={3}/>}
+                </ScatterChart>
+            </ResponsiveContainer>
+        )
+    }
+
+    render() {
+        const {feature} = this.props
+        const data = this.props?.data?.get(this.state.clazz)
+
+        const pdp = data ? data.features.get(feature) : undefined
+
+        return (
+            <>
+                <div style={{height: '300px', flexGrow: 1}}>
+                    <LoadingIndicator loading={data === undefined}/>
+                    {pdp &&
+                        <>
+                            <div style={{display: "flex", justifyContent: "space-between"}} className={'pdp'}>
+                                <Heading help={PDPComp.HELP}>
+                                    <h4>
+                                        Partial Dependencies for Feature <i>{feature}</i> and class&nbsp;
+                                        {this.props.data.size > 2 ?
+                                            <FormControl variant="standard" size="small">
+                                                <Select value={this.state.clazz}
+                                                        onChange={this.handleClassChange}
+                                                        style={{marginLeft: '10px', marginRight: '10px'}}>
+                                                    {Array.from(this.props.data.keys()).map(clazz => <MenuItem
+                                                        value={clazz}>{clazz}</MenuItem>)}
+                                                </Select>
+                                            </FormControl> : <i>{this.state.clazz}</i>
+                                        }</h4>
+                                </Heading>
+                                <JupyterButton onClick={this.exportDataFrame}/>
+                            </div>
+
+                            {typeof pdp.avg[0].x === 'number' && this.renderNumerical(data)}
+                            {typeof pdp.avg[0].x === 'string' && this.renderCategorical(data)}
+                        </>
+                    }
+                </div>
+            </>
+        )
     }
 }
 
@@ -35,8 +191,10 @@ interface FeatureImportanceProps {
 }
 
 interface FeatureImportanceState {
-    data: Map<string, FeatureImportance>
+    data: FeatureImportance
+    pdp: Map<string, PDPResponse>
     error: Error
+    selectedRow: number
 }
 
 export class FeatureImportanceComponent extends React.Component<FeatureImportanceProps, FeatureImportanceState> {
@@ -51,13 +209,14 @@ export class FeatureImportanceComponent extends React.Component<FeatureImportanc
 
     constructor(props: FeatureImportanceProps) {
         super(props);
-        this.state = {data: new Map<string, FeatureImportance>(), error: undefined}
+        this.state = {data: undefined, pdp: undefined, error: undefined, selectedRow: undefined}
 
         this.exportDataFrame = this.exportDataFrame.bind(this)
+        this.selectRow = this.selectRow.bind(this)
     }
 
     componentDidMount() {
-        this.queryFeatureImportance()
+        window.setTimeout(() => this.queryFeatureImportance(), 100)
     }
 
     componentDidUpdate(prevProps: Readonly<FeatureImportanceProps>, prevState: Readonly<FeatureImportanceState>, snapshot?: any) {
@@ -67,12 +226,27 @@ export class FeatureImportanceComponent extends React.Component<FeatureImportanc
 
     private queryFeatureImportance() {
         const {candidate, component} = this.props.model
-        if (!component || this.state.data.has(component))
+        if (!component)
             return
 
         this.setState({error: undefined})
         this.context.requestFeatureImportance(candidate.id, component)
-            .then(data => this.setState((state) => ({data: state.data.set(component, data)})))
+            .then(data => this.setState({data: data, error: undefined}))
+            .catch(error => {
+                console.error(`Failed to fetch FeatureImportance data.\n${error.name}: ${error.message}`)
+                this.setState({error: error})
+            });
+    }
+
+    private selectRow(idx: number) {
+        this.setState({selectedRow: idx})
+        this.queryPDP(this.state.data.data.column_names[idx])
+    }
+
+    private queryPDP(feature: string) {
+        this.setState({pdp: undefined, error: undefined})
+        this.context.requestPDP(this.props.model.candidate.id, this.props.model.component, [feature])
+            .then(data => this.setState({pdp: data, error: undefined}))
             .catch(error => {
                 console.error(`Failed to fetch FeatureImportance data.\n${error.name}: ${error.message}`)
                 this.setState({error: error})
@@ -80,75 +254,47 @@ export class FeatureImportanceComponent extends React.Component<FeatureImportanc
     }
 
     private exportDataFrame() {
-        function pythonBool(bool: boolean) {
-            const string = bool.toString()
-            return string.charAt(0).toUpperCase() + string.slice(1);
-        }
-
-        const {component} = this.props.model
-        const {data} = this.state
-        const additionalFeatures = data.get(component).additional_features
-
-        // noinspection JSMismatchedCollectionQueryUpdate
-        const entries: string[] = []
-        // noinspection JSMismatchedCollectionQueryUpdate
-        const index: string[] = []
-        const columns: string[] = ['\'importance\'', '\'additional_feature\'']
-        data.get(component).data.forEach((value, key) => {
-            entries.push(`[${value}, ${pythonBool(additionalFeatures.includes(key))}]`)
-            index.push(`'${key}'`)
-        })
+        const {candidate, component} = this.props.model
 
         this.context.createCell(`
-import pandas as pd
-
-${ID}_feature_importance = pd.DataFrame([${entries}],
-  index=[${index}],
-  columns=[${columns}])
+${ID}_feature_importance = XAutoMLManager.get_active().get_feature_importance('${candidate.id}', '${component}')
 ${ID}_feature_importance
         `.trim())
     }
 
     render() {
-        const {data, error} = this.state
-        const {component} = this.props.model
-
-        const bars: any[] = []
-        let maxLabelLength = 35
-        data.get(component)?.data.forEach((value, key) => {
-            bars.push({feature: key, y: value})
-            maxLabelLength = Math.max(maxLabelLength, key.length * 4)
-        })
-        const additionalFeatures = data.has(component) ? data.get(component).additional_features : []
+        const {data, error, selectedRow, pdp} = this.state
+        const marginTop = data ? maxLabelLength(data.data.column_names) : 0
 
         return (
             <>
                 <ErrorIndicator error={error}/>
                 {!error &&
                     <>
-                        <LoadingIndicator loading={bars.length === 0}/>
-                        {bars.length > 0 &&
+                        <LoadingIndicator loading={data === undefined}/>
+                        {data &&
                             <>
-                                <div style={{display: "flex", flexDirection: "row-reverse"}}>
-                                    <JupyterButton onClick={this.exportDataFrame}/>
-                                </div>
-
-                                <CommonWarnings additionalFeatures={additionalFeatures.length > 0}/>
-                                <div style={{height: this.props.height}}>
-                                    <ResponsiveContainer>
-                                        <BarChart data={bars} margin={{bottom: maxLabelLength, left: 30}}>
-                                            <CartesianGrid strokeDasharray="3 3"/>
-                                            <XAxis dataKey="feature" type={"category"} interval={0}
-                                                   tick={<CustomizedAxisTick
-                                                       additionalFeatures={additionalFeatures}/>}/>
-                                            <YAxis label={{value: `Performance Decrease`, angle: -90, dx: -40}}
-                                                   domain={['0', 'dataMax']}
-                                                   tickFormatter={y => prettyPrint(y, 4)}/>
-                                            <ReferenceLine y="0" stroke="#666666"/>
-                                            <Tooltip content={<MinimalisticTooltip/>}/>
-                                            <Bar dataKey="y" fill={Colors.DEFAULT}/>
-                                        </BarChart>
-                                    </ResponsiveContainer>
+                                <CommonWarnings additionalFeatures={data.additional_features.length > 0}/>
+                                <div style={{display: 'flex'}}>
+                                    <ImportanceOverviewComp overview={data.data} selectedRow={selectedRow}
+                                                            onExportClick={this.exportDataFrame}
+                                                            onSelectRow={this.selectRow}/>
+                                    <div style={{
+                                        marginLeft: '20px',
+                                        flexGrow: 1,
+                                        flexShrink: 1,
+                                        minWidth: 'auto'
+                                    }}>
+                                        {selectedRow === undefined ?
+                                            <p style={{marginTop: marginTop}}>
+                                                Select a feature on the left side to get a detailed visualization how
+                                                the different values of this feature correlate with the predicted class.
+                                            </p> :
+                                            <PDPComp data={pdp} feature={data.data.column_names[selectedRow]}
+                                                     cid={this.props.model.candidate.id}
+                                                     component={this.props.model.component}/>
+                                        }
+                                    </div>
                                 </div>
                             </>
                         }

@@ -1,6 +1,7 @@
 import json
 
-from xautoml.tests import get_31, get_autosklearn, get_168746, get_autosklearn_hearts, get_autosklearn_iris
+from xautoml.tests import get_31, get_autosklearn, get_168746, get_autosklearn_hearts, get_autosklearn_iris, get_1823, \
+    get_7306
 
 
 def test_serialization_fixed_structure():
@@ -20,32 +21,52 @@ def test_serialization_autosklearn():
 
 def test_output_description():
     main = get_autosklearn_hearts()
-    print(main.output_description('00:01:03').data)
+    print(main.output_description('00:03:17').data)
 
 
 def test_output_complete():
     main = get_autosklearn_hearts()
-    print(main.output_complete('00:01:03').data)
+    print(main.output_complete('00:03:17').data)
 
 
 def test_performance_data():
     main = get_autosklearn_hearts()
-    print(main.performance_data('00:01:03').data)
+    print(main.performance_data('00:03:17').data)
 
 
 def test_decision_tree_surrogate():
     main = get_autosklearn_hearts()
-    print(main.decision_tree_surrogate('00:01:03', 'SOURCE', None).data)
+    print(main.decision_tree_surrogate('00:03:17', 'SOURCE', None).data)
 
 
 def test_decision_tree_surrogate_last_step():
     main = get_autosklearn_hearts()
-    print(main.decision_tree_surrogate('00:01:03', 'classifier:gradient_boosting', None).data)
+    print(main.decision_tree_surrogate('00:03:17', 'classifier:gradient_boosting', None).data)
 
 
 def test_feature_importance():
-    main = get_autosklearn_hearts()
-    print(main.feature_importance('00:01:03', 'SOURCE').data)
+    main = get_31()
+    print(main.feature_importance('00:02:02', 'SOURCE').data)
+
+
+def test_pdp():
+    main = get_31()
+    print(json.dumps(main.pdp('00:00:05', 'SOURCE', ['installment_commitment']).data))
+
+
+def test_pdp2():
+    main = get_1823()
+    print(main.pdp('00:00:00', 'SOURCE').data)
+
+
+def test_pdp3():
+    main = get_7306()
+    print(main.pdp('00:02:02', 'SOURCE').data)
+
+
+def test_pdp4():
+    main = get_168746()
+    print(main.pdp('00:00:103', 'data_preprocessing:categorical:imputation').data)
 
 
 def test_fanova():
@@ -65,12 +86,12 @@ def test_config_similarity():
 
 def test_lime():
     main = get_autosklearn_hearts()
-    print(main.lime('00:01:03', 1, 'SOURCE').data)
+    print(main.lime('00:03:17', 1, 'SOURCE').data)
 
 
 def test_roc_curve():
     main = get_autosklearn_hearts()
-    print(main.roc_curve(['00:01:03']).data)
+    print(main.roc_curve(['00:03:17']).data)
 
 
 def test_ensemble_decision_surface():

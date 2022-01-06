@@ -18,7 +18,7 @@ def test_overview():
 
     f, X = HPImportance.construct_fanova(cs, configs, loss)
     overview = HPImportance.calculate_fanova_overview(f, X)
-    print(json.dumps(overview))
+    print(overview.to_json())
 
 
 def test_for_step():
@@ -33,7 +33,7 @@ def test_for_step():
     overview = HPImportance.calculate_fanova_overview(f, X, '1.1')
     print(overview)
 
-    details = HPImportance.calculate_fanova_details(f, X, hps=overview['keys'])
+    details = HPImportance.calculate_fanova_details(f, X, hps=overview.index.tolist())
     print(json.dumps(details))
 
 
@@ -101,16 +101,16 @@ def test_auto_sklearn():
     f, X = HPImportance.construct_fanova(cs, configs, loss)
 
     overview = HPImportance.calculate_fanova_overview(f, X)
-    print(json.dumps(overview))
+    print(overview.to_json())
 
-    details = HPImportance.calculate_fanova_details(f, X)
+    details = HPImportance.calculate_fanova_details(f, X, hps=overview.index.tolist())
     print(json.dumps(details))
 
 
 def test_all_auto_sklearn_steps():
     main = get_autosklearn_hearts()
 
-    X, y, pipeline = main.get_pipeline('00:01:03')
+    X, y, pipeline = main.get_pipeline('00:03:17')
 
     inputs, outputs = OutputCalculator.calculate_outputs(pipeline, X, y, method=RAW)
 

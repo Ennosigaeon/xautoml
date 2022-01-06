@@ -78,8 +78,6 @@ export class RawDataset extends React.Component<RawDatasetProps, RawDatasetState
         const {candidate, component} = this.props.model
 
         this.context.createCell(`
-from xautoml.util import io_utils
-
 ${ID}_X, ${ID}_y, ${ID}_pipeline = XAutoMLManager.get_active().get_sub_pipeline('${candidate.id}', '${component}')
 ${ID}_X
         `.trim())

@@ -100,7 +100,7 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
 
                 <CollapseComp name={'hp-importance'} showInitial={false} help={HPImportanceComp.HELP}>
                     <h3>Hyperparameter Importance</h3>
-                    <HPImportanceComp structure={structure} component={componentId} metric={meta.metric}/>
+                    <HPImportanceComp structure={structure} model={model} metric={meta.metric}/>
                 </CollapseComp>
 
                 <CollapseComp name={'feature-importance'} showInitial={false} help={FeatureImportanceComponent.HELP}>

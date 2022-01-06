@@ -289,6 +289,10 @@ div.structure-graph_tooltip {
 
 
 /** JupyterButton */
+.jupyter-button {
+    max-width: 135px;
+}
+
 .jupyter-button > span {
     font-size: var(--jp-code-font-size);
 }
@@ -519,4 +523,12 @@ text.pc-axis-label:hover {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-around;
+}
+
+
+/** Feature Importance **/
+.pdp .MuiInputBase-input{
+    font-size: var(--jp-code-font-size);
+    padding-top: 0;
+    line-height: unset;
 }

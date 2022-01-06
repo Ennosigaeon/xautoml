@@ -39,28 +39,19 @@ class HPImportance:
                 imp = {'individual importance': 0.5, 'individual std': 0, 'total importance': 0.5, 'total std': 0}
                 d = {(i,): imp, (j,): imp, (i, j): imp}
             res[(i_name, i_name)] = {
-                'importance': d[(i,)]['individual importance'],
+                'mean': d[(i,)]['individual importance'],
                 'std': d[(i,)]['individual std']
             }
             res[(j_name, j_name)] = {
-                'importance': d[(j,)]['individual importance'],
+                'mean': d[(j,)]['individual importance'],
                 'std': d[(j,)]['individual std']
             }
             res[(i_name, j_name)] = {
-                'importance': d[(i, j)]['total importance'],
+                'mean': d[(i, j)]['total importance'],
                 'std': d[(i, j)]['total std']
             }
-        df = pd.DataFrame(res).T
-
-        df['lower'] = (df['importance'] - df['std']).clip(lower=0)
-        df['upper'] = (df['importance'] + df['std']).clip(upper=1)
-
-        df = df.round(NUMBER_PRECISION)
-
-        df['std'] = list(zip((df['importance'] - df['lower']).round(NUMBER_PRECISION),
-                             (df['upper'] - df['importance']).round(NUMBER_PRECISION)))
-
-        df = df.sort_values('importance', ascending=False)
+        df = pd.DataFrame(res).T.round(NUMBER_PRECISION)
+        df = df.sort_values('mean', ascending=False)
 
         if step is not None and step not in (SOURCE, SINK):
             # Move all rows with hyperparameters from the selected step to top of DataFrame
@@ -73,13 +64,7 @@ class HPImportance:
             df = df.head(n_head)
 
         df['idx'] = range(0, df.shape[0])
-        remaining_hp_names = np.unique(np.array(df.index.to_list()).flatten())
-
-        return {
-            'hyperparameters': remaining_hp_names.tolist(),
-            'keys': df.index.tolist(),
-            'importance': df[['importance', 'std', 'idx']].to_dict('records'),
-        }
+        return df
 
     @staticmethod
     def calculate_fanova_details(f: fANOVA, X: pd.DataFrame, resolution: int = 20, hps: list[tuple[str, str]] = None):

@@ -6,7 +6,7 @@ from sklearn.datasets import load_iris
 
 from xautoml.adapter import import_dswizard, import_auto_sklearn
 from xautoml.main import XAutoML
-from xautoml.util.datasets import hearts
+from xautoml.util.datasets import stroke, openml_task
 
 
 def get_31() -> XAutoML:
@@ -20,7 +20,7 @@ def get_31() -> XAutoML:
     structure.results[2].model_file = 'res/31/models_0-2-2.pkl'
 
     rh = import_dswizard(raw, ensemble)
-    X, y = _load_data('res/31/dataset.pkl')
+    X, y = openml_task(31, 0, test=True)
     return XAutoML(rh, X, y)
 
 
@@ -72,11 +72,11 @@ def get_168746() -> XAutoML:
 
 
 def get_fixed_hearts() -> XAutoML:
+    X_test, y_test = stroke('/home/marc/phd/code/xautoml/user_study/stroke.csv', train=True)
     with open('/home/marc/phd/code/xautoml/user_study/dswizard/output/fixed/dswizard.pkl', 'rb') as f:
         (raw, ensemble) = joblib.load(f)
 
     rh = import_dswizard(raw, ensemble)
-    X_test, y_test = hearts('/home/marc/phd/code/xautoml/xautoml/tests/res/autosklearn_hearts/heart.csv', test=True)
     return XAutoML(rh, X_test, y_test)
 
 
@@ -112,7 +112,7 @@ def get_autosklearn_hearts() -> XAutoML:
         raw = joblib.load(f)
 
     rh = import_auto_sklearn(raw)
-    X_test, y_test = hearts('/home/marc/phd/code/xautoml/xautoml/tests/res/autosklearn_hearts/heart.csv', test=True)
+    X_test, y_test = stroke('/home/marc/phd/code/xautoml/user_study/stroke.csv', test=True)
     return XAutoML(rh, X_test, y_test)
 
 
