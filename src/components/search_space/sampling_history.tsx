@@ -38,9 +38,9 @@ class LabelEncoder {
 
 export class SamplingHistory extends React.Component<SamplingHistoryProps, SamplingHistoryState> {
 
-    static HELP = 'Shows the distribution and performance of a single hyperparameter over time. This component can be' +
-        'used to validate that the complete range of the hyperparameter is searched. Furthermore, it can be verified' +
-        'that the search algorithm converges to a well performing region of the hyperparameter.'
+    static readonly HELP = 'Shows the distribution and performance of a single hyperparameter over time. This ' +
+        'view can be used to validate that the complete range of the hyperparameter is searched. Furthermore, it can ' +
+        'be verified that the search algorithm converges to a well performing region of the hyperparameter.'
 
     constructor(props: SamplingHistoryProps) {
         super(props);
@@ -137,8 +137,8 @@ export class SamplingHistory extends React.Component<SamplingHistoryProps, Sampl
             <div style={{height: this.props.height}}>
                 {!history &&
                     <p>
-                        Select a hyperparameter name in the parallel coordinate plot (Bayesian Optimization) above to
-                        get more details about the sampled values of this hyperparameter.
+                        Select a hyperparameter name in the parallel coordinate plot (Bayesian Optimization) above by
+                        clicking on the name of a hyperparameter. In the resulting  to get more details about the sampled values of this hyperparameter.
                     </p>
                 }
                 {data?.length === 0 &&
@@ -150,6 +150,7 @@ export class SamplingHistory extends React.Component<SamplingHistoryProps, Sampl
                 {data?.length > 0 &&
                     <div style={{display: 'flex', flexDirection: 'column', height: '100%'}}>
                         <div style={{flex: '1 1 auto', padding: '5px'}}>
+                            <h4>Sampled Values</h4>
                             <ResponsiveContainer>
                                 <ScatterChart margin={{left: marginLeft, bottom: 5}}>
                                     <CartesianGrid strokeDasharray="3 3"/>
@@ -202,6 +203,7 @@ export class SamplingHistory extends React.Component<SamplingHistoryProps, Sampl
                             </ResponsiveContainer>
                         </div>
                         <div style={{flex: '0 1 auto', padding: '5px'}}>
+                            <h4>Performance Overview</h4>
                             <PerformanceTimeline data={data} meta={this.props.meta}
                                                  height={100}
                                                  xDomain={xDomain as [number, number]}

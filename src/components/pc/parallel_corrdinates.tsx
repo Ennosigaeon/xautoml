@@ -35,12 +35,18 @@ interface PCState {
 
 export class ParallelCoordinates extends React.Component<PCProps, PCState> {
 
-    static HELP = 'Overview of the complete search space traversed by the Bayesian optimizer including selected ' +
-        'configurations. Each axis represents a single tunable hyperparameter. Optionally, each axis can provide ' +
-        'a visualization of the internal surrogate model with expected performances. For a better overview, related ' +
-        'hyperparameters, e.g. all hyperparameters of a single component, can be collapsed. Each horizontal line ' +
-        'represents a single selected configuration. Configurations can be selected via brushing numerical axes, ' +
-        'hovering categorical values or clicking/hovering single lines.'
+    static readonly HELP = 'Overview of the complete search space traversed by the Bayesian optimizer including ' +
+        'selected configurations. Each axis represents a single tunable hyperparameter. For a better overview, ' +
+        'related hyperparameters, e.g. all hyperparameters of a single component, can be collapsed. Each horizontal ' +
+        'line represents a single selected configuration. Configurations can be selected via brushing numerical ' +
+        'axes, hovering categorical values or clicking/hovering single lines.' +
+        '\n\n' +
+        'In case of a model-based selection of the configuration, the areas in the background visualize the internal ' +
+        'estimate of well performing regions of the surrogate model. If no information about the actual internal ' +
+        'surrogate model are available, a surrogate model is simulated.' +
+        '\n\n' +
+        'If information about the surrogate model are available, the rendering of the surrogate model and/or the ' +
+        'evaluated configurations can be controlled using the checkboxes at the top.'
 
     private readonly NODE_HEIGHT = 55
 

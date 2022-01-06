@@ -9,7 +9,7 @@ import {KeyValue} from "../../util/KeyValue";
 import {Dag} from "d3-dag";
 import {CommonWarnings} from "../../util/warning";
 import {JupyterButton} from "../../util/jupyter-button";
-import {JupyterContext} from "../../util";
+import {Colors, JupyterContext, prettyPrint} from "../../util";
 import {ID} from "../../jupyter";
 
 
@@ -28,10 +28,10 @@ interface GlobalSurrogateState {
 
 export class GlobalSurrogateComponent extends React.Component<GlobalSurrogateProps, GlobalSurrogateState> {
 
-    static HELP = 'Approximates the pipeline using a global surrogate model. The surrogate model is a decision tree ' +
-        'that is trained to approximate the predictions of a black-box model. By adjusting the maximum number of ' +
-        'leaves in the decision tree, the fidelity of the approximation can be weighted against the simplicity of the ' +
-        'explanation.'
+    static readonly HELP = 'Approximates the pipeline using a global surrogate model. The surrogate model is a ' +
+        'decision tree that is trained to approximate the predictions of a black-box model. By adjusting the maximum ' +
+        'number of leaves in the decision tree, the fidelity of the approximation can be weighted against the ' +
+        'simplicity of the explanation.'
 
     static contextType = JupyterContext;
     context: React.ContextType<typeof JupyterContext>;
@@ -150,7 +150,29 @@ ${ID}_dt
                                 <div style={{
                                     display: "flex", flexDirection: "column", justifyContent: "space-between"
                                 }}>
-                                    <KeyValue key_={'Fidelity'} value={dt.fidelity}/>
+                                    <KeyValue key_={'Fidelity'} value={
+                                        <div style={{
+                                            backgroundColor: Colors.DEFAULT,
+                                            borderRadius: '5px',
+                                            marginLeft: '10px',
+                                            padding: '1px',
+                                            height: '16px',
+                                            width: '200px',
+                                            display: 'inline-block'
+                                        }}>
+                                            <div
+                                                style={{
+                                                    width: `${dt.fidelity * 100}%`,
+                                                    height: '100%',
+                                                    backgroundColor: dt.fidelity < 0.9 ? 'red' : Colors.HIGHLIGHT,
+                                                    textAlign: 'center'
+                                                }}>{prettyPrint(dt.fidelity)}</div>
+                                        </div>
+                                    }
+                                              help={'Measure how good the approximation represents the real model. ' +
+                                                  'A value of 1 means that the approximation perfectly resembles the ' +
+                                                  'model, a value below 0.9 indicates that the model is no good ' +
+                                                  'approximation and the number of nodes should be increased.'}/>
                                     <KeyValue key_={'Leave Nodes'} value={dt.n_leaves}/>
                                 </div>
                             </div>
@@ -159,7 +181,7 @@ ${ID}_dt
                                 <Slider min={0} max={this.ticks.length - 1}
                                         defaultValue={this.ticks.indexOf(dt.max_leaf_nodes)}
                                         step={null} marks={marks}
-                                        onAfterChange={this.onMaxLeavesChange}/>
+                                        onChange={this.onMaxLeavesChange}/>
                             </div>
                             <div style={{flexGrow: 1, alignSelf: "center"}}>
                                 <JupyterButton style={{float: "right"}} onClick={this.exportTree}/>

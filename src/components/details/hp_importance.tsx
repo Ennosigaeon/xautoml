@@ -29,16 +29,24 @@ import {Heatbar, MinimalisticTooltip} from "../../util/recharts";
 
 interface SingleHPProps {
     data: HPImportanceDetails
+    maxLabelLength: number
+    metric: string
 }
 
 class SingleHP extends React.Component<SingleHPProps> {
 
     render() {
-        const {data} = this.props
+        const {data, metric} = this.props
 
+        let description
         let plot;
         let additionalData;
         if (data.mode === 'discrete') {
+            description = 'On the x axis, the different values of the selected categorical hyperparameter are ' +
+                'displayed. For each possible value, the marginal performance is calculated by averaging over all ' +
+                'other possible hyperparameter constellations. The according marginal performance is displayed on ' +
+                'the y axis.'
+
             const whiskers: any[] = [];
             Object.entries<[number, number]>(data.data).forEach(([key, value]) => {
                 whiskers.push({label: key, y: value})
@@ -48,7 +56,7 @@ class SingleHP extends React.Component<SingleHPProps> {
                 <BarChart data={whiskers} margin={{left: 30, bottom: 5}}>
                     <CartesianGrid strokeDasharray="3 3"/>
                     <XAxis dataKey="label" label={{value: data.name[0], dy: 10}}/>
-                    <YAxis label={{value: 'Marginal Performance', angle: -90, dx: -40}} domain={['auto', 'auto']}/>
+                    <YAxis label={{value: `Marginal ${metric}`, angle: -90, dx: -40}} domain={['auto', 'auto']}/>
 
                     <Tooltip content={<MinimalisticTooltip/>}/>
 
@@ -57,24 +65,35 @@ class SingleHP extends React.Component<SingleHPProps> {
             )
         } else if (data.mode === 'continuous') {
             if (data.name.length === 1) {
+                description = 'On the x axis, the range of the selected numerical hyperparameter is displayed. For 20 ' +
+                    'evenly distributed values on this range, the marginal performance is calculated by averaging over ' +
+                    'all other possible hyperparameter constellations. The according marginal performance is displayed ' +
+                    'on the y axis.'
+
                 plot = (
                     <ComposedChart data={(data.data as ContinuousHPImportance)} margin={{left: 30, bottom: 5}}>
                         <CartesianGrid strokeDasharray="3 3"/>
                         <XAxis dataKey="x" label={{value: data.name[0], dy: 10}} type={'number'}
                                domain={['dataMin', 'dataMax']}/>
-                        <YAxis label={{value: 'Marginal Performance', angle: -90, dx: -40}} domain={['auto', 'auto']}/>
+                        <YAxis label={{value: `Marginal ${metric}`, angle: -90, dx: -40}} domain={['auto', 'auto']}/>
                         <Area type="monotone" dataKey="area" fill={Colors.DEFAULT} stroke={Colors.DEFAULT}/>
                         <Line type="monotone" dataKey={'y'} stroke={Colors.HIGHLIGHT} strokeWidth={2} dot={false}/>
                     </ComposedChart>
                 )
             } else {
+                description = 'On the x axis, the range of the selected numerical hyperparameter is displayed. For ' +
+                    'each possible value of the selected numerical hyperparameter, an additional line is plotted. ' +
+                    'For each line, 20 evenly distributed values on the numerical range are created and the marginal ' +
+                    'performance is calculated by averaging over all other possible hyperparameter constellations. ' +
+                    'The according marginal performance is displayed on the y axis.'
+
                 const keys = Object.keys(data.data[0]).filter(k => k !== 'x')
                 plot = (
                     <LineChart data={data.data} margin={{left: 30}}>
                         <CartesianGrid strokeDasharray="3 3"/>
                         <XAxis dataKey="x" label={{value: data.name[1], dy: 10}} type={'number'}
                                domain={['dataMin', 'dataMax']}/>
-                        <YAxis label={{value: 'Marginal Performance', angle: -90, dx: -40}} domain={['auto', 'auto']}/>
+                        <YAxis label={{value: `Marginal ${metric}`, angle: -90, dx: -40}} domain={['auto', 'auto']}/>
                         <Legend/>
                         {keys.map((key, idx) => (
                             <Line key={key} type="monotone" name={key} dataKey={key}
@@ -84,6 +103,13 @@ class SingleHP extends React.Component<SingleHPProps> {
                 )
             }
         } else if (data.mode === 'heatmap') {
+            description = 'On the x axis, the range of the first selected numerical hyperparameter and on the ' +
+                'y axis the range of the second selected numerical hyperparameter is displayed. For both ' +
+                'hyperparameters, 20 evenly distributed values are created and the marginal performance of each ' +
+                'possible combination of those 20 points is calculated by averaging over all other possible ' +
+                'hyperparameter constellations. The according marginal performance is displayed using a color ' +
+                'scale. The range of the color scale is displayed below the heat map.'
+
             const rows = Object.keys(data.data)
             const columns = Object.keys(data.data[rows[0]])
 
@@ -132,6 +158,10 @@ class SingleHP extends React.Component<SingleHPProps> {
 
         return (
             <div>
+                <div style={{minHeight: this.props.maxLabelLength, display: "flex", alignItems: "center"}}>
+                    <p>{description}</p>
+                </div>
+
                 <div style={{height: '300px', width: '100%'}}>
                     <ResponsiveContainer>
                         {plot}
@@ -161,6 +191,7 @@ class SingleHP extends React.Component<SingleHPProps> {
 interface HPImportanceProps {
     structure: Structure
     component: string
+    metric: string
 }
 
 interface HPImportanceState {
@@ -173,11 +204,11 @@ interface HPImportanceState {
 
 export class HPImportanceComp extends React.Component<HPImportanceProps, HPImportanceState> {
 
-    static HELP = 'Visualizes the impact of each hyperparameter (pair) on the marginal performance. This allows ' +
-        'the identification of hyperparameters with a large impact on the performance of the pipeline. ' +
+    static readonly HELP = 'Visualizes the impact of each hyperparameter (pair) on the marginal performance. This ' +
+        'allows the identification of hyperparameters with a large impact on the performance of the pipeline. ' +
         'Additionally, hyperparameter regions having a high correlation with a good performance can be identified. ' +
-        'By selecting a single step, only the hyperparameters of the selected step are shown. To view the overall ' +
-        'most important hyperparameters, select either the pipeline source or sink.'
+        'By selecting a single step in the structure graph above, only the hyperparameters of the selected step are ' +
+        'shown. To view the overall most important hyperparameters, select either the pipeline source or sink.'
 
     static contextType = JupyterContext;
     context: React.ContextType<typeof JupyterContext>;
@@ -293,7 +324,8 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
                           barSize={2 * radius} barGap={margin} style={{overflow: "visible"}}>
                     <text x={width / 2} y={marginTop - 30} textAnchor={'middle'}>Importance</text>
                     <CartesianGrid strokeDasharray="3 3"/>
-                    <XAxis dataKey={'importance'} type={'number'} orientation={'top'} domain={[-0.001, 1]}/>
+                    <XAxis dataKey={'importance'} type={'number'} orientation={'top'} domain={[0, 1]}
+                           ticks={[0, 0.25, 0.5, 0.75, 1]}/>
                     <YAxis dataKey="idx" type={"category"} interval={0} hide/>
 
                     {selectedRow !== undefined && <ReferenceArea x1={0} x2={1} y1={selectedRow} y2={selectedRow}
@@ -329,16 +361,20 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
                     {overview?.keys.length > 0 && <>
                         {this.renderOverview(maxLabelLength)}
                         <div style={{
-                            marginTop: maxLabelLength,
                             marginLeft: '20px',
                             flexGrow: 1,
                             flexShrink: 1,
                             minWidth: 'auto'
                         }}>
                             {selectedRow === undefined ?
-                                <p>Select a hyperparameter (pair) on the left side to get a detailed visualization of
-                                    the correlation of the selected hyperparameter with the marginal performance.</p> :
-                                <SingleHP data={this.getDetails(selectedRow)}/>
+                                <p style={{marginTop: maxLabelLength}}>
+                                    Select a hyperparameter (pair) on the left side to get a detailed visualization of
+                                    the correlation of the selected hyperparameter (pairs) in combination with the
+                                    marginal performance.
+                                </p> :
+                                <SingleHP data={this.getDetails(selectedRow)}
+                                          maxLabelLength={maxLabelLength}
+                                          metric={this.props.metric}/>
                             }
                         </div>
                     </>}

@@ -10,6 +10,7 @@ import {EnsembleTable} from "./ensemble/ensemble_table";
 import {CandidateId, Prediction} from "../model";
 import {DecisionSurface} from "./ensemble/decision_surface";
 import {Checkbox} from "@material-ui/core";
+import {Heading} from "../util/heading";
 
 interface EnsembleProps {
     onCandidateSelection: (cid: Set<CandidateId>, show?: boolean) => void
@@ -87,8 +88,11 @@ export class Ensemble extends React.Component<EnsembleProps, EnsembleState> {
 
         return (
             <>
-                <CollapseComp name={'ensemble'} showInitial={true}>
-                    <h4>Ensemble Overview</h4>
+                <CollapseComp name={'ensemble'} showInitial={true}
+                              help={'Displays the individual ensemble members and some basic statics. In addition ' +
+                                  'a selection of data set samples with conflicting predictions in the ensemble is ' +
+                                  'given.'}>
+                    <h3>Ensemble Overview</h3>
                     <>
                         <ErrorIndicator error={overviewError}/>
                         {!overviewError &&
@@ -96,14 +100,24 @@ export class Ensemble extends React.Component<EnsembleProps, EnsembleState> {
                                 <LoadingIndicator loading={overview === undefined}/>
 
                                 {overview &&
-                                    <TwoColumnLayout flexShrinkRight={'0'}>
+                                    <TwoColumnLayout flexShrinkRight={'0'} flexGrowLeft={'0'} flexGrowRight={'0'}>
+                                        <>
+                                            <Heading help={EnsembleTable.HELP}>
+                                                <h4>Ensemble Members</h4>
+                                            </Heading>
+                                            <EnsembleTable metrics={overview.metrics} predictions={predictions}
+                                                           onCandidateSelection={this.props.onCandidateSelection}/>
+                                        </>
+
                                         <div style={{marginTop: '10px'}}>
+                                            <Heading help={'A selection of input data samples, where at least one ' +
+                                                'ensemble member had another prediction than the rest.'}>
+                                                <h4>Samples with Conflicting Predictions </h4>
+                                            </Heading>
                                             <DatasetTable data={overview.df}
                                                           selectedSample={selectedSample}
                                                           onSampleClick={this.selectSampleIdx}/>
                                         </div>
-                                        <EnsembleTable metrics={overview.metrics} predictions={predictions}
-                                                       onCandidateSelection={this.props.onCandidateSelection}/>
                                     </TwoColumnLayout>
                                 }
                             </>
@@ -111,8 +125,8 @@ export class Ensemble extends React.Component<EnsembleProps, EnsembleState> {
                     </>
                 </CollapseComp>
 
-                <CollapseComp name={'decision-surface'} showInitial={true}>
-                    <h4>Decision Surface</h4>
+                <CollapseComp name={'decision-surface'} showInitial={true} help={DecisionSurface.HELP}>
+                    <h3>Decision Surface</h3>
                     <>
                         <ErrorIndicator error={surfaceError}/>
                         {!surfaceError &&
@@ -129,7 +143,7 @@ export class Ensemble extends React.Component<EnsembleProps, EnsembleState> {
                                             {Array.from(decisionSurface.contours.entries()).map(([cid, value]) => {
                                                 return (
                                                     <div key={cid}>
-                                                        <h5>{cid}</h5>
+                                                        <h4>{cid}</h4>
                                                         <DecisionSurface contour={value}
                                                                          X={decisionSurface.X}
                                                                          y={decisionSurface.y}

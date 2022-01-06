@@ -33,9 +33,10 @@ interface IncumbentRecord extends TimelineRecord {
 
 export default class PerformanceTimeline extends React.Component<ConfigHistoryProps, ConfigHistoryState> {
 
-    static HELP = 'This component provides a scatter plot of the performance of each evaluated candidate over the ' +
-        'time. The line plot show the performance of the best candidate over time. Individual pipelines can be ' +
-        'selected by clicking on the corresponding patch.'
+    static readonly HELP = 'This view provides an overview of the performance of each evaluated candidate. Results ' +
+        'can either be aggregated over time or group by achieved performance. In the temporal plot each scatter dot ' +
+        'represents a single candidate and the line plot shows the performance of the best candidate over time. ' +
+        'The distribution plot aggregates candidates by their performance.'
 
     static defaultProps = {
         margin: undefined as Margin,

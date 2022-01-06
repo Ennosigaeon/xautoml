@@ -19,6 +19,10 @@ interface SurrogateExplanationState {
 
 export class SurrogateExplanation extends React.Component<SurrogateExplanationProps, SurrogateExplanationState> {
 
+    static readonly HELP = 'The line highlighted in blue represents the the actual selected configuration. In case ' +
+        'of a model-based selection of the configuration, other potential configurations, that are worse ' +
+        'than the selected configuration according to the internal model, are also displayed.'
+
     static contextType = JupyterContext;
     context: React.ContextType<typeof JupyterContext>;
 
@@ -56,7 +60,7 @@ export class SurrogateExplanation extends React.Component<SurrogateExplanationPr
         const loss = candidates.map(([c, _]) => c.loss)
 
 
-        const selected = new Set<CandidateId>([explanation ? loss.reduce((argMax, x, idx, array) => {
+        const selected = new Set<CandidateId>([loss.length > 1 ? loss.reduce((argMax, x, idx, array) => {
             return x > array[argMax] ? idx : argMax
         }, 0).toString() : candidate.id])
 
@@ -67,9 +71,8 @@ export class SurrogateExplanation extends React.Component<SurrogateExplanationPr
                     <>
                         {(this.props.explanation === undefined && explanation !== undefined) &&
                             <WarningIndicator message={'The run history did not contain information about ' +
-                                'the surrogate model. The surrogate state is only ' +
-                                'simulated via hyperparameter importance and may differ ' +
-                                'significantly from the real surrogate model.'}/>
+                                'the surrogate model. The surrogate state is only simulated via hyperparameter ' +
+                                'importance and may differ significantly from the real surrogate model.'}/>
                         }
                         {(this.props.explanation === undefined && explanation === undefined) &&
                             <WarningIndicator message={'Failed to simulate surrogate model.'}/>

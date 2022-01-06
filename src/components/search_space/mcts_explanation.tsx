@@ -108,7 +108,7 @@ class SingleNode extends React.Component<SingleNodeProps, SingleNodeState> {
         return (
             <GraphNode key={data.id}
                        node={node}
-                       className={`bandit-explanation ${details.selected ? 'highlight' : ''} ${selected ? 'selected' : ''} ${details.isFailure() ? 'failure' : 'expandable'}`}
+                       className={`mcts-explanation ${details.selected ? 'highlight' : ''} ${selected ? 'selected' : ''} ${details.isFailure() ? 'failure' : 'expandable'}`}
                        nodeWidth={NODE_WIDTH}
                        nodeHeight={NODE_HEIGHT}
                        onClick={this.toggleShow}
@@ -130,7 +130,7 @@ class SingleNode extends React.Component<SingleNodeProps, SingleNodeState> {
 
                     {!details.isFailure() &&
                         <Collapse in={this.state.show}>
-                            <div className={'bandit-explanation_node-details'} style={{marginTop: "-5px"}}>
+                            <div className={'mcts-explanation_node-details'} style={{marginTop: "-5px"}}>
                                 {Array.from(details.policy.keys()).map(k =>
                                     <KeyValue key={k} key_={k} value={details.policy.get(k)} tight={true}
                                               prec={2}/>
@@ -144,7 +144,7 @@ class SingleNode extends React.Component<SingleNodeProps, SingleNodeState> {
     }
 }
 
-interface BanditExplanationsProps {
+interface MCTSExplanationsProps {
     explanations: RL.Explanation;
     structures: Structure[];
 
@@ -155,15 +155,21 @@ interface BanditExplanationsProps {
     timestamp: string
 }
 
-interface BanditExplanationsState {
+interface MCTSExplanationsState {
     root: CollapsibleNode
     timestamp: string
 }
 
-export class BanditExplanationsComponent extends React.Component<BanditExplanationsProps, BanditExplanationsState> {
+export class MCTSExplanationsComponent extends React.Component<MCTSExplanationsProps, MCTSExplanationsState> {
 
-    static HELP = "Visualizes the search procedure of a Monte-Carlo tree search. Each node contains the current " +
-        "reward computed by MCTS. Additional details how the score is computed is available via reward decomposition."
+    static readonly HELP = "Visualizes the search procedure of a Monte-Carlo tree search (MCTS). Each node contains " +
+        "the according component and current reward computed by MCTS. Additional details what factors are relevant " +
+        "for the actual rewards can be shown by clicking on any node. Via reward decomposition, the reward is split " +
+        "up into all relevant factors highlighting which factor has the largest impact on the current reward." +
+        "\n\n" +
+        "If a node contains a plus sign, some of its child nodes are hidden. Those nodes can be revealed by clicking " +
+        "on the plus sign. Node are hidden if they either represent a failing component (the algorithm crashed or " +
+        "timed out) or a component that was not selected during MCTS expansion."
 
     static defaultProps = {
         selectedCandidates: new Set<CandidateId>(),
@@ -172,7 +178,7 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
         }
     }
 
-    constructor(props: BanditExplanationsProps) {
+    constructor(props: MCTSExplanationsProps) {
         super(props);
 
         // Create implicit copy of hierarchical data to prevent accidental modifications of children
@@ -187,7 +193,7 @@ export class BanditExplanationsComponent extends React.Component<BanditExplanati
         this.getSelectedNodes = this.getSelectedNodes.bind(this)
     }
 
-    static getDerivedStateFromProps(props: BanditExplanationsProps, state: BanditExplanationsState) {
+    static getDerivedStateFromProps(props: MCTSExplanationsProps, state: MCTSExplanationsState) {
         if (props.timestamp !== state.timestamp) {
             const root: CollapsibleNode = d3.hierarchy(props.explanations, d => d.children);
             CollapsibleNodeActions.collapseNode(root, props.timestamp, true)

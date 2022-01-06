@@ -36,6 +36,11 @@ interface EnsembleTableState {
 
 export class EnsembleTable extends React.Component<EnsembleTableProps, EnsembleTableState> {
 
+    static readonly HELP = 'List of all pipelines in the ensemble. For each member, the weight in the ensemble and ' +
+        'much much the prediction of this member align with the ensemble prediction (consensus) are displayed. By ' +
+        'selecting a single sample in the data set preview on the right, the actual predictions of each ensemble ' +
+        'member can be computed. '
+
     constructor(props: EnsembleTableProps) {
         super(props);
         this.state = {order: 'desc', orderBy: 'weight'}

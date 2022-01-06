@@ -86,7 +86,7 @@ export class ConfigurationComp extends React.Component<ConfigurationProps> {
                 {structure.pipeline.steps
                     .map(step =>
                         <div key={step.label}>
-                            <h3>{step.label}</h3>
+                            <h4>{step.label}</h4>
                             <ConfigurationTable config={candidate.subConfig(step, true)} twoColumns={false}/>
                         </div>
                     )

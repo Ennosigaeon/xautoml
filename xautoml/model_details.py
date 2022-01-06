@@ -180,6 +180,9 @@ class ModelDetails:
 
     @staticmethod
     def calculate_feature_importance(X: pd.DataFrame, y: pd.Series, model: Pipeline, metric: str):
-        result = permutation_importance(model, X, y, scoring=metric, random_state=0)
+        try:
+            result = permutation_importance(model, X, y, scoring=metric, random_state=0)
+        except ValueError:
+            result = permutation_importance(model, X, y, scoring='f1_micro', random_state=0)
         return pd.DataFrame(np.stack((result.importances_mean, result.importances_std)),
                             columns=X.columns.map(lambda c: c[:20]))

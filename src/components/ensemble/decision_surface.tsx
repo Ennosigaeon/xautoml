@@ -33,6 +33,15 @@ interface DecisionSurfaceProps {
 
 export class DecisionSurface extends React.Component<DecisionSurfaceProps, any> {
 
+    static readonly HELP = 'Visualization of the decision surface of each ensemble member mapped into a 2D space. ' +
+        'The background color indicates the predicted class in this region. In addition, a subset of the data can ' +
+        'be plotted in the 2D space using a scatter plot. Each scatter dot is colored by the correct class.' +
+        '\n\n' +
+        'Important: The mapping of the high-dimensional input space to 2D in combination with a low sampling rate ' +
+        'of the input space due computational restrictions may lead to an under-sampling and seemingly wrong' +
+        'decision surfaces, e.g. constant predictions of a classifier or sample colors not being aligned with the ' +
+        'decision surface.'
+
     static defaultProps = {
         width: 300,
         height: 300

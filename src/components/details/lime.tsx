@@ -13,7 +13,6 @@ import {MinimalisticTooltip} from "../../util/recharts";
 class CustomizedTick extends React.PureComponent<any> {
     render() {
         const {x, y, payload, additionalFeatures} = this.props;
-        console.log(payload.value)
         const isAdditional = additionalFeatures.filter((a: string) => payload.value.startsWith(a)).length > 0 ||
             additionalFeatures.filter((a: string) => payload.value.includes(` ${a} `)).length > 0
 
@@ -43,13 +42,6 @@ interface LimeState {
 
 export class LimeComponent extends React.Component<LimeProps, LimeState> {
 
-    static HELP = 'LIME, the acronym for local interpretable model-agnostic explanations, is a technique that ' +
-        'approximates any black box machine learning model with a local, interpretable model to explain each ' +
-        'individual prediction. The algorithm perturbs the original data points, feed them into the black box model, ' +
-        'and then observe the corresponding outputs. The method then weighs those new data points as a function of ' +
-        'their proximity to the original point. Ultimately, it fits a linear regression on the dataset with ' +
-        'variations using those sample weights.'
-
     private resizeObserver: ResizeObserver
     private readonly container = React.createRef<HTMLDivElement>()
 
@@ -68,6 +60,7 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
         }
 
         this.onLabelClick = this.onLabelClick.bind(this)
+        this.onTickClick = this.onTickClick.bind(this)
     }
 
     componentDidUpdate(prevProps: Readonly<LimeProps>, prevState: Readonly<LimeState>, snapshot?: any) {
@@ -113,6 +106,11 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
         this.setState({selectedLabel: point.label})
     }
 
+    private onTickClick(e: React.MouseEvent) {
+        // @ts-ignore
+        this.setState({selectedLabel: e.value})
+    }
+
     render() {
         const {selectedSample} = this.props.model
         const {selectedLabel, data, loading, error} = this.state
@@ -131,13 +129,24 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
 
         return (
             <div className={'lime'} style={{height: '100%'}}>
-                <h4>Local Approximation</h4>
+                <h3>Local Approximation</h3>
                 <ErrorIndicator error={error}/>
                 {!error && <>
                     <LoadingIndicator loading={loading}/>
 
-                    {(!loading && !selectedSample) &&
-                        <p>Select a data set sample to calculate a local model approximation (LIME).</p>
+                    {(!loading && selectedSample === undefined) &&
+                        <>
+                            <p>Select a data set sample to calculate a local model approximation (LIME).</p>
+                            <p>
+                                LIME, the acronym for local interpretable model-agnostic explanations, is a technique
+                                that approximates any black box machine learning model with a local, interpretable
+                                model to explain each individual prediction. The algorithm perturbs the original data
+                                points, feeds them into the black box model, and then observes the corresponding
+                                outputs. The method then weighs those new data points as a function of their proximity
+                                to the original point. Ultimately, it fits a linear regression on the dataset with
+                                variations using those sample weights.
+                            </p>
+                        </>
                     }
 
                     {data?.categorical_input && <ErrorIndicator error={{
@@ -156,14 +165,23 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
 
                     {data?.expl.size > 0 && <div style={{minWidth: "350px"}}>
                         <CommonWarnings additionalFeatures={data.additional_features.length > 0}/>
-                        <CollapseComp name={'lime-classes'} showInitial={true}>
-                            <h5>Predicted Class Probabilities</h5>
+                        <CollapseComp name={'lime-classes'} showInitial={true}
+                                      help={'In this plot you can see the predicted class probabilities of the model ' +
+                                          'for all available classes. The probabilities range between 0 (the model is' +
+                                          'certain that this is not the correct class) to 1 (the model is certain ' +
+                                          'that this is the correct class). If the model is uncertain about the ' +
+                                          'correct class, two or more classes have roughly the same probabilities.' +
+                                          '\n\n' +
+                                          'The actual correct class is given above the plot.'}>
+                            <h4>Predicted Class Probabilities</h4>
                             <>
+                                <p>Correct Class: {data.label}</p>
                                 <div style={{height: 300}}>
                                     <ResponsiveContainer>
                                         <BarChart data={probs}>
                                             <CartesianGrid strokeDasharray="3 3"/>
-                                            <XAxis dataKey="label" type={"category"}/>
+                                            <XAxis dataKey="label" type={"category"} onClick={this.onTickClick}
+                                                   className={'selectable-ticks'}/>
                                             <YAxis/>
                                             <Bar dataKey="y" fill={Colors.DEFAULT} onClick={this.onLabelClick}
                                                  className={'lime-class'}>
@@ -175,12 +193,21 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
                                         </BarChart>
                                     </ResponsiveContainer>
                                 </div>
-                                <p>Correct Class: {data.label}</p>
                             </>
                         </CollapseComp>
 
-                        <CollapseComp name={'lime-explanations'} showInitial={true}>
-                            <h5>Explanations for Class {selectedLabel}</h5>
+                        <CollapseComp name={'lime-explanations'} showInitial={true}
+                                      help={'This plots contains the most important factors influencing the ' +
+                                          'prediction of the selected sample. In each row, a true statement about ' +
+                                          'the selected sample is given. The according plot on the right side ' +
+                                          'indicates how this statement changes the prediction probability. Values' +
+                                          'smaller than zero are an argument against the selected class, values ' +
+                                          'larger than zero for the selected class.' +
+                                          '\n\n' +
+                                          'To switch the class, you can chose any class in the plot above by ' +
+                                          'clicking the x axis ticks or box plots. The currently selected class is ' +
+                                          'displayed above the plot.'}>
+                            <h4>Explanations for Class {selectedLabel}</h4>
                             <div style={{height: explHeight}} ref={this.container}>
                                 <ResponsiveContainer>
                                     <BarChart data={expl} layout={'vertical'}

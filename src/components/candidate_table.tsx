@@ -218,7 +218,7 @@ ${ID}_pipeline
                 <TableRow>
                     <TableCell style={{padding: 0}} colSpan={6}>
                         <Collapse in={this.state.open} timeout='auto' unmountOnExit={false} mountOnEnter={true}>
-                            <Box margin={1}>
+                            <Box margin={1} style={{marginBottom: '5em'}}>
                                 <DataSetDetailsComponent
                                     structure={candidate.candidate[0]}
                                     candidate={candidate.candidate[1]}

@@ -1,6 +1,6 @@
 import React from "react";
 import {CollapseComp} from "../util/collapse";
-import {BanditExplanationsComponent} from "./search_space/bandit_explanation";
+import {MCTSExplanationsComponent} from "./search_space/mcts_explanation";
 import {ParallelCoordinates} from "./pc/parallel_corrdinates";
 import {BO, Candidate, CandidateId, ConfigValue, Explanations, MetaInformation, Structure} from "../model";
 import Slider from "rc-slider";
@@ -134,17 +134,17 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
             <>
                 {explanations.structures &&
                     <CollapseComp name={'reinforcement-explanations'} showInitial={true}
-                                  help={BanditExplanationsComponent.HELP}>
-                        <h4>Reinforcement Learning</h4>
-                        <BanditExplanationsComponent explanations={explanations.structures}
-                                                     selectedCandidates={selectedCandidates}
-                                                     hideUnselectedCandidates={hideUnselectedCandidates}
-                                                     structures={structures}
-                                                     timestamp={this.cids[this.state.timestamp].split(':').slice(0, -1).join(':')}
-                                                     onCandidateSelection={onCandidateSelection}/>
+                                  help={MCTSExplanationsComponent.HELP}>
+                        <h3>Reinforcement Learning</h3>
+                        <MCTSExplanationsComponent explanations={explanations.structures}
+                                                   selectedCandidates={selectedCandidates}
+                                                   hideUnselectedCandidates={hideUnselectedCandidates}
+                                                   structures={structures}
+                                                   timestamp={this.cids[this.state.timestamp].split(':').slice(0, -1).join(':')}
+                                                   onCandidateSelection={onCandidateSelection}/>
                     </CollapseComp>}
                 <CollapseComp name={'bayesian-explanations'} showInitial={true} help={ParallelCoordinates.HELP}>
-                    <h4>Bayesian Optimization</h4>
+                    <h3>Bayesian Optimization</h3>
                     <ParallelCoordinates structures={structures}
                                          perfAxis={{
                                              domain: [meta.bestPerformance, meta.worstPerformance],
@@ -163,7 +163,7 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
                     <div style={{display: 'flex'}}>
                         <div style={{flex: '1', overflowX: 'hidden', margin: 0, marginRight: '5px'}}>
                             <CollapseComp name={'config-similarity'} showInitial={true} help={ConfigSimilarity.HELP}>
-                                <h4>Candidate Distribution</h4>
+                                <h3>Candidate Distribution</h3>
                                 <ConfigSimilarity structures={structures}
                                                   selectedCandidates={selectedCandidates}
                                                   hideUnselectedCandidates={hideUnselectedCandidates}
@@ -175,7 +175,7 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
                         </div>
                         <div style={{flex: '1', margin: 0, marginLeft: '5px'}}>
                             <CollapseComp name={'sampling-history'} showInitial={true} help={SamplingHistory.HELP}>
-                                <h4>Sampling History</h4>
+                                <h3>Sampling History</h3>
                                 <SamplingHistory history={this.state.hpHistory}
                                                  meta={meta}
                                                  selectedCandidates={selectedCandidates}

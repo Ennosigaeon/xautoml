@@ -9,6 +9,7 @@ import {PerformanceData} from "../../dao";
 import {ErrorIndicator} from "../../util/error";
 import {LoadingIndicator} from "../../util/loading";
 import {Table, TableBody, TableCell, TableRow} from "@material-ui/core";
+import {Heading} from "../../util/heading";
 
 
 interface PerformanceComponentProps {
@@ -25,8 +26,8 @@ interface PerformanceComponentState {
 
 export class PerformanceComponent extends React.Component<PerformanceComponentProps, PerformanceComponentState> {
 
-    static HELP = 'Displays basic performance details like train and test performance. Additionally, a confusion ' +
-        'matrix for all classes is computed. Finally, the ROC curve for this candidate is displayed.'
+    static readonly HELP = 'Displays basic performance details like train and test performance. Additionally, a ' +
+        'confusion matrix for all classes is computed. Finally, the ROC curve for this candidate is displayed.'
 
     static contextType = JupyterContext;
     context: React.ContextType<typeof JupyterContext>;
@@ -64,9 +65,14 @@ export class PerformanceComponent extends React.Component<PerformanceComponentPr
                 {!error && <>
                     <LoadingIndicator loading={loading}/>
                     {data &&
-                        <div style={{display: "flex"}}>
-                            <div style={{flexGrow: 1, flexShrink: 1, flexBasis: "19%"}}>
-                                <h5>Metrics</h5>
+                        <div className={'performance-wrapper'}>
+                            <div style={{flexGrow: 0, flexShrink: 1,}}>
+                                <Heading help={'Displays the training and validation performance in addition with the' +
+                                    'validation accuracy. Furthermore, the training duration and time for creating' +
+                                    'predictions using this model are displayed.'}>
+                                    <h4>Metrics</h4>
+                                </Heading>
+
                                 <KeyValue key_={`Training ${meta.metric}`} value={model.candidate.loss} prec={4}/>
                                 <KeyValue key_={`Validation ${meta.metric}`} value={data.val_score} prec={4}/>
                                 <KeyValue key_={`Validation Accuracy`} value={data.accuracy} prec={4}/>
@@ -77,13 +83,19 @@ export class PerformanceComponent extends React.Component<PerformanceComponentPr
 
                                 <hr/>
 
-                                <h5>Information</h5>
+                                <h4>Information</h4>
                                 <KeyValue key_={'Status'} value={model.candidate.status}/>
                                 <KeyValue key_={'Budget'} value={model.candidate.budget}/>
                             </div>
 
-                            <div style={{flexGrow: 1, margin: "0 10px", flexBasis: "27%"}}>
-                                <h5>Class Report</h5>
+                            <div style={{flexGrow: 0, margin: "0 10px"}}>
+                                <Heading help={'For each possible class, relevance metrics are displayed. Precision ' +
+                                    '(also called positive predictive value) is the fraction of relevant instances ' +
+                                    'among the retrieved instances, while recall (also known as sensitivity) is the ' +
+                                    'fraction of relevant instances that were retrieved. Support is the number of ' +
+                                    'total items in the respective class.'}>
+                                    <h4>Class Report</h4>
+                                </Heading>
                                 <Table className={'jp-RenderedHTMLCommon'}>
                                     <TableBody>
                                         <TableRow>
@@ -105,13 +117,20 @@ export class PerformanceComponent extends React.Component<PerformanceComponentPr
                                 </Table>
                             </div>
 
-                            <div style={{flexGrow: 1, margin: "0 10px", flexBasis: "27%"}}>
-                                <h5>Confusion Matrix</h5>
+                            <div style={{flexGrow: 0, margin: "0 10px"}}>
+                                <Heading help={'A confusion matrix is a table layout that allows visualization of ' +
+                                    'the performance of a classifier. Each row of the matrix represents the ' +
+                                    'instances in an actual class while each column represents the instances in a ' +
+                                    'predicted class.'}>
+                                    <h4>Confusion Matrix</h4>
+                                </Heading>
                                 <ConfusionMatrix cm={data.cm}/>
                             </div>
 
-                            <div style={{flexGrow: 1, flexBasis: "27%"}}>
-                                <h5>Receiver Operating Characteristic (ROC) Curve</h5>
+                            <div style={{flexGrow: 0, flexBasis: "25%"}}>
+                                <Heading help={RocCurve.HELP}>
+                                    <h4>Receiver Operating Characteristic (ROC) Curve</h4>
+                                </Heading>
                                 <RocCurve selectedCandidates={new Set([model.candidate.id])}
                                           candidateMap={candidateMap}
                                           height={200}/>
