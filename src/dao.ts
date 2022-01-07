@@ -126,8 +126,12 @@ export interface SinglePDP {
     avg: LinePoint[]
 }
 
-export interface FANOVAResponse {
+export interface FANOVAOverview {
     overview: ImportanceOverview,
+    error?: string
+}
+
+export interface FANOVADetails {
     details?: Map<string, Map<string, HPImportanceDetails>>
     error?: string
 }

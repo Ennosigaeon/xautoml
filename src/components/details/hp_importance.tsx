@@ -245,8 +245,6 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
             .then(resp => {
                 if (resp.error)
                     this.setState({error: new Error(resp.error)})
-                else if (resp.details)
-                    this.setState({overview: resp.overview, details: resp.details})
                 else
                     this.setState({overview: resp.overview})
             })
@@ -257,7 +255,21 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
     }
 
     private selectRow(idx: number) {
+        const {structure, model} = this.props;
         this.setState({selectedRow: idx})
+
+        this.context.requestFANOVADetails(structure.cid, model.component, this.state.overview.keys[idx])
+            .then(resp => {
+                if (resp.error)
+                    this.setState({error: new Error(resp.error)})
+                else
+                    this.setState({details: resp.details})
+            })
+            .catch(error => {
+                console.error(`Failed to fetch HPImportance data.\n${error.name}: ${error.message}`)
+                this.setState({error: error})
+            });
+
     }
 
     private getDetails(selectedRow: number): HPImportanceDetails {
@@ -315,10 +327,14 @@ ${ID}_hp_interactions
                                     the correlation of the selected hyperparameter (pairs) in combination with the
                                     marginal performance.
                                 </p> :
-                                <SingleHP data={this.getDetails(selectedRow)}
-                                          maxLabelLength={marginTop}
-                                          metric={this.props.metric}
-                                          onExportClick={this.exportDetails}/>
+                                <>
+                                    <LoadingIndicator loading={this.state.details === undefined}/>
+                                    {this.state.details && <SingleHP data={this.getDetails(selectedRow)}
+                                                                     maxLabelLength={marginTop}
+                                                                     metric={this.props.metric}
+                                                                     onExportClick={this.exportDetails}/>}
+                                </>
+
                             }
                         </div>
                     </>}

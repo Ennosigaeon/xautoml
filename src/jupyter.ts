@@ -2,16 +2,19 @@ import {
     ConfigSimilarityResponse,
     DecisionSurfaceResponse,
     EnsembleOverview,
-    FANOVAResponse,
+    FANOVADetails,
+    FANOVAOverview,
     FeatureImportance,
     GlobalSurrogateResult,
     Label,
     LimeResult,
     LinePoint,
     LocalExplanation,
-    OutputDescriptionData, PDPResponse,
+    OutputDescriptionData,
+    PDPResponse,
     PerformanceData,
-    RocCurveData, SinglePDP
+    RocCurveData,
+    SinglePDP
 } from "./dao";
 import {INotebookTracker, Notebook, NotebookActions} from "@jupyterlab/notebook";
 import {TagTool} from "@jupyterlab/celltags";
@@ -220,9 +223,15 @@ export class Jupyter {
         })
     }
 
-    requestFANOVA(sid: CandidateId, step: string = 'None'): Promise<FANOVAResponse> {
-        return this.memExecuteCode<FANOVAResponse>(
-            `XAutoMLManager.get_active().fanova('${sid}', '${step}')`
+    requestFANOVA(sid: CandidateId, step: string = 'None'): Promise<FANOVAOverview> {
+        return this.memExecuteCode<FANOVAOverview>(
+            `XAutoMLManager.get_active().fanova_overview('${sid}', '${step}')`
+        )
+    }
+
+    requestFANOVADetails(sid: CandidateId, step: string = 'None', hps: [string, string]): Promise<FANOVADetails> {
+        return this.memExecuteCode<FANOVAOverview>(
+            `XAutoMLManager.get_active().fanova_details('${sid}', '${step}', '${hps[0]}', '${hps[1]}')`
         )
     }
 

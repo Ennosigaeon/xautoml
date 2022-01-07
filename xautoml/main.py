@@ -182,19 +182,24 @@ class XAutoML:
         return self.get_pdp(cid, step, features)
 
     @as_json
-    def fanova(self, sid: Optional[CandidateId], step: str):
+    def fanova_overview(self, sid: Optional[CandidateId], step: str):
         try:
             f, X, actual_cs = self._construct_fanova(sid, step)
-
             overview = HPImportance.calculate_fanova_overview(f, X, step=step, filter_=actual_cs)
             overview = {
                 'column_names': np.unique(np.array(overview.index.to_list()).flatten()).tolist(),
                 'keys': overview.index.tolist(),
                 'importance': overview[['mean', 'std', 'idx']].to_dict('records'),
             }
+            return {'overview': overview}
+        except ValueError as ex:
+            return {'error': str(ex)}
 
-            details = HPImportance.calculate_fanova_details(f, X, hps=overview['keys'])
-            return {'overview': overview, 'details': details}
+    @as_json
+    def fanova_details(self, sid: Optional[CandidateId], step: str, hp1: str, hp2: str):
+        try:
+            f, X, actual_cs = self._construct_fanova(sid, step)
+            return {'details': HPImportance.calculate_fanova_details(f, X, hps=[(hp1, hp2)])}
         except ValueError as ex:
             return {'error': str(ex)}
 
