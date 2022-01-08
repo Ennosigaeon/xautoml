@@ -405,9 +405,14 @@ text.pc-axis-label {
     cursor: pointer;
 }
 
+text.pc-axis-label.selected {
+    font-weight: bold;
+    fill: var(--select-color)
+}
+
 text.pc-axis-label:hover {
     font-weight: bold;
-    fill: var(--select-color);
+    fill: var(--hover-color);
 }
 
 .pc-line {

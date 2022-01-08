@@ -240,11 +240,13 @@ export class PCAxis extends React.Component<CPCAxisProps, CPCAxisState> {
                                                  onBrushEnd={this.onBrushEnd}
                 />}
 
-                <text className={selectableTitle ? 'pc-axis-label' : ''} onClick={(e) => {
-                    if (selectableTitle)
-                        onClick(axis)
-                    e.stopPropagation()
-                }}>
+                <text
+                    className={`${selectableTitle ? 'pc-axis-label' : ''} ${this.context.selectedAxis.has(axis.id) ? 'selected' : ''}`}
+                    onClick={(e) => {
+                        if (selectableTitle)
+                            onClick(axis)
+                        e.stopPropagation()
+                    }}>
                     <path id={id} d={
                         linkHorizontal().x(d => d[0]).y(d => d[1])({
                             source: [x, y - 0.5 * Constants.TEXT_HEIGHT],

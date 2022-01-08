@@ -15,6 +15,7 @@ export interface CPCContext {
     svg: React.RefObject<SVGSVGElement>
     showExplanations: boolean
     model: Model
+    selectedAxis: Set<string>
 }
 
 export const CPCContext = React.createContext<CPCContext>(undefined);

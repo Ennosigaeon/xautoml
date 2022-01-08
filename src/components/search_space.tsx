@@ -25,7 +25,7 @@ interface SearchSpaceState {
     sliderMarks: { [key: string]: string; }
     timestamp: number
     configSimilarity: ConfigSimilarityResponse
-    hpHistory: HyperparameterHistory
+    hpHistories: Map<string, HyperparameterHistory>
 }
 
 export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceState> {
@@ -63,7 +63,7 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
             sliderMarks: sliderMarks,
             timestamp: timestamp,
             configSimilarity: undefined,
-            hpHistory: undefined
+            hpHistories: new Map<string, HyperparameterHistory>()
         }
 
         this.changeTimestamp = this.changeTimestamp.bind(this)
@@ -78,45 +78,46 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
     }
 
     private onHyperparameterSelection(hyperparameter: string) {
-        let scale: d3.ScaleBand<ConfigValue> | d3.ScaleContinuousNumeric<number, number> = undefined
-        let type = undefined
-        const data = [].concat(...this.props.structures
-            .map(structure => {
-                if (scale === undefined) {
-                    const hp = structure.configspace.hyperparameters.find(hp => hp.name === hyperparameter)
-                    if (hp instanceof CategoricalHyperparameter) {
-                        scale = d3.scaleBand((hp as CategoricalHyperparameter).choices, [0, 1])
-                        type = 'category'
-                    } else if (hp instanceof NumericalHyperparameter) {
-                        const numHp = hp as NumericalHyperparameter
-                        type = 'number'
-                        if (numHp.log)
-                            scale = d3.scaleLog([numHp.lower, numHp.upper], [0, 1])
-                        else
-                            scale = d3.scaleLinear([numHp.lower, numHp.upper], [0, 1])
+        if (!this.state.hpHistories.has(hyperparameter)) {
+            let scale: d3.ScaleBand<ConfigValue> | d3.ScaleContinuousNumeric<number, number> = undefined
+            let type: 'category' | 'number' = undefined
+            const data = [].concat(...this.props.structures
+                .map(structure => {
+                    if (scale === undefined) {
+                        const hp = structure.configspace.hyperparameters.find(hp => hp.name === hyperparameter)
+                        if (hp instanceof CategoricalHyperparameter) {
+                            scale = d3.scaleBand((hp as CategoricalHyperparameter).choices, [0, 1])
+                            type = 'category'
+                        } else if (hp instanceof NumericalHyperparameter) {
+                            const numHp = hp as NumericalHyperparameter
+                            type = 'number'
+                            if (numHp.log)
+                                scale = d3.scaleLog([numHp.lower, numHp.upper], [0, 1])
+                            else
+                                scale = d3.scaleLinear([numHp.lower, numHp.upper], [0, 1])
+                        }
                     }
-                }
 
-                return structure.configs
-                    .filter(c => !this.props.hideUnselectedCandidates || this.props.selectedCandidates.has(c.id))
-                    .filter(c => c.config.has(hyperparameter))
-                    .map(c => ({
-                        cid: c.id,
-                        value: c.config.get(hyperparameter),
-                        performance: c.loss,
-                        timestamp: c.runtime.timestamp
-                    }))
-            }))
+                    return structure.configs
+                        .filter(c => !this.props.hideUnselectedCandidates || this.props.selectedCandidates.has(c.id))
+                        .filter(c => c.config.has(hyperparameter))
+                        .map(c => ({
+                            cid: c.id,
+                            value: c.config.get(hyperparameter),
+                            performance: c.loss,
+                            timestamp: c.runtime.timestamp
+                        }))
+                }))
 
-        this.setState({
-            hpHistory: {
+            this.state.hpHistories.set(hyperparameter, {
                 name: hyperparameter,
                 type: type,
                 scale: scale,
                 data: data
-            }
-        })
-
+            })
+        } else
+            this.state.hpHistories.delete(hyperparameter)
+        this.setState({hpHistories: this.state.hpHistories})
     }
 
     render() {
@@ -153,6 +154,7 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
                                          }}
                                          hideUnselectedCandidates={hideUnselectedCandidates}
                                          selectedCandidates={selectedCandidates}
+                                         selectedAxis={new Set(this.state.hpHistories.keys())}
                                          onCandidateSelection={onCandidateSelection}
                                          onAxisSelection={this.onHyperparameterSelection}
                                          explanation={explanations.configs.get(this.cids[this.state.timestamp])}
@@ -176,12 +178,11 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
                         <div style={{flex: '1', margin: 0, marginLeft: '5px'}}>
                             <CollapseComp name={'sampling-history'} showInitial={true} help={SamplingHistory.HELP}>
                                 <h3>Sampling History</h3>
-                                <SamplingHistory history={this.state.hpHistory}
+                                <SamplingHistory histories={Array.from(this.state.hpHistories.values())}
                                                  meta={meta}
                                                  selectedCandidates={selectedCandidates}
                                                  hideUnselectedCandidates={hideUnselectedCandidates}
-                                                 onCandidateSelection={onCandidateSelection}
-                                                 height={'300px'}/>
+                                                 onCandidateSelection={onCandidateSelection}/>
                             </CollapseComp>
                         </div>
                     </div>

@@ -17,6 +17,7 @@ interface PCProps {
     explanation?: BO.Explanation
     showExplanations?: boolean
     selectedCandidates?: Set<CandidateId>
+    selectedAxis?: Set<string>
     hideUnselectedCandidates?: boolean
     onCandidateSelection?: (cid: Set<CandidateId>, show?: boolean) => void
     onAxisSelection?: (hyperparameter: string) => void
@@ -56,6 +57,7 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
         candidates: (undefined as [Candidate, Structure][]),
         explanation: (undefined as BO.Explanation),
         selectedCandidates: new Set<CandidateId>(),
+        selectedAxis: new Set<string>(),
         hideUnselectedCandidates: false,
         showExplanations: false,
         onCandidateSelection: () => {
@@ -200,7 +202,8 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
                     <cpc.CPCContext.Provider value={{
                         svg: model.lines.length > 1 ? this.svg : undefined, // Disable brushing when only when line present
                         showExplanations: this.state.showExplanations,
-                        model: this.state.model
+                        model: this.state.model,
+                        selectedAxis: this.props.selectedAxis
                     }}>
                         <PCChoice choice={root} parent={undefined}
                                   onCollapse={this.onCollapse}
