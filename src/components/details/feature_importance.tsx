@@ -194,6 +194,7 @@ interface FeatureImportanceState {
     data: FeatureImportance
     pdp: Map<string, PDPResponse>
     error: Error
+    detailsError: Error
     selectedRow: number
 }
 
@@ -209,7 +210,13 @@ export class FeatureImportanceComponent extends React.Component<FeatureImportanc
 
     constructor(props: FeatureImportanceProps) {
         super(props);
-        this.state = {data: undefined, pdp: undefined, error: undefined, selectedRow: undefined}
+        this.state = {
+            data: undefined,
+            pdp: undefined,
+            error: undefined,
+            selectedRow: undefined,
+            detailsError: undefined
+        }
 
         this.exportDataFrame = this.exportDataFrame.bind(this)
         this.selectRow = this.selectRow.bind(this)
@@ -244,12 +251,12 @@ export class FeatureImportanceComponent extends React.Component<FeatureImportanc
     }
 
     private queryPDP(feature: string) {
-        this.setState({pdp: undefined, error: undefined})
+        this.setState({pdp: undefined, detailsError: undefined})
         this.context.requestPDP(this.props.model.candidate.id, this.props.model.component, [feature])
-            .then(data => this.setState({pdp: data, error: undefined}))
+            .then(data => this.setState({pdp: data, detailsError: undefined}))
             .catch(error => {
                 console.error(`Failed to fetch FeatureImportance data.\n${error.name}: ${error.message}`)
-                this.setState({error: error})
+                this.setState({detailsError: error})
             });
     }
 
@@ -263,7 +270,7 @@ ${ID}_feature_importance
     }
 
     render() {
-        const {data, error, selectedRow, pdp} = this.state
+        const {data, error, selectedRow, pdp, detailsError} = this.state
         const marginTop = data ? maxLabelLength(data.data.column_names) : 0
 
         return (
@@ -272,7 +279,7 @@ ${ID}_feature_importance
                 {!error &&
                     <>
                         <LoadingIndicator loading={data === undefined}/>
-                        {data &&
+                        {data && data.data.column_names.length > 0 &&
                             <>
                                 <CommonWarnings additionalFeatures={data.additional_features.length > 0}/>
                                 <div style={{display: 'flex'}}>
@@ -290,14 +297,21 @@ ${ID}_feature_importance
                                                 Select a feature on the left side to get a detailed visualization how
                                                 the different values of this feature correlate with the predicted class.
                                             </p> :
-                                            <PDPComp data={pdp} feature={data.data.column_names[selectedRow]}
-                                                     cid={this.props.model.candidate.id}
-                                                     component={this.props.model.component}/>
+                                            <>
+                                                <ErrorIndicator error={detailsError}/>
+                                                {detailsError === undefined &&
+                                                    <PDPComp data={pdp} feature={data.data.column_names[selectedRow]}
+                                                             cid={this.props.model.candidate.id}
+                                                             component={this.props.model.component}/>
+                                                }
+                                            </>
                                         }
                                     </div>
                                 </div>
                             </>
                         }
+                        {data && data.data.column_names.length === 0 &&
+                        <p>Feature importance not available for the actual predictions.</p>}
                     </>
                 }
             </>

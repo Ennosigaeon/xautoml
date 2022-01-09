@@ -256,7 +256,7 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
 
     private selectRow(idx: number) {
         const {structure, model} = this.props;
-        this.setState({selectedRow: idx})
+        this.setState({selectedRow: idx, details: undefined})
 
         this.context.requestFANOVADetails(structure.cid, model.component, this.state.overview.keys[idx])
             .then(resp => {
@@ -276,9 +276,8 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
         if (selectedRow === undefined)
             return undefined
 
-        const keys: [string, string] = this.state.overview.keys[selectedRow]
-        // @ts-ignore
-        return this.state.details[keys[0]][keys[1]]
+        const [hp0, hp1] = this.state.overview.keys[selectedRow]
+        return this.state.details.get(hp0)?.get(hp1)
     }
 
     private exportOverview() {

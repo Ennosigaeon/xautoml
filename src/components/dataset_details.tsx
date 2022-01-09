@@ -81,7 +81,7 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
 
                 <hr/>
                 <h3>Insights for <i>
-                    {Components.isPipEnd(model.component) ? 'Beginning of the Pipeline' : `${model.algorithm} (${model.component})`}
+                    {Components.isPipEnd(model.component) ? `${model.component === Components.SOURCE ? 'Beginning' : 'End'} of the Pipeline` : `${model.algorithm} (${model.component})`}
                 </i>
                 </h3>
                 <p style={{marginBottom: '15px', marginTop: '-15px'}}>

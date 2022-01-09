@@ -6,6 +6,7 @@ import {
     FANOVAOverview,
     FeatureImportance,
     GlobalSurrogateResult,
+    HPImportanceDetails,
     Label,
     LimeResult,
     LinePoint,
@@ -211,7 +212,6 @@ export class Jupyter {
         return this.memExecuteCode<Map<string, PDPResponse>>(
             `XAutoMLManager.get_active().pdp('${cid}', '${step}', ['${list}'])`
         ).then(data => {
-            console.log(data)
             const x: [string, PDPResponse][] = Object.entries(data as Map<string, PDPResponse>)
                 .map(([clazz, pdpResponse]) => {
                     return [clazz, {
@@ -230,9 +230,14 @@ export class Jupyter {
     }
 
     requestFANOVADetails(sid: CandidateId, step: string = 'None', hps: [string, string]): Promise<FANOVADetails> {
-        return this.memExecuteCode<FANOVAOverview>(
+        return this.memExecuteCode<FANOVADetails>(
             `XAutoMLManager.get_active().fanova_details('${sid}', '${step}', '${hps[0]}', '${hps[1]}')`
-        )
+        ).then(data => {
+            const details = new Map<string, Map<string, HPImportanceDetails>>(
+                Object.entries(data.details).map(t => [t[0], new Map<string, HPImportanceDetails>(Object.entries(t[1]))])
+            )
+            return {details: details, error: data.error}
+        })
     }
 
     requestSimulatedSurrogate(sid: CandidateId, timestamp: number): Promise<BO.Explanation> {

@@ -100,15 +100,7 @@ export class Ensemble extends React.Component<EnsembleProps, EnsembleState> {
                                 <LoadingIndicator loading={overview === undefined}/>
 
                                 {overview &&
-                                    <TwoColumnLayout flexShrinkRight={'0'} flexGrowLeft={'0'} flexGrowRight={'0'}>
-                                        <>
-                                            <Heading help={EnsembleTable.HELP}>
-                                                <h4>Ensemble Members</h4>
-                                            </Heading>
-                                            <EnsembleTable metrics={overview.metrics} predictions={predictions}
-                                                           onCandidateSelection={this.props.onCandidateSelection}/>
-                                        </>
-
+                                    <TwoColumnLayout flexShrinkLeft={'1'} flexGrowLeft={'0'} flexGrowRight={'1'} flexShrinkRight={'0'}>
                                         <div style={{marginTop: '10px'}}>
                                             <Heading help={'A selection of input data samples, where at least one ' +
                                                 'ensemble member had another prediction than the rest.'}>
@@ -118,6 +110,14 @@ export class Ensemble extends React.Component<EnsembleProps, EnsembleState> {
                                                           selectedSample={selectedSample}
                                                           onSampleClick={this.selectSampleIdx}/>
                                         </div>
+
+                                        <>
+                                            <Heading help={EnsembleTable.HELP}>
+                                                <h4>Ensemble Members</h4>
+                                            </Heading>
+                                            <EnsembleTable metrics={overview.metrics} predictions={predictions}
+                                                           onCandidateSelection={this.props.onCandidateSelection}/>
+                                        </>
                                     </TwoColumnLayout>
                                 }
                             </>

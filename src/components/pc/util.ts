@@ -79,6 +79,8 @@ export namespace ParCord {
     }
 
     export function parseConfigSpace(structures: Structure[], perfAxis: cpc.PerformanceAxis): cpc.Axis[][] {
+        // TODO: clean-up this mess...
+
         function parseHyperparameter(hp: HyperParameter, conditions: Condition[]): cpc.Axis {
             const id = hp.name
             if (hp instanceof NumericalHyperparameter)
@@ -115,8 +117,9 @@ export namespace ParCord {
                     comp[idx].set(commonStepName, new ParallelAxes(commonStepName, step.parallelPaths))
 
                 if (!comp[idx].get(commonStepName).has(step.id)) {
-                    const axes = structure.configspace.getHyperparameters(step.id)
+                    const axes_ = structure.configspace.getHyperparameters(step.id)
                         .map((hp: HyperParameter) => [parseHyperparameter(hp, structure.configspace.conditions)])
+                    const axes = axes_.length === 0 ? [[]] : axes_
 
                     const label = !Number.isNaN(Number.parseInt(step.name)) || !step.name ? step.label : undefined
                     const parAxes = comp[idx].get(commonStepName)
