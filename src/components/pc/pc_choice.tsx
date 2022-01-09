@@ -55,26 +55,38 @@ export class PCChoice extends React.Component<CPCPChoiceProps, {}> {
         const centeredX = choice.getLayout().centeredX()
         const centeredY = choice.getLayout().centeredY()
 
+        const columns = choice.axes
+        const maxRows = Math.max(1, ...columns.map(column => column.length))
+
         return (
             <g className={`pc-choice ${choice.isExpandable() ? 'pc-choice-expandable' : ''} ${choice.getSelected() ? 'selected' : ''}`}
                onClick={this.onClick}>
-                {choice.isCollapsed() && <circle cx={centeredX}
-                                                 cy={centeredY}
-                                                 r={Constants.CIRCLE_SIZE}/>}
-                <text x={centeredX}
-                      y={centeredY}
-                      transform={`rotate(${Constants.TEXT_ROTATION}, ${centeredX}, ${centeredY})`}>{prettyPrint(choice.label)}</text>
+
+                {maxRows === 1 &&
+                    <>
+                        {choice.isCollapsed() && <circle cx={centeredX} cy={centeredY} r={Constants.CIRCLE_SIZE}/>}
+                        <text x={centeredX}
+                              y={centeredY}
+                              transform={`rotate(${Constants.TEXT_ROTATION}, ${centeredX}, ${centeredY})`}>{prettyPrint(choice.label)}</text>
+                    </>
+                }
+
+                {/* TODO highlight pipeline step */}
 
                 {!choice.isCollapsed() && <>
                     {parent && <rect x={x} y={y} width={width} height={height} onClick={this.collapse}
                                      className={'pc-border'}/>}
-                    {choice.axes.map(a => <PCAxis key={a.id}
-                                                  axis={a}
-                                                  parent={choice}
-                                                  onCollapse={onCollapse}
-                                                  onExpand={onExpand}
-                                                  onHighlight={onHighlight}
-                                                  onClick={onAxisSelection}/>)}
+                    {columns.map(column => (
+                        <g>
+                            {column.map(row => <PCAxis key={row.id}
+                                                       axis={row}
+                                                       parent={choice}
+                                                       onCollapse={onCollapse}
+                                                       onExpand={onExpand}
+                                                       onHighlight={onHighlight}
+                                                       onClick={onAxisSelection}/>)}
+                        </g>
+                    ))}
                 </>}
             </g>
         )

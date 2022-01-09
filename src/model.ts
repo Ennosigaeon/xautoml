@@ -277,12 +277,16 @@ export class PipelineStep {
     public readonly label: string
     public readonly edgeLabels: Map<string, string>
 
+    public parallelPaths: string[]
+
     constructor(public readonly id: string, public readonly clazz: string, public readonly parentIds: string[]) {
         this.label = normalizeComponent(this.clazz)
         this.edgeLabels = new Map<string, string>()
 
         const tokens = this.id.split(':')
         this.name = tokens[tokens.length - 1]
+
+        this.parallelPaths = [id]
     }
 }
 
@@ -312,10 +316,13 @@ export class Pipeline {
         } else if (step.clazz.includes('ColumnTransformer')) {
             const steps: PipelineStep[] = [];
             const outParents: string[] = [];
+            const otherPaths = (step.args.transformers as [string, any, any][]).map(t => t[0]);
+
             (step.args.transformers as [string, any, any][])
-                .forEach(([subId, subPath, columns]) => {
+                .forEach(([subId, subPath, columns], idx, arr) => {
                     const [childSteps, newParents] = this.loadSingleStep(`${id}:${subId}`, subPath, parents)
                     childSteps[0].edgeLabels.set(subId, columns.toString()) // At least one child always have to be present
+                    childSteps.forEach(c => c.parallelPaths = otherPaths)
                     steps.push(...childSteps)
                     outParents.push(...newParents)
                 })
@@ -323,10 +330,13 @@ export class Pipeline {
         } else if (step.clazz.includes('FeatureUnion')) {
             const steps: PipelineStep[] = [];
             const outParents: string[] = [];
+            const otherPaths = (step.args.transformer_list as [string, any][]).map(t => t[0]);
+
             (step.args.transformer_list as [string, any][])
-                .forEach(([subId, subPath]) => {
+                .forEach(([subId, subPath], idx, arr) => {
                     const [childSteps, newParents] = this.loadSingleStep(`${id}:${subId}`, subPath, parents)
                     childSteps[0].edgeLabels.set(subId, 'all') // At least one child always have to be present
+                    childSteps.forEach(c => c.parallelPaths = otherPaths)
                     steps.push(...childSteps)
                     outParents.push(...newParents)
                 })

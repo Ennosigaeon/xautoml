@@ -21,8 +21,6 @@ export default class PerformanceDistribution extends React.Component<Performance
         const bins = bin()(data.map(d => d.performance as number))
             .map(bin => ({frequency: bin.length, performance: (bin.x0 + bin.x1) / 2}))
 
-        console.log(bins)
-
         return (
             <div style={{height: this.props.height}}>
                 <LoadingIndicator loading={data.length === 0}/>

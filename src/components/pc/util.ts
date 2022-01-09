@@ -42,21 +42,43 @@ export namespace ParCord {
         return n % 1 === 0;
     }
 
-    export function xScale(axes: Array<cpc.Axis>, range: [number, number]): d3.ScaleBand<string> {
-        const weights = axes.map(a => a.getWidthWeight() - 1)
-        const ids = [].concat(...axes.map((a, i) => [a.id, ...Array(...Array(weights[i])).map((_, j) => `_${a.id}_${j}_`)]))
+    export function xScale(columns: cpc.Axis[][], range: [number, number]): d3.ScaleBand<string>[] {
+        const maxRows = Math.max(...columns.map(row => row.length))
 
-        return d3.scaleBand(ids, range).padding(0.1)
+        const scales = []
+        for (let rowIdx = 0; rowIdx < maxRows; rowIdx++) {
+            const axes = columns.map(rows => rows[Math.min(rows.length - 1, rowIdx)])
+
+            const weights = axes.map(a => a.getWidthWeight() - 1)
+            const ids = [].concat(...axes.map((a, i) => [a.id, ...Array(...Array(weights[i])).map((_, j) => `_${a.id}_${j}_`)]))
+
+            const scale = d3.scaleBand(ids, range).padding(0.1)
+            scales.push(scale)
+        }
+        return scales
     }
 
-    export function yScale(choices: Array<cpc.Choice>, range: [number, number]): d3.ScaleBand<string> {
+    export function yScale(choices: cpc.Choice[], range: [number, number]): d3.ScaleBand<string> {
         const weights = choices.map(c => c.getHeightWeight() - 1)
         const ids = [].concat(...choices.map((c, i) => [c.value, ...Array(...Array(weights[i])).map((_, j) => `_${c.value}_${j}_`)]))
 
         return d3.scaleBand(ids, range)
     }
 
-    export function parseConfigSpace(structures: Structure[], perfAxis: cpc.PerformanceAxis): cpc.Axis[] {
+    class ParallelAxes {
+
+        public readonly choices: Map<string, cpc.Choice>
+
+        constructor(public readonly commonStepName: string, public readonly otherPaths: string[]) {
+            this.choices = new Map<string, cpc.Choice>()
+        }
+
+        has(step: string) {
+            return this.choices.has(step)
+        }
+    }
+
+    export function parseConfigSpace(structures: Structure[], perfAxis: cpc.PerformanceAxis): cpc.Axis[][] {
         function parseHyperparameter(hp: HyperParameter, conditions: Condition[]): cpc.Axis {
             const id = hp.name
             if (hp instanceof NumericalHyperparameter)
@@ -69,46 +91,96 @@ export namespace ParCord {
                     conditions.filter(con => con.parent === hp.name && con.child === child.name)[0].values
                         .forEach(v =>
                             choices.filter(c => c.value === v)
-                                .forEach(c => c.axes.push(parseHyperparameter(child, conditions)))
+                                .forEach(c => c.axes.push([parseHyperparameter(child, conditions)]))
                         )
                 })
                 return cpc.Axis.Categorical(id, hp.name, choices)
             }
         }
 
-        const components: Map<string, cpc.Choice>[] = []
-        structures.forEach(structure => {
-            structure.pipeline.steps.forEach((step, idx) => {
-                if (components.length === idx)
-                    components.push(new Map<string, cpc.Choice>())
+        const nameToIndex = new Map<string, number>()
+        const comp: Map<string, ParallelAxes>[] = []
 
-                if (!components[idx].has(step.id)) {
+        structures.forEach(structure => {
+            structure.pipeline.steps.forEach(step => {
+                const idx = Math.max(-1, ...step.parentIds.map(pid => nameToIndex.get(pid))
+                    .filter(pid => pid !== undefined)) + 1
+                nameToIndex.set(step.id, idx)
+
+                if (comp.length === idx)
+                    comp.push(new Map<string, ParallelAxes>())
+
+                const commonStepName = step.id.includes(':') ? step.id.split(':').slice(0, -1).join(':') : step.id
+                if (!comp[idx].has(commonStepName))
+                    comp[idx].set(commonStepName, new ParallelAxes(commonStepName, step.parallelPaths))
+
+                if (!comp[idx].get(commonStepName).has(step.id)) {
                     const axes = structure.configspace.getHyperparameters(step.id)
-                        .map((hp: HyperParameter) => parseHyperparameter(hp, structure.configspace.conditions))
+                        .map((hp: HyperParameter) => [parseHyperparameter(hp, structure.configspace.conditions)])
 
                     const label = !Number.isNaN(Number.parseInt(step.name)) || !step.name ? step.label : undefined
-                    components[idx].set(step.id, new cpc.Choice(step.name, axes, true, label))
+                    const parAxes = comp[idx].get(commonStepName)
+                    parAxes.choices.set(step.id, new cpc.Choice(step.name, axes, true, label))
                 }
             })
         })
-        const axes = components.map((steps, idx) => {
-            const name = steps.size === 1 ? steps.keys().next().value : `Component ${idx}`
-            return cpc.Axis.Categorical(`${idx}`, name, [...steps.values()])
+
+        const axes = comp.map((steps, idx) => {
+            const parallelAxes: cpc.Axis[] = []
+            const addedAxes = new Set<string>()
+
+            steps.forEach(parAxes => {
+                parAxes.otherPaths.forEach(pathId => {
+                    if (addedAxes.has(pathId))
+                        return
+
+                    let key
+                    if (steps.has(pathId))
+                        key = pathId
+                    else {
+                        const pathTokens = pathId.split(':')
+                        key = Array.from(steps.keys()).filter(k => {
+                            const tokens = k.split(':')
+                            let intersection = tokens.filter(x => pathTokens.includes(x));
+                            return intersection.length > 0
+                        }).pop()
+                    }
+
+                    const values = key !== undefined && steps.has(key) ? Array.from(steps.get(key).choices.values()) : []
+                    const name = key !== undefined ? key : pathId
+
+                    addedAxes.add(pathId)
+                    parallelAxes.push(cpc.Axis.Categorical(`${idx}.${name}`, name, values))
+                })
+            })
+            return parallelAxes
         })
 
         const lowerPerf = Math.min(...perfAxis.domain)
         const upperPerf = Math.max(...perfAxis.domain)
-        axes.push(cpc.Axis.Numerical('__performance__', perfAxis.label,
-            new cpc.Domain(lowerPerf, upperPerf, perfAxis.log)))
+        axes.push([
+            cpc.Axis.Numerical('__performance__', perfAxis.label, new cpc.Domain(lowerPerf, upperPerf, perfAxis.log))
+        ])
 
         return axes
     }
 
-    export function parseCandidates(candidates: [Candidate, Structure][], axes: cpc.Axis[]): cpc.Line[] {
+    export function parseCandidates(candidates: [Candidate, Structure][], axes: cpc.Axis[][]): cpc.Line[] {
+        const nameToIndex = new Map<string, number>()
+        candidates.forEach(([_, structure]) => {
+            structure.pipeline.steps.forEach(step => {
+                const idx = Math.max(-1, ...step.parentIds.map(pid => nameToIndex.get(pid))
+                    .filter(pid => pid !== undefined)) + 1
+                nameToIndex.set(step.id, idx)
+            })
+        })
+
+        // noinspection UnnecessaryLocalVariableJS
         const lines = candidates.map(([candidate, structure]) => {
             const points = new Array<cpc.LinePoint>()
-            structure.pipeline.steps.map((step, idx) => {
-                points.push(new cpc.LinePoint(idx.toString(), step.name))
+            structure.pipeline.steps.map(step => {
+                const commonStepName = step.id.includes(':') ? step.id.split(':').slice(0, -1).join(':') : step.id
+                points.push(new cpc.LinePoint(`${nameToIndex.get(step.id)}.${commonStepName}`, step.name))
 
                 candidate.subConfig(step, false)
                     .forEach((value: ConfigValue, key: string) => {
@@ -117,11 +189,16 @@ export namespace ParCord {
             })
 
             // Fill missing steps in pipeline and final performance measure
-            axes.slice(structure.pipeline.steps.length).forEach(axis => {
-                const value = axis.id === '__performance__' ? candidate.loss : undefined
-                points.push(new cpc.LinePoint(axis.id, value))
+            // noinspection UnnecessaryLocalVariableJS
+            const lastStep = structure.pipeline.steps[structure.pipeline.steps.length - 1].id
+            axes.slice(nameToIndex.get(lastStep)).forEach((axes: cpc.Axis[]) => {
+                axes.forEach(axis => {
+                    const value = axis.id === '__performance__' ? candidate.loss : undefined
+                    points.push(new cpc.LinePoint(axis.id, value))
+                })
             })
-            return new cpc.Line(candidate.id, points, candidate.runtime? candidate.runtime.timestamp : 0)
+
+            return new cpc.Line(candidate.id, points, candidate.runtime ? candidate.runtime.timestamp : 0)
         }).sort((a, b) => a.timestamp - b.timestamp)
         return lines
     }

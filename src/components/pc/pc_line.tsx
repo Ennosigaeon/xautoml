@@ -68,6 +68,7 @@ export class PCLine extends React.Component<PCLineProps, PCLineStats> {
         const tooltips: Array<Tooltip> = []
 
         let lastPosition: [number, number] = undefined
+        let openEnd: [number, number] = undefined
 
         line.points.map(point => {
             const axis = model.getAxis(point.axis)
@@ -91,17 +92,32 @@ export class PCLine extends React.Component<PCLineProps, PCLineStats> {
                 if (axis.isNumerical()) {
                     y = (yScale as d3.ScaleContinuousNumeric<number, number>)(point.value as number)
                 } else {
-                    const choice = axis.choices.filter(c => c.value == point.value).pop()
-                    if (!choice.isCollapsed())
-                        // Don't render axis that are expanded
-                        return
-                    y = choice.getLayout().centeredY()
+                    if (axis.choices.length === 0) {
+                        // y = lastPosition[1]
+                    } else {
+                        const choice = axis.choices.filter(c => c.value == point.value).pop()
+                        if (!choice.isCollapsed())
+                            // Don't render axis that are expanded
+                            return
+                        y = choice.getLayout().centeredY()
+                    }
                 }
 
                 if (lastPosition === undefined)
                     path.moveTo(xStart, y)
-                else
+                else if (xStart < lastPosition[0]) {
+                    openEnd = [lastPosition[0], lastPosition[1]]
+                    path.moveTo(xStart, y)
+                } else
                     path.lineTo(xStart, y)
+
+                // Close potential open parallel path
+                if (openEnd !== undefined && openEnd[0] < x) {
+                    path.moveTo(...openEnd)
+                    path.lineTo(xStart, y)
+                    openEnd = undefined
+                }
+
                 path.lineTo(xEnd, y)
 
                 lastPosition = [xEnd, y]

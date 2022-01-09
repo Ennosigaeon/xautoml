@@ -27,8 +27,8 @@ export class Model {
     private explanations_: BO.Explanation
 
     constructor(
-        public readonly axes: Array<Axis>,
-        public readonly lines: Array<Line>) {
+        public readonly axes: Axis[][],
+        public readonly lines: Line[]) {
         this.axesMap = new Map<string, Axis>()
         this.cacheAxes(axes)
     }
@@ -45,10 +45,12 @@ export class Model {
         return this.explanations_?.get(axis.name)
     }
 
-    private cacheAxes(axes: Array<Axis>) {
-        axes.forEach(a => {
-            this.axesMap.set(a.id, a)
-            a.choices.forEach(c => this.cacheAxes(c.axes))
+    private cacheAxes(columns: Axis[][]) {
+        columns.forEach(column => {
+            column.forEach(row => {
+                this.axesMap.set(row.id, row)
+                row.choices.forEach(c => this.cacheAxes(c.axes))
+            })
         })
     }
 }
@@ -107,7 +109,7 @@ export class Axis {
         if (this.isNumerical()) {
             return 5;
         } else {
-            return this.choices.map(c => c.getHeightWeight()).reduce((a, b) => a + b)
+            return this.choices.map(c => c.getHeightWeight()).reduce((a, b) => a + b, 0)
         }
     }
 
@@ -131,7 +133,7 @@ export class Axis {
 
     clearLayout() {
         this.layout_ = undefined
-        this.choices.forEach(c => c.axes.forEach(a => a.clearLayout()))
+        this.choices.forEach(c => c.axes.forEach(column => column.forEach(row => row.clearLayout())))
     }
 
     getLayout(): Layout {
@@ -152,7 +154,7 @@ export class Choice {
 
     constructor(
         public readonly value: ConfigValue,
-        public readonly axes: Array<Axis> = new Array<Axis>(),
+        public readonly axes: Axis[][] = [],
         public readonly collapsible: boolean = true,
         public readonly label?: ConfigValue) {
         this.collapsed = collapsible
@@ -176,7 +178,7 @@ export class Choice {
     }
 
     isExpandable() {
-        return this.collapsed && this.axes.length > 0
+        return this.collapsed && Math.max(...this.axes.map(a => a.length)) === 1 && this.axes[0].length > 0
     }
 
     toggleSelected() {
@@ -196,7 +198,7 @@ export class Choice {
         if (this.collapsed || this.axes.length === 0) {
             return 1
         } else {
-            return this.axes.map(a => a.getWidthWeight()).reduce((a, b) => a + b)
+            return this.axes.map(column => Math.max(...column.map(row => row.getWidthWeight()))).reduce((a, b) => a + b)
         }
     }
 
@@ -204,12 +206,13 @@ export class Choice {
         if (this.collapsed || this.axes.length === 0) {
             return 1
         } else {
-            return Math.max(1, ...this.axes.map(a => a.getHeightWeight()))
+            const columns = this.axes
+            return Math.max(1, ...columns.map(column => column.map(row => row.getHeightWeight()).reduce((a, b) => a + b)))
         }
     }
 
     public layout(xRange: [number, number], yScale: d3.ScaleBand<string>) {
-        const xScale = ParCord.xScale(this.axes, xRange)
+        const xScales = ParCord.xScale(this.axes, xRange)
 
         const x = xRange[0]
         const width = xRange[1] - xRange[0]
@@ -217,11 +220,19 @@ export class Choice {
         const y = yScale(this.value.toString())
         const height = this.getHeightWeight() * yScale.bandwidth()
         this.layout_ = new Layout(x, y, width, height, yScale)
+        const columns = this.axes
 
         if (!this.isCollapsed()) {
-            this.axes.forEach(a => a.layout(xScale, [y, y + height]))
+            columns.forEach(column => {
+                let start = y
+                column.forEach((row, rowIdx) => {
+                    const fracHeight = height / column.length
+                    row.layout(xScales[rowIdx], [start, start + fracHeight])
+                    start += fracHeight
+                })
+            })
         } else {
-            this.axes.forEach(a => a.clearLayout())
+            columns.forEach(column => column.forEach(row => row.clearLayout()))
         }
     }
 

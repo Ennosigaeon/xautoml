@@ -135,7 +135,6 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
     }
 
     private onAxisSelection(axis: cpc.Axis) {
-        console.log(axis)
         this.props.onAxisSelection(axis.id)
     }
 
@@ -174,7 +173,7 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
         const root = new cpc.Choice('', this.state.model.axes, false);
 
         // Estimate height based on maximum number of choices in all coordinates
-        const maxNodes = Math.max(...root.axes.map(a => a.getHeightWeight()))
+        const maxNodes = Math.max(...root.axes.map(column => column.map(row => row.getHeightWeight()).reduce((a, b) => a + b)))
         const height = this.NODE_HEIGHT * maxNodes
         const yScale = d3.scaleBand([root.value.toString()], [0, height / root.getHeightWeight()])
         root.layout([0, width], yScale)

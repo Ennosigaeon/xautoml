@@ -221,6 +221,9 @@ export class PCAxis extends React.Component<CPCAxisProps, CPCAxisState> {
         const id = `path-${uuidv4()}`
         const selectableTitle = axis.isNumerical() || choices.length > 1
 
+        if (!axis.isNumerical() && choices.length === 0)
+            return <></>
+
         return (
             <g className={'pc-axis'} onClick={this.collapse}>
                 <Axis direction={'y'} layout={axis.getLayout()} showTicks={this.isNumerical()} xScale={xScale}/>
