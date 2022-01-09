@@ -113,7 +113,9 @@ class ModelDetails:
         X = pipeline.fit_transform(df).values
 
         categorical_features = df.columns.get_indexer(cat_columns)
-        categorical_names = {idx: name for idx, name in zip(categorical_features, cat_columns)}
+        encoder = pipeline.steps[1][1].encoder
+        cat_name_mappings = encoder.categories_ if hasattr(encoder, 'categories_') else []
+        categorical_names = {col: cat_name_mappings[i] for i, col in enumerate(categorical_features)}
 
         class_names = np.unique(y).tolist()
         feature_names = list(map(lambda c: c[:20], df.columns))  # Truncate names
@@ -125,7 +127,7 @@ class ModelDetails:
                                                            categorical_names=categorical_names,
                                                            class_names=class_names,
                                                            random_state=1)
-        explanation = explainer.explain_instance(X[idx], invert_categorial_encoding, num_features=10, num_samples=1000,
+        explanation = explainer.explain_instance(X[idx], invert_categorial_encoding, num_features=15, num_samples=1000,
                                                  top_labels=np.unique(y).shape[0])
 
         all_explanations = {}
