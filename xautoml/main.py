@@ -353,8 +353,7 @@ class XAutoML:
         X, y, pipeline = self._load_model(cid)
 
         pipeline, X, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X, y)
-        details = ModelDetails()
-        return details.calculate_pdp(X, y, pipeline, features=features)
+        return ModelDetails.calculate_pdp(X, y, pipeline, features=features)
 
     @no_warnings
     def get_global_surrogate(self, cid: CandidateId, step: str, max_leaf_nodes: int):

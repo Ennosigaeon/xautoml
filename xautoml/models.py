@@ -1,5 +1,5 @@
 from dataclasses import dataclass, asdict
-from typing import Optional, Any
+from typing import Optional, Any, Callable
 
 from ConfigSpace.read_and_write import json as config_json
 from ConfigSpace import ConfigurationSpace, Configuration
@@ -34,6 +34,7 @@ class Candidate:
     config: Configuration
     origin: str
     model: Pipeline
+    y_transformer: Callable
 
     def as_dict(self):
         return {

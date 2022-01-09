@@ -35,7 +35,7 @@ def import_dswizard(dswizard: Any, ensemble: VotingClassifier) -> RunHistory:
                                          res.loss * (1 if meta.is_minimization else -1),
                                          res.runtime.as_dict(), res.config,
                                          res.config.origin if res.config is not None else None,
-                                         pipeline))
+                                         pipeline, lambda y: y))
             except FileNotFoundError:
                 warnings.warn('Model {} does not exist. Skipping it'.format(res.model_file))
         structures.append(CandidateStructure(struct.cid.without_config().external_name,
@@ -153,6 +153,12 @@ def import_auto_sklearn(automl: Any):
                 except FileNotFoundError:
                     warnings.warn('Skipping {} without fitted model'.format(t))
                     continue
+            try:
+                # ClassifierChoice does not provide sklearn classifier information
+                pipeline.steps[-1][1]._estimator_type = 'classifier'
+                pipeline.steps[-1][1].classes_ = pipeline.steps[-1][1].choice.estimator.classes_
+            except AttributeError:
+                pass
 
             try:
                 struct_key = str(config_pipeline.get_hyperparameter_search_space())
@@ -185,7 +191,8 @@ def import_auto_sklearn(automl: Any):
                     'training_time': value.endtime - value.starttime
                 },
                 config, config.origin,
-                pipeline
+                pipeline,
+                automl.automl_.InputValidator.target_validator.inverse_transform
             )
             structure.configs.append(candidate)
 

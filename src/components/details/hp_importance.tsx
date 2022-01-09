@@ -239,7 +239,7 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
 
     private queryHPImportance() {
         const {structure, model} = this.props;
-        this.setState({error: undefined, overview: undefined, details: undefined});
+        this.setState({error: undefined, overview: undefined, selectedRow: undefined, details: undefined});
 
         this.context.requestFANOVA(structure.cid, model.component)
             .then(resp => {

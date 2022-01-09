@@ -236,7 +236,7 @@ export class FeatureImportanceComponent extends React.Component<FeatureImportanc
         if (!component)
             return
 
-        this.setState({error: undefined})
+        this.setState({error: undefined, selectedRow: undefined, pdp: undefined, detailsError: undefined})
         this.context.requestFeatureImportance(candidate.id, component)
             .then(data => this.setState({data: data, error: undefined}))
             .catch(error => {

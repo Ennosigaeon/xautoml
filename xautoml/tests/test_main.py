@@ -45,13 +45,13 @@ def test_decision_tree_surrogate_last_step():
 
 
 def test_feature_importance():
-    main = get_31()
-    print(main.feature_importance('00:02:02', 'SOURCE').data)
+    main = get_autosklearn_hearts()
+    print(main.feature_importance('00:106:154', 'SOURCE').data)
 
 
 def test_pdp():
-    main = get_31()
-    print(json.dumps(main.pdp('00:00:05', 'SOURCE', ['installment_commitment']).data))
+    main = get_autosklearn_hearts()
+    print(main.pdp('00:106:154', 'SOURCE', ['checking_status']).data)
 
 
 def test_pdp2():
@@ -95,7 +95,7 @@ def test_roc_curve():
 
 
 def test_ensemble_decision_surface():
-    main = get_autosklearn_iris()
+    main = get_autosklearn_hearts()
     print(main.ensemble_decision_surface().data)
 
 
@@ -105,5 +105,5 @@ def test_ensemble_overview():
 
 
 def test_ensemble_predictions():
-    main = get_autosklearn_iris()
+    main = get_autosklearn_hearts()
     print(main.ensemble_predictions(15).data)

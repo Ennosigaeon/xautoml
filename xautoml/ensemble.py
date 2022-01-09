@@ -19,11 +19,11 @@ class EnsembleInspection:
 
     @staticmethod
     def member_predictions(candidates: list[Candidate], X: pd.DataFrame, n_jobs=1):
-        def _model_predict(model: Pipeline, X: pd.DataFrame) -> np.ndarray:
-            return model.predict(X.copy())
+        def _model_predict(candidate: Candidate, X: pd.DataFrame) -> np.ndarray:
+            return candidate.y_transformer(candidate.model.predict(X.copy()))
 
         all_predictions = joblib.Parallel(n_jobs=n_jobs)(
-            joblib.delayed(_model_predict)(model=candidate.model, X=X) for candidate in candidates
+            joblib.delayed(_model_predict)(candidate=candidate, X=X) for candidate in candidates
         )
         all_predictions = np.array(all_predictions)
         return all_predictions
@@ -69,13 +69,13 @@ class EnsembleInspection:
 
         grid = pipeline.inverse_transform(grid_2d)
 
-        models = [ensemble.model] + [c.model for c in candidates]
+        models = [(ensemble.model, lambda y: y)] + [(c.model, c.y_transformer) for c in candidates]
         names = ['Ensemble'] + [c.id for c in candidates]
 
         contours = {}
-        for clf, cid in zip(models, names):
+        for (clf, y_trans), cid in zip(models, names):
             fig, ax = plt.subplots(1, 1, figsize=(10, 10), dpi=10)
-            Z = clf.predict(grid)
+            Z = y_trans(clf.predict(grid))
             Z = label_encoder.transform(Z)
             Z = Z.reshape(xx.shape)
 

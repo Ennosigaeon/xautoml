@@ -13,11 +13,11 @@ def get_31() -> XAutoML:
     with open('res/31/runhistory_31.pkl', 'rb') as f:
         raw = pickle.load(f)
 
-    with open('res/31/ensemble_31.pkl', 'rb') as f:
+    with open('/opt/xautoml/dswizard/output/fixed/ensemble_31.pkl', 'rb') as f:
         ensemble = pickle.load(f)
 
-    structure = raw.data[(0, 2, None)]
-    structure.results[2].model_file = 'res/31/models_0-2-2.pkl'
+    # structure = raw.data[(0, 2, None)]
+    # structure.results[2].model_file = 'res/31/models_0-2-2.pkl'
 
     rh = import_dswizard(raw, ensemble)
     X, y = openml_task(31, 0, test=True)
@@ -108,11 +108,11 @@ def get_autosklearn_iris() -> XAutoML:
 
 
 def get_autosklearn_hearts() -> XAutoML:
-    with open('/home/marc/phd/code/xautoml/user_study/auto-sklearn/output/autosklearn.pkl', 'rb') as f:
+    with open('/opt/xautoml/autosklearn/output/autosklearn.pkl', 'rb') as f:
         raw = joblib.load(f)
 
     rh = import_auto_sklearn(raw)
-    X_test, y_test = stroke('/home/marc/phd/code/xautoml/user_study/stroke.csv', test=True)
+    X_test, y_test = openml_task(31, 0, test=True)
     return XAutoML(rh, X_test, y_test)
 
 

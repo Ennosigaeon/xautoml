@@ -9,6 +9,7 @@ from sklearn.compose import make_column_selector
 from sklearn.inspection import permutation_importance, partial_dependence
 from sklearn.metrics import confusion_matrix, get_scorer, roc_auc_score, classification_report
 from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import LabelEncoder
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.utils import check_random_state
 from sklearn.utils.fixes import delayed
@@ -78,7 +79,12 @@ class ModelDetails:
                 y_prob = y_prob[:, 1]
             validation_score = roc_auc_score(y, y_prob, average='weighted', multi_class='ovr')
         else:
-            validation_score = get_scorer(scoreing)(model, X, y)
+            score_func = get_scorer(scoreing)._score_func
+            try:
+                validation_score = score_func(y, y_pred)
+            except TypeError:
+                y = LabelEncoder().fit_transform(y)
+                validation_score = score_func(y, y_pred)
 
         cm = confusion_matrix(y, y_pred)
         labels = unique_labels(y, y_pred)
@@ -189,7 +195,17 @@ class ModelDetails:
         try:
             result = permutation_importance(model, X, y, scoring=metric, random_state=0)
         except ValueError:
-            result = permutation_importance(model, X, y, scoring='f1_micro', random_state=0)
+            if metric != 'f1_micro':
+                return ModelDetails.calculate_feature_importance(X, y, model, 'f1_micro')
+            else:
+                raise
+        except TypeError:
+            y_enc = LabelEncoder().fit_transform(y)
+            if not np.all(y == y_enc):
+                return ModelDetails.calculate_feature_importance(X, y_enc, model, metric)
+            else:
+                raise
+
         df = pd.DataFrame(np.stack((result.importances_mean, result.importances_std)),
                           columns=X.columns.map(lambda c: c[:20]), index=['mean', 'std'])
 
