@@ -19,6 +19,9 @@ export class Heatbar extends React.Component<HeatbarProps, any> {
         const {marginLeft, scale} = this.props
         const [min, max] = this.props.scale.domain()
 
+        const nSteps = 10
+        const step = (max - min) / nSteps
+
         const id = `gradient-${uuidv4()}`
 
         return (
@@ -27,10 +30,10 @@ export class Heatbar extends React.Component<HeatbarProps, any> {
                 <svg height="20" width="100%">
                     <defs>
                         <linearGradient id={id} x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%"
-                                  style={{stopColor: scale(min), stopOpacity: 1}}/>
-                            <stop offset="100%"
-                                  style={{stopColor: scale(max), stopOpacity: 1}}/>
+                            {Array.from(Array(10).keys()).map(idx => {
+                                return <stop offset={`${idx * 100 / nSteps}%`}
+                                             style={{stopColor: scale(min + idx * step), stopOpacity: 1}}/>
+                            })}
                         </linearGradient>
                     </defs>
                     <rect x="0" y="0" width="100%" height="100%" fill={`url(#${id})`}/>
