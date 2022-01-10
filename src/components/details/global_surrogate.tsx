@@ -136,11 +136,7 @@ ${ID}_dt
                 {!error && <>
                     {data === undefined && <LoadingIndicator loading={true}/>}
 
-                    {dt?.root.children.length === 0 &&
-                        <p>Decision Tree approximation not available for the actual predictions.</p>
-                    }
-
-                    {dt?.root.children.length > 0 && <>
+                    {dt?.root && <>
                         <div style={{display: 'flex'}}>
                             <div style={{flexGrow: 1}}>
                                 <div style={{

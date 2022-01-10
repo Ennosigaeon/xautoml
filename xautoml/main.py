@@ -146,8 +146,8 @@ class XAutoML:
 
         last_step = pipeline.steps[-1][0]
         if step == last_step or step.startswith('{}:'.format(last_step)) or step == SINK:
-            res = GlobalSurrogateResult([DecisionTreeResult(pipeline_utils.Node('empty', 0, [], []), 0, 0, 2)], 0)
-            additional_features = False
+            res = GlobalSurrogateResult([DecisionTreeResult(pipeline_utils.Node('empty', 0, [], []), 0, 0, 2)] * 10, 0)
+            additional_features = []
         else:
             pipeline, X, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X, y)
             details = ModelDetails()

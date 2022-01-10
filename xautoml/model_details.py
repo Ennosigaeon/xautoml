@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 from joblib import Parallel
+from pandas.core.dtypes.common import is_numeric_dtype
 from sklearn import metrics
 from sklearn.compose import make_column_selector
 from sklearn.inspection import permutation_importance, partial_dependence
@@ -207,7 +208,7 @@ class ModelDetails:
                 raise
 
         df = pd.DataFrame(np.stack((result.importances_mean, result.importances_std)),
-                          columns=X.columns.map(lambda c: c[:20]), index=['mean', 'std'])
+                          columns=X.columns.map(lambda c: str(c)[:20]), index=['mean', 'std'])
 
         df = df.round(NUMBER_PRECISION).T.sort_values('mean', ascending=False)
         return df.head(n_head)
@@ -223,7 +224,9 @@ class ModelDetails:
         if features is None:
             features = X.columns
 
-        features = [(X.columns.get_indexer([c])[0],) for c in features]
+        if is_numeric_dtype(X.columns.dtype):
+            features = [int(f) for f in features]
+        features = [(X.columns.get_indexer([c])[0].item(),) for c in features]
 
         pd_results = Parallel(n_jobs=n_jobs, verbose=0)(
             delayed(partial_dependence)(model, X, fxs, grid_resolution=20, kind='both')
@@ -254,12 +257,12 @@ class ModelDetails:
                 ice_lines_idx = rng.choice(preds.shape[0], subsample, replace=False)
                 ice_lines = []
                 for ice in preds[ice_lines_idx, :]:
-                    ice_lines.append([{'x': x, 'y': y} for x, y in zip(feature_values, ice.ravel())])
+                    ice_lines.append([{'x': x, 'y': float(y)} for x, y in zip(feature_values, ice.ravel())])
 
                 feature['ice'] = ice_lines
                 feature['avg'] = [{'x': x, 'y': y} for x, y in
                                   zip(feature_values, pd_result.average[target_idx].tolist())]
 
-                result[target]['features'][X.columns[feature_idx]] = feature
+                result[target]['features'][X.columns[feature_idx].item()] = feature
 
         return result
