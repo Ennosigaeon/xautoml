@@ -68,7 +68,7 @@ export class Axis {
         public readonly label: string,
         public readonly type: Type,
         domain?: Domain,
-        choices?: Array<Choice>) {
+        choices?: Choice[]) {
         if (this.isNumerical()) {
             if (domain === undefined)
                 throw new Error('Domain has to be provided for a numerical axis')
@@ -88,12 +88,7 @@ export class Axis {
     }
 
     static Categorical(id: string, name: string, choices: Array<Choice>): Axis {
-        let name_ = name
-        if (choices.length === 1) {
-            name_ = prettyPrint(choices[0].label)
-            choices[0].expand()
-        }
-        const tokens = name_.split(':')
+        const tokens = (choices.length === 1 ? prettyPrint(choices[0].label) : name).split(':')
         return new Axis(id, name, tokens[tokens.length - 1], Type.CATEGORICAL, undefined, choices)
     }
 
@@ -109,7 +104,7 @@ export class Axis {
         if (this.isNumerical()) {
             return 5;
         } else {
-            return this.choices.map(c => c.getHeightWeight()).reduce((a, b) => a + b, 0)
+            return Math.max(1, this.choices.map(c => c.getHeightWeight()).reduce((a, b) => a + b, 0))
         }
     }
 
@@ -206,8 +201,10 @@ export class Choice {
         if (this.collapsed || this.axes.length === 0) {
             return 1
         } else {
+            // noinspection UnnecessaryLocalVariableJS
             const columns = this.axes
-            return Math.max(1, ...columns.map(column => column.map(row => row.getHeightWeight()).reduce((a, b) => a + b)))
+            return Math.max(1,
+                ...columns.map(column => column.map(row => row.getHeightWeight()).reduce((a, b) => a + b) + column.length))
         }
     }
 
@@ -224,9 +221,10 @@ export class Choice {
 
         if (!this.isCollapsed()) {
             columns.forEach(column => {
+                const cumHeight = column.map(r => r.getHeightWeight()).reduce((a, b) => a + b, 0)
                 let start = y
                 column.forEach((row, rowIdx) => {
-                    const fracHeight = height / column.length
+                    const fracHeight = height * (row.getHeightWeight() / cumHeight)
                     row.layout(xScales[rowIdx], [start, start + fracHeight])
                     start += fracHeight
                 })
@@ -327,3 +325,5 @@ export enum Type {
 }
 
 export type Scale = d3.ScaleContinuousNumeric<number, number> | d3.ScaleBand<string>
+
+export const PARENT_MARKER = '__parent__'

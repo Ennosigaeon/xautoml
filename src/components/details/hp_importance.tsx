@@ -156,7 +156,7 @@ class SingleHP extends React.Component<SingleHPProps> {
                 </LineChart>
             )
             additionalData = (
-                <Heatbar scale={scale} marginLeft={marginLeft}/>
+                <Heatbar scale={scale} marginLeft={marginLeft} label={metric}/>
             )
         }
 

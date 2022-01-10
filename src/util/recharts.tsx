@@ -7,6 +7,7 @@ import {v4 as uuidv4} from "uuid";
 
 interface HeatbarProps {
     scale: d3.ScaleSequential<string>
+    label: string
     marginLeft?: number
 }
 
@@ -16,7 +17,7 @@ export class Heatbar extends React.Component<HeatbarProps, any> {
     }
 
     render() {
-        const {marginLeft, scale} = this.props
+        const {marginLeft, scale, label} = this.props
         const [min, max] = this.props.scale.domain()
 
         const nSteps = 10
@@ -43,6 +44,9 @@ export class Heatbar extends React.Component<HeatbarProps, any> {
                     </text>
                     <text x={'95%'} y={'50%'} dominantBaseline={'middle'} textAnchor={'end'}>
                         {prettyPrint(max, 5)}
+                    </text>
+                    <text x={'50%'} y={'50%'} dominantBaseline={'middle'} textAnchor={'middle'}>
+                        {label}
                     </text>
                 </svg>
             </div>

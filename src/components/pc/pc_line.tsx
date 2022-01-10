@@ -3,6 +3,7 @@ import * as cpc from "./model";
 import React from "react";
 import {fixedPrec} from "../../util";
 import {CandidateId} from "../../model";
+import {PARENT_MARKER} from "./model";
 
 interface PCLineProps {
     line: cpc.Line
@@ -73,8 +74,9 @@ export class PCLine extends React.Component<PCLineProps, PCLineStats> {
         line.points.map(point => {
             const axis = model.getAxis(point.axis)
             if (axis === undefined) {
-                // Should not happen. Maybe rendering different structures at once
-                console.log(`Failed to find axis ${point.axis} in line ${line.id}. Skipping this point.`)
+                if (!point.axis?.endsWith(PARENT_MARKER))
+                    // Should not happen. Maybe rendering different structures at once
+                    console.log(`Failed to find axis ${point.axis} in line ${line.id}. Skipping this point.`)
                 return
             }
 
@@ -103,6 +105,15 @@ export class PCLine extends React.Component<PCLineProps, PCLineStats> {
                     }
                 }
 
+                // Close potential open parallel path
+                if (openEnd !== undefined && openEnd[0] < x) {
+                    path.lineTo(openEnd[0], lastPosition[1])
+                    path.lineTo(xStart, y)
+
+                    path.moveTo(...openEnd)
+                    openEnd = undefined
+                }
+
                 if (lastPosition === undefined)
                     path.moveTo(xStart, y)
                 else if (xStart < lastPosition[0]) {
@@ -110,13 +121,6 @@ export class PCLine extends React.Component<PCLineProps, PCLineStats> {
                     path.moveTo(xStart, y)
                 } else
                     path.lineTo(xStart, y)
-
-                // Close potential open parallel path
-                if (openEnd !== undefined && openEnd[0] < x) {
-                    path.moveTo(...openEnd)
-                    path.lineTo(xStart, y)
-                    openEnd = undefined
-                }
 
                 path.lineTo(xEnd, y)
 

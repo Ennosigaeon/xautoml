@@ -1,3 +1,4 @@
+import time
 import warnings
 from copy import deepcopy
 from typing import Optional
@@ -51,10 +52,22 @@ class XAutoML:
             X, y = down_sample(X, y, n_samples)
         self.X: pd.DataFrame = X.reset_index(drop=True)
         self.y: pd.Series = y.reset_index(drop=True)
+        self._calc_pred_times()
 
         XAutoMLManager.open(self)
 
     # Helper Methods
+
+    @no_warnings
+    def _calc_pred_times(self):
+        for candidate in self.run_history.cid_to_candidate.values():
+            try:
+                start = time.time()
+                candidate.model.predict(self.X)
+                end = time.time()
+                candidate.runtime['prediction_time'] = end - start
+            except Exception:
+                candidate.runtime['prediction_time'] = 1000
 
     def _load_models(self, cids: list[CandidateId]) -> tuple[pd.DataFrame, pd.Series, list[Pipeline]]:
         models = []

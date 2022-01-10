@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 import numpy as np
 import pandas as pd
 from ConfigSpace import CategoricalHyperparameter
@@ -54,7 +56,8 @@ class ConfigSimilarity:
                 padded_config['__structure__'] = idx
                 combined_configs.append(padded_config)
 
-            combined_cs.add_configuration_space(name, cs, parent_hyperparameter={'parent': choice, 'value': idx})
+            combined_cs.add_configuration_space(name, deepcopy(cs),
+                                                parent_hyperparameter={'parent': choice, 'value': idx})
 
         pruned_cs, configs = configs_as_dataframe(combined_cs,
                                                   [Configuration(combined_cs, d) for d in combined_configs])

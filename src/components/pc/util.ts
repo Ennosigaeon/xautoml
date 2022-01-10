@@ -1,4 +1,5 @@
 import * as cpc from "./model";
+import {PARENT_MARKER} from "./model";
 import * as d3 from "d3";
 import {BO, Candidate, ConfigValue, Structure} from "../../model";
 
@@ -128,7 +129,7 @@ export namespace ParCord {
             })
         })
 
-        const axes = comp.map((steps, idx) => {
+        const columns = comp.map((steps, idx) => {
             const parallelAxes: cpc.Axis[] = []
             const addedAxes = new Set<string>()
 
@@ -161,11 +162,19 @@ export namespace ParCord {
 
         const lowerPerf = Math.min(...perfAxis.domain)
         const upperPerf = Math.max(...perfAxis.domain)
-        axes.push([
+        columns.push([
             cpc.Axis.Numerical('__performance__', perfAxis.label, new cpc.Domain(lowerPerf, upperPerf, perfAxis.log))
         ])
 
-        return axes
+        return columns.map(rows => {
+            return rows.map(axis => {
+                if (axis.isNumerical())
+                    return axis
+                if (axis.choices.length <= 1)
+                    return axis
+                return cpc.Axis.Categorical(`${axis.id}.${PARENT_MARKER}`, axis.name, [new cpc.Choice(axis.name, [[axis]], true, axis.label)])
+            })
+        })
     }
 
     export function parseCandidates(candidates: [Candidate, Structure][], axes: cpc.Axis[][]): cpc.Line[] {
@@ -183,6 +192,7 @@ export namespace ParCord {
             const points = new Array<cpc.LinePoint>()
             structure.pipeline.steps.map(step => {
                 const commonStepName = step.id.includes(':') ? step.id.split(':').slice(0, -1).join(':') : step.id
+                points.push(new cpc.LinePoint(`${nameToIndex.get(step.id)}.${commonStepName}.${PARENT_MARKER}`, commonStepName))
                 points.push(new cpc.LinePoint(`${nameToIndex.get(step.id)}.${commonStepName}`, step.name))
 
                 candidate.subConfig(step, false)

@@ -165,7 +165,7 @@ export class ConfigSimilarity extends React.Component<ConfigSimilarityProps, Con
                             </ResponsiveContainer>
                         </div>
                         <div style={{flex: '0 1 auto'}}>
-                            <Heatbar scale={scale}/>
+                            <Heatbar scale={scale} label={this.props.meta.metric}/>
                         </div>
                     </div>
                 }

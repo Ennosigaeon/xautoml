@@ -133,6 +133,12 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
 
         return (
             <>
+                {nSteps > 0 &&
+                    <div style={{margin: '20px'}}>
+                        <Slider min={0} max={nSteps} marks={this.state.sliderMarks} defaultValue={nSteps}
+                                included={false} onChange={this.changeTimestamp}/>
+                    </div>}
+
                 {explanations.structures &&
                     <CollapseComp name={'reinforcement-explanations'} showInitial={true}
                                   help={MCTSExplanationsComponent.HELP}>

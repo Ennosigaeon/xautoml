@@ -20,7 +20,7 @@ import {MoreVert} from "@material-ui/icons";
 
 interface SingleCandidate {
     id: CandidateId;
-    timestamp: number;
+    pred_time: number;
     performance: number;
     candidate: [Structure, Candidate];
 }
@@ -199,7 +199,7 @@ ${ID}_pipeline
                                   onClick={this.onCheckBoxClick}/>
                     </TableCell>
                     <TableCell scope='row' padding='none'>{candidate.id}</TableCell>
-                    <TableCell align='right'>{prettyPrint(candidate.timestamp, 2)}</TableCell>
+                    <TableCell align='right'>{prettyPrint(candidate.pred_time, 3)}</TableCell>
                     <TableCell align='right'>{prettyPrint(candidate.performance, 4)}</TableCell>
                     <TableCell align='right' style={{height: '50px'}} padding='none'>
                         <StructureGraphComponent structure={candidate.candidate[0]}
@@ -393,7 +393,7 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
                     rows.push(
                         {
                             id: c.id,
-                            timestamp: c.runtime.timestamp,
+                            pred_time: c.runtime.prediction_time,
                             performance: c.loss,
                             candidate: [structure, c]
                         }
@@ -409,7 +409,7 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
 
         const headCells: HeadCell[] = [
             {id: 'id', numeric: false, sortable: true, label: 'Id', width: '40px'},
-            {id: 'timestamp', numeric: true, sortable: true, label: 'Timestamp', width: '90px'},
+            {id: 'pred_time', numeric: true, sortable: true, label: 'Pred. Time', width: '60px'},
             {id: 'performance', numeric: true, sortable: true, label: 'Performance', width: '100px'},
             {id: 'candidate', numeric: false, sortable: false, label: 'Configuration', width: 'auto'}
         ];

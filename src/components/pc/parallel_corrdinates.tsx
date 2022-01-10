@@ -19,6 +19,7 @@ interface PCProps {
     selectedCandidates?: Set<CandidateId>
     selectedAxis?: Set<string>
     hideUnselectedCandidates?: boolean
+    expand?: boolean
     onCandidateSelection?: (cid: Set<CandidateId>, show?: boolean) => void
     onAxisSelection?: (hyperparameter: string) => void
 
@@ -60,6 +61,7 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
         selectedAxis: new Set<string>(),
         hideUnselectedCandidates: false,
         showExplanations: false,
+        expand: false,
         onCandidateSelection: () => {
         },
         onAxisSelection: () => {
@@ -94,6 +96,10 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
             this.props.candidates : [].concat(...this.props.structures.map(s => s.configs.map(c => [c, s])))
 
         const axes = ParCord.parseConfigSpace(this.props.structures, this.props.perfAxis)
+        if (this.props.expand || axes.length <=5 )
+            axes.forEach(column => column.filter(row => !row.isNumerical() && row.choices.length === 1)
+                .forEach(row => row.choices[0].expand()))
+
         const lines = ParCord.parseCandidates(candidates, axes)
         const filter = new Map<cpc.Axis, cpc.Choice | [number, number]>()
 
@@ -166,8 +172,19 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
         this.props.onCandidateSelection(new Set<CandidateId>([cid]), true)
     }
 
+    private renderLine(line: cpc.Line, idx: number, onlyHighlighted: boolean) {
+        if (idx == this.props.timestamp || onlyHighlighted === this.state.highlightedLines.has(line.id))
+            return (
+                <PCLine key={line.id} line={line}
+                        selected={idx == this.props.timestamp}
+                        highlight={this.state.highlightedLines.has(line.id)}
+                        onClick={this.onSelectLine}
+                        onAlternativeClick={this.onShowCandidate}/>
+            )
+    }
+
     public render() {
-        const {model, highlightedLines, container} = this.state
+        const {model, container} = this.state
         const width = (container && container.current) ? container.current.clientWidth : 0
 
         const root = new cpc.Choice('', this.state.model.axes, false);
@@ -179,6 +196,10 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
         root.layout([0, width], yScale)
 
         model.explanations = this.props.explanation
+
+        const lines = this.state.model.lines
+            .slice(0, this.props.timestamp + 1)
+            .filter(line => !this.props.hideUnselectedCandidates || this.props.selectedCandidates.has(line.id))
 
         return (
             <>
@@ -209,14 +230,12 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
                                   onExpand={this.onExpand}
                                   onHighlight={this.highlightLines}
                                   onAxisSelection={this.onAxisSelection}/>
-                        {this.state.showCandidates && this.state.model.lines
-                            .slice(0, this.props.timestamp + 1)
-                            .filter(line => !this.props.hideUnselectedCandidates || this.props.selectedCandidates.has(line.id))
-                            .map((line, idx) => <PCLine key={line.id} line={line}
-                                                        selected={idx == this.props.timestamp}
-                                                        highlight={highlightedLines.has(line.id)}
-                                                        onClick={this.onShowCandidate}
-                                                        onAlternativeClick={this.onSelectLine}/>)}
+                        {this.state.showCandidates &&
+                            <>
+                                {lines.map((line, idx) => this.renderLine(line, idx, false))}
+                                {lines.map((line, idx) => this.renderLine(line, idx, true))}
+                            </>
+                        }
                     </cpc.CPCContext.Provider>
                 </RefableFlexibleSvg>
             </>

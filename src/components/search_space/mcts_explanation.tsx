@@ -63,8 +63,8 @@ namespace CollapsibleNodeActions {
 
 }
 
-const NODE_HEIGHT = 70;
-const NODE_WIDTH = 190;
+const NODE_HEIGHT = 55;
+const NODE_WIDTH = 210;
 
 interface SingleNodeProps {
     node: DagNode<CollapsibleNode>
@@ -117,7 +117,7 @@ class SingleNode extends React.Component<SingleNodeProps, SingleNodeState> {
                     <div style={{display: 'flex', alignItems: 'center'}}>
                         <div style={{flexGrow: 1}}>
                             <h3>
-                                {normalizeComponent(data.label)}: {details.isFailure() ? details.failure_message : prettyPrint(details.score)}
+                                {normalizeComponent(data.label).substring(0, 20)}: {details.isFailure() ? details.failure_message : prettyPrint(details.score)}
                             </h3>
                         </div>
                         {node.data.isExpandable &&

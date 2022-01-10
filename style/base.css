@@ -179,7 +179,7 @@ tr.MuiTableRow-root.MuiTableRow-hover:hover {
 .mcts-explanation_node-details {
     display: grid;
     text-align: left;
-    grid-template-columns: 60% 40%;
+    grid-template-columns: 33% 33% 33%;
     font-size: 8px;
 }
 

@@ -263,6 +263,8 @@ class ModelDetails:
                 feature['avg'] = [{'x': x, 'y': y} for x, y in
                                   zip(feature_values, pd_result.average[target_idx].tolist())]
 
-                result[target]['features'][X.columns[feature_idx].item()] = feature
+                result[target]['features'][
+                    X.columns[feature_idx].item() if hasattr(X.columns[feature_idx], 'item') else X.columns[
+                        feature_idx]] = feature
 
         return result

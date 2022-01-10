@@ -128,7 +128,6 @@ export namespace RL {
     export class StateDetails {
 
         constructor(public readonly failure_message: string,
-                    public readonly visits: number,
                     public readonly score: number,
                     public readonly selected: boolean,
                     public readonly policy: PolicyData) {
@@ -136,14 +135,13 @@ export namespace RL {
 
         static fromJson(stateDetails: StateDetails): StateDetails {
             return new StateDetails(stateDetails.failure_message,
-                stateDetails.visits,
                 stateDetails.score,
                 stateDetails.selected,
                 new Map<string, number>(Object.entries(stateDetails.policy)));
         }
 
         isUnvisited(): boolean {
-            return this.failure_message === 'Unvisited'
+            return this.failure_message === 'Unvisited' || this.policy.get('visits') === 0
         }
 
         isFailure(): boolean {
@@ -167,7 +165,7 @@ export namespace RL {
                 .forEach(k => details.set(k[0], StateDetails.fromJson(k[1])));
 
             return new Explanation(graphNode.id,
-                graphNode.label,
+                normalizeComponent(graphNode.label),
                 details,
                 graphNode.children?.map(d => Explanation.fromJson(d)))
         }
@@ -196,11 +194,13 @@ export class Explanations {
 }
 
 export class Runtime {
-    constructor(public readonly training_time: number, public readonly timestamp: number) {
+    constructor(public readonly training_time: number,
+                public readonly timestamp: number,
+                public readonly prediction_time: number) {
     }
 
     public static fromJson(runtime: Runtime): Runtime {
-        return new Runtime(runtime.training_time, runtime.timestamp)
+        return new Runtime(runtime.training_time, runtime.timestamp, runtime.prediction_time)
     }
 }
 
@@ -319,7 +319,7 @@ export class Pipeline {
             const otherPaths = (step.args.transformers as [string, any, any][]).map(t => t[0]);
 
             (step.args.transformers as [string, any, any][])
-                .forEach(([subId, subPath, columns], idx, arr) => {
+                .forEach(([subId, subPath, columns]) => {
                     const [childSteps, newParents] = this.loadSingleStep(`${id}:${subId}`, subPath, parents)
                     childSteps[0].edgeLabels.set(subId, columns.toString()) // At least one child always have to be present
                     childSteps.forEach(c => c.parallelPaths = otherPaths)
@@ -333,7 +333,7 @@ export class Pipeline {
             const otherPaths = (step.args.transformer_list as [string, any][]).map(t => t[0]);
 
             (step.args.transformer_list as [string, any][])
-                .forEach(([subId, subPath], idx, arr) => {
+                .forEach(([subId, subPath]) => {
                     const [childSteps, newParents] = this.loadSingleStep(`${id}:${subId}`, subPath, parents)
                     childSteps[0].edgeLabels.set(subId, 'all') // At least one child always have to be present
                     childSteps.forEach(c => c.parallelPaths = otherPaths)

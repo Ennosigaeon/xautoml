@@ -176,6 +176,8 @@ interface CPCAxisState {
 
 export class PCAxis extends React.Component<CPCAxisProps, CPCAxisState> {
 
+    private static readonly STEP_AXIS = /^\d+\..+/;
+
     static contextType = cpc.CPCContext;
     context: React.ContextType<typeof cpc.CPCContext>;
 
@@ -219,7 +221,7 @@ export class PCAxis extends React.Component<CPCAxisProps, CPCAxisState> {
                                                         onAxisSelection={onClick}/>)
 
         const id = `path-${uuidv4()}`
-        const selectableTitle = axis.isNumerical() || choices.length > 1
+        const selectableTitle = axis.isNumerical() || (choices.length > 1 && !PCAxis.STEP_AXIS.test(axis.id))
 
         if (!axis.isNumerical() && choices.length === 0)
             return <></>

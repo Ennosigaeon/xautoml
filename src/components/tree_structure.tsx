@@ -9,6 +9,8 @@ import {v4 as uuidv4} from 'uuid';
 import memoize from "memoize-one";
 import {prettyPrint, Primitive} from "../util";
 
+const ANIMATION_DURATION = 300
+
 interface GraphElementProps {
     nodeWidth: number
     nodeHeight: number
@@ -65,8 +67,8 @@ export class GraphNode<Datum> extends React.Component<GraphNodeProps<Datum>, {}>
         return (
             <Animate
                 start={{x: parent.x, y: parent.y}}
-                update={{x: [node.x], y: [node.y], timing: {duration: 500, ease: easeExpInOut}}}
-                enter={{x: [node.x], y: [node.y], timing: {duration: 500, ease: easeExpInOut}}}
+                update={{x: [node.x], y: [node.y], timing: {duration: ANIMATION_DURATION, ease: easeExpInOut}}}
+                enter={{x: [node.x], y: [node.y], timing: {duration: ANIMATION_DURATION, ease: easeExpInOut}}}
             >{({x: x, y: y}) =>
                 <g className={`hierarchical-tree_node ${className} ${highlight ? 'selected' : ''}`}
                    transform={`translate(${y}, ${x})`}>
@@ -113,12 +115,12 @@ export class GraphEdge<Datum> extends React.Component<GraphEdgeProps<Datum>, any
                 update={{
                     source: {x: [link.source.y + nodeWidth], y: [link.source.x]},
                     target: {x: [link.target.y], y: [link.target.x]},
-                    timing: {duration: 500, ease: easeExpInOut}
+                    timing: {duration: ANIMATION_DURATION, ease: easeExpInOut}
                 }}
                 enter={{
                     source: {x: [link.source.y + nodeWidth], y: [link.source.x]},
                     target: {x: [link.target.y], y: [link.target.x]},
-                    timing: {duration: 500, ease: easeExpInOut}
+                    timing: {duration: ANIMATION_DURATION, ease: easeExpInOut}
                 }}
             >{({source: source, target: target}) => {
                 const id = `edge-${uuidv4()}`
