@@ -1,0 +1,27 @@
+Evaluated Candidates,
+T01,What performance does the best pipeline have?
+T02,Is the best pipeline performing significantly better than the rest?
+T03,Are better pipelines found over time?
+T04,How many pipelines were generated in total?
+T05,How many pipelines use an <ALGORITHM> as first step in pipeline?
+,
+Candidate Inspection,
+T10,What steps does the pipeline have?
+T11,Which classifier does the pipeline use?
+T12,Are there some steps in the pipeline that do not have to be there?
+T13,How fast is a prediction using this pipeline?
+T14,Which are the most important hyperparameters?
+T15,Why was a single sample predicted as <CLASS>?
+T16,Do you understand how this pipeline was sampled?
+,
+Search Space,
+T20,What does the search space look like?
+T21,Which classifier was most often used in all candidates?
+T22,Are there some algorithms that were never evaluated?
+T23,How many hyperparameters does the random forest have?
+T24,What range should <HYPERPARAMETER> be to yield a good performance?
+T25,Can you explain the how the search algorithm works?
+,
+Ensemble Inspection,
+T30,Which is the most important member in the ensemble?
+T31,Are there models which should be removed from the ensemble?
