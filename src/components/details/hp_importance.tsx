@@ -30,7 +30,6 @@ import {JupyterButton} from "../../util/jupyter-button";
 
 interface SingleHPProps {
     data: HPImportanceDetails
-    maxLabelLength: number
     metric: string
 
     onExportClick: () => void
@@ -161,19 +160,20 @@ class SingleHP extends React.Component<SingleHPProps> {
 
         return (
             <div>
-                <div style={{minHeight: this.props.maxLabelLength, display: "flex", alignItems: "center"}}>
+                <div style={{display: "flex", alignItems: "end"}}>
                     <div>
                         <p>{description}</p>
                         <JupyterButton onClick={this.props.onExportClick}/>
                     </div>
                 </div>
 
-                <div style={{height: '300px', width: '100%'}}>
+                {additionalData && additionalData}
+
+                <div style={{height: '250px', width: '100%'}}>
                     <ResponsiveContainer>
                         {plot}
                     </ResponsiveContainer>
                 </div>
-                {additionalData && additionalData}
             </div>
         )
     }
@@ -197,6 +197,10 @@ class SingleHP extends React.Component<SingleHPProps> {
 interface HPImportanceProps {
     model: DetailsModel
     metric: string
+
+    selectedHp1?: string
+    selectedHp2?: string
+    onHpChange?: (hp1: string, hp2: string) => void
 }
 
 interface HPImportanceState {
@@ -227,19 +231,24 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
     }
 
     componentDidMount() {
-        window.setTimeout(() => this.queryHPImportance(), 100)
+        window.setTimeout(() => this.queryHPImportance()
+            .then(() => this.selectRow(this.state.overview.keys
+                .findIndex(k => k[0] === this.props.selectedHp1 && k[1] === this.props.selectedHp2))), 100)
     }
 
     componentDidUpdate(prevProps: Readonly<HPImportanceProps>, prevState: Readonly<HPImportanceState>, snapshot?: any) {
         if (prevProps.model.component !== this.props.model.component)
             this.queryHPImportance()
+        if (prevProps.selectedHp1 !== this.props.selectedHp1 || prevProps.selectedHp2 !== this.props.selectedHp2)
+            this.selectRow(this.state.overview.keys
+                .findIndex(k => k[0] === this.props.selectedHp1 && k[1] === this.props.selectedHp2))
     }
 
     private queryHPImportance() {
         const {model} = this.props;
         this.setState({error: undefined, overview: undefined, selectedRow: undefined, details: undefined});
 
-        this.context.requestFANOVA(model.structure.cid, model.component)
+        return this.context.requestFANOVA(model.structure.cid, model.component)
             .then(resp => {
                 if (resp.error)
                     this.setState({error: new Error(resp.error)})
@@ -253,10 +262,16 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
     }
 
     private selectRow(idx: number) {
+        if (idx === -1) {
+            this.setState({selectedRow: undefined, details: undefined})
+            return
+        }
+
         const {model} = this.props;
         this.setState({selectedRow: idx, details: undefined})
 
-        this.context.requestFANOVADetails(model.structure.cid, model.component, this.state.overview.keys[idx])
+        const [hp1, hp2] = this.state.overview.keys[idx]
+        this.context.requestFANOVADetails(model.structure.cid, model.component, [hp1, hp2])
             .then(resp => {
                 if (resp.error)
                     this.setState({error: new Error(resp.error)})
@@ -268,6 +283,8 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
                 this.setState({error: error})
             });
 
+        if (this.props.onHpChange !== undefined && (this.props.selectedHp1 !== hp1 || this.props.selectedHp2 !== hp2))
+            this.props.onHpChange(hp1, hp2)
     }
 
     private getDetails(selectedRow: number): HPImportanceDetails {
@@ -327,7 +344,6 @@ ${ID}_hp_interactions
                                 <>
                                     <LoadingIndicator loading={this.state.details === undefined}/>
                                     {this.state.details && <SingleHP data={this.getDetails(selectedRow)}
-                                                                     maxLabelLength={marginTop}
                                                                      metric={this.props.metric}
                                                                      onExportClick={this.exportDetails}/>}
                                 </>

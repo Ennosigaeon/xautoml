@@ -4,12 +4,15 @@ import KeyboardArrowDownIcon from "@material-ui/icons/KeyboardArrowDown";
 import React from "react";
 import {HelpIcon} from "./help";
 import {JupyterContext} from "../util";
+import {CompareArrows} from "@material-ui/icons";
 
 interface CollapseProps {
     showInitial: boolean
     name?: string
     className?: string
     help?: string
+
+    onComparisonRequest?: () => void
 }
 
 interface CollapseState {
@@ -30,10 +33,11 @@ export class CollapseComp extends React.Component<CollapseProps, CollapseState> 
     constructor(props: CollapseProps, context: React.ContextType<typeof JupyterContext>) {
         super(props, context);
         this.context.collapsedState.setIfNotPresent(this.props.name, this.props.showInitial)
-        this.state = {show: this.context.collapsedState.get(this.props.name)}
+        this.state = {show: this.context.collapsedState.get(this.props.name) || (this.props.name === undefined && this.props.showInitial)}
 
         this.toggleShow = this.toggleShow.bind(this)
         this.toggleShowOpen = this.toggleShowOpen.bind(this)
+        this.onComparisonRequest = this.onComparisonRequest.bind(this)
     }
 
 
@@ -50,6 +54,11 @@ export class CollapseComp extends React.Component<CollapseProps, CollapseState> 
             this.toggleShow(e)
     }
 
+    private onComparisonRequest(e: React.MouseEvent) {
+        this.props.onComparisonRequest()
+        e.stopPropagation()
+    }
+
     render() {
         const children = React.Children.toArray(this.props.children);
 
@@ -60,6 +69,12 @@ export class CollapseComp extends React.Component<CollapseProps, CollapseState> 
                     <div style={{flexGrow: 1, cursor: 'pointer'}} onClick={this.toggleShow}>
                         {children[0]}
                     </div>
+                    {this.props.onComparisonRequest &&
+                        <IconButton style={{flexShrink: 1, maxHeight: '24px'}} size='small'
+                                    title={'Compare With Selected Candidates'}
+                                    onClick={this.onComparisonRequest}>
+                            <CompareArrows/>
+                        </IconButton>}
                     {this.props.help && this.state.show && <HelpIcon help={this.props.help}/>}
                     <IconButton style={{flexShrink: 1, maxHeight: '24px'}} size='small' onClick={this.toggleShow}>
                         {this.state.show ? <KeyboardArrowUpIcon/> : <KeyboardArrowDownIcon/>}

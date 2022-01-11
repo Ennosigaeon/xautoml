@@ -152,7 +152,7 @@ ${ID}_pdp
 
         return (
             <>
-                <div style={{height: '300px', flexGrow: 1}}>
+                <div style={{height: '250px', flexGrow: 1}}>
                     <LoadingIndicator loading={data === undefined}/>
                     {pdp &&
                         <>
@@ -187,6 +187,9 @@ ${ID}_pdp
 
 interface FeatureImportanceProps {
     model: DetailsModel
+
+    selectedFeature?: string
+    onFeatureSelection?: (feature: string) => void
 }
 
 interface FeatureImportanceState {
@@ -222,12 +225,17 @@ export class FeatureImportanceComponent extends React.Component<FeatureImportanc
     }
 
     componentDidMount() {
-        window.setTimeout(() => this.queryFeatureImportance(), 100)
+        window.setTimeout(() => {
+            this.queryFeatureImportance().then(() => this.selectRow(this.state?.data.data.column_names.indexOf(this.props.selectedFeature)))
+        }, 100)
     }
 
     componentDidUpdate(prevProps: Readonly<FeatureImportanceProps>, prevState: Readonly<FeatureImportanceState>, snapshot?: any) {
         if (prevProps.model.component !== this.props.model.component)
             this.queryFeatureImportance()
+
+        if (prevProps.selectedFeature !== this.props.selectedFeature)
+            this.selectRow(this.state.data.data.column_names.indexOf(this.props.selectedFeature))
     }
 
     private queryFeatureImportance() {
@@ -236,7 +244,7 @@ export class FeatureImportanceComponent extends React.Component<FeatureImportanc
             return
 
         this.setState({error: undefined, selectedRow: undefined, pdp: undefined, detailsError: undefined})
-        this.context.requestFeatureImportance(candidate.id, component)
+        return this.context.requestFeatureImportance(candidate.id, component)
             .then(data => this.setState({data: data, error: undefined}))
             .catch(error => {
                 console.error(`Failed to fetch FeatureImportance data.\n${error.name}: ${error.message}`)
@@ -245,8 +253,17 @@ export class FeatureImportanceComponent extends React.Component<FeatureImportanc
     }
 
     private selectRow(idx: number) {
-        this.setState({selectedRow: idx})
-        this.queryPDP(this.state.data.data.column_names[idx])
+        if (idx === undefined)
+            return
+        if (idx === -1)
+            this.setState({selectedRow: undefined, pdp: undefined})
+        else {
+            const feature = this.state.data.data.column_names[idx]
+            this.setState({selectedRow: idx})
+            this.queryPDP(feature)
+            if (this.props.onFeatureSelection !== undefined && this.props.selectedFeature !== feature)
+                this.props.onFeatureSelection(feature)
+        }
     }
 
     private queryPDP(feature: string) {
@@ -310,7 +327,7 @@ ${ID}_feature_importance
                             </>
                         }
                         {data && data.data.column_names.length === 0 &&
-                        <p>Feature importance not available for the actual predictions.</p>}
+                            <p>Feature importance not available for the actual predictions.</p>}
                     </>
                 }
             </>

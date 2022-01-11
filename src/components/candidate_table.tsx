@@ -17,6 +17,8 @@ import {DataSetDetailsComponent} from './dataset_details';
 import {JupyterButton} from "../util/jupyter-button";
 import {ID} from "../jupyter";
 import {MoreVert} from "@material-ui/icons";
+import {Comparison} from "./comparison";
+import {DetailsModel, ComparisonType} from "./details/model";
 
 interface SingleCandidate {
     id: CandidateId;
@@ -102,6 +104,7 @@ interface CandidateTableRowProps {
     selected: boolean
     onRowClick: (id: CandidateId) => void
     onRowHide: (id: CandidateId) => void
+    onComparisonRequest: (type: ComparisonType, selectedRow: number) => void
 
     structures: Structure[]
     explanations: Explanations
@@ -180,7 +183,7 @@ ${ID}_pipeline
     }
 
     render() {
-        const {candidate, meta, selected, structures, explanations} = this.props
+        const {candidate, meta, selected, structures, explanations, onComparisonRequest} = this.props
         const {open} = this.state
 
         const selectedComponent = (open && this.state.selectedComponent[0] === undefined) ?
@@ -226,6 +229,7 @@ ${ID}_pipeline
                                     componentLabel={selectedComponent[1]}
                                     meta={meta}
                                     explanations={explanations}
+                                    onComparisonRequest={onComparisonRequest}
                                     structures={structures}/>
                             </Box>
                         </Collapse>
@@ -304,6 +308,9 @@ interface CandidateTableState {
     orderBy: keyof SingleCandidate
     page: number
     rowsPerPage: number
+
+    selectedRow: number
+    comparisonType: ComparisonType
 }
 
 export class CandidateTable extends React.Component<CandidateTableProps, CandidateTableState> {
@@ -319,7 +326,9 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
             order: order,
             orderBy: orderBy,
             page: 0,
-            rowsPerPage: 10
+            rowsPerPage: 10,
+            selectedRow: undefined,
+            comparisonType: undefined
         }
 
         this.handleRequestSort = this.handleRequestSort.bind(this)
@@ -327,6 +336,11 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
         this.handleRowClick = this.handleRowClick.bind(this)
         this.handleChangePage = this.handleChangePage.bind(this)
         this.handleChangeRowsPerPage = this.handleChangeRowsPerPage.bind(this)
+        this.handleComparisonRequest = this.handleComparisonRequest.bind(this)
+    }
+
+    private handleComparisonRequest(type: ComparisonType, selectedRow: number) {
+        this.setState({comparisonType: type, selectedRow: selectedRow})
     }
 
     private handleRequestSort(_: React.MouseEvent<unknown>, property: keyof SingleCandidate): void {
@@ -415,7 +429,7 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
         ];
 
         return (
-            <>
+            <div className={'comparison-anchor'}>
                 <TableContainer>
                     <Table style={{tableLayout: 'fixed'}}
                            size="small"
@@ -447,6 +461,7 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
                                                            onRowHide={this.props.onCandidateHide}
                                                            structures={structures}
                                                            explanations={explanations}
+                                                           onComparisonRequest={this.handleComparisonRequest}
                                                            open={row.id === this.props.showCandidate}/>
                                     );
                                 })}
@@ -462,7 +477,15 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
                     onPageChange={this.handleChangePage}
                     onRowsPerPageChange={this.handleChangeRowsPerPage}
                 />
-            </>
+
+
+                {this.state.comparisonType !== undefined &&
+                    <Comparison meta={this.props.meta} type={this.state.comparisonType}
+                                onClose={() => this.handleComparisonRequest(undefined, undefined)}
+                                models={rows.filter(r => this.props.selectedCandidates.has(r.id))
+                                    .map(r => new DetailsModel(r.candidate[0], r.candidate[1], Components.SOURCE, Components.SOURCE, this.state.selectedRow))}/>
+                }
+            </div>
         )
     }
 }

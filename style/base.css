@@ -304,6 +304,27 @@ div.structure-graph_tooltip {
 
 
 /** LIME */
+.lime {
+    display: flex;
+}
+
+.lime.vertical {
+    height: 100%;
+    flex-direction: column;
+}
+
+.lime.horizontal {
+    flex-direction: row;
+}
+
+.lime.vertical .lime_plot {
+    min-width: 350px;
+}
+
+.lime.horizontal .lime_plot {
+    flex-grow: 1;
+}
+
 .lime .rv-xy-plot__axis__title text {
     font-size: larger;
 }
@@ -513,6 +534,7 @@ text.pc-axis-label:hover {
 
 .performance-wrapper {
     display: flex;
+    flex-flow: wrap;
     justify-content: space-around;
 }
 
@@ -532,8 +554,23 @@ text.pc-axis-label:hover {
 
 
 /** Feature Importance **/
-.pdp .MuiInputBase-input{
+.pdp .MuiInputBase-input {
     font-size: var(--jp-code-font-size);
     padding-top: 0;
     line-height: unset;
+}
+
+
+/** Comparison **/
+.comparison-anchor {
+    position: relative;
+}
+
+.comparison-container {
+    padding: 10px;
+    width: 1000px;
+    position: absolute;
+    right: 0;
+    top: 0;
+    background-color: white;
 }

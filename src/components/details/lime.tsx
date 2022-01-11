@@ -2,13 +2,15 @@ import React from "react";
 import {Label, LimeResult} from "../../dao";
 import {Colors, JupyterContext} from "../../util";
 import {LoadingIndicator} from "../../util/loading";
-import {DetailsModel} from "./model";
+import {ComparisonType, DetailsModel} from "./model";
 import {ErrorIndicator} from "../../util/error";
 import {CollapseComp} from "../../util/collapse";
 import {CommonWarnings} from "../../util/warning";
 import {Bar, BarChart, CartesianGrid, Cell, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis} from "recharts";
 import ResizeObserver from "resize-observer-polyfill";
 import {MinimalisticTooltip} from "../../util/recharts";
+import {CompareArrows} from "@material-ui/icons";
+import {IconButton} from "@material-ui/core";
 
 class CustomizedTick extends React.PureComponent<any> {
     render() {
@@ -20,6 +22,7 @@ class CustomizedTick extends React.PureComponent<any> {
             <text x={x} y={y} dy={0} textAnchor="end"
                   fill={isAdditional ? Colors.ADDITIONAL_FEATURE : Colors.SELECTED_FEATURE}>
                 {payload.value.toLocaleString().replace(/ /g, '\u00A0')}
+                <title>{payload.value.toLocaleString()}</title>
             </text>
         );
     }
@@ -28,6 +31,11 @@ class CustomizedTick extends React.PureComponent<any> {
 
 interface LimeProps {
     model: DetailsModel
+    orientation: 'vertical' | 'horizontal'
+
+    selectedLabel?: Label
+    onLabelChange?: (label: Label) => void
+    onComparisonRequest?: (type: ComparisonType) => void
 }
 
 interface LimeState {
@@ -63,10 +71,18 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
         this.onTickClick = this.onTickClick.bind(this)
     }
 
+    componentDidMount() {
+        if (this.props.model.selectedSample !== undefined)
+            this.queryLime(this.props.model.selectedSample)
+    }
+
     componentDidUpdate(prevProps: Readonly<LimeProps>, prevState: Readonly<LimeState>, snapshot?: any) {
         if (prevProps.model.component !== this.props.model.component ||
             prevProps.model.selectedSample !== this.props.model.selectedSample)
             this.queryLime(this.props.model.selectedSample)
+
+        if (prevProps.selectedLabel !== this.props.selectedLabel)
+            this.setState({selectedLabel: this.props.selectedLabel})
 
         if (this.container.current && this.resizeObserver === undefined) {
             this.resizeObserver = new ResizeObserver(() => {
@@ -104,6 +120,8 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
 
     private onLabelClick(point: any) {
         this.setState({selectedLabel: point.label})
+        if (this.props.onLabelChange !== undefined)
+            this.props.onLabelChange(point.label)
     }
 
     private onTickClick(e: React.MouseEvent) {
@@ -125,11 +143,24 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
                 return {x: score, label: label}
             })
             .reverse()
+
+        maxLabelLength = Math.min(this.props.orientation === 'vertical' ? 150 : 500, maxLabelLength)
         const explHeight = data?.expl.get(selectedLabel.toString())?.length * 30
 
         return (
-            <div className={'lime'} style={{height: '100%'}}>
-                <h3>Local Approximation</h3>
+            <div className={`lime ${this.props.orientation}`}>
+                {this.props.orientation === 'vertical' &&
+                    <div style={{display: "flex", justifyContent: "space-between"}}>
+                        <h3>Local Approximation</h3>
+                        {this.props.onComparisonRequest && selectedSample !== undefined &&
+                            <IconButton style={{flexShrink: 1, maxHeight: '24px'}} size='small'
+                                        title={'Compare With Selected Candidates'}
+                                        onClick={() => this.props.onComparisonRequest('lime')}>
+                                <CompareArrows/>
+                            </IconButton>
+                        }
+                    </div>
+                }
                 <ErrorIndicator error={error}/>
                 {!error && <>
                     <LoadingIndicator loading={loading}/>
@@ -163,75 +194,79 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
                         LIME explanations are not available for the actual predictions.</p>
                     }
 
-                    {data?.expl.size > 0 && <div style={{minWidth: "350px"}}>
-                        <CommonWarnings additionalFeatures={data.additional_features.length > 0}/>
-                        <CollapseComp name={'lime-classes'} showInitial={true}
-                                      help={'In this plot you can see the predicted class probabilities of the model ' +
-                                          'for all available classes. The probabilities range between 0 (the model is' +
-                                          'certain that this is not the correct class) to 1 (the model is certain ' +
-                                          'that this is the correct class). If the model is uncertain about the ' +
-                                          'correct class, two or more classes have roughly the same probabilities.' +
-                                          '\n\n' +
-                                          'The actual correct class is given above the plot.'}>
-                            <h4>Predicted Class Probabilities</h4>
-                            <>
-                                <p>Correct Class: {data.label}</p>
-                                <div style={{height: 300}}>
+                    {data?.expl.size > 0 && <>
+                        <div className={'lime_plot'}>
+                            <CommonWarnings additionalFeatures={data.additional_features.length > 0}/>
+                            <CollapseComp name={'lime-classes'} showInitial={true}
+                                          help={'In this plot you can see the predicted class probabilities of the model ' +
+                                              'for all available classes. The probabilities range between 0 (the model is' +
+                                              'certain that this is not the correct class) to 1 (the model is certain ' +
+                                              'that this is the correct class). If the model is uncertain about the ' +
+                                              'correct class, two or more classes have roughly the same probabilities.' +
+                                              '\n\n' +
+                                              'The actual correct class is given above the plot.'}>
+                                <h4>Predicted Class Probabilities</h4>
+                                <>
+                                    <p>Correct Class: {data.label}</p>
+                                    <div style={{height: 150}}>
+                                        <ResponsiveContainer>
+                                            <BarChart data={probs}>
+                                                <CartesianGrid strokeDasharray="3 3"/>
+                                                <XAxis dataKey="label" type={"category"} onClick={this.onTickClick}
+                                                       className={'selectable-ticks'}/>
+                                                <YAxis/>
+                                                <Bar dataKey="y" fill={Colors.DEFAULT} onClick={this.onLabelClick}
+                                                     className={'lime-class'}>
+                                                    {probs.map((d, index) => (
+                                                        <Cell key={`cell-${index}`}
+                                                              fill={selectedLabel === d.label ? Colors.HIGHLIGHT : Colors.DEFAULT}/>
+                                                    ))}
+                                                </Bar>
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </>
+                            </CollapseComp>
+                        </div>
+                        <div className={'lime_plot'}>
+                            <CollapseComp name={'lime-explanations'} showInitial={true}
+                                          help={'This plots contains the most important factors influencing the ' +
+                                              'prediction of the selected sample. In each row, a true statement about ' +
+                                              'the selected sample is given. The according plot on the right side ' +
+                                              'indicates how this statement changes the prediction probability. Values' +
+                                              'smaller than zero are an argument against the selected class, values ' +
+                                              'larger than zero for the selected class.' +
+                                              '\n\n' +
+                                              'To switch the class, you can chose any class in the plot above by ' +
+                                              'clicking the x axis ticks or box plots. The currently selected class is ' +
+                                              'displayed above the plot.'}>
+                                <h4>Explanations for Class {selectedLabel}</h4>
+                                <div style={{height: explHeight, overflow: "hidden"}} ref={this.container}>
                                     <ResponsiveContainer>
-                                        <BarChart data={probs}>
+                                        <BarChart data={expl} layout={'vertical'}
+                                                  margin={{left: maxLabelLength, top: 20, right: 0, bottom: 0}}>
                                             <CartesianGrid strokeDasharray="3 3"/>
-                                            <XAxis dataKey="label" type={"category"} onClick={this.onTickClick}
-                                                   className={'selectable-ticks'}/>
-                                            <YAxis/>
-                                            <Bar dataKey="y" fill={Colors.DEFAULT} onClick={this.onLabelClick}
-                                                 className={'lime-class'}>
-                                                {probs.map((d, index) => (
-                                                    <Cell key={`cell-${index}`}
-                                                          fill={selectedLabel === d.label ? Colors.HIGHLIGHT : Colors.DEFAULT}/>
-                                                ))}
-                                            </Bar>
+                                            <XAxis type={'number'}/>
+                                            <YAxis dataKey="label" type={"category"} interval={0}
+                                                   tick={<CustomizedTick
+                                                       additionalFeatures={data.additional_features}/>}/>
+
+                                            <Tooltip content={<MinimalisticTooltip/>}/>
+
+                                            <Bar dataKey="x" fill={Colors.DEFAULT} className={'lime-explanation'}/>
+                                            {this.state.x1 &&
+                                                <text x={this.state.x1} y={15}>{`Not ${selectedLabel}`}</text>}
+                                            {this.state.x2 &&
+                                                <text x={this.state.x2} textAnchor="end"
+                                                      y={15}>{selectedLabel.toString()}</text>}
+
+                                            <ReferenceLine x="0" stroke="#666666"/>
                                         </BarChart>
                                     </ResponsiveContainer>
                                 </div>
-                            </>
-                        </CollapseComp>
-
-                        <CollapseComp name={'lime-explanations'} showInitial={true}
-                                      help={'This plots contains the most important factors influencing the ' +
-                                          'prediction of the selected sample. In each row, a true statement about ' +
-                                          'the selected sample is given. The according plot on the right side ' +
-                                          'indicates how this statement changes the prediction probability. Values' +
-                                          'smaller than zero are an argument against the selected class, values ' +
-                                          'larger than zero for the selected class.' +
-                                          '\n\n' +
-                                          'To switch the class, you can chose any class in the plot above by ' +
-                                          'clicking the x axis ticks or box plots. The currently selected class is ' +
-                                          'displayed above the plot.'}>
-                            <h4>Explanations for Class {selectedLabel}</h4>
-                            <div style={{height: explHeight}} ref={this.container}>
-                                <ResponsiveContainer>
-                                    <BarChart data={expl} layout={'vertical'}
-                                              margin={{left: maxLabelLength, top: 20, right: 0, bottom: 0}}>
-                                        <CartesianGrid strokeDasharray="3 3"/>
-                                        <XAxis type={'number'}/>
-                                        <YAxis dataKey="label" type={"category"} interval={0}
-                                               tick={<CustomizedTick additionalFeatures={data.additional_features}/>}/>
-
-                                        <Tooltip content={<MinimalisticTooltip/>}/>
-
-                                        <Bar dataKey="x" fill={Colors.DEFAULT} className={'lime-explanation'}/>
-                                        {this.state.x1 &&
-                                            <text x={this.state.x1} y={15}>{`Not ${selectedLabel}`}</text>}
-                                        {this.state.x2 &&
-                                            <text x={this.state.x2} textAnchor="end"
-                                                  y={15}>{selectedLabel.toString()}</text>}
-
-                                        <ReferenceLine x="0" stroke="#666666"/>
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </CollapseComp>
-                    </div>
+                            </CollapseComp>
+                        </div>
+                    </>
                     }
                 </>}
             </div>

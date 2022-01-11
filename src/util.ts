@@ -50,7 +50,7 @@ export function maxLabelLength(labels: string[]) {
     return Math.max(...labels.map(d => d
         .replace('data_preprocessor:feature_type:numerical_transformer:', '')
         .replace('data_preprocessor:feature_type:categorical_transformer:', '')
-        .length)) * 6
+        .length)) * 5
 }
 
 

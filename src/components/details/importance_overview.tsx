@@ -22,9 +22,8 @@ export class ImportanceOverviewComp extends React.Component<ImportanceOverviewPr
         if (overview === undefined)
             return <></>
 
-
-        const radius = 10
-        const margin = 5
+        const radius = 8
+        const margin = 2
 
         const marginTop = overview?.column_names ? maxLabelLength(overview.column_names) : 0
         const stepSize = (2 * radius) + margin
@@ -80,38 +79,38 @@ export class ImportanceOverviewComp extends React.Component<ImportanceOverviewPr
 
         return (
             <>
-                <div style={{display: "flex", minWidth: 'auto'}}>
-                    <div style={{display: "flex", flexDirection: "column", minWidth: 'auto'}}>
+                <div style={{display: "flex", minWidth: 'auto', flexDirection: "column"}}>
+                    <div style={{display: "flex", minWidth: 'auto'}}>
                         <svg width={width} height={height + marginTop} style={{overflow: "visible"}}>
                             <g transform={'translate(10, 10)'}>
                                 <g transform={`translate(0, ${marginTop})`}>{rows}</g>
                                 <g>{headers}</g>
                             </g>
                         </svg>
+                        <BarChart data={errorBarImportance} layout={'vertical'} className={'hp-importance'}
+                                  width={125} height={height + marginTop}
+                                  margin={{top: marginTop - 32, bottom: 0, left: 5, right: 5}}
+                                  barSize={2 * radius} barGap={margin} style={{overflow: "visible"}}>
+                            <text x={125 / 2} y={marginTop - 30} textAnchor={'middle'}>Importance</text>
+                            <CartesianGrid strokeDasharray="3 3"/>
+                            <XAxis dataKey={'mean'} type={'number'} orientation={'top'} domain={[0, 1]}
+                                   ticks={[0, 0.25, 0.5, 0.75, 1]}/>
+                            <YAxis dataKey="idx" type={"category"} interval={0} hide/>
 
-                        <JupyterButton onClick={this.props.onExportClick}/>
+                            {selectedRow !== undefined && <ReferenceArea x1={0} x2={1} y1={selectedRow} y2={selectedRow}
+                                                                         fill={'var(--md-grey-300)'} fillOpacity={1}/>}
+
+                            <Bar dataKey="mean"
+                                 fill={Colors.DEFAULT}
+                                 onClick={(d) => onSelectRow(d.idx)}
+                                 isAnimationActive={selectedRow === undefined}>
+                                <ErrorBar dataKey="errorBars" height={radius / 2} strokeWidth={2}
+                                          stroke={Colors.HIGHLIGHT}
+                                          direction="x"/>
+                            </Bar>
+                        </BarChart>
                     </div>
-                    <BarChart data={errorBarImportance} layout={'vertical'} className={'hp-importance'}
-                              width={125} height={height + marginTop}
-                              margin={{top: marginTop - 32, bottom: 0, left: 5, right: 5}}
-                              barSize={2 * radius} barGap={margin} style={{overflow: "visible"}}>
-                        <text x={125 / 2} y={marginTop - 30} textAnchor={'middle'}>Importance</text>
-                        <CartesianGrid strokeDasharray="3 3"/>
-                        <XAxis dataKey={'mean'} type={'number'} orientation={'top'} domain={[0, 1]}
-                               ticks={[0, 0.25, 0.5, 0.75, 1]}/>
-                        <YAxis dataKey="idx" type={"category"} interval={0} hide/>
-
-                        {selectedRow !== undefined && <ReferenceArea x1={0} x2={1} y1={selectedRow} y2={selectedRow}
-                                                                     fill={'var(--md-grey-300)'} fillOpacity={1}/>}
-
-                        <Bar dataKey="mean"
-                             fill={Colors.DEFAULT}
-                             onClick={(d) => onSelectRow(d.idx)}
-                             isAnimationActive={selectedRow === undefined}>
-                            <ErrorBar dataKey="errorBars" height={radius / 2} strokeWidth={2} stroke={Colors.HIGHLIGHT}
-                                      direction="x"/>
-                        </Bar>
-                    </BarChart>
+                    <JupyterButton onClick={this.props.onExportClick}/>
                 </div>
             </>
         )

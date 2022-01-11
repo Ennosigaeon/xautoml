@@ -15,13 +15,15 @@ import {ID} from "../../jupyter";
 
 interface GlobalSurrogateProps {
     model: DetailsModel
+
+    dtIndex?: number
+    onDTIndexChange?: (dtIndex: number) => void
 }
 
 interface GlobalSurrogateState {
     loading: boolean
     data: GlobalSurrogateResult
     dt: DecisionTreeResult
-    maxLeafNodes: number
     error: Error
 }
 
@@ -43,7 +45,7 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
 
     constructor(props: GlobalSurrogateProps) {
         super(props);
-        this.state = {loading: true, data: undefined, dt: undefined, maxLeafNodes: undefined, error: undefined}
+        this.state = {loading: true, data: undefined, dt: undefined, error: undefined}
 
         this.onMaxLeavesChange = this.onMaxLeavesChange.bind(this)
         this.exportTree = this.exportTree.bind(this)
@@ -51,26 +53,32 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
     }
 
     componentDidMount() {
-        this.queryDT(this.state.maxLeafNodes)
+        this.queryDT()
     }
 
     componentDidUpdate(prevProps: Readonly<GlobalSurrogateProps>, prevState: Readonly<GlobalSurrogateState>, snapshot?: any) {
         if (prevProps.model.component !== this.props.model.component)
-            this.queryDT(undefined)
+            this.queryDT()
+
+        if (prevProps.dtIndex !== this.props.dtIndex) {
+            const dt = this.state.data.candidates[this.props.dtIndex]
+            this.setState({dt: dt})
+        }
     }
 
-    private queryDT(maxLeafNodes: number) {
+    private queryDT() {
         const {candidate, component} = this.props.model
         if (component === undefined)
             return
 
-        const promise = this.context.requestGlobalSurrogate(candidate.id, component, maxLeafNodes)
+        const promise = this.context.requestGlobalSurrogate(candidate.id, component)
         this.setState({loading: true})
 
         promise
             .then(data => {
-                const dt = data.candidates[data.best]
-                this.setState({data: data, dt: dt, loading: false, maxLeafNodes: dt.max_leaf_nodes})
+                const idx = this.props.dtIndex !== undefined ? this.props.dtIndex : data.best
+                const dt = data.candidates[idx]
+                this.setState({data: data, dt: dt, loading: false})
             })
             .catch(error => {
                 console.error(`Failed to fetch DecisionTreeResult data.\n${error.name}: ${error.message}`)
@@ -112,14 +120,16 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
 
     private onMaxLeavesChange(idx: number) {
         this.setState({dt: this.state.data.candidates[idx]})
+        if (this.props.onDTIndexChange !== undefined)
+            this.props.onDTIndexChange(idx)
     }
 
     private exportTree() {
         const {candidate, component} = this.props.model
-        const {maxLeafNodes} = this.state
+        const {dt} = this.state
 
         this.context.createCell(`
-${ID}_dt = XAutoMLManager.get_active().get_global_surrogate('${candidate.id}', '${component}', ${maxLeafNodes})
+${ID}_dt = XAutoMLManager.get_active().get_global_surrogate('${candidate.id}', '${component}', ${dt.max_leaf_nodes})
 ${ID}_dt
         `.trim())
     }
