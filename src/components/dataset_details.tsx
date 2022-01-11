@@ -60,7 +60,7 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
         const {candidate, structure, meta, componentId, componentLabel, structures, explanations} = this.props
         const {selectedSample} = this.state
 
-        const model = new DetailsModel(candidate, componentId, componentLabel, selectedSample)
+        const model = new DetailsModel(structure, candidate, componentId, componentLabel, selectedSample)
 
         return (
             <>
@@ -73,10 +73,7 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
 
                 <CollapseComp name={'config-origin'} showInitial={false} help={ConfigOriginComp.HELP}>
                     <h3>Configuration</h3>
-                    <ConfigOriginComp candidate={candidate}
-                                      structure={structure}
-                                      structures={structures}
-                                      explanations={explanations}/>
+                    <ConfigOriginComp model={model} structures={structures} explanations={explanations}/>
                 </CollapseComp>
 
                 <hr/>
@@ -100,12 +97,12 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
 
                 <CollapseComp name={'hp-importance'} showInitial={false} help={HPImportanceComp.HELP}>
                     <h3>Hyperparameter Importance</h3>
-                    <HPImportanceComp structure={structure} model={model} metric={meta.metric}/>
+                    <HPImportanceComp model={model} metric={meta.metric}/>
                 </CollapseComp>
 
                 <CollapseComp name={'feature-importance'} showInitial={false} help={FeatureImportanceComponent.HELP}>
                     <h3>Feature Importance</h3>
-                    <FeatureImportanceComponent model={model} height={200}/>
+                    <FeatureImportanceComponent model={model}/>
                 </CollapseComp>
 
                 <CollapseComp name={'global-surrogate'} showInitial={false} help={GlobalSurrogateComponent.HELP}>

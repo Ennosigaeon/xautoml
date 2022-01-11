@@ -22,7 +22,6 @@ import {
 } from "recharts";
 import {ErrorIndicator} from "../../util/error";
 import {LoadingIndicator} from "../../util/loading";
-import {Structure} from "../../model";
 import {Heatbar, MinimalisticTooltip} from "../../util/recharts";
 import {ImportanceOverviewComp} from "./importance_overview";
 import {ID} from "../../jupyter";
@@ -196,7 +195,6 @@ class SingleHP extends React.Component<SingleHPProps> {
 
 
 interface HPImportanceProps {
-    structure: Structure
     model: DetailsModel
     metric: string
 }
@@ -238,10 +236,10 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
     }
 
     private queryHPImportance() {
-        const {structure, model} = this.props;
+        const {model} = this.props;
         this.setState({error: undefined, overview: undefined, selectedRow: undefined, details: undefined});
 
-        this.context.requestFANOVA(structure.cid, model.component)
+        this.context.requestFANOVA(model.structure.cid, model.component)
             .then(resp => {
                 if (resp.error)
                     this.setState({error: new Error(resp.error)})
@@ -255,10 +253,10 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
     }
 
     private selectRow(idx: number) {
-        const {structure, model} = this.props;
+        const {model} = this.props;
         this.setState({selectedRow: idx, details: undefined})
 
-        this.context.requestFANOVADetails(structure.cid, model.component, this.state.overview.keys[idx])
+        this.context.requestFANOVADetails(model.structure.cid, model.component, this.state.overview.keys[idx])
             .then(resp => {
                 if (resp.error)
                     this.setState({error: new Error(resp.error)})
@@ -281,20 +279,20 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
     }
 
     private exportOverview() {
-        const {model, structure} = this.props
+        const {model} = this.props
 
         this.context.createCell(`
-${ID}_hp_importance = XAutoMLManager.get_active().get_hp_importance('${structure.cid}', '${model.component}')
+${ID}_hp_importance = XAutoMLManager.get_active().get_hp_importance('${model.structure.cid}', '${model.component}')
 ${ID}_hp_importance
         `.trim())
     }
 
     private exportDetails() {
-        const {model, structure} = this.props
+        const {model} = this.props
         const [hp1, hp2] = this.state.overview.keys[this.state.selectedRow]
 
         this.context.createCell(`
-${ID}_hp_interactions = XAutoMLManager.get_active().get_hp_interactions('${structure.cid}', '${model.component}', '${hp1}', '${hp2}')
+${ID}_hp_interactions = XAutoMLManager.get_active().get_hp_interactions('${model.structure.cid}', '${model.component}', '${hp1}', '${hp2}')
 ${ID}_hp_interactions
         `.trim())
     }

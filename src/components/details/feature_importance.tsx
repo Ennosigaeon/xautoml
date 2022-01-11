@@ -187,7 +187,6 @@ ${ID}_pdp
 
 interface FeatureImportanceProps {
     model: DetailsModel
-    height: number
 }
 
 interface FeatureImportanceState {

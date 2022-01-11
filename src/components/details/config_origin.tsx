@@ -1,4 +1,4 @@
-import {Candidate, ConfigOrigin, Explanations, Structure} from "../../model";
+import {ConfigOrigin, Explanations, Structure} from "../../model";
 import {MCTSExplanationsComponent} from "../search_space/mcts_explanation";
 import {cidToSid, JupyterContext} from "../../util";
 import {SurrogateExplanation} from "./surrogate_explanation";
@@ -7,11 +7,11 @@ import {KeyValue} from "../../util/KeyValue";
 import {ConfigurationComp} from "./configuration";
 import {CollapseComp} from "../../util/collapse";
 import {ParallelCoordinates} from "../pc/parallel_corrdinates";
+import {DetailsModel} from "./model";
 
 
 interface ConfigOriginProps {
-    candidate: Candidate
-    structure: Structure
+    model: DetailsModel
 
     structures: Structure[]
     explanations: Explanations
@@ -51,7 +51,8 @@ export class ConfigOriginComp extends React.Component<ConfigOriginProps, any> {
     }
 
     render() {
-        const {explanations, structures, candidate, structure} = this.props
+        const {explanations, structures, model} = this.props
+        const {candidate, structure} = model
 
         return (
             <>
@@ -73,7 +74,7 @@ export class ConfigOriginComp extends React.Component<ConfigOriginProps, any> {
                     <CollapseComp name={'config-origin-bo'} showInitial={true}
                                   help={ParallelCoordinates.HELP + '\n\n' + SurrogateExplanation.HELP}>
                         <h4>Hyperparameter Optimization</h4>
-                        <SurrogateExplanation structure={structure} candidate={candidate}
+                        <SurrogateExplanation model={model}
                                               explanation={explanations.configs.get(candidate.id)}/>
                     </CollapseComp>
                 }

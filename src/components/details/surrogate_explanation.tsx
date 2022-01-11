@@ -4,11 +4,11 @@ import {BO, Candidate, CandidateId, Structure} from "../../model";
 import {LoadingIndicator} from "../../util/loading";
 import {WarningIndicator} from "../../util/warning";
 import {JupyterContext} from "../../util";
+import {DetailsModel} from "./model";
 
 
 interface SurrogateExplanationProps {
-    structure: Structure
-    candidate: Candidate
+    model: DetailsModel
     explanation: BO.Explanation
 }
 
@@ -37,10 +37,10 @@ export class SurrogateExplanation extends React.Component<SurrogateExplanationPr
     }
 
     private simulateExplanation() {
-        const {candidate, structure} = this.props
+        const {model} = this.props
 
         this.setState({loading: true})
-        this.context.requestSimulatedSurrogate(structure.cid, candidate.runtime.timestamp)
+        this.context.requestSimulatedSurrogate(model.structure.cid, model.candidate.runtime.timestamp)
             .then(resp => {
                 this.setState({explanation: resp, loading: false})
             })
@@ -51,18 +51,18 @@ export class SurrogateExplanation extends React.Component<SurrogateExplanationPr
     }
 
     render() {
-        const {structure, candidate} = this.props
+        const {model} = this.props
         const {explanation, loading} = this.state
 
         const candidates: [Candidate, Structure][] = explanation && explanation.candidates.length > 0 ?
-            explanation.candidates.map(c => [c, structure]) : [[candidate, structure]]
+            explanation.candidates.map(c => [c, model.structure]) : [[model.candidate, model.structure]]
         const label = explanation ? explanation.metric : 'Performance'
         const loss = candidates.map(([c, _]) => c.loss)
 
 
         const selected = new Set<CandidateId>([loss.length > 1 ? loss.reduce((argMax, x, idx, array) => {
             return x > array[argMax] ? idx : argMax
-        }, 0).toString() : candidate.id])
+        }, 0).toString() : model.candidate.id])
 
         return (
             <div className={'surrogate_explanation'}>
@@ -77,7 +77,7 @@ export class SurrogateExplanation extends React.Component<SurrogateExplanationPr
                         {(this.props.explanation === undefined && explanation === undefined) &&
                             <WarningIndicator message={'Failed to simulate surrogate model.'}/>
                         }
-                        <ParallelCoordinates structures={[structure]}
+                        <ParallelCoordinates structures={[model.structure]}
                                              candidates={candidates}
                                              selectedCandidates={selected}
                                              explanation={explanation}
