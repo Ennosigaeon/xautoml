@@ -4,9 +4,8 @@
 
 ## New Features
 
-- PC Explanations for SMAC
-- More "Continue in Jupyter" Buttons
 - Help texts for components. Link to sklearn
+- Extend structure search space for all kinds of structures
 
 - Feature Correlation
 

@@ -4,9 +4,9 @@
 
 Extract content in `/opt/xautoml/dswizard/output/`
 
-## mcts.tar.xz
+## credit-g.tar.xz / mfeat-morphological.tar.xz
 
-Extract content in `/opt/xautoml/dswizard/output/`
+Extract content of one of those archives in `/opt/xautoml/dswizard/output/`
 
 ## autosklearn.tar.xz
 
