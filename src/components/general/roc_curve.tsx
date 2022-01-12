@@ -96,38 +96,42 @@ export class RocCurve extends React.Component<RocCurveProps, RocCurveState> {
     }
 
     render() {
-        const {data, loading, pendingCount, error} = this.state
+        const {loading, pendingCount, error} = this.state
 
         let content: JSX.Element
         if (loading && pendingCount > 2)
             content = <LoadingIndicator loading={true}/>
-        else if (data.size > 0) {
+        else {
             const labels: string[] = []
             const data: any[] = []
             this.state.data.forEach((v, k) => {
-                labels.push(k)
-                data.push(v)
+                const prunedName = k.split(' ')[0]
+                if (this.props.selectedCandidates.has(prunedName)) {
+                    labels.push(prunedName)
+                    data.push(v)
+                }
             })
-
-            content = (
-                <div style={{height: this.props.height}}>
-                    <ResponsiveContainer>
-                        <LineChart>
-                            <CartesianGrid strokeDasharray="3 3"/>
-                            <XAxis dataKey="x" label={{value: 'False Positive Rate', dy: 10}} type={'number'}
-                                   domain={[0, 1]}/>
-                            <YAxis label={{value: 'True Positive Rate', angle: -90, dx: -15}}/>
-                            {data.length <= 12 && <Legend/>}
-                            {data.map((s, idx) => (
-                                <Line key={labels[idx]} name={labels[idx]} data={s} dataKey={'y'}
-                                      stroke={Colors.getColor(idx)} strokeWidth={2} dot={false}/>
-                            ))}
-                        </LineChart>
-                    </ResponsiveContainer>
-                </div>
-            )
-        } else
-            content = <p>No Configuration selected</p>
+            if (data.length > 0) {
+                content = (
+                    <div style={{height: this.props.height}}>
+                        <ResponsiveContainer>
+                            <LineChart>
+                                <CartesianGrid strokeDasharray="3 3"/>
+                                <XAxis dataKey="x" label={{value: 'False Positive Rate', dy: 10}} type={'number'}
+                                       domain={[0, 1]}/>
+                                <YAxis label={{value: 'True Positive Rate', angle: -90, dx: -15}}/>
+                                {data.length <= 12 && <Legend/>}
+                                {data.map((s, idx) => (
+                                    <Line key={labels[idx]} name={labels[idx]} data={s} dataKey={'y'}
+                                          stroke={Colors.getColor(idx)} strokeWidth={2} dot={false}/>
+                                ))}
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </div>
+                )
+            } else
+                content = <p>No Configuration selected</p>
+        }
 
         return (
             <>

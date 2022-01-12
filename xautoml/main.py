@@ -274,11 +274,14 @@ class XAutoML:
         return res.to_dict(additional_features)
 
     @as_json
-    def roc_curve(self, cids: list[CandidateId], micro: bool = False, macro: bool = True, max_samples: int = 50):
-        X, y, models = self._load_models(cids)
+    def roc_curve(self, cids: list[CandidateId], micro: bool = False, macro: bool = True, max_samples: int = 50,
+                  max_curves: int = 20):
+        pruned_cids = cids[:max_curves]
+
+        X, y, models = self._load_models(pruned_cids)
 
         result = {}
-        for cid, pipeline in zip(cids, models):
+        for cid, pipeline in zip(pruned_cids, models):
             try:
                 roc = RocCurve(micro=micro, macro=macro)
                 roc.score(pipeline, X, y)

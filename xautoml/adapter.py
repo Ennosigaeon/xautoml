@@ -1,4 +1,3 @@
-import warnings
 from collections import OrderedDict
 from typing import Any
 
@@ -37,7 +36,7 @@ def import_dswizard(dswizard: Any, ensemble: VotingClassifier) -> RunHistory:
                                          res.config.origin if res.config is not None else None,
                                          pipeline, lambda y: y))
             except FileNotFoundError:
-                warnings.warn('Model {} does not exist. Skipping it'.format(res.model_file))
+                pass
         structures.append(CandidateStructure(struct.cid.without_config().external_name,
                                              struct.configspace, struct.pipeline, configs))
 
@@ -151,7 +150,6 @@ def import_auto_sklearn(automl: Any):
                                                                                             key.budget)
                     config_pipeline = as_configurable_pipeline(pipeline)
                 except FileNotFoundError:
-                    warnings.warn('Skipping {} without fitted model'.format(t))
                     continue
             try:
                 # ClassifierChoice does not provide sklearn classifier information
