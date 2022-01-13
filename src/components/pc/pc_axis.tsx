@@ -221,7 +221,8 @@ export class PCAxis extends React.Component<CPCAxisProps, CPCAxisState> {
                                                         onAxisSelection={onClick}/>)
 
         const id = `path-${uuidv4()}`
-        const selectableTitle = axis.isNumerical() || (choices.length > 1 && !PCAxis.STEP_AXIS.test(axis.id))
+        const selectableTitle = (axis.isNumerical() || (choices.length > 1 && !PCAxis.STEP_AXIS.test(axis.id))) &&
+            axis.id !== '__performance__'
 
         if (!axis.isNumerical() && choices.length === 0)
             return <></>

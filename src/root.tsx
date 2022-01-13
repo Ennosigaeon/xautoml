@@ -6,7 +6,7 @@ import {Colors, JupyterContext} from "./util";
 import {CandidateTable} from "./components/candidate_table";
 import {Jupyter} from "./jupyter";
 import {LoadingIndicator} from "./util/loading";
-import {Box, Button, Checkbox, Tab, Tabs} from "@material-ui/core";
+import {Box, Button, Tab, Tabs} from "@material-ui/core";
 import {TabContext} from "@material-ui/lab";
 import {TabPanel} from "./util/tabpanel";
 import {SearchSpace} from "./components/search_space";
@@ -180,15 +180,20 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
                                         </span>
                                     </DivInTabs>
                                     <DivInTabs>
-                                        <label className={'MuiFormControlLabel-root'}>
-                                            <Checkbox checked={hideUnselected}
-                                                      onChange={this.toggleHideUnselected}/>
-                                            <span>Hide&nbsp;Unselected</span>
-                                        </label>
+                                        <Button onClick={() => this.onCandidateSelection(new Set())}>
+                                            Clear Selected
+                                        </Button>
                                     </DivInTabs>
-                                    <DivInTabs>
-                                        <Button onClick={this.resetHidden}>Clear Hidden</Button>
-                                    </DivInTabs>
+                                    {/*<DivInTabs>*/}
+                                    {/*    <label className={'MuiFormControlLabel-root'}>*/}
+                                    {/*        <Checkbox checked={hideUnselected}*/}
+                                    {/*                  onChange={this.toggleHideUnselected}/>*/}
+                                    {/*        <span>Hide&nbsp;Unselected</span>*/}
+                                    {/*    </label>*/}
+                                    {/*</DivInTabs>*/}
+                                    {/*<DivInTabs>*/}
+                                    {/*    <Button onClick={this.resetHidden}>Clear Hidden</Button>*/}
+                                    {/*</DivInTabs>*/}
                                 </Tabs>
                             </Box>
 

@@ -142,7 +142,7 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
                 {explanations.structures &&
                     <CollapseComp name={'reinforcement-explanations'} showInitial={true}
                                   help={MCTSExplanationsComponent.HELP}>
-                        <h3>Reinforcement Learning</h3>
+                        <h3>Pipeline Structure Search</h3>
                         <MCTSExplanationsComponent explanations={explanations.structures}
                                                    selectedCandidates={selectedCandidates}
                                                    hideUnselectedCandidates={hideUnselectedCandidates}
@@ -151,7 +151,7 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
                                                    onCandidateSelection={onCandidateSelection}/>
                     </CollapseComp>}
                 <CollapseComp name={'bayesian-explanations'} showInitial={true} help={ParallelCoordinates.HELP}>
-                    <h3>Bayesian Optimization</h3>
+                    <h3>Hyperparameter Optimization</h3>
                     <ParallelCoordinates structures={structures}
                                          perfAxis={{
                                              domain: [meta.bestPerformance, meta.worstPerformance],

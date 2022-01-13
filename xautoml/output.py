@@ -17,6 +17,7 @@ class OutputCalculator:
     @staticmethod
     def _load_data(d: Union[dict, pd.DataFrame],
                    y: pd.Series,
+                   y_pred: pd.Series,
                    confidence: np.ndarray,
                    method: int) -> Union[str, pd.DataFrame]:
 
@@ -35,6 +36,7 @@ class OutputCalculator:
         if method == COMPLETE:
             # Add target column for displaying in raw_dataset.tsx
             df['TARGET'] = y
+            df['PREDICTION'] = y_pred
             df['CONFIDENCE'] = confidence
             return df._repr_html_()
         elif method == DESCRIPTION:
@@ -50,7 +52,7 @@ class OutputCalculator:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", UserWarning)
             alter_pipeline_for_debugging(pipeline)
-            pipeline.predict(X)
+            y_pred = pipeline.predict(X)
             y_proba = pipeline.predict_proba(X)
             confidence = np.max(y_proba, axis=1)
 
@@ -62,8 +64,8 @@ class OutputCalculator:
             inputs = {}
             outputs = {}
             for coordinate, model, subset in enumerate_pipeline_models(pipeline):
-                input = OutputCalculator._load_data(model._debug.inputs, y, confidence, method)
-                output = OutputCalculator._load_data(model._debug.outputs, y, confidence, method)
+                input = OutputCalculator._load_data(model._debug.inputs, y, y_pred, confidence, method)
+                output = OutputCalculator._load_data(model._debug.outputs, y, y_pred, confidence, method)
 
                 if len(coordinate) == 1:
                     # Populate SINK and SOURCE instead of single step

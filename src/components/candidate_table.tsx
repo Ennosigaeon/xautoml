@@ -215,7 +215,7 @@ ${ID}_pipeline
                         <IconButton aria-label='expand row' size='small' onClick={this.toggleDetails}>
                             {this.state.open ? <KeyboardArrowUpIcon/> : <KeyboardArrowDownIcon/>}
                         </IconButton>
-                        <BasicMenu onHide={this.onHide}/>
+                        {/*<BasicMenu onHide={this.onHide}/>*/}
                     </TableCell>
                 </TableRow>
                 <TableRow>

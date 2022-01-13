@@ -45,6 +45,7 @@ export class Model {
         return this.explanations_?.get(axis.name)
     }
 
+    // noinspection JSMethodCanBeStatic
     private cacheAxes(columns: Axis[][]) {
         columns.forEach(column => {
             column.forEach(row => {

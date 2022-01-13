@@ -275,15 +275,15 @@ div.structure-graph_tooltip {
     cursor: pointer;
 }
 
-.raw-dataset tr th:nth-last-child(2),
-.raw-dataset tr td:nth-last-child(2) {
+.raw-dataset tr th:nth-last-child(3),
+.raw-dataset tr td:nth-last-child(3) {
     border-left: var(--jp-border-width) solid var(--jp-border-color1);
     padding-left: 10px;
     font-style: italic;
 }
 
-.raw-dataset tr th:nth-last-child(3),
-.raw-dataset tr td:nth-last-child(3) {
+.raw-dataset tr th:nth-last-child(4),
+.raw-dataset tr td:nth-last-child(4) {
     padding-right: 30px;
 }
 

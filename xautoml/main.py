@@ -324,7 +324,8 @@ class XAutoML:
         metrics, idx = EnsembleInspection.ensemble_overview(ensemble, members, X, y_pred)
 
         with pd.option_context('display.max_columns', 1024, 'display.max_rows', 30, 'display.min_rows', 20):
-            df = OutputCalculator._load_data(X.loc[idx, :], y_pred[idx], np.max(confidence[idx], axis=1), COMPLETE)
+            df = OutputCalculator._load_data(X.loc[idx, :], y[idx], y_pred[idx], np.max(confidence[idx], axis=1),
+                                             COMPLETE)
             return {'df': df, 'metrics': metrics}
 
     @as_json

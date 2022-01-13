@@ -61,8 +61,10 @@ export class DecisionSurface extends React.Component<DecisionSurfaceProps, any> 
                 </g>
 
                 <CartesianGrid strokeDasharray="3 3"/>
-                <XAxis dataKey="x" type={'number'} domain={['dataMin', 'dataMax']} tickFormatter={prettyPrint}/>
-                <YAxis dataKey="y" type={'number'} domain={['dataMin', 'dataMax']} tickFormatter={prettyPrint}/>
+                <XAxis dataKey="x" type={'number'} domain={['dataMin', 'dataMax']} tickFormatter={prettyPrint}
+                       label={{value: 'Dimension 1', dy: 10}}/>
+                <YAxis dataKey="y" type={'number'} domain={['dataMin', 'dataMax']} tickFormatter={prettyPrint}
+                       label={{value: 'Dimension 2', angle: -90, dx: -40}}/>
 
                 <Scatter data={X}>
                     {X.map((entry, idx) =>

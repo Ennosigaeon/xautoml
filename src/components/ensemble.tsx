@@ -100,7 +100,8 @@ export class Ensemble extends React.Component<EnsembleProps, EnsembleState> {
                                 <LoadingIndicator loading={overview === undefined}/>
 
                                 {overview &&
-                                    <TwoColumnLayout flexShrinkLeft={'1'} flexGrowLeft={'0'} flexGrowRight={'1'} flexShrinkRight={'0'}>
+                                    <TwoColumnLayout flexShrinkLeft={'1'} flexGrowLeft={'0'} flexGrowRight={'1'}
+                                                     flexShrinkRight={'0'}>
                                         <div style={{marginTop: '10px'}}>
                                             <Heading help={'A selection of input data samples, where at least one ' +
                                                 'ensemble member had another prediction than the rest.'}>
@@ -143,7 +144,11 @@ export class Ensemble extends React.Component<EnsembleProps, EnsembleState> {
                                             {Array.from(decisionSurface.contours.entries()).map(([cid, value]) => {
                                                 return (
                                                     <div key={cid}>
-                                                        <h4>{cid}</h4>
+                                                        <h4 onClick={() => {
+                                                            if (cid !== 'Ensemble')
+                                                                this.props.onCandidateSelection(new Set<CandidateId>([cid]), true)
+                                                        }}
+                                                            style={{cursor: 'pointer'}}>{cid}</h4>
                                                         <DecisionSurface contour={value}
                                                                          X={decisionSurface.X}
                                                                          y={decisionSurface.y}

@@ -96,7 +96,7 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
             this.props.candidates : [].concat(...this.props.structures.map(s => s.configs.map(c => [c, s])))
 
         const axes = ParCord.parseConfigSpace(this.props.structures, this.props.perfAxis)
-        if (this.props.expand || axes.length <=5 )
+        if (this.props.expand || axes.length <= 3)
             axes.forEach(column => column.filter(row => !row.isNumerical() && row.choices.length === 1)
                 .forEach(row => row.choices[0].expand()))
 
