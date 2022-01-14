@@ -124,7 +124,7 @@ export class SamplingHistory extends React.Component<SamplingHistoryProps, Sampl
 
     private onScatterClick(x: HPRecord, _: number, e: React.MouseEvent) {
         const cid: CandidateId = x.cid
-        if (e.ctrlKey) {
+        if (!e.ctrlKey) {
             const selected = new Set(this.props.selectedCandidates)
             if (this.props.selectedCandidates.has(cid))
                 selected.delete(cid)

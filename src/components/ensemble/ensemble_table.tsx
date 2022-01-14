@@ -54,8 +54,11 @@ export class EnsembleTable extends React.Component<EnsembleTableProps, EnsembleT
     }
 
     private onRowClick(e: React.MouseEvent, cid: CandidateId) {
-        this.props.onCandidateSelection(new Set([cid]), true)
-        e.stopPropagation()
+        if (e.ctrlKey) {
+            this.props.onCandidateSelection(new Set([cid]), true)
+            e.stopPropagation()
+            e.preventDefault()
+        }
     }
 
     render() {

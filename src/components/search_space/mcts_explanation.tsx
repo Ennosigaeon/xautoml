@@ -111,8 +111,8 @@ class SingleNode extends React.Component<SingleNodeProps, SingleNodeState> {
                        className={`mcts-explanation ${details.selected ? 'highlight' : ''} ${selected ? 'selected' : ''} ${details.isFailure() ? 'failure' : 'expandable'}`}
                        nodeWidth={NODE_WIDTH}
                        nodeHeight={NODE_HEIGHT}
-                       onClick={this.toggleShow}
-                       onAlternativeClick={this.props.onSelectNode}>
+                       onClick={this.props.onSelectNode}
+                       onAlternativeClick={this.toggleShow}>
                 <div>
                     <div style={{display: 'flex', alignItems: 'center'}}>
                         <div style={{flexGrow: 1}}>

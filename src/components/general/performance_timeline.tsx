@@ -75,7 +75,7 @@ export default class PerformanceTimeline extends React.Component<ConfigHistoryPr
 
     private onScatterClick(x: any, _: number, e: React.MouseEvent) {
         const cid: CandidateId = x.cid
-        if (e.ctrlKey) {
+        if (!e.ctrlKey) {
             const selected = new Set(this.props.selectedCandidates)
             if (this.props.selectedCandidates.has(cid))
                 selected.delete(cid)

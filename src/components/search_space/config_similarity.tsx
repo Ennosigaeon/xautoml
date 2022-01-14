@@ -74,7 +74,7 @@ export class ConfigSimilarity extends React.Component<ConfigSimilarityProps, Con
     private onScatterClick(point: { x: number, y: number, idx: number }, _: number, e: React.MouseEvent) {
         const cid: CandidateId = this.state.cids[point.idx]
 
-        if (e.ctrlKey) {
+        if (!e.ctrlKey) {
             const selected = new Set(this.props.selectedCandidates)
             if (this.props.selectedCandidates.has(cid))
                 selected.delete(cid)
