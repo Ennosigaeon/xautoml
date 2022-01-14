@@ -10,6 +10,7 @@ import {HPImportanceComp} from "./details/hp_importance";
 import {CollapseComp} from "../util/collapse";
 import {ArrowForwardIos} from "@material-ui/icons";
 import {IconButton} from "@material-ui/core";
+import {ConfigurationTable} from "./details/configuration";
 
 
 interface ComparisonProps {
@@ -70,7 +71,7 @@ export class Comparison extends React.Component<ComparisonProps, ComparisonState
             <div className={'comparison-container container'}>
                 <div style={{display: "flex", marginBottom: '10px'}}>
                     <IconButton style={{flexShrink: 1, maxHeight: '18px'}} size='small' onClick={this.props.onClose}>
-                         <ArrowForwardIos/>
+                        <ArrowForwardIos/>
                     </IconButton>
                     <h3 style={{margin: 0, lineHeight: '24px', textAlign: 'center'}}>Comparisons</h3>
                 </div>
@@ -98,6 +99,9 @@ export class Comparison extends React.Component<ComparisonProps, ComparisonState
                                               onHpChange={this.onHpImportanceChange}
                                               selectedHp1={this.state.hpImportanceSelectedHp1}
                                               selectedHp2={this.state.hpImportanceSelectedHp2}/>}
+
+                        {type === 'configuration' &&
+                            <ConfigurationTable config={model.candidate.config} twoColumns={true}/>}
                     </CollapseComp>
                 )}
             </div>

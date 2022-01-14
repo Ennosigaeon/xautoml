@@ -1,6 +1,12 @@
 import {Candidate, Structure} from "../../model";
 
-export type ComparisonType = 'performance' | 'feature_importance' | 'lime' | 'global_surrogate' | 'hp_importance'
+export type ComparisonType =
+    'performance'
+    | 'feature_importance'
+    | 'lime'
+    | 'global_surrogate'
+    | 'hp_importance'
+    | 'configuration'
 
 export class DetailsModel {
 

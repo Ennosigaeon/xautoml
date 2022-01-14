@@ -79,7 +79,8 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
                                           candidateMap={new Map(structure.configs.map(c => [c.id, c]))}/>
                 </CollapseComp>
 
-                <CollapseComp name={'config-origin'} showInitial={false} help={ConfigOriginComp.HELP}>
+                <CollapseComp name={'config-origin'} showInitial={false} help={ConfigOriginComp.HELP}
+                              onComparisonRequest={() => this.onComparisonRequest('configuration')}>
                     <h3>Configuration</h3>
                     <ConfigOriginComp model={model} structures={structures} explanations={explanations}/>
                 </CollapseComp>
@@ -98,7 +99,8 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
                     <h3>Data Set Preview</h3>
                     <TwoColumnLayout widthRight={'25%'}>
                         <RawDataset model={model} onSampleClick={this.handleSampleSelection}/>
-                        <LimeComponent model={model} orientation={'vertical'} onComparisonRequest={this.onComparisonRequest}/>
+                        <LimeComponent model={model} orientation={'vertical'}
+                                       onComparisonRequest={this.onComparisonRequest}/>
                     </TwoColumnLayout>
                 </CollapseComp>
 
