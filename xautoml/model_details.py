@@ -216,7 +216,7 @@ class ModelDetails:
     @staticmethod
     def calculate_pdp(X: pd.DataFrame, y: pd.Series, model: Pipeline, features: list[str] = None, subsample: int = 50,
                       n_jobs: int = 1):
-        targets = np.unique(y)
+        targets: list = np.unique(y).tolist()
         if len(targets) == 2:
             targets = [targets[0]]
 

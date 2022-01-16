@@ -425,7 +425,7 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
             {id: 'id', numeric: false, sortable: true, label: 'Id', width: '40px'},
             {id: 'pred_time', numeric: true, sortable: true, label: 'Pred. Time', width: '60px'},
             {id: 'performance', numeric: true, sortable: true, label: 'Performance', width: '100px'},
-            {id: 'candidate', numeric: false, sortable: false, label: 'Configuration', width: 'auto'}
+            {id: 'candidate', numeric: false, sortable: false, label: 'Pipeline', width: 'auto'}
         ];
 
         return (

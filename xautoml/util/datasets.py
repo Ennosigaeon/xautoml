@@ -63,8 +63,6 @@ def stroke(file: str, train: bool = False, test: bool = False):
     data.loc[:, 'Residence_type'] = data.Residence_type.astype('category')
     data.loc[:, 'smoking_status'] = data.smoking_status.astype('category')
 
-    data.drop(columns=['age'], inplace=True)
-
     X = data.loc[:, data.columns[:-1]]
     y = data.loc[:, data.columns[-1]]
 
@@ -75,7 +73,7 @@ def stroke(file: str, train: bool = False, test: bool = False):
             from imblearn.over_sampling import SMOTENC
             X_train.loc[pd.isna(X_train.bmi), 'bmi'] = -1
 
-            smote = SMOTENC([1, 4, 5, 6, 9], random_state=1)
+            smote = SMOTENC([1, 5, 6, 7, 10], random_state=1)
             X, y = smote.fit_resample(X_train, y_train)
 
             X.loc[X.bmi < 11.5, 'bmi'] = np.nan
