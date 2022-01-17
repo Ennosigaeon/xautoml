@@ -16,4 +16,4 @@ hypertendril/
 *.pkl
 *.ipynb
 user_study/**/output/
-user_study/task_results.ods
+evaluation/
