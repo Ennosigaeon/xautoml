@@ -110,7 +110,7 @@ class SingleHP extends React.Component<SingleHPProps> {
                 'hyperparameters, 20 evenly distributed values are created and the marginal performance of each ' +
                 'possible combination of those 20 points is calculated by averaging over all other possible ' +
                 'hyperparameter constellations. The according marginal performance is displayed using a color ' +
-                'scale. The range of the color scale is displayed below the heat map.'
+                'scale. The range of the color scale is displayed above the heat map.'
 
             const rows = Object.keys(data.data)
             const columns = Object.keys(data.data[rows[0]])

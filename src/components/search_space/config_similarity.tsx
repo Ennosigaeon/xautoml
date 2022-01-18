@@ -40,7 +40,7 @@ export class ConfigSimilarity extends React.Component<ConfigSimilarityProps, Con
         'For the visualization, the search space as well as all configurations are mapped into 2D space. Similar ' +
         'configurations are mapped into the same region in the 2D space. Each scatter dot represents a single ' +
         'configuration, squares are incumbent configurations. In addition, the marginal performance is displayed ' +
-        'using a color scale. The range of the color scale is displayed below the heat map.'
+        'using a color scale. The range of the color scale is displayed above the heat map.'
 
     static contextType = JupyterContext;
     context: React.ContextType<typeof JupyterContext>;

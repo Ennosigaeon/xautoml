@@ -10,7 +10,7 @@ def load_data():
     # The first seven answers have to loaded from the first Excel file because MS Forms is too stupid to handle a
     # change in one question...
     df1 = pd.read_excel('XAutoML(1-7).xlsx')
-    df2 = pd.read_excel('XAutoML(1-10).xlsx').loc[7:, :]
+    df2 = pd.read_excel('XAutoML.xlsx').loc[7:, :]
 
     df1.columns = df2.columns
 
@@ -68,11 +68,25 @@ def plot_priority_distribution(df: pd.DataFrame, group=True):
 
     data = pd.DataFrame({'x': x, 'y': y, 'role': m})
 
+    with pd.option_context('display.precision', 2):
+        print('Average card rank')
+        print(data.groupby(by='x').mean())
+
+        mean = data.groupby(by=['x', 'role']).mean().reset_index()
+        mean = pd.DataFrame({
+            'Question': mean['x'].iloc[::3].reset_index(drop=True),
+            'Domain Expert': 24 - mean.loc[mean['role'] == 'Domain Expert', 'y'].reset_index(drop=True),
+            'Data Scientist': 24 - mean.loc[mean['role'] == 'Data Scientist', 'y'].reset_index(drop=True),
+            'AutoML Researcher': 24 - mean.loc[mean['role'] == 'AutoML Researcher', 'y'].reset_index(drop=True),
+        })
+
+        print(mean)
+
     if group:
         replacements = {
-            '#1': ['#2', '#3', '#4'],
-            '#5': ['#6', '#7', '#8'],
-            '#9': ['#10', '#11', '#12'],
+            '#01': ['#02', '#03', '#04'],
+            '#05': ['#06', '#07', '#08'],
+            '#09': ['#10', '#11', '#12'],
             '#15': ['#16'],
             '#19': ['#20'],
             # '#22': ['#23', '#24']
@@ -83,9 +97,9 @@ def plot_priority_distribution(df: pd.DataFrame, group=True):
                 data.loc[data['x'] == value, 'x'] = key
 
         rename = {
-            '#1': 'Raw Data',
-            '#5': 'Pre-Proc. Data',
-            '#9': 'Feat.-Eng. Data',
+            '#01': 'Raw Data',
+            '#05': 'Pre-Proc. Data',
+            '#09': 'Feat.-Eng. Data',
             '#13': 'Complete Pipeline',
             '#14': 'Search Space',
             '#15': 'Search Strategy',
@@ -100,15 +114,18 @@ def plot_priority_distribution(df: pd.DataFrame, group=True):
         for old, new in rename.items():
             data.loc[data['x'] == old, 'x'] = new
 
+    data.loc[data['role'] == 'AutoML Researcher', 'role'] = 'Data Scientist'
+
     sns.set_theme(style="whitegrid")
     fig, ax = plt.subplots(1, 1, figsize=(15, 5))
     fig.tight_layout()
 
-    sns.violinplot(data=data, x='x', y=y, hue='role', split=True, palette='pastel', ax=ax)
+    sns.violinplot(data=data, x='x', y='y', hue='role', split=True, palette='pastel', ax=ax)
     sns.despine(left=True)
 
     ax.set_ylim(0, 24)
     ax.set_yticklabels([])
+    ax.set_ylabel(None)
     ax.set_xlabel(None)
     plt.xticks(rotation=15)
 
