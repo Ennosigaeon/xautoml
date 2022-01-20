@@ -13,7 +13,6 @@ import PerformanceDistribution from "./general/performance_distribution";
 interface GeneralInformationProps {
     structures: Structure[]
     meta: MetaInformation
-    candidateMap: Map<CandidateId, Candidate>
     selectedCandidates: Set<CandidateId>
     onCandidateSelection: (selected: Set<CandidateId>) => void
 }
@@ -45,7 +44,7 @@ export class GeneralInformation extends React.Component<GeneralInformationProps,
     }
 
     render() {
-        const {meta, candidateMap, selectedCandidates, onCandidateSelection} = this.props
+        const {meta, selectedCandidates, onCandidateSelection} = this.props
         const {openTab} = this.state
 
         return (
@@ -75,9 +74,7 @@ export class GeneralInformation extends React.Component<GeneralInformationProps,
                 </CollapseComp>
                 <CollapseComp name={'roc-curve'} showInitial={true} help={RocCurve.HELP}>
                     <h4>ROC Curve</h4>
-                    <RocCurve selectedCandidates={selectedCandidates}
-                              candidateMap={candidateMap}
-                              height={250}/>
+                    <RocCurve selectedCandidates={selectedCandidates} height={250}/>
                 </CollapseComp>
             </>
         )

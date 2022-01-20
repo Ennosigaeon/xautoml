@@ -1,5 +1,5 @@
 import React from "react";
-import {Candidate, CandidateId} from "../../model";
+import {CandidateId} from "../../model";
 import {LoadingIndicator} from "../../util/loading";
 import {ErrorIndicator} from "../../util/error";
 import {CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, XAxis, YAxis} from "recharts";
@@ -8,8 +8,6 @@ import {Colors, JupyterContext} from "../../util";
 
 interface RocCurveProps {
     selectedCandidates: Set<CandidateId>
-    candidateMap: Map<CandidateId, Candidate>
-
     height: number
 }
 

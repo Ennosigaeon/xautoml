@@ -13,7 +13,7 @@ import {StepWithConfig, PipelineStructureComponent} from './details/pipeline_str
 import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@material-ui/icons/KeyboardArrowUp';
 import Collapse from '@material-ui/core/Collapse';
-import {DataSetDetailsComponent} from './dataset_details';
+import {CandidateDetailsComponent} from './candidate_details';
 import {JupyterButton} from "../util/jupyter-button";
 import {ID} from "../jupyter";
 import {MoreVert} from "@material-ui/icons";
@@ -222,7 +222,7 @@ ${ID}_pipeline
                     <TableCell style={{padding: 0}} colSpan={6}>
                         <Collapse in={this.state.open} timeout='auto' unmountOnExit={false} mountOnEnter={true}>
                             <Box margin={1} style={{marginBottom: '5em'}}>
-                                <DataSetDetailsComponent
+                                <CandidateDetailsComponent
                                     structure={candidate.candidate[0]}
                                     candidate={candidate.candidate[1]}
                                     componentId={selectedComponent[0]}

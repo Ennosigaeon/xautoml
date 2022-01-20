@@ -12,7 +12,7 @@ import {PerformanceComponent} from "./details/performance";
 import {HPImportanceComp} from "./details/hp_importance";
 import {ConfigOriginComp} from "./details/config_origin";
 
-interface DataSetDetailsProps {
+interface CandidateDetailsProps {
     candidate: Candidate
     structure: Structure
     componentId: string
@@ -25,38 +25,25 @@ interface DataSetDetailsProps {
     onComparisonRequest: (type: ComparisonType, selectedRow: number) => void
 }
 
-interface DataSetDetailsState {
+interface CandidateDetailsState {
     selectedSample: number
-
-    showFeatureImportance: boolean
-    showGlobalSurrogate: boolean
 }
 
-export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps, DataSetDetailsState> {
+export class CandidateDetailsComponent extends React.Component<CandidateDetailsProps, CandidateDetailsState> {
 
     static contextType = JupyterContext;
     context: React.ContextType<typeof JupyterContext>;
 
-    constructor(props: DataSetDetailsProps) {
+    constructor(props: CandidateDetailsProps) {
         super(props);
-        this.state = {selectedSample: undefined, showFeatureImportance: true, showGlobalSurrogate: true}
+        this.state = {selectedSample: undefined}
 
         this.handleSampleSelection = this.handleSampleSelection.bind(this)
-        this.toggleFeatureImportance = this.toggleFeatureImportance.bind(this)
-        this.toggleGlobalSurrogate = this.toggleGlobalSurrogate.bind(this)
         this.onComparisonRequest = this.onComparisonRequest.bind(this)
     }
 
     private handleSampleSelection(idx: number) {
         this.setState({selectedSample: idx})
-    }
-
-    private toggleFeatureImportance() {
-        this.setState((state) => ({showFeatureImportance: !state.showFeatureImportance}))
-    }
-
-    private toggleGlobalSurrogate() {
-        this.setState((state) => ({showGlobalSurrogate: !state.showGlobalSurrogate}))
     }
 
     private onComparisonRequest(type: ComparisonType) {
@@ -75,8 +62,7 @@ export class DataSetDetailsComponent extends React.Component<DataSetDetailsProps
                 <CollapseComp name={'performance'} showInitial={false} help={PerformanceComponent.HELP}
                               onComparisonRequest={() => this.onComparisonRequest('performance')}>
                     <h3>Performance Details</h3>
-                    <PerformanceComponent model={model} meta={meta}
-                                          candidateMap={new Map(structure.configs.map(c => [c.id, c]))}/>
+                    <PerformanceComponent model={model} meta={meta}/>
                 </CollapseComp>
 
                 <CollapseComp name={'config-origin'} showInitial={false} help={ConfigOriginComp.HELP}

@@ -81,8 +81,7 @@ export class Comparison extends React.Component<ComparisonProps, ComparisonState
                     <CollapseComp showInitial={true} key={model.candidate.id}>
                         <h4>{model.candidate.id}</h4>
                         {type === 'performance' &&
-                            <PerformanceComponent model={model} meta={meta}
-                                                  candidateMap={new Map([[model.candidate.id, model.candidate]])}/>}
+                            <PerformanceComponent model={model} meta={meta}/>}
                         {type === 'lime' &&
                             <LimeComponent model={model} selectedLabel={this.state.limeLabel}
                                            orientation={'horizontal'}

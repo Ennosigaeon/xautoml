@@ -4,7 +4,7 @@ import {KeyValue} from "../../util/KeyValue";
 import {JupyterContext, prettyPrint} from "../../util";
 import {ConfusionMatrix} from "./confusion_matrix";
 import {RocCurve} from "../general/roc_curve";
-import {Candidate, CandidateId, MetaInformation} from "../../model";
+import {MetaInformation} from "../../model";
 import {PerformanceData} from "../../dao";
 import {ErrorIndicator} from "../../util/error";
 import {LoadingIndicator} from "../../util/loading";
@@ -17,7 +17,6 @@ import {ID} from "../../jupyter";
 interface PerformanceComponentProps {
     model: DetailsModel
     meta: MetaInformation
-    candidateMap: Map<CandidateId, Candidate>
 }
 
 interface PerformanceComponentState {
@@ -75,7 +74,7 @@ ${ID}_cm
     }
 
     render() {
-        const {model, meta, candidateMap} = this.props
+        const {model, meta} = this.props
         const {data, loading, error} = this.state
 
         return (
@@ -154,9 +153,7 @@ ${ID}_cm
                                 <Heading help={RocCurve.HELP}>
                                     <h4>Receiver Operating Characteristic (ROC) Curve</h4>
                                 </Heading>
-                                <RocCurve selectedCandidates={new Set([model.candidate.id])}
-                                          candidateMap={candidateMap}
-                                          height={200}/>
+                                <RocCurve selectedCandidates={new Set([model.candidate.id])} height={200}/>
                             </div>
                         </div>
                     }
