@@ -12,6 +12,7 @@ from sklearn.pipeline import Pipeline
 from xautoml._helper import XAutoMLManager
 from xautoml.config_similarity import ConfigSimilarity
 from xautoml.ensemble import EnsembleInspection
+from xautoml.graph_similarity import pipeline_to_networkx, GraphMatching, export_json
 from xautoml.hp_importance import HPImportance
 from xautoml.model_details import ModelDetails, DecisionTreeResult, LimeResult, GlobalSurrogateResult
 from xautoml.models import RunHistory, CandidateId, CandidateStructure
@@ -344,6 +345,16 @@ class XAutoML:
         res['Ensemble'] = ensemble.model.predict(X).tolist()[0]
 
         return res
+
+    @as_json
+    def get_pipeline_history(self) -> dict:
+        candidates = []
+        for struct in self.run_history.structures:
+            candidates += [(c.runtime['timestamp'], struct.pipeline, c.id) for c in struct.configs]
+
+        graphs = [pipeline_to_networkx(pipeline, cid) for _, pipeline, cid in candidates]
+        merged, history = GraphMatching.create_structure_history(graphs)
+        return {'merged': history, 'individual': [export_json(g) for g in graphs]}
 
     # Endpoints for external communication
 

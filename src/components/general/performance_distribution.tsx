@@ -31,7 +31,7 @@ export default class PerformanceDistribution extends React.Component<Performance
                             <CartesianGrid strokeDasharray="3 3"/>
 
                             <XAxis dataKey="performance" label={{value: this.props.meta.metric, dy: 10}}/>
-                            <YAxis label={{value: 'Frequency', angle: -90, dx: -25}}/>
+                            <YAxis label={{value: 'Number of Candidates', angle: -90, dx: -25}}/>
 
                             <Tooltip content={<MinimalisticTooltip/>}/>
 

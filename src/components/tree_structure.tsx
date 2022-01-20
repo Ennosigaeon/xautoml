@@ -20,8 +20,7 @@ interface GraphElementProps {
 interface GraphNodeProps<Datum> extends GraphElementProps {
     node: DagNode<Datum>;
 
-    isRoot?: boolean
-    isTerminal?: boolean
+    round?: boolean
     highlight?: boolean
 
     onClick?: (d: Datum, e?: React.MouseEvent) => void;
@@ -33,8 +32,7 @@ export class GraphNode<Datum> extends React.Component<GraphNodeProps<Datum>, {}>
     static defaultProps = {
         className: '',
 
-        isRoot: false,
-        isTerminal: false,
+        round: false,
         highlight: false,
 
         onClick: () => {
@@ -58,12 +56,10 @@ export class GraphNode<Datum> extends React.Component<GraphNodeProps<Datum>, {}>
     }
 
     render() {
-        const {node, className, nodeWidth, nodeHeight, isRoot, isTerminal, highlight} = this.props;
+        const {node, className, nodeWidth, nodeHeight, round, highlight} = this.props;
         const parent = node
 
-        const round = isRoot || isTerminal
-        const offset = isRoot ? nodeWidth / 2 - nodeHeight : -nodeWidth / 2
-        const size = round ? [nodeHeight, nodeHeight] : [nodeWidth, nodeHeight]
+        const width = round ? nodeHeight : nodeWidth
         return (
             <Animate
                 start={{x: parent.x, y: parent.y}}
@@ -72,10 +68,10 @@ export class GraphNode<Datum> extends React.Component<GraphNodeProps<Datum>, {}>
             >{({x: x, y: y}) =>
                 <g className={`hierarchical-tree_node ${className} ${highlight ? 'selected' : ''}`}
                    transform={`translate(${y}, ${x})`}>
-                    <foreignObject x={offset} y={-nodeHeight / 2} width={size[0]} height={size[1]}>
+                    <foreignObject x={0} y={-nodeHeight / 2} width={width} height={nodeHeight}>
                         <div className={`hierarchical-tree_node-container`}>
                             <div onClick={this.handleClick}
-                                className={`hierarchical-tree_node-content ${round ? 'hierarchical-tree_node-content-round' : ''}`}>
+                                 className={`hierarchical-tree_node-content ${round ? 'hierarchical-tree_node-content-round' : ''}`}>
                                 {this.props.children}
                             </div>
                         </div>
@@ -92,6 +88,7 @@ interface GraphEdgeProps<Datum> extends GraphElementProps {
     link: DagLink<Datum>
     label: Primitive
     highlight?: boolean
+    startOffset?: number
 }
 
 export class GraphEdge<Datum> extends React.Component<GraphEdgeProps<Datum>, any> {
@@ -99,26 +96,27 @@ export class GraphEdge<Datum> extends React.Component<GraphEdgeProps<Datum>, any
     static defaultProps = {
         className: '',
         highlight: false,
+        startOffset: 0,
         label: (undefined as Primitive)
     }
 
     render() {
-        const {link, label, className, nodeWidth, highlight} = this.props;
+        const {link, label, className, nodeWidth, highlight, startOffset} = this.props;
 
         // noinspection JSSuspiciousNameCombination
         return (
             <Animate
                 start={{
-                    source: {x: link.source.y + nodeWidth, y: link.source.x},
+                    source: {x: link.source.y + nodeWidth, y: link.source.x + startOffset},
                     target: {x: link.target.y, y: link.target.x}
                 }}
                 update={{
-                    source: {x: [link.source.y + nodeWidth], y: [link.source.x]},
+                    source: {x: [link.source.y + nodeWidth], y: [link.source.x + startOffset]},
                     target: {x: [link.target.y], y: [link.target.x]},
                     timing: {duration: ANIMATION_DURATION, ease: easeExpInOut}
                 }}
                 enter={{
-                    source: {x: [link.source.y + nodeWidth], y: [link.source.x]},
+                    source: {x: [link.source.y + nodeWidth], y: [link.source.x + startOffset]},
                     target: {x: [link.target.y], y: [link.target.x]},
                     timing: {duration: ANIMATION_DURATION, ease: easeExpInOut}
                 }}
@@ -128,7 +126,6 @@ export class GraphEdge<Datum> extends React.Component<GraphEdgeProps<Datum>, any
                 return <>
                     <path
                         id={id}
-                        transform={`translate(${-nodeWidth / 2}, 0)`}
                         className={`hierarchical-tree_link ${className} ${highlight ? 'selected' : ''}`}
                         d={
                             linkHorizontal().x(d => d[0]).y(d => d[1])({
@@ -226,7 +223,7 @@ export class HierarchicalTree<Datum> extends React.Component<HierarchicalTreePro
 
         return (
             <FlexibleSvg height={height} onContainerChange={this.updateContainer}>
-                <g transform={`translate(${this.props.containsTerminalNodes ? -(this.props.nodeWidth - this.props.nodeHeight) : 0},0)`}>
+                <g transform={`translate(${-this.props.nodeWidth / 2},0)`}>
                     {root && this.props.render(root)}
                 </g>
             </FlexibleSvg>

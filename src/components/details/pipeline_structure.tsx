@@ -8,6 +8,7 @@ import {ErrorIndicator} from "../../util/error";
 import {GraphEdge, GraphNode, HierarchicalTree} from "../tree_structure";
 import {Dag} from "d3-dag";
 import {ConfigurationTable} from "./configuration";
+import isPipEnd = Components.isPipEnd;
 
 
 export class StepWithConfig extends PipelineStep {
@@ -98,7 +99,7 @@ interface StructureGraphState {
     error: Error
 }
 
-export class StructureGraphComponent extends React.Component<StructureGraphProps, StructureGraphState> {
+export class PipelineStructureComponent extends React.Component<StructureGraphProps, StructureGraphState> {
 
     private static readonly NODE_HEIGHT = 26;
     private static readonly NODE_WIDTH = 100;
@@ -170,10 +171,9 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
                 <GraphNode key={node.data.label}
                            node={node}
                            highlight={node.data.id === selectedComponent}
-                           isRoot={node.data.id === Components.SOURCE}
-                           isTerminal={node.data.id === Components.SINK}
-                           nodeWidth={StructureGraphComponent.NODE_WIDTH}
-                           nodeHeight={StructureGraphComponent.NODE_HEIGHT}
+                           round={isPipEnd(node.data.id)}
+                           nodeWidth={PipelineStructureComponent.NODE_WIDTH}
+                           nodeHeight={PipelineStructureComponent.NODE_HEIGHT}
                            className={'structure-graph_node'}
                            onClick={this.onComponentSelection}>
                     <SingleComponent step={node.data}
@@ -189,8 +189,8 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
             <GraphEdge key={link.source.data.label + '-' + link.target.data.label}
                        link={link}
                        label={link.target.data.getLabel(link.source.data.id)}
-                       nodeWidth={StructureGraphComponent.NODE_WIDTH}
-                       nodeHeight={StructureGraphComponent.NODE_HEIGHT}/>
+                       nodeWidth={isPipEnd(link.source.data.id) ? PipelineStructureComponent.NODE_HEIGHT : PipelineStructureComponent.NODE_WIDTH}
+                       nodeHeight={PipelineStructureComponent.NODE_HEIGHT}/>
         )
 
         return (
@@ -206,10 +206,9 @@ export class StructureGraphComponent extends React.Component<StructureGraphProps
         const data = this.toStepsWithConfig(candidate, structure.pipeline)
 
         return (
-            <HierarchicalTree nodeHeight={StructureGraphComponent.NODE_HEIGHT}
-                              nodeWidth={StructureGraphComponent.NODE_WIDTH}
+            <HierarchicalTree nodeHeight={PipelineStructureComponent.NODE_HEIGHT}
+                              nodeWidth={PipelineStructureComponent.NODE_WIDTH}
                               data={data}
-                              containsTerminalNodes={true}
                               render={this.renderNodes}/>
         )
     }

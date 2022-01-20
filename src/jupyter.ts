@@ -14,6 +14,8 @@ import {
     OutputDescriptionData,
     PDPResponse,
     PerformanceData,
+    PipelineHistory,
+    PipelineStep,
     RocCurveData,
     SinglePDP
 } from "./dao";
@@ -290,6 +292,16 @@ export class Jupyter {
                     contours: new Map(Object.entries(data.contours)),
                     X: data.X,
                     y: data.y
+                }
+            })
+    }
+
+    requestPipelineHistory(): Promise<PipelineHistory> {
+        return this.memExecuteCode<PipelineHistory>(`XAutoMLManager.get_active().get_pipeline_history()`)
+            .then(data => {
+                return {
+                    'merged': data.merged.map(pipeline => pipeline.map(d => PipelineStep.fromJson(d))),
+                    'individual': data.individual.map(pipeline => pipeline.map(d => PipelineStep.fromJson(d)))
                 }
             })
     }

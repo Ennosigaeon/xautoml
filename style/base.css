@@ -146,9 +146,17 @@ tr.MuiTableRow-root.MuiTableRow-hover:hover {
 
 .hierarchical-tree_node-content-round {
     border-radius: 50%;
-    height: 100%;
+    height: 99%;
     padding: 0;
     box-sizing: border-box;
+}
+
+.hierarchical-tree_node-content-splitter .hierarchical-tree_node-content {
+    border-right-width: 6px;
+}
+
+.hierarchical-tree_node-content-merger .hierarchical-tree_node-content {
+    border-left-width: 6px;
 }
 
 .hierarchical-tree_node-content h3 {

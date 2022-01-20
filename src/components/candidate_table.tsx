@@ -9,7 +9,7 @@ import Checkbox from '@material-ui/core/Checkbox';
 import {Box, IconButton, Menu, MenuItem, Table, TableContainer} from '@material-ui/core';
 import {Candidate, CandidateId, Explanations, MetaInformation, Structure} from '../model';
 import {Components, JupyterContext, prettyPrint} from '../util';
-import {StepWithConfig, StructureGraphComponent} from './details/structure_graph';
+import {StepWithConfig, PipelineStructureComponent} from './details/pipeline_structure';
 import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@material-ui/icons/KeyboardArrowUp';
 import Collapse from '@material-ui/core/Collapse';
@@ -205,10 +205,10 @@ ${ID}_pipeline
                     <TableCell align='right'>{prettyPrint(candidate.pred_time, 3)}</TableCell>
                     <TableCell align='right'>{prettyPrint(candidate.performance, 4)}</TableCell>
                     <TableCell align='right' style={{height: '50px'}} padding='none'>
-                        <StructureGraphComponent structure={candidate.candidate[0]}
-                                                 candidate={candidate.candidate[1]}
-                                                 selectedComponent={selectedComponent[0]}
-                                                 onComponentSelection={this.openComponent}/>
+                        <PipelineStructureComponent structure={candidate.candidate[0]}
+                                                    candidate={candidate.candidate[1]}
+                                                    selectedComponent={selectedComponent[0]}
+                                                    onComponentSelection={this.openComponent}/>
                     </TableCell>
                     <TableCell>
                         <JupyterButton onClick={this.openCandidateInJupyter}/>

@@ -1,6 +1,5 @@
 import React from "react";
 import {CollapseComp} from "../util/collapse";
-import {MCTSExplanationsComponent} from "./search_space/mcts_explanation";
 import {ParallelCoordinates} from "./pc/parallel_corrdinates";
 import {BO, Candidate, CandidateId, ConfigValue, Explanations, MetaInformation, Structure} from "../model";
 import Slider from "rc-slider";
@@ -9,6 +8,7 @@ import {ConfigSimilarityResponse} from "../dao";
 import {SamplingHistory} from "./search_space/sampling_history";
 import * as d3 from "d3";
 import {HyperparameterHistory} from "./search_space/model";
+import {StructureSearchGraph} from "./search_space/structure_search";
 import CategoricalHyperparameter = BO.CategoricalHyperparameter;
 import NumericalHyperparameter = BO.NumericalHyperparameter;
 
@@ -139,17 +139,26 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
                                 included={false} onChange={this.changeTimestamp}/>
                     </div>}
 
-                {explanations.structures &&
-                    <CollapseComp name={'reinforcement-explanations'} showInitial={true}
-                                  help={MCTSExplanationsComponent.HELP}>
-                        <h3>Pipeline Structure Search</h3>
-                        <MCTSExplanationsComponent explanations={explanations.structures}
-                                                   selectedCandidates={selectedCandidates}
-                                                   hideUnselectedCandidates={hideUnselectedCandidates}
-                                                   structures={structures}
-                                                   timestamp={this.cids[this.state.timestamp].split(':').slice(0, -1).join(':')}
-                                                   onCandidateSelection={onCandidateSelection}/>
-                    </CollapseComp>}
+                {/*{explanations.structures &&*/}
+                {/*    <CollapseComp name={'reinforcement-explanations'} showInitial={true}*/}
+                {/*                  help={MCTSExplanationsComponent.HELP}>*/}
+                {/*        <h3>Pipeline Structure Search</h3>*/}
+                {/*        <MCTSExplanationsComponent explanations={explanations.structures}*/}
+                {/*                                   selectedCandidates={selectedCandidates}*/}
+                {/*                                   hideUnselectedCandidates={hideUnselectedCandidates}*/}
+                {/*                                   structures={structures}*/}
+                {/*                                   timestamp={this.cids[this.state.timestamp].split(':').slice(0, -1).join(':')}*/}
+                {/*                                   onCandidateSelection={onCandidateSelection}/>*/}
+                {/*    </CollapseComp>}*/}
+
+                <CollapseComp name={'reinforcement-explanations'} showInitial={true} help={StructureSearchGraph.HELP}>
+                    <h3>Pipeline Structure Search</h3>
+                    <StructureSearchGraph timestamp={this.state.timestamp}
+                                          structures={structures}
+                                          selectedCandidates={selectedCandidates}
+                                          onCandidateSelection={onCandidateSelection}/>
+                </CollapseComp>
+
                 <CollapseComp name={'bayesian-explanations'} showInitial={true} help={ParallelCoordinates.HELP}>
                     <h3>Hyperparameter Optimization</h3>
                     <ParallelCoordinates structures={structures}

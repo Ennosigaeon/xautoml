@@ -107,7 +107,7 @@ class ConfigSimilarity:
         return location
 
     @staticmethod
-    def get_contour_plot(X: np.ndarray, y: np.ndarray, n_steps: int = 10) -> pd.DataFrame:
+    def get_contour_plot(X: np.ndarray, y: np.ndarray, n_steps: int = 20) -> pd.DataFrame:
         # noinspection PyTypeChecker
         rf: RandomForestRegressor = RandomForestRegressor().fit(X, y)
 
