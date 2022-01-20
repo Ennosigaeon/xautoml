@@ -74,7 +74,10 @@ class XAutoML:
         models = []
         for cid in cids:
             try:
-                models.append(deepcopy(self.run_history.cid_to_candidate[cid].model))
+                if cid == 'ENSEMBLE':
+                    models.append(deepcopy(self.run_history.ensemble.candidate.model))
+                else:
+                    models.append(deepcopy(self.run_history.cid_to_candidate[cid].model))
             except FileNotFoundError:
                 pass
 

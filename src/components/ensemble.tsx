@@ -7,12 +7,14 @@ import {ErrorIndicator} from "../util/error";
 import {LoadingIndicator} from "../util/loading";
 import {DatasetTable} from "./details/dataset_table";
 import {EnsembleTable} from "./ensemble/ensemble_table";
-import {CandidateId, Prediction} from "../model";
+import {CandidateId, MetaInformation, Prediction} from "../model";
 import {DecisionSurface} from "./ensemble/decision_surface";
 import {Checkbox} from "@material-ui/core";
 import {Heading} from "../util/heading";
+import {EnsembleDetailsComponent} from "./ensemble/ensemble_details";
 
 interface EnsembleProps {
+    meta: MetaInformation
     onCandidateSelection: (cid: Set<CandidateId>, show?: boolean) => void
 }
 
@@ -88,6 +90,11 @@ export class Ensemble extends React.Component<EnsembleProps, EnsembleState> {
 
         return (
             <>
+                <CollapseComp name={'ensemble-details'} showInitial={true} help={''}>
+                    <h3>Insights for Ensemble</h3>
+                    <EnsembleDetailsComponent meta={this.props.meta}/>
+                </CollapseComp>
+
                 <CollapseComp name={'ensemble'} showInitial={true}
                               help={'Displays the individual ensemble members and some basic statics. In addition ' +
                                   'a selection of data set samples with conflicting predictions in the ensemble is ' +

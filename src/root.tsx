@@ -216,7 +216,7 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
                                              onCandidateSelection={this.onCandidateSelection}/>
                             </TabPanel>
                             <TabPanel value={'3'}>
-                                <Ensemble onCandidateSelection={this.onCandidateSelection}/>
+                                <Ensemble onCandidateSelection={this.onCandidateSelection} meta={runHistory.meta}/>
                             </TabPanel>
                         </TabContext>
                     </div>

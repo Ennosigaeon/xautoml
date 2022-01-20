@@ -96,6 +96,7 @@ export namespace Components {
 
     export const SOURCE: string = 'SOURCE'
     export const SINK: string = 'SINK'
+    export const ENSEMBLE: string = 'ENSEMBLE'
 
     export function isPipEnd(id: string): boolean {
         return id === Components.SOURCE || id === Components.SINK

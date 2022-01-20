@@ -105,6 +105,8 @@ class Ensemble:
         self.weights = list(members.values())
         self.weight_map = members
         self.model = model
+        self.candidate = Candidate('ENSEMBLE', 0, 'SUCCESS', 0, {}, ConfigurationSpace().get_default_configuration(),
+                                   'ensemble', Pipeline(steps=[('classifier', model)]), lambda x: x)
 
     def as_dict(self):
         return {
