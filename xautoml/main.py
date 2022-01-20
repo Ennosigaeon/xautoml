@@ -151,8 +151,16 @@ class XAutoML:
     def performance_data(self, cid: CandidateId):
         X, y, pipeline = self._load_model(cid)
         details = ModelDetails()
-        data = details.calculate_performance_data(X, y, pipeline, self.run_history.meta.metric)
-        return data
+
+        duration, validation_score, report, accuracy, cm = details.calculate_performance_data(X, y, pipeline,
+                                                                                              self.run_history.meta.metric)
+        return {
+            'duration': duration,
+            'val_score': float(validation_score),
+            'report': {np.asscalar(key): value for key, value in report.items()},
+            'accuracy': accuracy,
+            'cm': {"classes": cm.columns.to_list(), "values": cm.values.tolist()}
+        }
 
     @as_json
     def decision_tree_surrogate(self, cid: CandidateId, step: str, max_leaf_nodes: Optional[int]):
@@ -397,6 +405,20 @@ class XAutoML:
     def get_hp_interactions(self, sid: Optional[str], step: str, hp1: str, hp2: str):
         f, X, actual_cs = self._construct_fanova(sid, step)
         return pd.DataFrame(HPImportance.calculate_fanova_details(f, X, hps=[(hp1, hp2)])[hp1][hp2]['data'])
+
+    @no_warnings
+    def get_class_report(self, cid: str):
+        X, y, pipeline = self._load_model(cid)
+        details = ModelDetails()
+        _, _, report, _, _ = details.calculate_performance_data(X, y, pipeline, self.run_history.meta.metric)
+        return pd.DataFrame(report)
+
+    @no_warnings
+    def get_cm(self, cid: str):
+        X, y, pipeline = self._load_model(cid)
+        details = ModelDetails()
+        _, _, _, _, cm = details.calculate_performance_data(X, y, pipeline, self.run_history.meta.metric)
+        return cm
 
     def _repr_mimebundle_(self, include, exclude):
         return {

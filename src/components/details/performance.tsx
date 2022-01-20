@@ -10,6 +10,8 @@ import {ErrorIndicator} from "../../util/error";
 import {LoadingIndicator} from "../../util/loading";
 import {Table, TableBody, TableCell, TableRow} from "@material-ui/core";
 import {Heading} from "../../util/heading";
+import {JupyterButton} from "../../util/jupyter-button";
+import {ID} from "../../jupyter";
 
 
 interface PerformanceComponentProps {
@@ -35,6 +37,9 @@ export class PerformanceComponent extends React.Component<PerformanceComponentPr
     constructor(props: PerformanceComponentProps) {
         super(props);
         this.state = {data: undefined, loading: false, error: undefined}
+
+        this.exportConfusionMatrix = this.exportConfusionMatrix.bind(this)
+        this.exportClassReport = this.exportClassReport.bind(this)
     }
 
     componentDidMount() {
@@ -53,6 +58,20 @@ export class PerformanceComponent extends React.Component<PerformanceComponentPr
                 console.error(`Failed to fetch confusion matrix: \n${error.name}: ${error.message}`);
                 this.setState({error: error, loading: false})
             });
+    }
+
+    private exportClassReport() {
+        this.context.createCell(`
+${ID}_report = XAutoMLManager.get_active().get_class_report('${this.props.model.candidate.id}')
+${ID}_report
+        `.trim())
+    }
+
+    private exportConfusionMatrix() {
+        this.context.createCell(`
+${ID}_cm = XAutoMLManager.get_active().get_cm('${this.props.model.candidate.id}')
+${ID}_cm
+        `.trim())
     }
 
     render() {
@@ -115,6 +134,8 @@ export class PerformanceComponent extends React.Component<PerformanceComponentPr
                                         )}
                                     </TableBody>
                                 </Table>
+
+                                <JupyterButton onClick={this.exportClassReport}/>
                             </div>
 
                             <div style={{flexGrow: 0, margin: "0 10px"}}>
@@ -125,6 +146,8 @@ export class PerformanceComponent extends React.Component<PerformanceComponentPr
                                     <h4>Confusion Matrix</h4>
                                 </Heading>
                                 <ConfusionMatrix cm={data.cm}/>
+
+                                <JupyterButton onClick={this.exportConfusionMatrix}/>
                             </div>
 
                             <div style={{flexGrow: 0, flexBasis: "25%"}}>

@@ -97,9 +97,7 @@ class ModelDetails:
         del report['macro avg']
         del report['weighted avg']
 
-        return {'duration': duration, 'val_score': float(validation_score),
-                'report': {np.asscalar(key): value for key, value in report.items()}, 'accuracy': accuracy,
-                'cm': {"classes": df.columns.to_list(), "values": df.values.tolist()}}
+        return duration, validation_score, report, accuracy, df
 
     @staticmethod
     def calculate_lime(df: pd.DataFrame, y: pd.Series, model, idx: int) -> LimeResult:
