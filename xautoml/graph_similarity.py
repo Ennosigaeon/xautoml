@@ -29,7 +29,7 @@ def pipeline_to_networkx(pipeline: Pipeline, cid: CandidateId):
                 else:
                     (name, transformer), cols = tuple_, 'all'
                 transformers += convert_component(transformer, prefix_name(prefix, name), parent_nodes,
-                                                  [','.join(cols)])
+                                                  [','.join([str(c) for c in cols])])
 
             return transformers
 
@@ -102,7 +102,7 @@ class GraphMatching:
                 merged.add_node(node, **data)
             else:
                 for key, value in data.items():
-                    if isinstance(merged.nodes[node][key], list):
+                    if key in merged.nodes[node] and isinstance(merged.nodes[node][key], list):
                         merged.nodes[node][key] += value
                     else:
                         merged.nodes[node][key] = value

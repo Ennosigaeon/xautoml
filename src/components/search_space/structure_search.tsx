@@ -115,31 +115,7 @@ export class StructureSearchGraph extends React.Component<StructureSearchProps, 
     }
 
     private selectNode(node: PipelineStep) {
-        const graph = this.state.data.merged[this.props.timestamp]
-
-        let nodesOnPath = []
-        let current: PipelineStep[] = [node]
-        while (current.length > 0) {
-            nodesOnPath.push(current)
-            current = graph.filter(n => current.filter(c => c.parentIds.filter(p => p === n.id).length > 0).length > 0)
-        }
-
-        let structures = this.props.structures
-        nodesOnPath.reverse()
-            .slice(1) // Remove root node
-            .map((nodes, idx) => {
-                structures = structures.filter(structure => {
-                    if (structure.pipeline.steps.length <= idx)
-                        return false
-                    return nodes.filter(n => structure.pipeline.steps[idx].label === n.label).length > 0
-                })
-            })
-
-        const candidates: CandidateId[] = []
-        structures
-            .map(structure => structure.configs)
-            .forEach(configs => configs.forEach(config => candidates.push(config.id)))
-
+        const candidates: CandidateId[] = node.cids
         const intersection = candidates.filter(c => this.props.selectedCandidates.has(c));
 
         if (intersection.length === candidates.length) {
