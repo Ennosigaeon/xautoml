@@ -172,10 +172,10 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
         this.props.onCandidateSelection(new Set<CandidateId>([cid]), true)
     }
 
-    private renderLine(line: cpc.Line, idx: number, onlyHighlighted: boolean) {
+    private renderLine(line: cpc.Line, idx: number, onlyHighlighted: boolean, missing: boolean) {
         if (idx == this.props.timestamp || onlyHighlighted === this.state.highlightedLines.has(line.id))
             return (
-                <PCLine key={line.id} line={line}
+                <PCLine key={line.id} line={line} missing={missing}
                         selected={idx == this.props.timestamp}
                         highlight={this.state.highlightedLines.has(line.id)}
                         onClick={this.onSelectLine}
@@ -225,6 +225,12 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
                         model: this.state.model,
                         selectedAxis: this.props.selectedAxis
                     }}>
+                        {this.state.showCandidates &&
+                            <>
+                                {lines.map((line, idx) => this.renderLine(line, idx, false, true))}
+                                {lines.map((line, idx) => this.renderLine(line, idx, true, true))}
+                            </>
+                        }
                         <PCChoice choice={root} parent={undefined}
                                   onCollapse={this.onCollapse}
                                   onExpand={this.onExpand}
@@ -232,8 +238,8 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
                                   onAxisSelection={this.onAxisSelection}/>
                         {this.state.showCandidates &&
                             <>
-                                {lines.map((line, idx) => this.renderLine(line, idx, false))}
-                                {lines.map((line, idx) => this.renderLine(line, idx, true))}
+                                {lines.map((line, idx) => this.renderLine(line, idx, false, false))}
+                                {lines.map((line, idx) => this.renderLine(line, idx, true, false))}
                             </>
                         }
                     </cpc.CPCContext.Provider>

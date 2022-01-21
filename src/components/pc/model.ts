@@ -103,7 +103,7 @@ export class Axis {
 
     getHeightWeight(): number {
         if (this.isNumerical()) {
-            return 5;
+            return 3;
         } else {
             return Math.max(1, this.choices.map(c => c.getHeightWeight()).reduce((a, b) => a + b, 0))
         }

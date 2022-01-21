@@ -453,6 +453,7 @@ text.pc-axis-label:hover {
 
 .pc-line.pc-missing-line {
     stroke-dasharray: 4;
+    stroke-opacity: 0.2;
 }
 
 .pc-fat-line {

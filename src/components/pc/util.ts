@@ -204,7 +204,7 @@ export namespace ParCord {
             // Fill missing steps in pipeline and final performance measure
             // noinspection UnnecessaryLocalVariableJS
             const lastStep = structure.pipeline.steps[structure.pipeline.steps.length - 1].id
-            axes.slice(nameToIndex.get(lastStep)).forEach((axes: cpc.Axis[]) => {
+            axes.slice(nameToIndex.get(lastStep) + 1).forEach((axes: cpc.Axis[]) => {
                 axes.forEach(axis => {
                     const value = axis.id === '__performance__' ? candidate.loss : undefined
                     points.push(new cpc.LinePoint(axis.id, value))

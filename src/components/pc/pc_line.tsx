@@ -9,6 +9,7 @@ interface PCLineProps {
     line: cpc.Line
     selected: boolean
     highlight: boolean
+    missing: boolean
     onClick?: (id: CandidateId) => void,
     onAlternativeClick?: (id: CandidateId) => void
 }
@@ -141,27 +142,27 @@ export class PCLine extends React.Component<PCLineProps, PCLineStats> {
 
 
     render() {
+        const {missing} = this.props
         const [path, missingPath, tooltips] = this.renderPath()
         const tooltipHeight = 20
 
         return (
             <g className={`${this.props.highlight ? 'pc-highlighted' : ''} ${this.state.selected || this.props.selected ? 'pc-selected' : ''}`}>
-                <path className={'pc-line'} d={path.toString()}/>
-                <path className={'pc-line pc-missing-line'} d={missingPath.toString()}/>
-
-                <path className={'pc-fat-line'} d={path.toString()}
-                      onMouseEnter={this.onMouseEnter}
-                      onMouseLeave={this.onMouseLeave}
-                      onClick={this.onClick}/>
-                <path className={'pc-fat-line'} d={missingPath.toString()}
-                      onMouseEnter={this.onMouseEnter}
-                      onMouseLeave={this.onMouseLeave}/>
-                {tooltips.map(t =>
-                    <foreignObject x={t.x - 20} y={t.y - (tooltipHeight + 2)}
-                                   width={100} height={tooltipHeight} style={{pointerEvents: 'none'}}>
-                        <span className={'pc-tooltip'}>{t.text}</span>
-                    </foreignObject>
-                )}
+                {missing && <path className={'pc-line pc-missing-line'} d={missingPath.toString()}/>}
+                {!missing &&
+                    <>
+                        <path className={'pc-line'} d={path.toString()}/>
+                        <path className={'pc-fat-line'} d={path.toString()}
+                              onMouseEnter={this.onMouseEnter}
+                              onMouseLeave={this.onMouseLeave}
+                              onClick={this.onClick}/>
+                        {tooltips.map(t =>
+                            <foreignObject x={t.x - 20} y={t.y - (tooltipHeight + 2)}
+                                           width={100} height={tooltipHeight} style={{pointerEvents: 'none'}}>
+                                <span className={'pc-tooltip'}>{t.text}</span>
+                            </foreignObject>
+                        )}
+                    </>}
             </g>
         )
     };
