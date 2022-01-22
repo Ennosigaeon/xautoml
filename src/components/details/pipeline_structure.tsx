@@ -171,7 +171,7 @@ export class PipelineStructureComponent extends React.Component<StructureGraphPr
                 <GraphNode key={node.data.label}
                            node={node}
                            highlight={node.data.id === selectedComponent}
-                           round={isPipEnd(node.data.id)}
+                           virtual={isPipEnd(node.data.id)}
                            nodeWidth={PipelineStructureComponent.NODE_WIDTH}
                            nodeHeight={PipelineStructureComponent.NODE_HEIGHT}
                            className={'structure-graph_node'}

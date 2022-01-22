@@ -1,15 +1,16 @@
 import React from "react";
 import {CandidateId, Structure} from "../../model";
 import 'rc-slider/assets/index.css';
-import {JupyterContext} from "../../util";
+import {Components, JupyterContext} from "../../util";
 import {GraphEdge, GraphNode, HierarchicalTree} from "../tree_structure";
 import {Dag, DagNode} from "d3-dag";
 import {PipelineHistory, PipelineStep} from "../../dao";
 import {LoadingIndicator} from "../../util/loading";
 import {ErrorIndicator} from "../../util/error";
+import SOURCE = Components.SOURCE;
 
 
-const NODE_HEIGHT = 65;
+const NODE_HEIGHT = 26;
 const NODE_WIDTH = 130;
 
 interface SingleNodeProps {
@@ -46,20 +47,19 @@ class SingleNode extends React.Component<SingleNodeProps, SingleNodeState> {
         return (
             <GraphNode key={data.id}
                        node={node}
-                       className={`mcts-explanation expandable ${selected ? 'selected ' : ''}` +
+                       className={`structure-graph_node ${selected ? 'selected ' : ''}` +
                            `${highlight ? 'highlight ' : ''}` +
                            `${data.splitter ? 'hierarchical-tree_node-content-splitter ' : ''}` +
                            `${data.merger ? 'hierarchical-tree_node-content-merger ' : ''}`}
                        nodeWidth={NODE_WIDTH}
+                       virtual={data.label === SOURCE}
                        nodeHeight={NODE_HEIGHT}
                        onClick={this.props.onSelectNode}
                        onAlternativeClick={this.toggleShow}>
                 <div>
                     <div style={{display: 'flex', alignItems: 'center'}}>
                         <div style={{flexGrow: 1}}>
-                            <h3>
-                                {data.label.substring(0, 20)}
-                            </h3>
+                            <p>{data.label !== SOURCE && data.label.substring(0, 20)}</p>
                         </div>
                     </div>
                 </div>
@@ -161,7 +161,7 @@ export class StructureSearchGraph extends React.Component<StructureSearchProps, 
                                        link={link}
                                        label={label}
                                        startOffset={startOffset}
-                                       nodeWidth={NODE_WIDTH}
+                                       nodeWidth={link.source.data.label === SOURCE ? NODE_HEIGHT : NODE_WIDTH}
                                        nodeHeight={NODE_HEIGHT}
                                        highlight={highlight}/>
                         }

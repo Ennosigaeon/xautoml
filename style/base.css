@@ -144,19 +144,18 @@ tr.MuiTableRow-root.MuiTableRow-hover:hover {
     border-width: 2px;
 }
 
-.hierarchical-tree_node-content-round {
-    border-radius: 50%;
-    height: 99%;
+.hierarchical-tree_node-content-virtual {
+    height: 100%;
     padding: 0;
     box-sizing: border-box;
 }
 
 .hierarchical-tree_node-content-splitter .hierarchical-tree_node-content {
-    border-right-width: 6px;
+    border-right-width: 10px;
 }
 
 .hierarchical-tree_node-content-merger .hierarchical-tree_node-content {
-    border-left-width: 6px;
+    border-left-width: 10px;
 }
 
 .hierarchical-tree_node-content h3 {
@@ -193,7 +192,6 @@ tr.MuiTableRow-root.MuiTableRow-hover:hover {
 
 .mcts-explanation.highlight .hierarchical-tree_node-content {
     background-color: var(--hover-color);
-    border-width: 2px;
 }
 
 .failure .hierarchical-tree_node-content {

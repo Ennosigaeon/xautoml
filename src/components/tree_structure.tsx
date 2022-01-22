@@ -20,7 +20,7 @@ interface GraphElementProps {
 interface GraphNodeProps<Datum> extends GraphElementProps {
     node: DagNode<Datum>;
 
-    round?: boolean
+    virtual?: boolean
     highlight?: boolean
 
     onClick?: (d: Datum, e?: React.MouseEvent) => void;
@@ -32,7 +32,7 @@ export class GraphNode<Datum> extends React.Component<GraphNodeProps<Datum>, {}>
     static defaultProps = {
         className: '',
 
-        round: false,
+        virtual: false,
         highlight: false,
 
         onClick: () => {
@@ -56,10 +56,10 @@ export class GraphNode<Datum> extends React.Component<GraphNodeProps<Datum>, {}>
     }
 
     render() {
-        const {node, className, nodeWidth, nodeHeight, round, highlight} = this.props;
+        const {node, className, nodeWidth, nodeHeight, virtual, highlight} = this.props;
         const parent = node
 
-        const width = round ? nodeHeight : nodeWidth
+        const width = virtual ? nodeHeight : nodeWidth
         return (
             <Animate
                 start={{x: parent.x, y: parent.y}}
@@ -71,7 +71,7 @@ export class GraphNode<Datum> extends React.Component<GraphNodeProps<Datum>, {}>
                     <foreignObject x={0} y={-nodeHeight / 2} width={width} height={nodeHeight}>
                         <div className={`hierarchical-tree_node-container`}>
                             <div onClick={this.handleClick}
-                                 className={`hierarchical-tree_node-content ${round ? 'hierarchical-tree_node-content-round' : ''}`}>
+                                 className={`hierarchical-tree_node-content ${virtual ? 'hierarchical-tree_node-content-virtual' : ''}`}>
                                 {this.props.children}
                             </div>
                         </div>
