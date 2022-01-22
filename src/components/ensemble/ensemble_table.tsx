@@ -66,9 +66,9 @@ export class EnsembleTable extends React.Component<EnsembleTableProps, EnsembleT
 
         const headCells: HeadCell[] = [
             {id: 'id', numeric: false, label: 'Id'},
+            {id: 'prediction', numeric: true, label: 'Prediction'},
             {id: 'weight', numeric: true, label: 'Weight'},
             {id: 'consensus', numeric: true, label: 'Consensus'},
-            {id: 'prediction', numeric: true, label: 'Prediction'}
         ];
 
         const comp = (a: RowRecord, b: RowRecord) => {
@@ -129,9 +129,9 @@ export class EnsembleTable extends React.Component<EnsembleTableProps, EnsembleT
                                     <TableRow key={row.id} hover tabIndex={-1}
                                               onClick={(e) => this.onRowClick(e, row.id)}>
                                         <TableCell scope='row' padding='none'>{row.id}</TableCell>
+                                        <TableCell align='right'>{row.prediction}</TableCell>
                                         <TableCell align='right'>{prettyPrint(row.weight)}</TableCell>
                                         <TableCell align='right'>{prettyPrint(row.consensus)}</TableCell>
-                                        <TableCell align='right'>{row.prediction}</TableCell>
                                     </TableRow>
                                 );
                             })}

@@ -139,7 +139,7 @@ tr.MuiTableRow-root.MuiTableRow-hover:hover {
     border-width: 2px;
 }
 
-.highlight .hierarchical-tree_node-content {
+.highlight.structure-graph_node .hierarchical-tree_node-content {
     background-color: var(--hover-color);
     border-width: 2px;
 }

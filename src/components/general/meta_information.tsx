@@ -35,7 +35,7 @@ export default class MetaInformationTable extends React.Component<MetaInformatio
                         <KeyValue key_={'End Time'} value={end}/>
                         <KeyValue key_={'Metric'} value={meta.metric}/>
                         <KeyValue key_={'Best Performance'} prec={4} value={meta.bestPerformance}/>
-                        <KeyValue key_={'Total Nr. Configs.'} value={meta.n_configs}/>
+                        <KeyValue key_={'Total Nr. Candidates'} value={meta.n_configs}/>
                         <KeyValue key_={'Unique Structures'} value={meta.n_structures}/>
                     </>
                 </CollapseComp>
