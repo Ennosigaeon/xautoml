@@ -107,16 +107,16 @@ export class GraphEdge<Datum> extends React.Component<GraphEdgeProps<Datum>, any
         return (
             <Animate
                 start={{
-                    source: {x: link.source.y + nodeWidth, y: link.source.x + startOffset},
+                    source: {x: link.source.y + nodeWidth, y: link.source.x},
                     target: {x: link.target.y, y: link.target.x}
                 }}
                 update={{
-                    source: {x: [link.source.y + nodeWidth], y: [link.source.x + startOffset]},
+                    source: {x: [link.source.y + nodeWidth], y: [link.source.x]},
                     target: {x: [link.target.y], y: [link.target.x]},
                     timing: {duration: ANIMATION_DURATION, ease: easeExpInOut}
                 }}
                 enter={{
-                    source: {x: [link.source.y + nodeWidth], y: [link.source.x + startOffset]},
+                    source: {x: [link.source.y + nodeWidth], y: [link.source.x]},
                     target: {x: [link.target.y], y: [link.target.x]},
                     timing: {duration: ANIMATION_DURATION, ease: easeExpInOut}
                 }}
@@ -129,11 +129,11 @@ export class GraphEdge<Datum> extends React.Component<GraphEdgeProps<Datum>, any
                         className={`hierarchical-tree_link ${className} ${highlight ? 'selected' : ''}`}
                         d={
                             linkHorizontal().x(d => d[0]).y(d => d[1])({
-                                source: [source.x, source.y],
+                                source: [source.x, source.y + startOffset],
                                 target: [target.x, target.y]
                             })}/>
                     {(label !== undefined && (labelSpace > 10)) &&
-                        <text className={'hierarchical-tree_link-label'} dy={source.y < target.y ? 10 : -5}
+                        <text className={'hierarchical-tree_link-label'} dy={source.y <= target.y ? 10 : -5}
                               fill={'black'}>
                             <textPath xlinkHref={`#${id}`} startOffset={'60%'} textAnchor={'middle'}>
                                 {labelSpace > 40 ? prettyPrint(label) : '[...]'}

@@ -10,7 +10,7 @@ import {ErrorIndicator} from "../../util/error";
 import SOURCE = Components.SOURCE;
 
 
-const NODE_HEIGHT = 26;
+const NODE_HEIGHT = 36;
 const NODE_WIDTH = 130;
 
 interface SingleNodeProps {
