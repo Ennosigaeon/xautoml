@@ -67,7 +67,7 @@ export class CandidateDetailsComponent extends React.Component<CandidateDetailsP
 
                 <CollapseComp name={'config-origin'} showInitial={false} help={ConfigOriginComp.HELP}
                               onComparisonRequest={() => this.onComparisonRequest('configuration')}>
-                    <h3>Configuration</h3>
+                    <h3>Candidate Origin</h3>
                     <ConfigOriginComp model={model} structures={structures} explanations={explanations}/>
                 </CollapseComp>
 

@@ -142,7 +142,6 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
                 maxLabelLength = Math.max(maxLabelLength, label.length * 5)
                 return {x: score, label: label}
             })
-            .reverse()
 
         maxLabelLength = Math.min(this.props.orientation === 'vertical' ? 150 : 500, maxLabelLength)
         const explHeight = data?.expl.get(selectedLabel.toString())?.length * 30
@@ -208,7 +207,7 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
                                 <h4>Predicted Class Probabilities</h4>
                                 <>
                                     <p>Correct Class: {data.label}</p>
-                                    <div style={{height: 150}}>
+                                    <div style={{height: 100}}>
                                         <ResponsiveContainer>
                                             <BarChart data={probs}>
                                                 <CartesianGrid strokeDasharray="3 3"/>

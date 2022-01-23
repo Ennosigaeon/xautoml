@@ -162,9 +162,11 @@ export interface DecisionSurfaceResponse {
 }
 
 export class PipelineHistory {
-    merged: PipelineStep[][]
-    individual: PipelineStep[][]
+    merged: Pipeline[]
+    individual: Pipeline[]
 }
+
+export type Pipeline = PipelineStep[]
 
 export class PipelineStep {
     constructor(public readonly id: string,

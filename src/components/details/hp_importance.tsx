@@ -142,13 +142,13 @@ class SingleHP extends React.Component<SingleHPProps> {
                            domain={[0, rows.length]}
                            ticks={[...Array(rows.length).keys()].map((_, i) => i + 0.5)}
                            interval={0}
-                           tickFormatter={x => prettyPrint(rows[x - 0.5])}
+                           tickFormatter={x => prettyPrint(rows[x - 0.5], 2)}
                            label={{value: data.name[1], dy: 10}}/>
                     <YAxis type="number" dataKey="y"
                            domain={[0, columns.length]}
                            ticks={[...Array(columns.length).keys()].map((_, i) => i + 0.5)}
                            interval={0}
-                           tickFormatter={y => prettyPrint(columns[y - 0.5])}
+                           tickFormatter={y => prettyPrint(columns[y - 0.5], 2)}
                            label={{value: data.name[0], angle: -90, dx: -marginLeft - 20}}/>
                     <Tooltip cursor={{strokeDasharray: '3 3'}}/>
                 </LineChart>

@@ -103,6 +103,15 @@ export class GraphEdge<Datum> extends React.Component<GraphEdgeProps<Datum>, any
     render() {
         const {link, label, className, nodeWidth, highlight, startOffset} = this.props;
 
+        let labelOffset = -5
+        if (label !== undefined) {
+            const idx = link.source.children()
+                .sort((a, b) => a.x - b.x)
+                .findIndex(c => c === link.target)
+            if (idx >= link.source.children().length / 2)
+                labelOffset = 10
+        }
+
         // noinspection JSSuspiciousNameCombination
         return (
             <Animate
@@ -133,7 +142,7 @@ export class GraphEdge<Datum> extends React.Component<GraphEdgeProps<Datum>, any
                                 target: [target.x, target.y]
                             })}/>
                     {(label !== undefined && (labelSpace > 10)) &&
-                        <text className={'hierarchical-tree_link-label'} dy={source.y <= target.y ? 10 : -5}
+                        <text className={'hierarchical-tree_link-label'} dy={labelOffset}
                               fill={'black'}>
                             <textPath xlinkHref={`#${id}`} startOffset={'60%'} textAnchor={'middle'}>
                                 {labelSpace > 40 ? prettyPrint(label) : '[...]'}

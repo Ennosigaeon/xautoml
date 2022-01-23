@@ -8,6 +8,8 @@ import {ConfigurationComp} from "./configuration";
 import {CollapseComp} from "../../util/collapse";
 import {ParallelCoordinates} from "../pc/parallel_corrdinates";
 import {DetailsModel} from "./model";
+import {JupyterButton} from "../../util/jupyter-button";
+import {ID} from "../../jupyter";
 
 
 interface ConfigOriginProps {
@@ -27,27 +29,41 @@ export class ConfigOriginComp extends React.Component<ConfigOriginProps, any> {
     static contextType = JupyterContext;
     context: React.ContextType<typeof JupyterContext>;
 
+    constructor(props: ConfigOriginProps) {
+        super(props);
+
+        this.exportConfiguration = this.exportConfiguration.bind(this)
+    }
+
     private static getHelp(origin: ConfigOrigin): string {
         switch (origin) {
             case 'Default':
-                return 'Default configuration as specified in the component declaration.'
+                return 'Default hyperparameters as specified in the component declaration.'
             case 'Hyperopt':
-                return 'The configuration is obtained by optimizing an internal model of the performance of ' +
-                    'potential configurations. More specifically, the selected configuration maximizes the posterior ' +
+                return 'The candidate is obtained by optimizing an internal model of the performance of ' +
+                    'potential candidates. More specifically, the selected candidate maximizes the posterior ' +
                     'in a Bayesian optimization. '
             case 'Initial design':
-                return 'This fixed configuration is selected based on some initial design. This initial design ' +
+                return 'This fixed candidate is selected based on some initial design. This initial design ' +
                     'could, for example, be a set of configurations obtained via via meta-learning that performed ' +
                     'well on a variety of data sets in the past.'
             case 'Random Search':
-                return 'The configuration was selected at random.'
+                return 'The candidate was selected at random.'
             case 'Local Search':
-                return 'Configuration obtained via local search around all-ready evaluated configuration maximizing the acquisition function'
+                return 'Candidate obtained via local search around all-ready evaluated candidates maximizing the acquisition function'
             case 'Random Search (sorted)':
-                return 'Configuration obtained via random search maximizing the acquisition function'
+                return 'Candidate obtained via random search maximizing the acquisition function'
             case 'Sobol':
                 return 'Quasi-random selection of configuration based on a Sobol sequence'
         }
+    }
+
+    private exportConfiguration() {
+        const {id} = this.props.model.candidate
+        this.context.createCell(`
+${ID}_hp = XAutoMLManager.get_active().get_config('${id}')
+${ID}_hp
+        `.trim())
     }
 
     render() {
@@ -56,7 +72,11 @@ export class ConfigOriginComp extends React.Component<ConfigOriginProps, any> {
 
         return (
             <>
-                <KeyValue key_={'Origin'} value={candidate.origin} help={ConfigOriginComp.getHelp(candidate.origin)}/>
+                <div style={{display: 'flex', justifyContent: "space-between"}}>
+                    <KeyValue key_={'Origin'} value={candidate.origin}
+                              help={ConfigOriginComp.getHelp(candidate.origin)}/>
+                    <JupyterButton onClick={this.exportConfiguration}/>
+                </div>
                 <ConfigurationComp candidate={candidate} structure={structure}/>
 
                 {(explanations.structures || explanations.configs) && <hr/>}

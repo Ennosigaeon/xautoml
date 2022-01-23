@@ -156,7 +156,8 @@ ${ID}_pdp
                     <LoadingIndicator loading={data === undefined}/>
                     {pdp &&
                         <>
-                            <div style={{display: "flex", justifyContent: "space-between"}} className={'pdp'}>
+                            <div style={{display: "flex", justifyContent: "space-between", marginBottom: '1em'}}
+                                 className={'pdp'}>
                                 <Heading help={PDPComp.HELP}>
                                     <h4>
                                         Partial Dependencies for Feature <i>{feature}</i> and class&nbsp;

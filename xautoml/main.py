@@ -423,6 +423,9 @@ class XAutoML:
         _, _, _, _, cm = details.calculate_performance_data(X, y, pipeline, self.run_history.meta.metric)
         return cm
 
+    def get_config(self, cid: str):
+        return self.run_history.cid_to_candidate.get(cid).config.get_dictionary()
+
     def _repr_mimebundle_(self, include, exclude):
         return {
             'application/xautoml+json': self.run_history.as_dict()
