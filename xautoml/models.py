@@ -1,10 +1,11 @@
 from dataclasses import dataclass, asdict
 from typing import Optional, Any, Callable
 
-from ConfigSpace.read_and_write import json as config_json
 from ConfigSpace import ConfigurationSpace, Configuration
+from ConfigSpace.read_and_write import json as config_json
 from sklearn.pipeline import Pipeline
-import dswizard.components.util as component_util
+
+from xautoml.graph_similarity import pipeline_to_networkx, export_json
 
 CandidateId = str
 
@@ -67,7 +68,7 @@ class CandidateStructure:
         return {
             'cid': self.cid,
             'configspace': config_json.write(self.configspace) if self.configspace is not None else None,
-            'pipeline': component_util.serialize(self.pipeline),
+            'pipeline': export_json(pipeline_to_networkx(self.pipeline, self.cid)),
             'configs': [c.as_dict() for c in self.configs]
         }
 

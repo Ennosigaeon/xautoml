@@ -75,7 +75,6 @@ def import_auto_sklearn(automl: Any):
             'resampling_strategy_arguments': automl.automl_._resampling_strategy_arguments,
             'n_jobs': automl.automl_._n_jobs,
             'multiprocessing_context': automl.automl_._multiprocessing_context,
-            'dask_client': automl.automl_._dask_client,
             'precision': automl.automl_.precision,
             'disable_evaluator_output': automl.automl_._disable_evaluator_output,
             'get_smac_objective_callback': automl.automl_._get_smac_object_callback,

@@ -15,7 +15,6 @@ import {
     PDPResponse,
     PerformanceData,
     PipelineHistory,
-    PipelineStep,
     RocCurveData,
     SinglePDP
 } from "./dao";
@@ -23,7 +22,7 @@ import {INotebookTracker, Notebook, NotebookActions} from "@jupyterlab/notebook"
 import {TagTool} from "@jupyterlab/celltags";
 import {KernelMessage} from "@jupyterlab/services";
 import {IError, IExecuteResult, IStream} from '@jupyterlab/nbformat';
-import {BO, CandidateId, Prediction} from "./model";
+import {BO, CandidateId, PipelineStep, Prediction} from "./model";
 import {Components} from "./util";
 import memoizee from "memoizee";
 import SOURCE = Components.SOURCE;

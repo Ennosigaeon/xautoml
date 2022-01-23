@@ -1,7 +1,7 @@
 import * as cpc from "./model";
 import {PARENT_MARKER} from "./model";
 import * as d3 from "d3";
-import {BO, Candidate, ConfigValue, Structure} from "../../model";
+import {BO, Candidate, ConfigValue, PipelineStep, Structure} from "../../model";
 
 export namespace ParCord {
 
@@ -105,7 +105,7 @@ export namespace ParCord {
         const comp: Map<string, ParallelAxes>[] = []
 
         structures.forEach(structure => {
-            structure.pipeline.steps.forEach(step => {
+            structure.pipeline.slice(1).forEach(step => {
                 const idx = Math.max(-1, ...step.parentIds.map(pid => nameToIndex.get(pid))
                     .filter(pid => pid !== undefined)) + 1
                 nameToIndex.set(step.id, idx)
@@ -113,18 +113,19 @@ export namespace ParCord {
                 if (comp.length === idx)
                     comp.push(new Map<string, ParallelAxes>())
 
-                const commonStepName = step.id.includes(':') ? step.id.split(':').slice(0, -1).join(':') : step.id
+                const commonStepName = step.step_name
                 if (!comp[idx].has(commonStepName))
-                    comp[idx].set(commonStepName, new ParallelAxes(commonStepName, step.parallelPaths))
+                    comp[idx].set(commonStepName, new ParallelAxes(commonStepName, step.parallel_paths.length === 0 ? [step.step_name] : step.parallel_paths))
 
                 if (!comp[idx].get(commonStepName).has(step.id)) {
+                    // TODO hyperparameters of components in dswizard parallel paths are still missing
                     const axes_ = structure.configspace.getHyperparameters(step.id)
-                        .map((hp: HyperParameter) => [parseHyperparameter(hp, structure.configspace.conditions)])
+                        .map(hp => [parseHyperparameter(hp, structure.configspace.conditions)])
                     const axes = axes_.length === 0 ? [[]] : axes_
 
-                    const label = !Number.isNaN(Number.parseInt(step.name)) || !step.name ? step.label : undefined
+                    const label = !Number.isNaN(Number.parseInt(step.label)) || !step.label ? step.label : undefined
                     const parAxes = comp[idx].get(commonStepName)
-                    parAxes.choices.set(step.id, new cpc.Choice(step.name, axes, true, label))
+                    parAxes.choices.set(step.id, new cpc.Choice(step.label, axes, true, label))
                 }
             })
         })
@@ -141,14 +142,8 @@ export namespace ParCord {
                     let key
                     if (steps.has(pathId))
                         key = pathId
-                    else {
-                        const pathTokens = pathId.split(':')
-                        key = Array.from(steps.keys()).filter(k => {
-                            const tokens = k.split(':')
-                            let intersection = tokens.filter(x => pathTokens.includes(x));
-                            return intersection.length > 0
-                        }).pop()
-                    }
+                    else
+                        key = Array.from(steps.keys()).filter(k => k.startsWith(pathId)).pop()
 
                     const values = key !== undefined && steps.has(key) ? Array.from(steps.get(key).choices.values()) : []
                     const name = key !== undefined ? key : pathId
@@ -180,7 +175,7 @@ export namespace ParCord {
     export function parseCandidates(candidates: [Candidate, Structure][], axes: cpc.Axis[][]): cpc.Line[] {
         const nameToIndex = new Map<string, number>()
         candidates.forEach(([_, structure]) => {
-            structure.pipeline.steps.forEach(step => {
+            structure.pipeline.slice(1).forEach(step => {
                 const idx = Math.max(-1, ...step.parentIds.map(pid => nameToIndex.get(pid))
                     .filter(pid => pid !== undefined)) + 1
                 nameToIndex.set(step.id, idx)
@@ -190,10 +185,10 @@ export namespace ParCord {
         // noinspection UnnecessaryLocalVariableJS
         const lines = candidates.map(([candidate, structure]) => {
             const points = new Array<cpc.LinePoint>()
-            structure.pipeline.steps.map(step => {
-                const commonStepName = step.id.includes(':') ? step.id.split(':').slice(0, -1).join(':') : step.id
+            structure.pipeline.slice(1).map(step => {
+                const commonStepName = step.step_name
                 points.push(new cpc.LinePoint(`${nameToIndex.get(step.id)}.${commonStepName}.${PARENT_MARKER}`, commonStepName))
-                points.push(new cpc.LinePoint(`${nameToIndex.get(step.id)}.${commonStepName}`, step.name))
+                points.push(new cpc.LinePoint(`${nameToIndex.get(step.id)}.${commonStepName}`, step.label))
 
                 candidate.subConfig(step, false)
                     .forEach((value: ConfigValue, key: string) => {
@@ -203,7 +198,7 @@ export namespace ParCord {
 
             // Fill missing steps in pipeline and final performance measure
             // noinspection UnnecessaryLocalVariableJS
-            const lastStep = structure.pipeline.steps[structure.pipeline.steps.length - 1].id
+            const lastStep = structure.pipeline[structure.pipeline.length - 1].id
             axes.slice(nameToIndex.get(lastStep) + 1).forEach((axes: cpc.Axis[]) => {
                 axes.forEach(axis => {
                     const value = axis.id === '__performance__' ? candidate.loss : undefined

@@ -1,34 +1,38 @@
 import networkx as nx
 import numpy as np
 from scipy.optimize import linear_sum_assignment
-from sklearn.pipeline import Pipeline
-
-from xautoml.models import CandidateId
 
 
-def pipeline_to_networkx(pipeline: Pipeline, cid: CandidateId):
+def pipeline_to_networkx(pipeline, cid):
     def prefix_name(prefix, name) -> str:
         if prefix:
+            if prefix.endswith(name):
+                return prefix
             return '{}:{}'.format(prefix, name)
         return name
 
-    def convert_component(component, prefix: str, parent_nodes: list[str], edge_labels: list[str] = None) -> list[str]:
+    def convert_component(component, prefix: str, parent_nodes: list[str], other_paths: list[str],
+                          edge_labels: list[str] = None) -> list[str]:
 
         if hasattr(component, 'choice'):
-            return convert_component(component.choice, prefix, parent_nodes)
+            return convert_component(component.choice, prefix, parent_nodes, other_paths)
 
         if hasattr(component, 'column_transformer') or hasattr(component, 'transformers'):
             for p in parent_nodes:
                 g.nodes[p]['splitter'] = True
 
+            trans_tuple = component.transformers if hasattr(component, 'transformers') else component.column_transformer
+
             transformers = []
-            for tuple_ in component.transformers:
+            other_paths = [prefix_name(prefix, t[0]) for t in trans_tuple]
+            for tuple_ in trans_tuple:
                 if len(tuple_) == 3:
                     name, transformer, cols = tuple_
                 else:
                     (name, transformer), cols = tuple_, 'all'
+
                 transformers += convert_component(transformer, prefix_name(prefix, name), parent_nodes,
-                                                  [','.join([str(c) for c in cols])])
+                                                  other_paths, [','.join([str(c) for c in cols])])
 
             return transformers
 
@@ -36,14 +40,17 @@ def pipeline_to_networkx(pipeline: Pipeline, cid: CandidateId):
             prev = parent_nodes
             labels = edge_labels
             for name, step in component.steps:
-                new_nodes = convert_component(step, prefix_name(prefix, name), prev, labels)
+                new_nodes = convert_component(step, prefix_name(prefix, name), prev, other_paths, labels)
                 prev = new_nodes
                 labels = None
             return prev
 
-        node = prefix_name(prefix, type(component).__name__)
+        suffix = component.__class__.__module__.split('.')[-1]
+        node = prefix_name(prefix, suffix)
         g.add_node(node,
+                   step_name=prefix.replace(f':{suffix}', '') if prefix.endswith(suffix) else prefix,
                    edge_labels={} if edge_labels is None else {p: l for p, l in zip(parent_nodes, edge_labels)},
+                   other_paths=other_paths,
                    merger=len(parent_nodes) > 1,
                    cids=[cid])
         for p in parent_nodes:
@@ -52,8 +59,8 @@ def pipeline_to_networkx(pipeline: Pipeline, cid: CandidateId):
         return [node]
 
     g = nx.DiGraph()
-    g.add_node('SOURCE', cids=[cid])
-    convert_component(pipeline, '', ['SOURCE'])
+    g.add_node('SOURCE', cids=[cid], other_paths=[])
+    convert_component(pipeline, '', ['SOURCE'], [])
 
     return g
 
@@ -64,6 +71,8 @@ def export_json(g: nx.DiGraph):
         nodes.append({
             'id': node,
             'label': node.split(':')[-1],
+            'step_name': data['step_name'] if 'step_name' in data else node,
+            'parallel_paths': data['other_paths'],
             'cids': data['cids'],
             'splitter': 'splitter' in data and data['splitter'],
             'merger': 'merger' in data and data['merger'],

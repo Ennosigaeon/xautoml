@@ -1,10 +1,10 @@
 import React from "react";
-import {CandidateId, Structure} from "../../model";
+import {CandidateId, PipelineStep} from "../../model";
 import 'rc-slider/assets/index.css';
 import {Components, JupyterContext} from "../../util";
 import {GraphEdge, GraphNode, HierarchicalTree} from "../tree_structure";
 import {Dag, DagNode} from "d3-dag";
-import {PipelineHistory, PipelineStep} from "../../dao";
+import {PipelineHistory} from "../../dao";
 import {LoadingIndicator} from "../../util/loading";
 import {ErrorIndicator} from "../../util/error";
 import SOURCE = Components.SOURCE;
@@ -69,7 +69,6 @@ class SingleNode extends React.Component<SingleNodeProps, SingleNodeState> {
 }
 
 interface StructureSearchProps {
-    structures: Structure[]
     timestamp: number
 
     selectedCandidates?: Set<CandidateId>;

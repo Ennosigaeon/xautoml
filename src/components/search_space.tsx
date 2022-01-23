@@ -154,7 +154,6 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
                 <CollapseComp name={'reinforcement-explanations'} showInitial={true} help={StructureSearchGraph.HELP}>
                     <h3>Pipeline Structure Search</h3>
                     <StructureSearchGraph timestamp={this.state.timestamp}
-                                          structures={structures}
                                           selectedCandidates={selectedCandidates}
                                           onCandidateSelection={onCandidateSelection}/>
                 </CollapseComp>

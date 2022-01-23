@@ -1,41 +1,13 @@
 import React from "react";
-import {Candidate, Config, ConfigValue, Pipeline, PipelineStep, Structure} from "../../model";
+import {Candidate, Pipeline, PipelineStep} from "../../model";
 import {Components, JupyterContext} from "../../util";
-import {Typography} from "@material-ui/core";
 import {OutputDescriptionData} from "../../dao";
-import {LoadingIndicator} from "../../util/loading";
-import {ErrorIndicator} from "../../util/error";
 import {GraphEdge, GraphNode, HierarchicalTree} from "../tree_structure";
 import {Dag} from "d3-dag";
-import {ConfigurationTable} from "./configuration";
 import isPipEnd = Components.isPipEnd;
 
-
-export class StepWithConfig extends PipelineStep {
-
-    constructor(public readonly id: string,
-                public readonly clazz: string,
-                public readonly parentIds: string[],
-                public readonly config: Config) {
-        super(id, clazz, parentIds);
-    }
-
-    static fromStep(step: PipelineStep, config: Config) {
-        const copy = new StepWithConfig(step.id, step.clazz, [...step.parentIds], config)
-        step.edgeLabels.forEach((v, k) => copy.edgeLabels.set(k, v))
-        return copy
-    }
-
-    getLabel(parent: string): string {
-        // parent id may have been changed to omit "transparent" steps like pipeline or column transformer.
-        if (this.edgeLabels.size === 1)
-            return this.edgeLabels.values().next().value
-        return this.edgeLabels.get(parent)
-    }
-}
-
 interface SingleComponentProps {
-    step: StepWithConfig
+    step: PipelineStep
 
     error: Error
     loading: boolean
@@ -87,10 +59,10 @@ class SingleComponent extends React.Component<SingleComponentProps, any> {
 }
 
 interface StructureGraphProps {
-    structure: Structure
+    structure: Pipeline
     candidate: Candidate
     selectedComponent: string
-    onComponentSelection?: (component: StepWithConfig) => void
+    onComponentSelection?: (component: PipelineStep) => void
 }
 
 interface StructureGraphState {
@@ -133,28 +105,7 @@ export class PipelineStructureComponent extends React.Component<StructureGraphPr
             });
     }
 
-    private toStepsWithConfig(candidate: Candidate, pipeline: Pipeline): StepWithConfig[] {
-        const root = new StepWithConfig(Components.SOURCE, 'Source', [], new Map<string, ConfigValue>())
-        const nodes = [root]
-        pipeline.steps.forEach(step => {
-            const subConfig = candidate.subConfig(step, true)
-            const node = StepWithConfig.fromStep(step, subConfig)
-            if (node.parentIds.length === 0)
-                node.parentIds.push(root.id)
-
-            nodes.push(node)
-        })
-
-        nodes.push(new StepWithConfig(
-            Components.SINK,
-            'Sink',
-            pipeline.steps.slice(-1).map(step => step.id), // Pipeline can only have exactly 1 final step (the classifier)
-            new Map<string, ConfigValue>())
-        )
-        return nodes
-    }
-
-    private onComponentSelection(step: StepWithConfig, e: React.MouseEvent): void {
+    private onComponentSelection(step: PipelineStep, e: React.MouseEvent): void {
         const {onComponentSelection} = this.props
         if (!!onComponentSelection) {
             onComponentSelection(step)
@@ -162,7 +113,7 @@ export class PipelineStructureComponent extends React.Component<StructureGraphPr
         }
     }
 
-    private renderNodes(root: Dag<StepWithConfig>): JSX.Element {
+    private renderNodes(root: Dag<PipelineStep>): JSX.Element {
         const {selectedComponent} = this.props
         const {outputs, loading, error} = this.state
 
@@ -170,7 +121,7 @@ export class PipelineStructureComponent extends React.Component<StructureGraphPr
             return (
                 <GraphNode key={node.data.label}
                            node={node}
-                           highlight={node.data.id === selectedComponent}
+                           highlight={node.data.step_name === selectedComponent}
                            virtual={isPipEnd(node.data.id)}
                            nodeWidth={PipelineStructureComponent.NODE_WIDTH}
                            nodeHeight={PipelineStructureComponent.NODE_HEIGHT}
@@ -202,13 +153,10 @@ export class PipelineStructureComponent extends React.Component<StructureGraphPr
     }
 
     render() {
-        const {structure, candidate} = this.props
-        const data = this.toStepsWithConfig(candidate, structure.pipeline)
-
         return (
             <HierarchicalTree nodeHeight={PipelineStructureComponent.NODE_HEIGHT}
                               nodeWidth={PipelineStructureComponent.NODE_WIDTH}
-                              data={data}
+                              data={this.props.structure}
                               render={this.renderNodes}/>
         )
     }

@@ -83,7 +83,8 @@ export class ConfigurationComp extends React.Component<ConfigurationProps> {
         const {candidate, structure} = this.props
         return (
             <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-around', flexWrap: 'wrap'}}>
-                {structure.pipeline.steps
+                {structure.pipeline
+                    .slice(1)
                     .map(step =>
                         <div key={step.label}>
                             <h4>{step.label}</h4>

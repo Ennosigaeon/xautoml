@@ -1,8 +1,7 @@
 import {URLExt} from '@jupyterlab/coreutils';
 
 import {ServerConnection} from '@jupyterlab/services';
-import {CandidateId, Prediction} from "./model";
-import {normalizeComponent} from "./util";
+import {CandidateId, Pipeline, Prediction} from "./model";
 
 /**
  * Call the API extension
@@ -164,37 +163,4 @@ export interface DecisionSurfaceResponse {
 export class PipelineHistory {
     merged: Pipeline[]
     individual: Pipeline[]
-}
-
-export type Pipeline = PipelineStep[]
-
-export class PipelineStep {
-    constructor(public readonly id: string,
-                public readonly label: string,
-                public readonly splitter: boolean,
-                public readonly merger: boolean,
-                public readonly edge_labels: Map<string, string>,
-                public readonly cids: CandidateId[],
-                public readonly parentIds: string[]) {
-    }
-
-    isSelected(selectedCandidates: Set<CandidateId>) {
-        return this.cids.filter(id => selectedCandidates.has(id)).length > 0
-    }
-
-    getLabel(parent: string): string {
-        // parent id may have been changed to omit "transparent" steps like pipeline or column transformer.
-        if (this.edge_labels.size === 1)
-            return this.edge_labels.values().next().value
-        return this.edge_labels.get(parent)
-    }
-
-    static fromJson(data: any) {
-        return new PipelineStep(data.id,
-            normalizeComponent(data.label),
-            data.splitter, data.merger,
-            new Map<string, string>(Object.entries(data.edge_labels)),
-            data.cids,
-            data.parentIds)
-    }
 }

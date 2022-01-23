@@ -7,9 +7,9 @@ import TableRow from '@material-ui/core/TableRow';
 import TableSortLabel from '@material-ui/core/TableSortLabel';
 import Checkbox from '@material-ui/core/Checkbox';
 import {Box, IconButton, Menu, MenuItem, Table, TableContainer} from '@material-ui/core';
-import {Candidate, CandidateId, Explanations, MetaInformation, Structure} from '../model';
+import {Candidate, CandidateId, Explanations, MetaInformation, PipelineStep, Structure} from '../model';
 import {Components, JupyterContext, prettyPrint} from '../util';
-import {StepWithConfig, PipelineStructureComponent} from './details/pipeline_structure';
+import {PipelineStructureComponent} from './details/pipeline_structure';
 import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@material-ui/icons/KeyboardArrowUp';
 import Collapse from '@material-ui/core/Collapse';
@@ -149,12 +149,12 @@ class CandidateTableRow extends React.Component<CandidateTableRowProps, Candidat
         e.stopPropagation()
     }
 
-    private openComponent(step: StepWithConfig) {
+    private openComponent(step: PipelineStep) {
         if (this.state.open && this.state.selectedComponent[0] === step.id) {
             // Close details when selecting the same step again
             this.setState({open: false, selectedComponent: [undefined, undefined]})
         } else {
-            this.setState({open: true, selectedComponent: [step.id, step.label]})
+            this.setState({open: true, selectedComponent: [step.step_name, step.label]})
         }
     }
 
@@ -205,7 +205,7 @@ ${ID}_pipeline
                     <TableCell align='right'>{prettyPrint(candidate.pred_time, 3)}</TableCell>
                     <TableCell align='right'>{prettyPrint(candidate.performance, 4)}</TableCell>
                     <TableCell align='right' style={{height: '50px'}} padding='none'>
-                        <PipelineStructureComponent structure={candidate.candidate[0]}
+                        <PipelineStructureComponent structure={candidate.candidate[0].pipeline}
                                                     candidate={candidate.candidate[1]}
                                                     selectedComponent={selectedComponent[0]}
                                                     onComponentSelection={this.openComponent}/>

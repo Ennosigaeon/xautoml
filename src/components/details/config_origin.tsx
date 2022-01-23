@@ -1,6 +1,5 @@
 import {ConfigOrigin, Explanations, Structure} from "../../model";
-import {MCTSExplanationsComponent} from "../search_space/mcts_explanation";
-import {cidToSid, JupyterContext} from "../../util";
+import {JupyterContext} from "../../util";
 import {SurrogateExplanation} from "./surrogate_explanation";
 import React from "react";
 import {KeyValue} from "../../util/KeyValue";
@@ -10,6 +9,7 @@ import {ParallelCoordinates} from "../pc/parallel_corrdinates";
 import {DetailsModel} from "./model";
 import {JupyterButton} from "../../util/jupyter-button";
 import {ID} from "../../jupyter";
+import {StructureSearchGraph} from "../search_space/structure_search";
 
 
 interface ConfigOriginProps {
@@ -67,7 +67,7 @@ ${ID}_hp
     }
 
     render() {
-        const {explanations, structures, model} = this.props
+        const {explanations, model} = this.props
         const {candidate, structure} = model
 
         return (
@@ -79,25 +79,20 @@ ${ID}_hp
                 </div>
                 <ConfigurationComp candidate={candidate} structure={structure}/>
 
-                {(explanations.structures || explanations.configs) && <hr/>}
-                {explanations.structures &&
-                    <CollapseComp name={'config-origin-reinforcement'} showInitial={true}
-                                  help={MCTSExplanationsComponent.HELP + '\n\n' + 'Highlighted in blue is the actual ' +
-                                      'selected pipeline structure.'}>
-                        <h4>Structure Search</h4>
-                        <MCTSExplanationsComponent explanations={explanations.structures}
-                                                   structures={structures}
-                                                   timestamp={cidToSid(candidate.id)}/>
-                    </CollapseComp>
-                }
-                {explanations.configs &&
-                    <CollapseComp name={'config-origin-bo'} showInitial={true}
-                                  help={ParallelCoordinates.HELP + '\n\n' + SurrogateExplanation.HELP}>
-                        <h4>Hyperparameter Optimization</h4>
-                        <SurrogateExplanation model={model}
-                                              explanation={explanations.configs.get(candidate.id)}/>
-                    </CollapseComp>
-                }
+                <hr/>
+                <CollapseComp name={'config-origin-reinforcement'} showInitial={true}
+                              help={StructureSearchGraph.HELP + '\n\n' +
+                                  'Highlighted in blue is the actual selected pipeline structure.'}>
+                    <h4>Pipeline Structure Search</h4>
+                    <StructureSearchGraph timestamp={candidate.index}/>
+                </CollapseComp>
+
+                <CollapseComp name={'config-origin-bo'} showInitial={true}
+                              help={ParallelCoordinates.HELP + '\n\n' + SurrogateExplanation.HELP}>
+                    <h4>Hyperparameter Optimization</h4>
+                    <SurrogateExplanation model={model}
+                                          explanation={explanations?.configs.get(candidate.id)}/>
+                </CollapseComp>
             </>
         )
     }

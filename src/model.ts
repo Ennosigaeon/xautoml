@@ -217,6 +217,9 @@ export class Candidate {
 
     public static readonly SUCCESS = 'SUCCESS'
 
+    // Computed after creating all candidates
+    public index: number = 0
+
     constructor(public readonly id: CandidateId,
                 public readonly status: string,
                 public readonly budget: number,
@@ -237,7 +240,7 @@ export class Candidate {
     subConfig(step: PipelineStep, prune: boolean): Config {
         const subConfig = new Map<string, ConfigValue>()
         Array.from(this.config.keys())
-            .filter(k => k.startsWith(step.id + ':'))
+            .filter(k => k.startsWith(step.step_name + ':'))
             .forEach(key => {
                 const tokens = key.split(':')
                 subConfig.set(prune ? tokens[tokens.length - 1] : key, this.config.get(key))
@@ -271,79 +274,40 @@ export class MetaInformation {
     }
 }
 
+export type Pipeline = PipelineStep[]
+
 export class PipelineStep {
-
-    public readonly name: string
-    public readonly label: string
-    public readonly edgeLabels: Map<string, string>
-
-    public parallelPaths: string[]
-
-    constructor(public readonly id: string, public readonly clazz: string, public readonly parentIds: string[]) {
-        this.label = normalizeComponent(this.clazz)
-        this.edgeLabels = new Map<string, string>()
-
-        const tokens = this.id.split(':')
-        this.name = tokens[tokens.length - 1]
-
-        this.parallelPaths = [id]
-    }
-}
-
-export class Pipeline {
-
-    constructor(public readonly steps: PipelineStep[]) {
+    constructor(public readonly id: string,
+                public readonly label: string,
+                public readonly step_name: string,
+                public readonly splitter: boolean,
+                public readonly merger: boolean,
+                public readonly parallel_paths: string[],
+                public readonly edge_labels: Map<string, string>,
+                public readonly cids: CandidateId[],
+                public readonly parentIds: string[]) {
     }
 
-    static fromJson(pipeline: any): Pipeline {
-        const [steps] = this.loadSingleStep(undefined, pipeline, [])
-        return new Pipeline(steps)
+    isSelected(selectedCandidates: Set<CandidateId>) {
+        return this.cids.filter(id => selectedCandidates.has(id)).length > 0
     }
 
+    getLabel(parent: string): string {
+        // parent id may have been changed to omit "transparent" steps like pipeline or column transformer.
+        if (this.edge_labels.size === 1)
+            return this.edge_labels.values().next().value
+        return this.edge_labels.get(parent)
+    }
 
-    private static loadSingleStep(id: string, step: any, parents: string[]): [PipelineStep[], string[]] {
-        if (step.clazz.includes('Pipeline')) {
-            let parents_: string[] = parents;
-            const steps: PipelineStep[] = [];
-            (step.args.steps as [string, any][])
-                .forEach(([subId, subStep]) => {
-                        const res = this.loadSingleStep(id ? `${id}:${subId}` : subId, subStep, parents_)
-                        steps.push(...res[0])
-                        parents_ = res[1]
-                    }
-                )
-            return [steps, parents_]
-        } else if (step.clazz.includes('ColumnTransformer')) {
-            const steps: PipelineStep[] = [];
-            const outParents: string[] = [];
-            const otherPaths = (step.args.transformers as [string, any, any][]).map(t => t[0]);
-
-            (step.args.transformers as [string, any, any][])
-                .forEach(([subId, subPath, columns]) => {
-                    const [childSteps, newParents] = this.loadSingleStep(`${id}:${subId}`, subPath, parents)
-                    childSteps[0].edgeLabels.set(subId, columns.toString()) // At least one child always have to be present
-                    childSteps.forEach(c => c.parallelPaths = otherPaths)
-                    steps.push(...childSteps)
-                    outParents.push(...newParents)
-                })
-            return [steps, outParents]
-        } else if (step.clazz.includes('FeatureUnion')) {
-            const steps: PipelineStep[] = [];
-            const outParents: string[] = [];
-            const otherPaths = (step.args.transformer_list as [string, any][]).map(t => t[0]);
-
-            (step.args.transformer_list as [string, any][])
-                .forEach(([subId, subPath]) => {
-                    const [childSteps, newParents] = this.loadSingleStep(`${id}:${subId}`, subPath, parents)
-                    childSteps[0].edgeLabels.set(subId, 'all') // At least one child always have to be present
-                    childSteps.forEach(c => c.parallelPaths = otherPaths)
-                    steps.push(...childSteps)
-                    outParents.push(...newParents)
-                })
-            return [steps, outParents]
-        } else {
-            return [[new PipelineStep(id ? id : '', step.clazz, parents)], [id]]
-        }
+    static fromJson(data: any) {
+        return new PipelineStep(data.id,
+            normalizeComponent(data.label),
+            data.step_name,
+            data.splitter, data.merger,
+            data.parallel_paths,
+            new Map<string, string>(Object.entries(data.edge_labels)),
+            data.cids,
+            data.parentIds)
     }
 }
 
@@ -356,8 +320,7 @@ export class Structure {
     }
 
     static fromJson(structure: Structure, defaultConfigSpace: BO.ConfigSpace): Structure {
-        // raw pipeline data is list of tuple and not object
-        const pipeline = Pipeline.fromJson(structure.pipeline as any)
+        const pipeline = structure.pipeline.map(s => PipelineStep.fromJson(s))
         const configs = structure.configs.map(c => Candidate.fromJson(c))
         const configSpace = structure.configspace ?
             BO.ConfigSpace.fromJson(structure.configspace as any) : defaultConfigSpace
@@ -376,7 +339,15 @@ export class RunHistory {
     constructor(public readonly meta: MetaInformation,
                 public readonly structures: Structure[],
                 public readonly explanations: Explanations) {
-        structures.map(s => s.configs.forEach(c => this.candidateMap.set(c.id, c)))
+
+        const array: Candidate[] = []
+        structures.map(s => s.configs.forEach(c => {
+            this.candidateMap.set(c.id, c)
+            array.push(c)
+        }))
+
+        array.sort((a, b) => a.runtime.timestamp - b.runtime.timestamp)
+            .forEach((c, idx) => c.index = idx)
     }
 
     static fromJson(runhistory: RunHistory): RunHistory {
