@@ -1,13 +1,14 @@
-# xautoml
+# XAutoML: A Visual Analytics Tool for Establishing Trust in Automated Machine Learning
 
-![Github Actions Status](https://github.com/Ennosigaeon/xautoml/workflows/Build/badge.svg)
+XAutoML is an interactive visual analytics tool for explaining AutoML optimisation procedures and ML pipelines
+constructed by AutoML. It combines interactive visualizations with established techniques from explainable AI (XAI) to
+make the complete AutoML procedure transparent and explainable. We integrate XAutoML with Jupyter to enable experienced
+users to extend the visual analytics with advanced ad-hoc visualizations based on information extracted from XAutoML
 
-A JupyterLab extension.
+Currently, XAutoML supports only [auto-sklearn](https://github.com/automl/auto-sklearn) and [dswizard](https://github.com/Ennosigaeon/dswizard)
+but we plan to add support for further AutoML systems.
 
 
-This extension is composed of a Python package named `xautoml`
-for the server extension and a NPM package named `xautoml`
-for the frontend extension.
 
 
 ## Requirements
