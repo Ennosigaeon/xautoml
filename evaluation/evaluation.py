@@ -2,50 +2,63 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from scipy.stats import ttest_ind
 
 from sklearn.preprocessing import LabelEncoder
 
 
 def load_data():
-    # The first seven answers have to loaded from the first Excel file because MS Forms is too stupid to handle a
-    # change in one question...
-    df1 = pd.read_excel('XAutoML(1-7).xlsx')
-    df2 = pd.read_excel('XAutoML.xlsx').loc[7:, :]
+    questionnaire = pd.read_excel('XAutoML.xlsx')
 
-    df1.columns = df2.columns
-
-    questionnaire = pd.concat([df1, df2])
+    encoder = LabelEncoder()
+    encoder.classes_ = np.array(['strongly disagree', 'disagree', 'neutral', 'agree', 'strongly agree'])
 
     for c in questionnaire.columns:
         try:
-            questionnaire.loc[:, c] = questionnaire.loc[:, c].str.strip()
-        except AttributeError:
+            questionnaire.loc[:, c] = questionnaire.loc[:, c].str.strip().str.lower()
+            questionnaire.loc[:, c] = encoder.transform(questionnaire.loc[:, c])
+        except (AttributeError, ValueError):
             pass
+    questionnaire.columns = questionnaire.columns.str.strip()
 
-    requirements_df = pd.read_excel('task_results.ods', sheet_name='Requirements', skiprows=1)
-    requirements_df = requirements_df.drop(index=[24], columns=['Unnamed: 1']).T
-    requirements_df.columns = requirements_df.iloc[0]
-    requirements_df = requirements_df[1:]
+    requirements = pd.read_excel('task_results.ods', sheet_name='Requirements', skiprows=1)
+    requirements = requirements.drop(index=[24], columns=['Unnamed: 1']).T
+    requirements.columns = requirements.iloc[0]
+    requirements = requirements[1:]
 
-    return questionnaire, requirements_df
+    tasks = pd.read_excel('task_results.ods', sheet_name=0)
+    tasks = tasks.dropna(axis=1, how='all').dropna(axis=0, how='all')
+    tasks.index = tasks.iloc[:, 0]
+    tasks.drop(columns=tasks.columns[:2], inplace=True)
+
+    return questionnaire, requirements, tasks
 
 
 def calculate_sus(df: pd.DataFrame):
-    encoder = LabelEncoder()
-    encoder.classes_ = np.array(['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly agree'])
-
     invert = [False, False, True, False, True, False, True, False, True, True]
 
     for c, inv in zip(df.columns, invert):
-        df.loc[:, c] = encoder.transform(df.loc[:, c])
         if inv:
             df.loc[:, c] = 4 - df.loc[:, c]
+        df.loc[:, c] = df.loc[:, c] * 2.5
 
-    score = df.mean(axis=0) * 2.5
+    score = df.sum(axis=1)
 
     print('###### System Usability Score ######')
-    print(score)
-    print(score.sum())
+    print(df.mean(axis=0))
+    print(score.mean(), score.std())
+    print('\n\n')
+
+
+def print_visual_design(df: pd.DataFrame):
+    de = df[df['Role'] == 'domain expert']
+    ar = df[df['Role'] == 'automl researcher']
+    ds = df[df['Role'] == 'data scientist']
+    data = pd.DataFrame([de.mean() + 1, ds.mean() + 1, ar.mean() + 1, df.mean() + 1]).T
+
+    print('###### Visual Design ######')
+    for _, row in data.iterrows():
+        print(f'\\({row[0]:.2f}\\)\t& \\({row[1]:.2f}\\)\t& \\({row[2]:.2f}\\)\t& \\({row[3]:.2f}\\) \\\\')
     print('\n\n')
 
 
@@ -68,19 +81,17 @@ def plot_priority_distribution(df: pd.DataFrame, group=True):
 
     data = pd.DataFrame({'x': x, 'y': y, 'role': m})
 
-    with pd.option_context('display.precision', 2):
-        print('Average card rank')
-        print(data.groupby(by='x').mean())
+    mean = data.groupby(by=['x', 'role']).mean().reset_index()
+    mean = pd.DataFrame({
+        'Domain Expert': 24 - mean.loc[mean['role'] == 'Domain Expert', 'y'].reset_index(drop=True),
+        'Data Scientist': 24 - mean.loc[mean['role'] == 'Data Scientist', 'y'].reset_index(drop=True),
+        'AutoML Researcher': 24 - mean.loc[mean['role'] == 'AutoML Researcher', 'y'].reset_index(drop=True),
+    })
 
-        mean = data.groupby(by=['x', 'role']).mean().reset_index()
-        mean = pd.DataFrame({
-            'Question': mean['x'].iloc[::3].reset_index(drop=True),
-            'Domain Expert': 24 - mean.loc[mean['role'] == 'Domain Expert', 'y'].reset_index(drop=True),
-            'Data Scientist': 24 - mean.loc[mean['role'] == 'Data Scientist', 'y'].reset_index(drop=True),
-            'AutoML Researcher': 24 - mean.loc[mean['role'] == 'AutoML Researcher', 'y'].reset_index(drop=True),
-        })
-
-        print(mean)
+    print('Average card rank')
+    for _, row in mean.iterrows():
+        print(f'\\({row[0]:.1f}\\)\t& \\({row[1]:.1f}\\)\t& \\({row[2]:.1f}\\) \\\\')
+    print('\n\n')
 
     if group:
         replacements = {
@@ -140,6 +151,60 @@ def plot_priority_distribution(df: pd.DataFrame, group=True):
     fig.savefig('requirement_cards.pdf')
 
 
-questionnaire, requirements_df = load_data()
-calculate_sus(questionnaire.iloc[:, 32:42])
-plot_priority_distribution(requirements_df)
+def calculate_trust_result(text_df: pd.DataFrame, vis_df: pd.DataFrame):
+    vis_df.columns = text_df.columns
+    print('###### Trust ######')
+    for col in text_df:
+        if col == 'Role':
+            continue
+
+        text = text_df.loc[:, col]
+        vis = vis_df.loc[:, col]
+
+        t = ttest_ind(text.values, vis.values, alternative='less')
+        print(
+            f'{col}, \({text.mean() + 1:.2f} \pm {text.std():.2f}\), \({vis.mean() + 1:.2f} \pm {vis.std():.2f}\), {t.pvalue:.2e}')
+
+    text_de, vis_de = text_df[text_df['Role'] == 'domain expert'], vis_df[vis_df['Role'] == 'domain expert']
+    text_ar, vis_ar = text_df[text_df['Role'] == 'automl researcher'], vis_df[vis_df['Role'] == 'automl researcher']
+    text_ds, vis_ds = text_df[text_df['Role'] == 'data scientist'], vis_df[vis_df['Role'] == 'data scientist']
+
+    for col in text_df:
+        if col == 'Role':
+            continue
+        print(
+            f'\\({text_de[col].mean() + 1:.2f}\\)\t& \\({text_ds[col].mean() + 1:.2f}\\)\t& \\({text_ar[col].mean() + 1:.2f}\\)\t& \\({text_df[col].mean() + 1:.2f}\\) \\\\')
+        print(
+            f'\\({vis_de[col].mean() + 1:.2f}\\)\t& \\({vis_ds[col].mean() + 1:.2f}\\)\t& \\({vis_ar[col].mean() + 1:.2f}\\)\t& \\({vis_df[col].mean() + 1:.2f}\\) \\\\')
+
+    print('\n\n')
+
+
+def calculate_task_success(df: pd.DataFrame):
+    encoder = LabelEncoder()
+    encoder.classes_ = np.array(['n', 'y'])
+
+    for c in df.columns:
+        df.loc[:, c] = encoder.transform(df.loc[:, c])
+
+    with pd.option_context('display.precision', 0):
+        print('Task success percentage')
+        print(df.mean(axis=1) * 100)
+        print('\n\n')
+
+
+def index(df: pd.DataFrame, slice_) -> pd.DataFrame:
+    df2 = df.iloc[:, slice_]
+    df2['Role'] = df['Role']
+    return df2
+
+
+questionnaire, requirements, tasks = load_data()
+print_visual_design(index(questionnaire, slice(27, 32)))
+calculate_sus(index(questionnaire, slice(32, 42)))
+plot_priority_distribution(requirements)
+calculate_task_success(tasks)
+calculate_trust_result(index(questionnaire, slice(14, 20)), index(questionnaire, slice(20, 26)))
+
+print('Correlation ML expertise and understanding of ML model')
+print(questionnaire.iloc[:, [6, 15]].corr())
