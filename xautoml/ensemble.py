@@ -79,7 +79,8 @@ class EnsembleInspection:
             Z = label_encoder.transform(Z)
             Z = Z.reshape(xx.shape)
 
-            ax.contourf(Z, levels=2, alpha=0.4, cmap='viridis')
+            norm = matplotlib.colors.Normalize(vmin=0.0, vmax=label_encoder.classes_.shape[0])
+            ax.contourf(Z, levels=2, alpha=0.75, norm=norm, cmap='viridis')
             ax.axis('off')
             ax.set_position([0, 0, 1, 1])
 
