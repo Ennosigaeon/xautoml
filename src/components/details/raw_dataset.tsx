@@ -78,7 +78,7 @@ export class RawDataset extends React.Component<RawDatasetProps, RawDatasetState
         const {candidate, component} = this.props.model
 
         this.context.createCell(`
-${ID}_X, ${ID}_y, ${ID}_pipeline = XAutoMLManager.get_active().get_sub_pipeline('${candidate.id}', '${component}')
+${ID}_X, ${ID}_y, ${ID}_pipeline = gcx().get_sub_pipeline('${candidate.id}', '${component}')
 ${ID}_X
         `.trim())
     }

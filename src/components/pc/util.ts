@@ -1,7 +1,7 @@
 import * as cpc from "./model";
 import {PARENT_MARKER} from "./model";
 import * as d3 from "d3";
-import {BO, Candidate, ConfigValue, PipelineStep, Structure} from "../../model";
+import {BO, Candidate, ConfigValue, Structure} from "../../model";
 
 export namespace ParCord {
 

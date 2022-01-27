@@ -61,7 +61,7 @@ export class ConfigOriginComp extends React.Component<ConfigOriginProps, any> {
     private exportConfiguration() {
         const {id} = this.props.model.candidate
         this.context.createCell(`
-${ID}_hp = XAutoMLManager.get_active().get_config('${id}')
+${ID}_hp = gcx().get_config('${id}')
 ${ID}_hp
         `.trim())
     }

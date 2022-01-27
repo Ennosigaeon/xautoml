@@ -129,7 +129,7 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
         const {dt} = this.state
 
         this.context.createCell(`
-${ID}_dt = XAutoMLManager.get_active().get_global_surrogate('${candidate.id}', '${component}', ${dt.max_leaf_nodes})
+${ID}_dt = gcx().get_global_surrogate('${candidate.id}', '${component}', ${dt.max_leaf_nodes})
 ${ID}_dt
         `.trim())
     }

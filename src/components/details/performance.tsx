@@ -61,14 +61,14 @@ export class PerformanceComponent extends React.Component<PerformanceComponentPr
 
     private exportClassReport() {
         this.context.createCell(`
-${ID}_report = XAutoMLManager.get_active().get_class_report('${this.props.model.candidate.id}')
+${ID}_report = gcx().get_class_report('${this.props.model.candidate.id}')
 ${ID}_report
         `.trim())
     }
 
     private exportConfusionMatrix() {
         this.context.createCell(`
-${ID}_cm = XAutoMLManager.get_active().get_cm('${this.props.model.candidate.id}')
+${ID}_cm = gcx().get_cm('${this.props.model.candidate.id}')
 ${ID}_cm
         `.trim())
     }

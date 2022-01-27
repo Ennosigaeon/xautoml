@@ -383,7 +383,7 @@ class XAutoML:
 
     @no_warnings
     def get_feature_importance(self, cid: CandidateId, step: str):
-        X, y, pipeline = XAutoMLManager.get_active().get_sub_pipeline(cid, step)
+        X, y, pipeline = self.get_sub_pipeline(cid, step)
         pipeline, X, _ = pipeline_utils.get_subpipeline(pipeline, step, X, y)
         return ModelDetails.calculate_feature_importance(X, y, pipeline, self.run_history.meta.metric, n_head=10000)
 
@@ -396,7 +396,7 @@ class XAutoML:
 
     @no_warnings
     def get_global_surrogate(self, cid: CandidateId, step: str, max_leaf_nodes: int):
-        X, y, pipeline = XAutoMLManager.get_active().get_sub_pipeline(cid, step)
+        X, y, pipeline = self.get_sub_pipeline(cid, step)
         return pipeline_utils.fit_decision_tree(X, pipeline.predict(X), max_leaf_nodes=max_leaf_nodes)
 
     @no_warnings

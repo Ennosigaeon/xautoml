@@ -87,7 +87,7 @@ export class Jupyter {
     executeCode<T>(code: string): Promise<T> {
         if (!this.initialized) {
             this.initialized = true
-            return this.executeCode('from xautoml._helper import XAutoMLManager')
+            return this.executeCode('from xautoml._helper import gcx')
                 .then(() => this.executeCode(code))
         }
         const sessionContext = this.notebooks.currentWidget.context.sessionContext
@@ -160,7 +160,7 @@ export class Jupyter {
     }
 
     requestPerformanceData(cid: CandidateId): Promise<PerformanceData> {
-        return this.memExecuteCode<PerformanceData>(`XAutoMLManager.get_active().performance_data('${cid}')`)
+        return this.memExecuteCode<PerformanceData>(`gcx().performance_data('${cid}')`)
             .then(data => {
                 return {
                     duration: data.duration,
@@ -173,17 +173,17 @@ export class Jupyter {
     }
 
     requestOutputComplete(cid: CandidateId): Promise<OutputDescriptionData> {
-        return this.memExecuteCode<OutputDescriptionData>(`XAutoMLManager.get_active().output_complete('${cid}')`)
+        return this.memExecuteCode<OutputDescriptionData>(`gcx().output_complete('${cid}')`)
             .then(data => new Map<string, string>(Object.entries(data)))
     }
 
     requestOutputDescription(cid: CandidateId): Promise<OutputDescriptionData> {
-        return this.memExecuteCode<OutputDescriptionData>(`XAutoMLManager.get_active().output_description('${cid}')`)
+        return this.memExecuteCode<OutputDescriptionData>(`gcx().output_description('${cid}')`)
             .then(data => new Map<string, string>(Object.entries(data)))
     }
 
     requestLimeSurrogate(cid: CandidateId, idx: number = 0, step: string = SOURCE): Promise<LimeResult> {
-        return this.memExecuteCode<LimeResult>(`XAutoMLManager.get_active().lime('${cid}', ${idx}, '${step}')`)
+        return this.memExecuteCode<LimeResult>(`gcx().lime('${cid}', ${idx}, '${step}')`)
             .then(data => {
                 return {
                     idx: data.idx,
@@ -198,20 +198,20 @@ export class Jupyter {
 
     requestGlobalSurrogate(cid: CandidateId, step: string, max_leaf_nodes: number | 'None' = 'None'): Promise<GlobalSurrogateResult> {
         return this.memExecuteCode<GlobalSurrogateResult>(
-            `XAutoMLManager.get_active().decision_tree_surrogate('${cid}', '${step}', ${max_leaf_nodes})`
+            `gcx().decision_tree_surrogate('${cid}', '${step}', ${max_leaf_nodes})`
         )
     }
 
     requestFeatureImportance(cid: CandidateId, step: string = SOURCE): Promise<FeatureImportance> {
         return this.memExecuteCode<FeatureImportance>(
-            `XAutoMLManager.get_active().feature_importance('${cid}', '${step}')`
+            `gcx().feature_importance('${cid}', '${step}')`
         )
     }
 
     requestPDP(cid: CandidateId, step: string = SOURCE, features: string[] = undefined): Promise<Map<string, PDPResponse>> {
         const list = features.join('\', \'')
         return this.memExecuteCode<Map<string, PDPResponse>>(
-            `XAutoMLManager.get_active().pdp('${cid}', '${step}', ['${list}'])`
+            `gcx().pdp('${cid}', '${step}', ['${list}'])`
         ).then(data => {
             const x: [string, PDPResponse][] = Object.entries(data as Map<string, PDPResponse>)
                 .map(([clazz, pdpResponse]) => {
@@ -226,13 +226,13 @@ export class Jupyter {
 
     requestFANOVA(sid: CandidateId, step: string = 'None'): Promise<FANOVAOverview> {
         return this.memExecuteCode<FANOVAOverview>(
-            `XAutoMLManager.get_active().fanova_overview('${sid}', '${step}')`
+            `gcx().fanova_overview('${sid}', '${step}')`
         )
     }
 
     requestFANOVADetails(sid: CandidateId, step: string = 'None', hps: [string, string]): Promise<FANOVADetails> {
         return this.memExecuteCode<FANOVADetails>(
-            `XAutoMLManager.get_active().fanova_details('${sid}', '${step}', '${hps[0]}', '${hps[1]}')`
+            `gcx().fanova_details('${sid}', '${step}', '${hps[0]}', '${hps[1]}')`
         ).then(data => {
             const details = new Map<string, Map<string, HPImportanceDetails>>(
                 Object.entries(data.details).map(t => [t[0], new Map<string, HPImportanceDetails>(Object.entries(t[1]))])
@@ -243,7 +243,7 @@ export class Jupyter {
 
     requestSimulatedSurrogate(sid: CandidateId, timestamp: number): Promise<BO.Explanation> {
         return this.memExecuteCode<Map<string, Map<string, [number, number][]>>>(
-            `XAutoMLManager.get_active().simulate_surrogate('${sid}', ${timestamp})`
+            `gcx().simulate_surrogate('${sid}', ${timestamp})`
         ).then(data => {
                 // @ts-ignore
                 return BO.Explanation.fromJson({
@@ -258,17 +258,17 @@ export class Jupyter {
     }
 
     requestConfigSimilarity(): Promise<ConfigSimilarityResponse> {
-        return this.memExecuteCode<ConfigSimilarityResponse>(`XAutoMLManager.get_active().config_similarity()`)
+        return this.memExecuteCode<ConfigSimilarityResponse>(`gcx().config_similarity()`)
     }
 
     requestROCCurve(cid: CandidateId[]): Promise<RocCurveData> {
         const list = cid.join('\', \'')
-        return this.memExecuteCode<RocCurveData>(`XAutoMLManager.get_active().roc_curve(['${list}'])`)
+        return this.memExecuteCode<RocCurveData>(`gcx().roc_curve(['${list}'])`)
             .then(data => new Map<string, LinePoint[]>(Object.entries(data)))
     }
 
     requestEnsembleOverview(): Promise<EnsembleOverview> {
-        return this.memExecuteCode<EnsembleOverview>(`XAutoMLManager.get_active().ensemble_overview()`)
+        return this.memExecuteCode<EnsembleOverview>(`gcx().ensemble_overview()`)
             .then(data => {
                 return {
                     df: data.df,
@@ -278,13 +278,13 @@ export class Jupyter {
     }
 
     requestEnsemblePredictions(idx: number): Promise<Map<CandidateId, Prediction>> {
-        return this.memExecuteCode<Map<CandidateId, Prediction>>(`XAutoMLManager.get_active().ensemble_predictions(${idx})`)
+        return this.memExecuteCode<Map<CandidateId, Prediction>>(`gcx().ensemble_predictions(${idx})`)
             .then(data => new Map<CandidateId, Prediction>(Object.entries(data)))
     }
 
 
     requestEnsembleDecisionSurface(): Promise<DecisionSurfaceResponse> {
-        return this.memExecuteCode<DecisionSurfaceResponse>(`XAutoMLManager.get_active().ensemble_decision_surface()`)
+        return this.memExecuteCode<DecisionSurfaceResponse>(`gcx().ensemble_decision_surface()`)
             .then(data => {
                 return {
                     colors: data.colors,
@@ -296,7 +296,7 @@ export class Jupyter {
     }
 
     requestPipelineHistory(): Promise<PipelineHistory> {
-        return this.memExecuteCode<PipelineHistory>(`XAutoMLManager.get_active().get_pipeline_history()`)
+        return this.memExecuteCode<PipelineHistory>(`gcx().get_pipeline_history()`)
             .then(data => {
                 return {
                     'merged': data.merged.map(pipeline => pipeline.map(d => PipelineStep.fromJson(d))),
