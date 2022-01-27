@@ -1,7 +1,7 @@
 import * as cpc from "./model";
 import React from "react";
 import * as d3 from "d3";
-import {Candidate, CandidateId, BO, Structure} from "../../model";
+import {BO, Candidate, CandidateId, Structure} from "../../model";
 import {ParCord} from "./util";
 import {PCChoice} from "./pc_choice";
 import {PCLine} from "./pc_line";
@@ -27,7 +27,8 @@ interface PCProps {
 }
 
 interface PCState {
-    model: cpc.Model
+    root: cpc.Choice
+    height: number
     highlightedLines: Set<string>
     container: React.RefObject<any>
     filter: Map<cpc.Axis, cpc.Choice | [number, number]>
@@ -69,12 +70,18 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
         timestamp: Infinity
     }
 
+    private model: cpc.Model
+
     constructor(props: PCProps) {
         super(props)
 
         const [model, filter] = this.calcModel()
+        this.model = model
+        const [root, height] = this.doLayout()
+
         this.state = {
-            model: model,
+            root: root,
+            height: height,
             filter: filter,
             highlightedLines: this.props.selectedCandidates,
             container: undefined,
@@ -106,6 +113,20 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
         return [new cpc.Model(axes, lines), filter]
     }
 
+    private doLayout(): [cpc.Choice, number] {
+        const container = this?.state?.container
+        const width = (container && container.current) ? container.current.clientWidth : 0
+
+        const root = new cpc.Choice('', this.model.axes, false);
+
+        // Estimate height based on maximum number of choices in all coordinates
+        const maxNodes = Math.max(...root.axes.map(column => column.map(row => row.getHeightWeight()).reduce((a, b) => a + b)))
+        const height = this.NODE_HEIGHT * maxNodes
+        const yScale = d3.scaleBand([root.value.toString()], [0, height / root.getHeightWeight()])
+        root.layout([0, width], yScale)
+        return [root, height]
+    }
+
     componentDidUpdate(prevProps: Readonly<PCProps>, prevState: Readonly<PCState>, snapshot?: any) {
         if (prevProps.selectedCandidates.size !== this.props.selectedCandidates.size)
             this.setState({highlightedLines: this.props.selectedCandidates})
@@ -113,18 +134,29 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
         if (prevProps.structures.length !== this.props.structures.length ||
             prevProps.structures.map(c => c.configs.length).reduce((a, b) => a + b, 0) !== this.props.structures.map(c => c.configs.length).reduce((a, b) => a + b, 0)) {
             const [model, filter] = this.calcModel()
-            this.setState({model: model, filter: filter})
+            this.model = model
+            const [root, height] = this.doLayout()
+            this.setState({root: root, height: height, filter: filter})
         }
+    }
+
+    componentDidMount() {
+        window.setTimeout(() => {
+            const [root, height] = this.doLayout()
+            this.setState({root: root, height: height})
+        }, 100)
     }
 
     private onCollapse(choice: cpc.Choice) {
         choice.collapse()
-        this.setState({model: this.state.model})
+        const [root, height] = this.doLayout()
+        this.setState({root: root, height: height})
     }
 
     private onExpand(choice: cpc.Choice) {
         choice.expand()
-        this.setState({model: this.state.model})
+        const [root, height] = this.doLayout()
+        this.setState({root: root, height: height})
     }
 
     private highlightLines(axis: cpc.Axis, filter: cpc.Choice | [number, number] | undefined) {
@@ -135,7 +167,7 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
         else
             this.state.filter.set(axis, filter)
 
-        const highlights = this.calculateHighlightedLines(this.state.model.lines, this.state.filter)
+        const highlights = this.calculateHighlightedLines(this.model.lines, this.state.filter)
         this.setState({highlightedLines: highlights, filter: this.state.filter})
         this.props.onCandidateSelection(highlights)
     }
@@ -184,20 +216,9 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
     }
 
     public render() {
-        const {model, container} = this.state
-        const width = (container && container.current) ? container.current.clientWidth : 0
+        this.model.explanations = this.props.explanation
 
-        const root = new cpc.Choice('', this.state.model.axes, false);
-
-        // Estimate height based on maximum number of choices in all coordinates
-        const maxNodes = Math.max(...root.axes.map(column => column.map(row => row.getHeightWeight()).reduce((a, b) => a + b)))
-        const height = this.NODE_HEIGHT * maxNodes
-        const yScale = d3.scaleBand([root.value.toString()], [0, height / root.getHeightWeight()])
-        root.layout([0, width], yScale)
-
-        model.explanations = this.props.explanation
-
-        const lines = this.state.model.lines
+        const lines = this.model.lines
             .slice(0, this.props.timestamp + 1)
             .filter(line => !this.props.hideUnselectedCandidates || this.props.selectedCandidates.has(line.id))
 
@@ -218,11 +239,11 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
                     </div>
                 }
                 {!this.props.explanation && <WarningIndicator message={'Surrogate model visualization not available'}/>}
-                <RefableFlexibleSvg height={height} onContainerChange={this.updateContainer} ref={this.svg}>
+                <RefableFlexibleSvg height={this.state.height} onContainerChange={this.updateContainer} ref={this.svg}>
                     <cpc.CPCContext.Provider value={{
-                        svg: model.lines.length > 1 ? this.svg : undefined, // Disable brushing when only when line present
+                        svg: this.model.lines.length > 1 ? this.svg : undefined, // Disable brushing when only when line present
                         showExplanations: this.state.showExplanations,
-                        model: this.state.model,
+                        model: this.model,
                         selectedAxis: this.props.selectedAxis
                     }}>
                         {this.state.showCandidates &&
@@ -231,7 +252,7 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
                                 {lines.map((line, idx) => this.renderLine(line, idx, true, true))}
                             </>
                         }
-                        <PCChoice choice={root} parent={undefined}
+                        <PCChoice choice={this.state.root} parent={undefined}
                                   onCollapse={this.onCollapse}
                                   onExpand={this.onExpand}
                                   onHighlight={this.highlightLines}
