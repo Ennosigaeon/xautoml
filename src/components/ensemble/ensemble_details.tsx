@@ -66,7 +66,7 @@ export class EnsembleDetailsComponent extends React.Component<EnsembleDetailsPro
                 {/*</CollapseComp>*/}
 
                 <CollapseComp name={'global-surrogate'} showInitial={false} help={GlobalSurrogateComponent.HELP}>
-                    <h3>Global Approximation</h3>
+                    <h3>Global Surrogate</h3>
                     <GlobalSurrogateComponent model={model}/>
                 </CollapseComp>
             </>

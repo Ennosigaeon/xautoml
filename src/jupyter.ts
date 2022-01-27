@@ -183,7 +183,7 @@ export class Jupyter {
             .then(data => new Map<string, string>(Object.entries(data)))
     }
 
-    requestLimeApproximation(cid: CandidateId, idx: number = 0, step: string = SOURCE): Promise<LimeResult> {
+    requestLimeSurrogate(cid: CandidateId, idx: number = 0, step: string = SOURCE): Promise<LimeResult> {
         return this.memExecuteCode<LimeResult>(`XAutoMLManager.get_active().lime('${cid}', ${idx}, '${step}')`)
             .then(data => {
                 return {

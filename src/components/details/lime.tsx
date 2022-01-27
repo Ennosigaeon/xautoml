@@ -107,7 +107,7 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
         if (component === undefined || idx === undefined)
             return
 
-        const promise = this.context.requestLimeApproximation(candidate.id, idx, component)
+        const promise = this.context.requestLimeSurrogate(candidate.id, idx, component)
         this.setState({loading: true, data: undefined, selectedLabel: undefined, error: undefined})
 
         promise
@@ -150,7 +150,7 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
             <div className={`lime ${this.props.orientation}`}>
                 {this.props.orientation === 'vertical' &&
                     <div style={{display: "flex", justifyContent: "space-between"}}>
-                        <h3>Local Approximation</h3>
+                        <h3>Local Surrogate</h3>
                         {this.props.onComparisonRequest && selectedSample !== undefined &&
                             <IconButton style={{flexShrink: 1, maxHeight: '24px'}} size='small'
                                         title={'Compare With Selected Candidates'}
@@ -166,7 +166,7 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
 
                     {(!loading && selectedSample === undefined) &&
                         <>
-                            <p>Select a data set sample to calculate a local model approximation (LIME).</p>
+                            <p>Select a data set sample to calculate a local model surrogate (LIME).</p>
                             <p>
                                 LIME, the acronym for local interpretable model-agnostic explanations, is a technique
                                 that approximates any black box machine learning model with a local, interpretable

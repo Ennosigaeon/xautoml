@@ -105,7 +105,7 @@ export class CandidateDetailsComponent extends React.Component<CandidateDetailsP
 
                 <CollapseComp name={'global-surrogate'} showInitial={false} help={GlobalSurrogateComponent.HELP}
                               onComparisonRequest={() => this.onComparisonRequest('global_surrogate')}>
-                    <h3>Global Approximation</h3>
+                    <h3>Global Surrogate</h3>
                     <GlobalSurrogateComponent model={model}/>
                 </CollapseComp>
 

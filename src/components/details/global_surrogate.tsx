@@ -32,7 +32,7 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
 
     static readonly HELP = 'Approximates the pipeline using a global surrogate model. The surrogate model is a ' +
         'decision tree that is trained to approximate the predictions of a black-box model. By adjusting the maximum ' +
-        'number of leaves in the decision tree, the fidelity of the approximation can be weighted against the ' +
+        'number of leaves in the decision tree, the fidelity of the surrogate can be weighted against the ' +
         'simplicity of the explanation.'
 
     static contextType = JupyterContext;
@@ -171,10 +171,10 @@ ${ID}_dt
                                                 }}>{prettyPrint(dt.fidelity)}</div>
                                         </div>
                                     }
-                                              help={'Measure how good the approximation represents the real model. ' +
-                                                  'A value of 1 means that the approximation perfectly resembles the ' +
+                                              help={'Measure how good the surrogate represents the real model. ' +
+                                                  'A value of 1 means that the surrogate perfectly resembles the ' +
                                                   'model, a value below 0.9 indicates that the model is no good ' +
-                                                  'approximation and the number of nodes should be increased.'}/>
+                                                  'surrogate and the number of nodes should be increased.'}/>
                                     <KeyValue key_={'Leave Nodes'} value={dt.n_leaves}/>
                                 </div>
                             </div>
