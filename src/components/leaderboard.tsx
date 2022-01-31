@@ -9,11 +9,11 @@ import Checkbox from '@material-ui/core/Checkbox';
 import {Box, IconButton, Menu, MenuItem, Table, TableContainer} from '@material-ui/core';
 import {Candidate, CandidateId, Explanations, MetaInformation, PipelineStep, Structure} from '../model';
 import {Components, JupyterContext, prettyPrint} from '../util';
-import {PipelineStructureComponent} from './details/pipeline_structure';
+import {PipelineVisualizationComponent} from './details/pipeline_visualization';
 import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@material-ui/icons/KeyboardArrowUp';
 import Collapse from '@material-ui/core/Collapse';
-import {CandidateDetailsComponent} from './candidate_details';
+import {CandidateInspections} from './candidate_inspections';
 import {JupyterButton} from "../util/jupyter-button";
 import {ID} from "../jupyter";
 import {MoreVert} from "@material-ui/icons";
@@ -29,7 +29,7 @@ interface SingleCandidate {
 
 type Order = 'asc' | 'desc';
 
-interface HeadCell {
+interface HeaderCell {
     id: keyof SingleCandidate;
     label: string;
     numeric: boolean;
@@ -37,8 +37,8 @@ interface HeadCell {
     width: string;
 }
 
-interface CandidateTableHeadProps {
-    headCells: HeadCell[]
+interface LeaderboardHeaderProps {
+    headCells: HeaderCell[]
     numSelected: number;
     onRequestSort: (event: React.MouseEvent<unknown>, property: keyof SingleCandidate) => void;
     onSelectAllClick: (event: React.ChangeEvent<HTMLInputElement>) => void;
@@ -47,9 +47,9 @@ interface CandidateTableHeadProps {
     rowCount: number;
 }
 
-class CandidateTableHead extends React.Component<CandidateTableHeadProps, {}> {
+class LeaderboardHeader extends React.Component<LeaderboardHeaderProps> {
 
-    constructor(props: CandidateTableHeadProps) {
+    constructor(props: LeaderboardHeaderProps) {
         super(props);
     }
 
@@ -98,7 +98,7 @@ class CandidateTableHead extends React.Component<CandidateTableHeadProps, {}> {
 }
 
 
-interface CandidateTableRowProps {
+interface LeaderboardRowProps {
     candidate: SingleCandidate
     meta: MetaInformation
     selected: boolean
@@ -112,17 +112,17 @@ interface CandidateTableRowProps {
     open: boolean
 }
 
-interface CandidateTableRowState {
+interface LeaderboardRowState {
     open: boolean
     selectedComponent: [string, string]
 }
 
-class CandidateTableRow extends React.Component<CandidateTableRowProps, CandidateTableRowState> {
+class LeaderboardRow extends React.Component<LeaderboardRowProps, LeaderboardRowState> {
 
     static contextType = JupyterContext;
     context: React.ContextType<typeof JupyterContext>;
 
-    constructor(props: CandidateTableRowProps) {
+    constructor(props: LeaderboardRowProps) {
         super(props);
         this.state = {open: this.props.open, selectedComponent: [undefined, undefined]}
 
@@ -134,7 +134,7 @@ class CandidateTableRow extends React.Component<CandidateTableRowProps, Candidat
         this.onHide = this.onHide.bind(this)
     }
 
-    componentDidUpdate(prevProps: Readonly<CandidateTableRowProps>, prevState: Readonly<CandidateTableRowState>, snapshot?: any) {
+    componentDidUpdate(prevProps: Readonly<LeaderboardRowProps>, prevState: Readonly<LeaderboardRowState>, snapshot?: any) {
         if (!prevProps.open && this.props.open)
             this.setState({open: true})
     }
@@ -202,13 +202,13 @@ ${ID}_pipeline
                                   onClick={this.onCheckBoxClick}/>
                     </TableCell>
                     <TableCell scope='row' padding='none'>{candidate.id}</TableCell>
-                    <TableCell align='right'>{prettyPrint(candidate.pred_time, 3)}</TableCell>
                     <TableCell align='right'>{prettyPrint(candidate.performance, 4)}</TableCell>
+                    <TableCell align='right'>{prettyPrint(candidate.pred_time, 3)}</TableCell>
                     <TableCell align='right' style={{height: '50px'}} padding='none'>
-                        <PipelineStructureComponent structure={candidate.candidate[0].pipeline}
-                                                    candidate={candidate.candidate[1]}
-                                                    selectedComponent={selectedComponent[0]}
-                                                    onComponentSelection={this.openComponent}/>
+                        <PipelineVisualizationComponent structure={candidate.candidate[0].pipeline}
+                                                        candidate={candidate.candidate[1]}
+                                                        selectedComponent={selectedComponent[0]}
+                                                        onComponentSelection={this.openComponent}/>
                     </TableCell>
                     <TableCell>
                         <JupyterButton onClick={this.openCandidateInJupyter}/>
@@ -222,7 +222,7 @@ ${ID}_pipeline
                     <TableCell style={{padding: 0}} colSpan={6}>
                         <Collapse in={this.state.open} timeout='auto' unmountOnExit={false} mountOnEnter={true}>
                             <Box margin={1} style={{marginBottom: '5em'}}>
-                                <CandidateDetailsComponent
+                                <CandidateInspections
                                     structure={candidate.candidate[0]}
                                     candidate={candidate.candidate[1]}
                                     componentId={selectedComponent[0]}
@@ -290,7 +290,7 @@ class BasicMenu extends React.Component<BasicMenuProps, { open: boolean }> {
 }
 
 
-interface CandidateTableProps {
+interface LeaderboardProps {
     structures: Structure[];
     selectedCandidates: Set<CandidateId>;
     hiddenCandidates: Set<CandidateId>;
@@ -302,7 +302,7 @@ interface CandidateTableProps {
     onCandidateHide: (cid: CandidateId) => void;
 }
 
-interface CandidateTableState {
+interface LeaderboardState {
     rows: SingleCandidate[],
     order: Order
     orderBy: keyof SingleCandidate
@@ -313,9 +313,9 @@ interface CandidateTableState {
     comparisonType: ComparisonType
 }
 
-export class CandidateTable extends React.Component<CandidateTableProps, CandidateTableState> {
+export class Leaderboard extends React.Component<LeaderboardProps, LeaderboardState> {
 
-    constructor(props: CandidateTableProps) {
+    constructor(props: LeaderboardProps) {
         super(props);
 
         const order = this.props.meta.is_minimization ? 'asc' : 'desc'
@@ -377,7 +377,7 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
         this.setState({rowsPerPage: parseInt(event.target.value, 10), page: 0})
     }
 
-    componentDidUpdate(prevProps: Readonly<CandidateTableProps>, prevState: Readonly<CandidateTableState>, snapshot?: any) {
+    componentDidUpdate(prevProps: Readonly<LeaderboardProps>, prevState: Readonly<LeaderboardState>, snapshot?: any) {
         if (prevProps.structures !== this.props.structures || prevProps.hideUnselectedCandidates !== this.props.hideUnselectedCandidates)
             this.setState({rows: this.calculateData(this.state.order, this.state.orderBy)})
 
@@ -421,10 +421,10 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
         const {structures, explanations, hiddenCandidates} = this.props
         const {rows, order, orderBy, page, rowsPerPage} = this.state
 
-        const headCells: HeadCell[] = [
+        const headCells: HeaderCell[] = [
             {id: 'id', numeric: false, sortable: true, label: 'Id', width: '40px'},
-            {id: 'pred_time', numeric: true, sortable: true, label: 'Pred. Time', width: '60px'},
             {id: 'performance', numeric: true, sortable: true, label: 'Performance', width: '100px'},
+            {id: 'pred_time', numeric: true, sortable: true, label: 'Pred. Time', width: '60px'},
             {id: 'candidate', numeric: false, sortable: false, label: 'Pipeline', width: 'auto'}
         ];
 
@@ -439,7 +439,7 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
                                if (e.ctrlKey)
                                    e.preventDefault()
                            })}>
-                        <CandidateTableHead
+                        <LeaderboardHeader
                             headCells={headCells}
                             numSelected={this.props.selectedCandidates.size}
                             order={order}
@@ -453,7 +453,7 @@ export class CandidateTable extends React.Component<CandidateTableProps, Candida
                                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                                 .map(row => {
                                     return (
-                                        <CandidateTableRow key={row.id}
+                                        <LeaderboardRow key={row.id}
                                                            candidate={row}
                                                            meta={this.props.meta}
                                                            selected={this.props.selectedCandidates.has(row.id)}

@@ -3,11 +3,10 @@ import {Candidate, MetaInformation, Runtime} from "../../model";
 import {Components, JupyterContext} from "../../util";
 import {DetailsModel} from "../details/model";
 import {CollapseComp} from "../../util/collapse";
-import {PerformanceComponent} from "../details/performance";
+import {PerformanceDetailsComponent} from "../details/performance_details";
 import {TwoColumnLayout} from "../../util/layout";
-import {RawDataset} from "../details/raw_dataset";
-import {LimeComponent} from "../details/lime";
-import {FeatureImportanceComponent} from "../details/feature_importance";
+import {RawDataset} from "../../util/raw_dataset";
+import {LocalSurrogateComponent} from "../details/local_surrogate";
 import {GlobalSurrogateComponent} from "../details/global_surrogate";
 import SOURCE = Components.SOURCE;
 import ENSEMBLE = Components.ENSEMBLE;
@@ -46,16 +45,16 @@ export class EnsembleDetailsComponent extends React.Component<EnsembleDetailsPro
 
         return (
             <>
-                <CollapseComp name={'performance'} showInitial={false} help={PerformanceComponent.HELP}>
+                <CollapseComp name={'performance'} showInitial={false} help={PerformanceDetailsComponent.HELP}>
                     <h3>Performance Details</h3>
-                    <PerformanceComponent model={model} meta={meta}/>
+                    <PerformanceDetailsComponent model={model} meta={meta}/>
                 </CollapseComp>
 
                 <CollapseComp name={'raw-dataset'} showInitial={false} help={RawDataset.HELP}>
                     <h3>Data Set Preview</h3>
                     <TwoColumnLayout widthRight={'25%'}>
                         <RawDataset model={model} onSampleClick={this.handleSampleSelection}/>
-                        <LimeComponent model={model} orientation={'vertical'}/>
+                        <LocalSurrogateComponent model={model} orientation={'vertical'}/>
                     </TwoColumnLayout>
                 </CollapseComp>
 

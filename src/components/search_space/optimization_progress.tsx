@@ -18,7 +18,7 @@ import {LoadingIndicator} from "../../util/loading";
 import {Heatbar} from "../../util/recharts";
 import {ErrorIndicator} from "../../util/error";
 
-interface ConfigSimilarityProps {
+interface OptimizationProgressProps {
     meta: MetaInformation
     structures: Structure[]
     selectedCandidates: Set<CandidateId>
@@ -28,13 +28,13 @@ interface ConfigSimilarityProps {
     onCandidateSelection?: (cid: Set<CandidateId>, show?: boolean) => void
 }
 
-interface ConfigSimilarityState {
+interface OptimizationProgressState {
     cids: CandidateId[]
     data: ConfigSimilarityResponse
     error: Error
 }
 
-export class ConfigSimilarity extends React.Component<ConfigSimilarityProps, ConfigSimilarityState> {
+export class OptimizationProgress extends React.Component<OptimizationProgressProps, OptimizationProgressState> {
 
     static readonly HELP = 'Visualizes the distribution of the selected configurations in the complete search space. ' +
         'For the visualization, the search space as well as all configurations are mapped into 2D space. Similar ' +
@@ -50,7 +50,7 @@ export class ConfigSimilarity extends React.Component<ConfigSimilarityProps, Con
         }
     }
 
-    constructor(props: ConfigSimilarityProps) {
+    constructor(props: OptimizationProgressProps) {
         super(props);
         this.state = {cids: [], data: undefined, error: undefined}
 

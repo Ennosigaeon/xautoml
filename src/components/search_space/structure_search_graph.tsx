@@ -2,7 +2,7 @@ import React from "react";
 import {CandidateId, PipelineStep} from "../../model";
 import 'rc-slider/assets/index.css';
 import {Components, JupyterContext} from "../../util";
-import {GraphEdge, GraphNode, HierarchicalTree} from "../tree_structure";
+import {GraphEdge, GraphNode, HierarchicalTree} from "../../util/tree_structure";
 import {Dag, DagNode} from "d3-dag";
 import {PipelineHistory} from "../../dao";
 import {LoadingIndicator} from "../../util/loading";
@@ -68,7 +68,7 @@ class SingleNode extends React.Component<SingleNodeProps, SingleNodeState> {
     }
 }
 
-interface StructureSearchProps {
+interface StructureSearchGraphProps {
     timestamp: number
 
     selectedCandidates?: Set<CandidateId>;
@@ -76,12 +76,12 @@ interface StructureSearchProps {
     onCandidateSelection?: (cid: Set<CandidateId>) => void;
 }
 
-interface StructureSearchState {
+interface StructureSearchGraphState {
     data: PipelineHistory
     error: Error
 }
 
-export class StructureSearchGraph extends React.Component<StructureSearchProps, StructureSearchState> {
+export class StructureSearchGraph extends React.Component<StructureSearchGraphProps, StructureSearchGraphState> {
 
     static readonly HELP = "Visualizes the underlying search procedure for pipeline structures. Highlighted in " +
         "light-blue is the latest selected pipeline. You can select pipelines by clicking on any node."
@@ -96,7 +96,7 @@ export class StructureSearchGraph extends React.Component<StructureSearchProps, 
         }
     }
 
-    constructor(props: StructureSearchProps) {
+    constructor(props: StructureSearchGraphProps) {
         super(props);
         this.state = {data: undefined, error: undefined}
 

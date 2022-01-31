@@ -1,13 +1,13 @@
 import React from "react";
-import {OutputDescriptionData} from "../../dao";
-import {LoadingIndicator} from "../../util/loading";
-import {DetailsModel} from "./model";
-import {TwoColumnLayout} from "../../util/layout";
-import {JupyterButton} from "../../util/jupyter-button";
-import {JupyterContext} from "../../util";
-import {ErrorIndicator} from "../../util/error";
-import {ID} from "../../jupyter";
-import {DatasetTable} from "./dataset_table";
+import {OutputDescriptionData} from "../dao";
+import {LoadingIndicator} from "./loading";
+import {DetailsModel} from "../components/details/model";
+import {TwoColumnLayout} from "./layout";
+import {JupyterButton} from "./jupyter-button";
+import {JupyterContext} from "../util";
+import {ErrorIndicator} from "./error";
+import {ID} from "../jupyter";
+import {DataSetTable} from "../components/details/dataset_table";
 
 
 interface RawDatasetProps {
@@ -102,7 +102,7 @@ ${ID}_X
                         {!loadingDf &&
                             <>
                                 {outputs.has(component) ?
-                                    <DatasetTable data={outputs.get(component)}
+                                    <DataSetTable data={outputs.get(component)}
                                                   selectedSample={selectedSample}
                                                   onSampleClick={this.props.onSampleClick}/> :
                                     <div>Missing</div>}

@@ -3,14 +3,14 @@ import {ReactWidget} from "@jupyterlab/apputils";
 import {IRenderMime} from "@jupyterlab/rendermime-interfaces";
 import {CandidateId, RunHistory} from "./model";
 import {Colors, JupyterContext} from "./util";
-import {CandidateTable} from "./components/candidate_table";
+import {Leaderboard} from "./components/leaderboard";
 import {Jupyter} from "./jupyter";
 import {LoadingIndicator} from "./util/loading";
 import {Box, Button, Tab, Tabs} from "@material-ui/core";
 import {TabContext} from "@material-ui/lab";
 import {TabPanel} from "./util/tabpanel";
 import {SearchSpace} from "./components/search_space";
-import {GeneralInformation} from "./components/general_information";
+import {GeneralInformation} from "./components/optimization_overview";
 import {Ensemble} from "./components/ensemble";
 
 
@@ -197,15 +197,15 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
                             </Box>
 
                             <TabPanel value={'1'}>
-                                <CandidateTable structures={runHistory.structures}
-                                                selectedCandidates={selectedCandidates}
-                                                hiddenCandidates={this.state.hiddenCandidates}
-                                                hideUnselectedCandidates={hideUnselected}
-                                                meta={runHistory.meta}
-                                                explanations={runHistory.explanations}
-                                                showCandidate={showCandidate}
-                                                onCandidateSelection={this.onCandidateSelection}
-                                                onCandidateHide={this.onCandidateHide}/>
+                                <Leaderboard structures={runHistory.structures}
+                                             selectedCandidates={selectedCandidates}
+                                             hiddenCandidates={this.state.hiddenCandidates}
+                                             hideUnselectedCandidates={hideUnselected}
+                                             meta={runHistory.meta}
+                                             explanations={runHistory.explanations}
+                                             showCandidate={showCandidate}
+                                             onCandidateSelection={this.onCandidateSelection}
+                                             onCandidateHide={this.onCandidateHide}/>
                             </TabPanel>
                             <TabPanel value={'2'}>
                                 <SearchSpace structures={runHistory.structures}

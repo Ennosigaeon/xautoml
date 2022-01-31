@@ -108,7 +108,7 @@ def plot_priority_distribution(df: pd.DataFrame, group=True):
                 data.loc[data['x'] == value, 'x'] = key
 
         rename = {
-            '#01': 'Raw Data',
+            '#01': 'Input Data',
             '#05': 'Pre-Proc. Data',
             '#09': 'Feat.-Eng. Data',
             '#13': 'Complete Pipeline',
@@ -126,6 +126,18 @@ def plot_priority_distribution(df: pd.DataFrame, group=True):
             data.loc[data['x'] == old, 'x'] = new
 
     data.loc[data['role'] == 'AutoML Researcher', 'role'] = 'Data Scientist'
+
+    print('Difference between user groups per card')
+    for card in data['x'].unique():
+        ds = data[(data['x'] == card) & (data['role'] == 'Data Scientist')]
+        de = data[(data['x'] == card) & (data['role'] == 'Domain Expert')]
+
+        t = ttest_ind(ds['y'].values, de['y'].values)
+        if t.pvalue < 0.05:
+            print(f'{card} {t.pvalue:.5f}')
+
+    print('\n\n')
+
 
     sns.set_theme(style="whitegrid")
     fig, ax = plt.subplots(1, 1, figsize=(15, 5))

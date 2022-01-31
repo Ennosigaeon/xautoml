@@ -6,7 +6,7 @@ import {ErrorIndicator} from "../../util/error";
 import {Colors, JupyterContext, maxLabelLength, prettyPrint} from "../../util";
 import {CommonWarnings} from "../../util/warning";
 import {JupyterButton} from "../../util/jupyter-button";
-import {ImportanceOverviewComp} from "./importance_overview";
+import {ImportanceOverviewComp} from "../../util/importance_overview";
 import {CartesianGrid, Line, LineChart, ResponsiveContainer, Scatter, ScatterChart, XAxis, YAxis} from "recharts";
 import {Heading} from "../../util/heading";
 import {FormControl, MenuItem, Select} from '@material-ui/core';

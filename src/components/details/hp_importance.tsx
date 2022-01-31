@@ -23,7 +23,7 @@ import {
 import {ErrorIndicator} from "../../util/error";
 import {LoadingIndicator} from "../../util/loading";
 import {Heatbar, MinimalisticTooltip} from "../../util/recharts";
-import {ImportanceOverviewComp} from "./importance_overview";
+import {ImportanceOverviewComp} from "../../util/importance_overview";
 import {ID} from "../../jupyter";
 import {DetailsModel} from "./model";
 import {JupyterButton} from "../../util/jupyter-button";

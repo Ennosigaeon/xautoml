@@ -2,17 +2,17 @@ import React from "react";
 import {Candidate, Explanations, MetaInformation, Structure} from "../model";
 import {Components, JupyterContext} from "../util";
 import {TwoColumnLayout} from "../util/layout";
-import {LimeComponent} from "./details/lime";
+import {LocalSurrogateComponent} from "./details/local_surrogate";
 import {FeatureImportanceComponent} from "./details/feature_importance";
-import {RawDataset} from "./details/raw_dataset";
+import {RawDataset} from "../util/raw_dataset";
 import {ComparisonType, DetailsModel} from "./details/model";
 import {GlobalSurrogateComponent} from "./details/global_surrogate";
 import {CollapseComp} from "../util/collapse";
-import {PerformanceComponent} from "./details/performance";
+import {PerformanceDetailsComponent} from "./details/performance_details";
 import {HPImportanceComp} from "./details/hp_importance";
-import {ConfigOriginComp} from "./details/config_origin";
+import {ConfigurationComponent} from "./details/configuration";
 
-interface CandidateDetailsProps {
+interface CandidateInspectionsProps {
     candidate: Candidate
     structure: Structure
     componentId: string
@@ -25,16 +25,16 @@ interface CandidateDetailsProps {
     onComparisonRequest: (type: ComparisonType, selectedRow: number) => void
 }
 
-interface CandidateDetailsState {
+interface CandidateInspectionsState {
     selectedSample: number
 }
 
-export class CandidateDetailsComponent extends React.Component<CandidateDetailsProps, CandidateDetailsState> {
+export class CandidateInspections extends React.Component<CandidateInspectionsProps, CandidateInspectionsState> {
 
     static contextType = JupyterContext;
     context: React.ContextType<typeof JupyterContext>;
 
-    constructor(props: CandidateDetailsProps) {
+    constructor(props: CandidateInspectionsProps) {
         super(props);
         this.state = {selectedSample: undefined}
 
@@ -59,16 +59,16 @@ export class CandidateDetailsComponent extends React.Component<CandidateDetailsP
         return (
             <>
                 <h3>Insights for Complete Pipeline</h3>
-                <CollapseComp name={'performance'} showInitial={false} help={PerformanceComponent.HELP}
+                <CollapseComp name={'performance'} showInitial={false} help={PerformanceDetailsComponent.HELP}
                               onComparisonRequest={() => this.onComparisonRequest('performance')}>
                     <h3>Performance Details</h3>
-                    <PerformanceComponent model={model} meta={meta}/>
+                    <PerformanceDetailsComponent model={model} meta={meta}/>
                 </CollapseComp>
 
-                <CollapseComp name={'config-origin'} showInitial={false} help={ConfigOriginComp.HELP}
+                <CollapseComp name={'config-origin'} showInitial={false} help={ConfigurationComponent.HELP}
                               onComparisonRequest={() => this.onComparisonRequest('configuration')}>
-                    <h3>Candidate Origin</h3>
-                    <ConfigOriginComp model={model} structures={structures} explanations={explanations}/>
+                    <h3>Configuration</h3>
+                    <ConfigurationComponent model={model} structures={structures} explanations={explanations}/>
                 </CollapseComp>
 
                 <hr/>
@@ -85,8 +85,8 @@ export class CandidateDetailsComponent extends React.Component<CandidateDetailsP
                     <h3>Data Set Preview</h3>
                     <TwoColumnLayout widthRight={'25%'}>
                         <RawDataset model={model} onSampleClick={this.handleSampleSelection}/>
-                        <LimeComponent model={model} orientation={'vertical'}
-                                       onComparisonRequest={this.onComparisonRequest}/>
+                        <LocalSurrogateComponent model={model} orientation={'vertical'}
+                                                 onComparisonRequest={this.onComparisonRequest}/>
                     </TwoColumnLayout>
                 </CollapseComp>
 

@@ -2,7 +2,7 @@ import React from "react";
 import {DetailsModel} from "./model";
 import {DecisionTreeNode, DecisionTreeResult, GlobalSurrogateResult} from "../../dao";
 import {LoadingIndicator} from "../../util/loading";
-import {GraphEdge, GraphNode, HierarchicalTree} from "../tree_structure";
+import {GraphEdge, GraphNode, HierarchicalTree} from "../../util/tree_structure";
 import Slider from "rc-slider";
 import {ErrorIndicator} from "../../util/error";
 import {KeyValue} from "../../util/KeyValue";

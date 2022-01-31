@@ -3,12 +3,12 @@ import {CollapseComp} from "../util/collapse";
 import {ParallelCoordinates} from "./pc/parallel_corrdinates";
 import {BO, Candidate, CandidateId, ConfigValue, Explanations, MetaInformation, Structure} from "../model";
 import Slider from "rc-slider";
-import {ConfigSimilarity} from "./search_space/config_similarity";
+import {OptimizationProgress} from "./search_space/optimization_progress";
 import {ConfigSimilarityResponse} from "../dao";
 import {SamplingHistory} from "./search_space/sampling_history";
 import * as d3 from "d3";
 import {HyperparameterHistory} from "./search_space/model";
-import {StructureSearchGraph} from "./search_space/structure_search";
+import {StructureSearchGraph} from "./search_space/structure_search_graph";
 import CategoricalHyperparameter = BO.CategoricalHyperparameter;
 import NumericalHyperparameter = BO.NumericalHyperparameter;
 
@@ -152,7 +152,7 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
                 {/*    </CollapseComp>}*/}
 
                 <CollapseComp name={'reinforcement-explanations'} showInitial={true} help={StructureSearchGraph.HELP}>
-                    <h3>Pipeline Structure Search</h3>
+                    <h3>Structure Search Graph</h3>
                     <StructureSearchGraph timestamp={this.state.timestamp}
                                           selectedCandidates={selectedCandidates}
                                           onCandidateSelection={onCandidateSelection}/>
@@ -178,15 +178,15 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
                 {structures.length > 0 &&
                     <div style={{display: 'flex'}}>
                         <div style={{flex: '1', overflowX: 'hidden', margin: 0, marginRight: '5px'}}>
-                            <CollapseComp name={'config-similarity'} showInitial={true} help={ConfigSimilarity.HELP}>
-                                <h3>Candidate Distribution</h3>
-                                <ConfigSimilarity structures={structures}
-                                                  selectedCandidates={selectedCandidates}
-                                                  hideUnselectedCandidates={hideUnselectedCandidates}
-                                                  meta={meta}
-                                                  height={'300px'}
-                                                  timestamp={this.state.timestamp}
-                                                  onCandidateSelection={onCandidateSelection}/>
+                            <CollapseComp name={'config-similarity'} showInitial={true} help={OptimizationProgress.HELP}>
+                                <h3>Optimization Progress</h3>
+                                <OptimizationProgress structures={structures}
+                                                      selectedCandidates={selectedCandidates}
+                                                      hideUnselectedCandidates={hideUnselectedCandidates}
+                                                      meta={meta}
+                                                      height={'300px'}
+                                                      timestamp={this.state.timestamp}
+                                                      onCandidateSelection={onCandidateSelection}/>
                             </CollapseComp>
                         </div>
                         <div style={{flex: '1', margin: 0, marginLeft: '5px'}}>

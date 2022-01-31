@@ -3,7 +3,7 @@ import {Animate} from "react-move";
 import {easeExpInOut} from "d3-ease";
 import * as d3ag from "d3-dag";
 import {Dag, DagLink, DagNode} from "d3-dag";
-import {FlexibleSvg} from "../util/flexible-svg";
+import {FlexibleSvg} from "./flexible-svg";
 import {linkHorizontal} from "d3";
 import {v4 as uuidv4} from 'uuid';
 import memoize from "memoize-one";

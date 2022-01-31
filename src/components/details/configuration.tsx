@@ -1,98 +1,188 @@
-import {Candidate, Config, ConfigValue, Structure} from "../../model";
+import {BO, Candidate, CandidateId, ConfigOrigin, Explanations, Structure} from "../../model";
+import {JupyterContext} from "../../util";
 import React from "react";
-import {Table, TableBody, TableCell, TableRow} from "@material-ui/core";
-import {prettyPrint} from "../../util";
+import {KeyValue} from "../../util/KeyValue";
+import {PipelineHyperparameters} from "./pipeline_hyperparameters";
+import {CollapseComp} from "../../util/collapse";
+import {ParallelCoordinates} from "../pc/parallel_corrdinates";
+import {DetailsModel} from "./model";
+import {JupyterButton} from "../../util/jupyter-button";
+import {ID} from "../../jupyter";
+import {StructureSearchGraph} from "../search_space/structure_search_graph";
+import {LoadingIndicator} from "../../util/loading";
+import {WarningIndicator} from "../../util/warning";
 
 
-interface ConfigurationTableProps {
-    config: Config
-    twoColumns: boolean
+interface SurrogateExplanationProps {
+    model: DetailsModel
+    explanation: BO.Explanation
 }
 
-export class ConfigurationTable extends React.Component<ConfigurationTableProps> {
+interface SurrogateExplanationState {
+    explanation: BO.Explanation
+    loading: boolean
+}
 
-    renderSingleColumn() {
-        const configTable: [string, ConfigValue][] = []
-        Array.from(this.props.config.entries())
-            .forEach(([name, value]) => {
-                configTable.push([name, value])
-            })
-        return configTable.map(([name, value]) =>
-            <TableRow key={name}>
-                <TableCell component="th"
-                           scope="row">{name}</TableCell>
-                <TableCell align="right">{prettyPrint(value, 5)}</TableCell>
-            </TableRow>
-        )
+class SMBOSurrogateCPC extends React.Component<SurrogateExplanationProps, SurrogateExplanationState> {
+
+    static readonly HELP = 'The line highlighted in blue represents the the actual selected configuration. In case ' +
+        'of a model-based selection of the configuration, other potential configurations, that are worse ' +
+        'than the selected configuration according to the internal model, are also displayed.'
+
+    static contextType = JupyterContext;
+    context: React.ContextType<typeof JupyterContext>;
+
+    constructor(props: SurrogateExplanationProps) {
+        super(props);
+        this.state = {explanation: this.props.explanation, loading: this.props.explanation === undefined}
     }
 
-    renderTwoColumns() {
-        const configTable: [[string, ConfigValue][], [string, ConfigValue][]] = [[], []]
-        Array.from(this.props.config.entries())
-            .forEach(([name, value], idx) => {
-                configTable[idx % 2].push([name, value])
-            })
-        // Ensure that left and right array have exactly the same amount of elements
-        if (configTable[0].length != configTable[1].length)
-            configTable[1].push(["", ""])
-
-        return configTable[0]
-            .map(([name, value], idx) => {
-                const name2 = configTable[1][idx][0]
-                const value2 = configTable[1][idx][1]
-
-                return (
-                    <TableRow key={name}>
-                        <TableCell component="th"
-                                   scope="row">{name}</TableCell>
-                        <TableCell align="right">{prettyPrint(value, 5)}</TableCell>
-
-                        <TableCell component="th"
-                                   scope="row">{name2}</TableCell>
-                        <TableCell align="right">{prettyPrint(value2, 5)}</TableCell>
-                    </TableRow>
-                )
-            })
+    componentDidMount() {
+        if (this.state.explanation === undefined)
+            this.simulateExplanation()
     }
 
+    private simulateExplanation() {
+        const {model} = this.props
+
+        this.setState({loading: true})
+        this.context.requestSimulatedSurrogate(model.structure.cid, model.candidate.runtime.timestamp)
+            .then(resp => {
+                this.setState({explanation: resp, loading: false})
+            })
+            .catch(error => {
+                console.error(`Failed to fetch simulated surrogate data.\n${error.name}: ${error.message}`)
+                this.setState({explanation: undefined, loading: false})
+            });
+    }
 
     render() {
-        if (this.props.config.size === 0)
-            return <p>No Configuration</p>
-        else
-            return (
-                <Table className={'jp-RenderedHTMLCommon'}>
-                    <TableBody>
-                        {this.props.twoColumns ? this.renderTwoColumns() : this.renderSingleColumn()}
-                    </TableBody>
-                </Table>
-            )
-    }
+        const {model} = this.props
+        const {explanation, loading} = this.state
 
+        const candidates: [Candidate, Structure][] = explanation && explanation.candidates.length > 0 ?
+            explanation.candidates.map(c => [c, model.structure]) : [[model.candidate, model.structure]]
+        const label = explanation ? explanation.metric : 'Performance'
+        const loss = candidates.map(([c, _]) => c.loss)
+
+
+        const selected = new Set<CandidateId>([loss.length > 1 ? loss.reduce((argMax, x, idx, array) => {
+            return x > array[argMax] ? idx : argMax
+        }, 0).toString() : model.candidate.id])
+
+        return (
+            <div className={'surrogate_explanation'}>
+                <LoadingIndicator loading={loading}/>
+                {!loading &&
+                    <>
+                        {(this.props.explanation === undefined && explanation !== undefined) &&
+                            <WarningIndicator message={'The run history did not contain information about ' +
+                                'the surrogate model. The surrogate state is only simulated via hyperparameter ' +
+                                'importance and may differ significantly from the real surrogate model.'}/>
+                        }
+                        {(this.props.explanation === undefined && explanation === undefined) &&
+                            <WarningIndicator message={'Failed to simulate surrogate model.'}/>
+                        }
+                        <ParallelCoordinates structures={[model.structure]}
+                                             candidates={candidates}
+                                             selectedCandidates={selected}
+                                             explanation={explanation}
+                                             showExplanations={true}
+                                             expand={true}
+                                             perfAxis={{
+                                                 label: label, domain: [Math.min(...loss), Math.max(...loss)], log: true
+                                             }}/>
+                    </>
+                }
+            </div>
+
+        );
+    }
 }
 
 
 interface ConfigurationProps {
-    candidate: Candidate
-    structure: Structure
+    model: DetailsModel
+
+    structures: Structure[]
+    explanations: Explanations
 }
 
-export class ConfigurationComp extends React.Component<ConfigurationProps> {
+export class ConfigurationComponent extends React.Component<ConfigurationProps, any> {
+
+    static readonly HELP = 'Contains details about the selected hyperparameter configuration. Displayed are the raw ' +
+        'hyperparameters for each step in the pipeline and how this configuration was obtained. If the configuration ' +
+        'was obtained some kind of guided search strategy, the reasoning of the internal AutoML optimizer are' +
+        'visualized.'
+
+    static contextType = JupyterContext;
+    context: React.ContextType<typeof JupyterContext>;
+
+    constructor(props: ConfigurationProps) {
+        super(props);
+
+        this.exportConfiguration = this.exportConfiguration.bind(this)
+    }
+
+    private static getHelp(origin: ConfigOrigin): string {
+        switch (origin) {
+            case 'Default':
+                return 'Default hyperparameters as specified in the component declaration.'
+            case 'Hyperopt':
+                return 'The candidate is obtained by optimizing an internal model of the performance of ' +
+                    'potential candidates. More specifically, the selected candidate maximizes the posterior ' +
+                    'in a Bayesian optimization. '
+            case 'Initial design':
+                return 'This fixed candidate is selected based on some initial design. This initial design ' +
+                    'could, for example, be a set of configurations obtained via via meta-learning that performed ' +
+                    'well on a variety of data sets in the past.'
+            case 'Random Search':
+                return 'The candidate was selected at random.'
+            case 'Local Search':
+                return 'Candidate obtained via local search around all-ready evaluated candidates maximizing the acquisition function'
+            case 'Random Search (sorted)':
+                return 'Candidate obtained via random search maximizing the acquisition function'
+            case 'Sobol':
+                return 'Quasi-random selection of configuration based on a Sobol sequence'
+        }
+    }
+
+    private exportConfiguration() {
+        const {id} = this.props.model.candidate
+        this.context.createCell(`
+${ID}_hp = gcx().get_config('${id}')
+${ID}_hp
+        `.trim())
+    }
 
     render() {
-        const {candidate, structure} = this.props
+        const {explanations, model} = this.props
+        const {candidate, structure} = model
+
         return (
-            <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-around', flexWrap: 'wrap'}}>
-                {structure.pipeline
-                    .slice(1)
-                    .map(step =>
-                        <div key={step.label}>
-                            <h4>{step.label}</h4>
-                            <ConfigurationTable config={candidate.subConfig(step, true)} twoColumns={false}/>
-                        </div>
-                    )
-                }
-            </div>
-        );
+            <>
+                <div style={{display: 'flex', justifyContent: "space-between"}}>
+                    <KeyValue key_={'Origin'} value={candidate.origin}
+                              help={ConfigurationComponent.getHelp(candidate.origin)}/>
+                    <JupyterButton onClick={this.exportConfiguration}/>
+                </div>
+                <PipelineHyperparameters candidate={candidate} structure={structure}/>
+
+                <hr/>
+                <CollapseComp name={'config-origin-reinforcement'} showInitial={true}
+                              help={StructureSearchGraph.HELP + '\n\n' +
+                                  'Highlighted in blue is the actual selected pipeline structure.'}>
+                    <h4>Pipeline Structure Search</h4>
+                    <StructureSearchGraph timestamp={candidate.index}/>
+                </CollapseComp>
+
+                <CollapseComp name={'config-origin-bo'} showInitial={true}
+                              help={ParallelCoordinates.HELP + '\n\n' + SMBOSurrogateCPC.HELP}>
+                    <h4>Hyperparameter Optimization</h4>
+                    <SMBOSurrogateCPC model={model}
+                                          explanation={explanations?.configs.get(candidate.id)}/>
+                </CollapseComp>
+            </>
+        )
     }
 }

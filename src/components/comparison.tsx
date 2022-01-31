@@ -1,16 +1,16 @@
 import React from "react";
 import {ComparisonType, DetailsModel} from "./details/model";
 import {MetaInformation} from "../model";
-import {PerformanceComponent} from "./details/performance";
 import {FeatureImportanceComponent} from "./details/feature_importance";
-import {LimeComponent} from "./details/lime";
+import {LocalSurrogateComponent} from "./details/local_surrogate";
 import {Label} from "../dao";
 import {GlobalSurrogateComponent} from "./details/global_surrogate";
 import {HPImportanceComp} from "./details/hp_importance";
 import {CollapseComp} from "../util/collapse";
 import {ArrowForwardIos} from "@material-ui/icons";
 import {IconButton} from "@material-ui/core";
-import {ConfigurationTable} from "./details/configuration";
+import {HyperparameterTable} from "./details/pipeline_hyperparameters";
+import {PerformanceDetailsComponent} from "./details/performance_details";
 
 
 interface ComparisonProps {
@@ -81,11 +81,11 @@ export class Comparison extends React.Component<ComparisonProps, ComparisonState
                     <CollapseComp showInitial={true} key={model.candidate.id}>
                         <h4>{model.candidate.id}</h4>
                         {type === 'performance' &&
-                            <PerformanceComponent model={model} meta={meta}/>}
+                            <PerformanceDetailsComponent model={model} meta={meta}/>}
                         {type === 'lime' &&
-                            <LimeComponent model={model} selectedLabel={this.state.limeLabel}
-                                           orientation={'horizontal'}
-                                           onLabelChange={this.onLimeLabelChange}/>}
+                            <LocalSurrogateComponent model={model} selectedLabel={this.state.limeLabel}
+                                                     orientation={'horizontal'}
+                                                     onLabelChange={this.onLimeLabelChange}/>}
                         {type === 'global_surrogate' &&
                             <GlobalSurrogateComponent model={model} onDTIndexChange={this.onDTIndexChange}
                                                       dtIndex={this.state.dtSelectedIndex}/>}
@@ -100,7 +100,7 @@ export class Comparison extends React.Component<ComparisonProps, ComparisonState
                                               selectedHp2={this.state.hpImportanceSelectedHp2}/>}
 
                         {type === 'configuration' &&
-                            <ConfigurationTable config={model.candidate.config} twoColumns={true}/>}
+                            <HyperparameterTable config={model.candidate.config} twoColumns={true}/>}
                     </CollapseComp>
                 )}
             </div>

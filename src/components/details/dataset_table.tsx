@@ -7,7 +7,7 @@ interface DatasetTableProps {
 }
 
 
-export class DatasetTable extends React.Component<DatasetTableProps> {
+export class DataSetTable extends React.Component<DatasetTableProps> {
 
     private readonly dfTableRef = React.createRef<HTMLDivElement>()
     private static selectedClassName = 'selected-config'
@@ -34,7 +34,7 @@ export class DatasetTable extends React.Component<DatasetTableProps> {
                 // Highlight previously selected row
                 if (this.props.selectedSample !== undefined &&
                     this.props.selectedSample === Number.parseInt(tr.firstElementChild.textContent)) {
-                    tr.classList.add(DatasetTable.selectedClassName)
+                    tr.classList.add(DataSetTable.selectedClassName)
                 }
             })
         }
@@ -49,9 +49,9 @@ export class DatasetTable extends React.Component<DatasetTableProps> {
             return
 
         // Highlight selected row
-        row.parentElement.querySelectorAll(`.${DatasetTable.selectedClassName}`)
-            .forEach(el => el.classList.remove(DatasetTable.selectedClassName))
-        row.classList.add(DatasetTable.selectedClassName)
+        row.parentElement.querySelectorAll(`.${DataSetTable.selectedClassName}`)
+            .forEach(el => el.classList.remove(DataSetTable.selectedClassName))
+        row.classList.add(DataSetTable.selectedClassName)
 
         this.props.onSampleClick(idx)
     }

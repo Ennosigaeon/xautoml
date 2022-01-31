@@ -2,7 +2,7 @@ import React from "react";
 import {Candidate, Pipeline, PipelineStep} from "../../model";
 import {Components, JupyterContext} from "../../util";
 import {OutputDescriptionData} from "../../dao";
-import {GraphEdge, GraphNode, HierarchicalTree} from "../tree_structure";
+import {GraphEdge, GraphNode, HierarchicalTree} from "../../util/tree_structure";
 import {Dag} from "d3-dag";
 import isPipEnd = Components.isPipEnd;
 
@@ -58,20 +58,20 @@ class SingleComponent extends React.Component<SingleComponentProps, any> {
     }
 }
 
-interface StructureGraphProps {
+interface PipelineVisualizationProps {
     structure: Pipeline
     candidate: Candidate
     selectedComponent: string
     onComponentSelection?: (component: PipelineStep) => void
 }
 
-interface StructureGraphState {
+interface PipelineVisualizationState {
     loading: boolean
     outputs: OutputDescriptionData
     error: Error
 }
 
-export class PipelineStructureComponent extends React.Component<StructureGraphProps, StructureGraphState> {
+export class PipelineVisualizationComponent extends React.Component<PipelineVisualizationProps, PipelineVisualizationState> {
 
     private static readonly NODE_HEIGHT = 26;
     private static readonly NODE_WIDTH = 100;
@@ -79,7 +79,7 @@ export class PipelineStructureComponent extends React.Component<StructureGraphPr
     static contextType = JupyterContext;
     context: React.ContextType<typeof JupyterContext>;
 
-    constructor(props: StructureGraphProps) {
+    constructor(props: PipelineVisualizationProps) {
         super(props);
         this.state = {loading: false, outputs: new Map<string, string>(), error: undefined}
 
@@ -123,8 +123,8 @@ export class PipelineStructureComponent extends React.Component<StructureGraphPr
                            node={node}
                            highlight={node.data.step_name === selectedComponent}
                            virtual={isPipEnd(node.data.id)}
-                           nodeWidth={PipelineStructureComponent.NODE_WIDTH}
-                           nodeHeight={PipelineStructureComponent.NODE_HEIGHT}
+                           nodeWidth={PipelineVisualizationComponent.NODE_WIDTH}
+                           nodeHeight={PipelineVisualizationComponent.NODE_HEIGHT}
                            className={'structure-graph_node'}
                            onClick={this.onComponentSelection}>
                     <SingleComponent step={node.data}
@@ -140,8 +140,8 @@ export class PipelineStructureComponent extends React.Component<StructureGraphPr
             <GraphEdge key={link.source.data.label + '-' + link.target.data.label}
                        link={link}
                        label={link.target.data.getLabel(link.source.data.id)}
-                       nodeWidth={isPipEnd(link.source.data.id) ? PipelineStructureComponent.NODE_HEIGHT : PipelineStructureComponent.NODE_WIDTH}
-                       nodeHeight={PipelineStructureComponent.NODE_HEIGHT}/>
+                       nodeWidth={isPipEnd(link.source.data.id) ? PipelineVisualizationComponent.NODE_HEIGHT : PipelineVisualizationComponent.NODE_WIDTH}
+                       nodeHeight={PipelineVisualizationComponent.NODE_HEIGHT}/>
         )
 
         return (
@@ -154,8 +154,8 @@ export class PipelineStructureComponent extends React.Component<StructureGraphPr
 
     render() {
         return (
-            <HierarchicalTree nodeHeight={PipelineStructureComponent.NODE_HEIGHT}
-                              nodeWidth={PipelineStructureComponent.NODE_WIDTH}
+            <HierarchicalTree nodeHeight={PipelineVisualizationComponent.NODE_HEIGHT}
+                              nodeWidth={PipelineVisualizationComponent.NODE_WIDTH}
                               data={this.props.structure}
                               render={this.renderNodes}/>
         )

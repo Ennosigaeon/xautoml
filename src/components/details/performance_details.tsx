@@ -14,18 +14,18 @@ import {JupyterButton} from "../../util/jupyter-button";
 import {ID} from "../../jupyter";
 
 
-interface PerformanceComponentProps {
+interface PerformanceDetailsProps {
     model: DetailsModel
     meta: MetaInformation
 }
 
-interface PerformanceComponentState {
+interface PerformanceDetailsState {
     data: PerformanceData
     loading: boolean
     error: Error
 }
 
-export class PerformanceComponent extends React.Component<PerformanceComponentProps, PerformanceComponentState> {
+export class PerformanceDetailsComponent extends React.Component<PerformanceDetailsProps, PerformanceDetailsState> {
 
     static readonly HELP = 'Displays basic performance details like train and test performance. Additionally, a ' +
         'confusion matrix for all classes is computed. Finally, the ROC curve for this candidate is displayed.'
@@ -33,7 +33,7 @@ export class PerformanceComponent extends React.Component<PerformanceComponentPr
     static contextType = JupyterContext;
     context: React.ContextType<typeof JupyterContext>;
 
-    constructor(props: PerformanceComponentProps) {
+    constructor(props: PerformanceDetailsProps) {
         super(props);
         this.state = {data: undefined, loading: false, error: undefined}
 

@@ -1,9 +1,9 @@
 import React from "react";
-import {Colors, maxLabelLength} from "../../util";
+import {Colors, maxLabelLength} from "../util";
 import * as d3 from "d3";
 import {Bar, BarChart, CartesianGrid, ErrorBar, ReferenceArea, XAxis, YAxis} from "recharts";
-import {ImportanceOverview} from "../../dao";
-import {JupyterButton} from "../../util/jupyter-button";
+import {ImportanceOverview} from "../dao";
+import {JupyterButton} from "./jupyter-button";
 
 interface ImportanceOverviewProps {
     overview: ImportanceOverview

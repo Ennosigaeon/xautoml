@@ -5,7 +5,7 @@ import {CollapseComp} from "../util/collapse";
 import {TwoColumnLayout} from "../util/layout";
 import {ErrorIndicator} from "../util/error";
 import {LoadingIndicator} from "../util/loading";
-import {DatasetTable} from "./details/dataset_table";
+import {DataSetTable} from "./details/dataset_table";
 import {EnsembleTable} from "./ensemble/ensemble_table";
 import {CandidateId, MetaInformation, Prediction} from "../model";
 import {DecisionSurface} from "./ensemble/decision_surface";
@@ -114,7 +114,7 @@ export class Ensemble extends React.Component<EnsembleProps, EnsembleState> {
                                                 'ensemble member had another prediction than the rest.'}>
                                                 <h4>Samples with Conflicting Predictions </h4>
                                             </Heading>
-                                            <DatasetTable data={overview.df}
+                                            <DataSetTable data={overview.df}
                                                           selectedSample={selectedSample}
                                                           onSampleClick={this.selectSampleIdx}/>
                                         </div>

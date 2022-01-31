@@ -29,7 +29,7 @@ class CustomizedTick extends React.PureComponent<any> {
 }
 
 
-interface LimeProps {
+interface LocalSurrogateProps {
     model: DetailsModel
     orientation: 'vertical' | 'horizontal'
 
@@ -38,7 +38,7 @@ interface LimeProps {
     onComparisonRequest?: (type: ComparisonType) => void
 }
 
-interface LimeState {
+interface LocalSurrogateState {
     selectedLabel: Label
     loading: boolean
     data: LimeResult
@@ -48,7 +48,7 @@ interface LimeState {
     x2: number
 }
 
-export class LimeComponent extends React.Component<LimeProps, LimeState> {
+export class LocalSurrogateComponent extends React.Component<LocalSurrogateProps, LocalSurrogateState> {
 
     private resizeObserver: ResizeObserver
     private readonly container = React.createRef<HTMLDivElement>()
@@ -56,7 +56,7 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
     static contextType = JupyterContext;
     context: React.ContextType<typeof JupyterContext>;
 
-    constructor(props: LimeProps) {
+    constructor(props: LocalSurrogateProps) {
         super(props);
         this.state = {
             selectedLabel: undefined,
@@ -76,7 +76,7 @@ export class LimeComponent extends React.Component<LimeProps, LimeState> {
             this.queryLime(this.props.model.selectedSample)
     }
 
-    componentDidUpdate(prevProps: Readonly<LimeProps>, prevState: Readonly<LimeState>, snapshot?: any) {
+    componentDidUpdate(prevProps: Readonly<LocalSurrogateProps>, prevState: Readonly<LocalSurrogateState>, snapshot?: any) {
         if (prevProps.model.component !== this.props.model.component ||
             prevProps.model.selectedSample !== this.props.model.selectedSample)
             this.queryLime(this.props.model.selectedSample)
