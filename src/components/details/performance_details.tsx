@@ -93,7 +93,8 @@ ${ID}_cm
 
                                 <KeyValue key_={`Training ${meta.metric}`} value={model.candidate.loss} prec={4}/>
                                 <KeyValue key_={`Validation ${meta.metric}`} value={data.val_score} prec={4}/>
-                                <KeyValue key_={`Validation Accuracy`} value={data.accuracy} prec={4}/>
+                                {meta.metric !== 'accuracy' &&
+                                    <KeyValue key_={`Validation Accuracy`} value={data.accuracy} prec={4}/>}
                                 <KeyValue key_={'Training Duration'}
                                           value={`${prettyPrint(model.candidate.runtime.training_time)} sec`}/>
                                 <KeyValue key_={'Prediction Duration'}
