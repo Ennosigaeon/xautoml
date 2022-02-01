@@ -3,6 +3,7 @@ import * as cpc from "./model";
 import React from "react";
 import {fixedPrec} from "../../util";
 import {CandidateId} from "../../model";
+import {Constants} from "./constants";
 
 interface PCLineProps {
     line: cpc.Line
@@ -89,6 +90,8 @@ export class PCLine extends React.Component<PCLineProps, PCLineStats> {
 
             if (point.value !== undefined) {
                 let y
+                const skipCenterX = !axis.isNumerical()
+
                 if (axis.isNumerical()) {
                     y = (yScale as d3.ScaleContinuousNumeric<number, number>)(point.value as number)
                 } else {
@@ -120,6 +123,11 @@ export class PCLine extends React.Component<PCLineProps, PCLineStats> {
                 } else
                     path.lineTo(xStart, y)
 
+                if (skipCenterX) {
+                    const centeredX = axis.getLayout().centeredX()
+                    path.lineTo(centeredX - Constants.CIRCLE_SIZE, y)
+                    path.moveTo(centeredX + Constants.CIRCLE_SIZE, y)
+                }
                 path.lineTo(xEnd, y)
 
                 lastPosition = [xEnd, y]
