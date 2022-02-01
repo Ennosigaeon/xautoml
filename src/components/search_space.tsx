@@ -77,8 +77,11 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
             this.setState({timestamp: Number.parseInt(this.state.sliderMarks[v])})
     }
 
-    private onHyperparameterSelection(hyperparameter: string) {
-        if (!this.state.hpHistories.has(hyperparameter)) {
+    private onHyperparameterSelection(fullyQualifiedHP: string) {
+        if (!this.state.hpHistories.has(fullyQualifiedHP)) {
+            const tokens = fullyQualifiedHP.split('::')
+            const hyperparameter = tokens[tokens.length - 1]
+
             let scale: d3.ScaleBand<ConfigValue> | d3.ScaleContinuousNumeric<number, number> = undefined
             let type: 'category' | 'number' = undefined
             const data = [].concat(...this.props.structures
@@ -109,14 +112,14 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
                         }))
                 }))
 
-            this.state.hpHistories.set(hyperparameter, {
+            this.state.hpHistories.set(fullyQualifiedHP, {
                 name: hyperparameter,
                 type: type,
                 scale: scale,
                 data: data
             })
         } else
-            this.state.hpHistories.delete(hyperparameter)
+            this.state.hpHistories.delete(fullyQualifiedHP)
         this.setState({hpHistories: this.state.hpHistories})
     }
 

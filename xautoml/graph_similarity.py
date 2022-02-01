@@ -49,6 +49,7 @@ def pipeline_to_networkx(pipeline, cid):
         node = prefix_name(prefix, suffix)
         g.add_node(node,
                    step_name=prefix.replace(f':{suffix}', '') if prefix.endswith(suffix) else prefix,
+                   config_prefix=prefix,
                    edge_labels={} if edge_labels is None else {p: l for p, l in zip(parent_nodes, edge_labels)},
                    other_paths=other_paths,
                    merger=len(parent_nodes) > 1,
@@ -72,6 +73,7 @@ def export_json(g: nx.DiGraph):
             'id': node,
             'label': node.split(':')[-1],
             'step_name': data['step_name'] if 'step_name' in data else node,
+            'config_prefix': data['config_prefix'] if 'config_prefix' in data else node,
             'parallel_paths': data['other_paths'],
             'cids': data['cids'],
             'splitter': 'splitter' in data and data['splitter'],

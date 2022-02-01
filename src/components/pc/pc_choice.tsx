@@ -71,8 +71,6 @@ export class PCChoice extends React.Component<CPCPChoiceProps, {}> {
                     </>
                 }
 
-                {/* TODO highlight pipeline step */}
-
                 {!choice.isCollapsed() && <>
                     {parent && <rect x={x} y={y} width={width} height={height} onClick={this.collapse}
                                      className={'pc-border'}/>}

@@ -3,7 +3,6 @@ import * as cpc from "./model";
 import React from "react";
 import {fixedPrec} from "../../util";
 import {CandidateId} from "../../model";
-import {PARENT_MARKER} from "./model";
 
 interface PCLineProps {
     line: cpc.Line
@@ -75,9 +74,7 @@ export class PCLine extends React.Component<PCLineProps, PCLineStats> {
         line.points.map(point => {
             const axis = model.getAxis(point.axis)
             if (axis === undefined) {
-                if (!point.axis?.endsWith(PARENT_MARKER))
-                    // Should not happen. Maybe rendering different structures at once
-                    console.log(`Failed to find axis ${point.axis} in line ${line.id}. Skipping this point.`)
+                // Should not happen. Maybe rendering different structures at once
                 return
             }
 

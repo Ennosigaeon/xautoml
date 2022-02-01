@@ -82,10 +82,10 @@ export namespace ParCord {
     export function parseConfigSpace(structures: Structure[], perfAxis: cpc.PerformanceAxis): cpc.Axis[][] {
         // TODO: clean-up this mess...
 
-        function parseHyperparameter(hp: HyperParameter, conditions: Condition[]): cpc.Axis {
+        function parseHyperparameter(hp: HyperParameter, conditions: Condition[], stepId: string): cpc.Axis {
             const id = hp.name
             if (hp instanceof NumericalHyperparameter)
-                return cpc.Axis.Numerical(id, hp.name, new cpc.Domain(hp.lower, hp.upper, hp.log))
+                return cpc.Axis.Numerical(`${stepId}::${id}`, hp.name, new cpc.Domain(hp.lower, hp.upper, hp.log))
             else {
                 const choices = (hp as CategoricalHyperparameter).choices
                     .map(choice => new cpc.Choice(choice as ConfigValue, []))
@@ -94,10 +94,10 @@ export namespace ParCord {
                     conditions.filter(con => con.parent === hp.name && con.child === child.name)[0].values
                         .forEach(v =>
                             choices.filter(c => c.value === v)
-                                .forEach(c => c.axes.push([parseHyperparameter(child, conditions)]))
+                                .forEach(c => c.axes.push([parseHyperparameter(child, conditions, stepId)]))
                         )
                 })
-                return cpc.Axis.Categorical(id, hp.name, choices)
+                return cpc.Axis.Categorical(`${stepId}::${id}`, hp.name, choices)
             }
         }
 
@@ -118,9 +118,8 @@ export namespace ParCord {
                     comp[idx].set(commonStepName, new ParallelAxes(commonStepName, step.parallel_paths.length === 0 ? [step.step_name] : step.parallel_paths))
 
                 if (!comp[idx].get(commonStepName).has(step.id)) {
-                    // TODO hyperparameters of components in dswizard parallel paths are still missing
-                    const axes_ = structure.configspace.getHyperparameters(step.id)
-                        .map(hp => [parseHyperparameter(hp, structure.configspace.conditions)])
+                    const axes_ = structure.configspace.getHyperparameters(step.config_prefix)
+                        .map(hp => [parseHyperparameter(hp, structure.configspace.conditions, step.id)])
                     const axes = axes_.length === 0 ? [[]] : axes_
 
                     const label = !Number.isNaN(Number.parseInt(step.label)) || !step.label ? step.label : undefined
@@ -191,8 +190,8 @@ export namespace ParCord {
                 points.push(new cpc.LinePoint(`${nameToIndex.get(step.id)}.${commonStepName}`, step.label))
 
                 candidate.subConfig(step, false)
-                    .forEach((value: ConfigValue, key: string) => {
-                        points.push(new cpc.LinePoint(key, value))
+                    .forEach((value: ConfigValue, name: string) => {
+                        points.push(new cpc.LinePoint(`${step.id}::${name}`, value))
                     })
             })
 
