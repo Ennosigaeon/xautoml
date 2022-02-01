@@ -68,6 +68,7 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
 
         this.changeTimestamp = this.changeTimestamp.bind(this)
         this.onHyperparameterSelection = this.onHyperparameterSelection.bind(this)
+        this.onHyperparameterReset = this.onHyperparameterReset.bind(this)
     }
 
     private changeTimestamp(v: number) {
@@ -120,6 +121,11 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
             })
         } else
             this.state.hpHistories.delete(fullyQualifiedHP)
+        this.setState({hpHistories: this.state.hpHistories})
+    }
+
+    private onHyperparameterReset() {
+        this.state.hpHistories.clear()
         this.setState({hpHistories: this.state.hpHistories})
     }
 
@@ -199,6 +205,7 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
                                                  meta={meta}
                                                  selectedCandidates={selectedCandidates}
                                                  hideUnselectedCandidates={hideUnselectedCandidates}
+                                                 onReset={this.onHyperparameterReset}
                                                  onCandidateSelection={onCandidateSelection}/>
                             </CollapseComp>
                         </div>

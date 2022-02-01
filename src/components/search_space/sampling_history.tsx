@@ -3,10 +3,12 @@ import {HPRecord, HyperparameterHistory} from "./model";
 import {CartesianGrid, Cell, ReferenceArea, ResponsiveContainer, Scatter, ScatterChart, XAxis, YAxis} from "recharts";
 import {CandidateId, ConfigValue, MetaInformation} from "../../model";
 import {Colors, prettyPrint} from "../../util";
+import * as d3 from "d3";
 import {Bin, bin} from "d3";
-import PerformanceTimeline from "../general/performance_timeline";
 import memoizee from "memoizee";
 import memoizeOne from "memoize-one";
+import {Heatbar} from "../../util/recharts";
+import {Button} from "@material-ui/core";
 
 interface PlotData {
     yAxisProps: any
@@ -23,9 +25,7 @@ interface SamplingHistoryProps {
     selectedCandidates: Set<CandidateId>
     hideUnselectedCandidates: boolean
     onCandidateSelection: (cid: Set<CandidateId>, show?: boolean) => void
-}
-
-interface SamplingHistoryState {
+    onReset: () => void
 }
 
 class LabelEncoder {
@@ -44,7 +44,7 @@ class LabelEncoder {
 }
 
 
-export class SamplingHistory extends React.Component<SamplingHistoryProps, SamplingHistoryState> {
+export class SamplingHistory extends React.Component<SamplingHistoryProps> {
 
     static readonly HELP = 'Shows the distribution and performance of a single hyperparameter over time. This ' +
         'view can be used to validate that the complete range of the hyperparameter is searched. Furthermore, it can ' +
@@ -114,10 +114,9 @@ export class SamplingHistory extends React.Component<SamplingHistoryProps, Sampl
         primitive: true, length: 1, max: 100, normalizer: args => args[0].name
     })
 
-    private static calcPerfHistory(plotData: PlotData[]) {
+    private static calcPerfHistory(plotData: PlotData[]): number[] {
         return [].concat(...plotData.map(data => data.data))
-            .sort((a: HPRecord, b: HPRecord) => a.timestamp - b.timestamp)
-            .filter((record, idx, arr) => !idx || record.timestamp != arr[idx - 1].timestamp)
+            .map(d => d.performance)
     }
 
     private memCalcPerfHistory = memoizeOne(SamplingHistory.calcPerfHistory)
@@ -135,9 +134,9 @@ export class SamplingHistory extends React.Component<SamplingHistoryProps, Sampl
             this.props.onCandidateSelection(new Set<CandidateId>([cid]), true)
     }
 
-    private renderSingleHp(history: HyperparameterHistory, plotData: PlotData, xMax: number, marginLeft: number) {
+    private renderSingleHp(history: HyperparameterHistory, plotData: PlotData, xMax: number, marginLeft: number, scale: d3.ScaleSequential<string>) {
         const {selectedCandidates} = this.props
-        const {yAxisProps, data, bins, name} = plotData
+        const {yAxisProps, data, bins} = plotData
 
         if (data.length === 0)
             return (
@@ -196,7 +195,7 @@ export class SamplingHistory extends React.Component<SamplingHistoryProps, Sampl
                         <Scatter yAxisId="value" data={data} onClick={this.onScatterClick}>
                             {data.map((d, index) => (
                                 <Cell key={`cell-${index}`}
-                                      fill={selectedCandidates.has(d.cid) ? Colors.HIGHLIGHT : Colors.DEFAULT}
+                                      fill={selectedCandidates.has(d.cid) ? Colors.HIGHLIGHT : scale(d.performance)}
                                       stroke={Colors.BORDER}
                                       cursor={'pointer'}/>
                             ))}
@@ -208,7 +207,7 @@ export class SamplingHistory extends React.Component<SamplingHistoryProps, Sampl
     }
 
     render() {
-        const {histories, selectedCandidates} = this.props
+        const {histories, meta, onReset} = this.props
         const plotData = histories.sort((a, b) => a.name.localeCompare(b.name))
             .map(h => this.memCalcData(h))
 
@@ -216,6 +215,8 @@ export class SamplingHistory extends React.Component<SamplingHistoryProps, Sampl
         const xMax = Math.max(...plotData.map(h => h.xMax))
 
         const perfRecords = this.memCalcPerfHistory(plotData)
+        const scale = d3.scaleSequential(d3.interpolateReds)
+            .domain([Math.min(...perfRecords), Math.max(...perfRecords)])
 
         return (
             <div>
@@ -230,16 +231,13 @@ export class SamplingHistory extends React.Component<SamplingHistoryProps, Sampl
                 {histories.length > 0 &&
                     <div style={{display: 'flex', flexDirection: 'column', height: '100%'}}>
                         <div style={{flex: '1 1 auto', padding: '5px'}}>
-                            {histories.map((hp, i) => this.renderSingleHp(hp, plotData[i], xMax, marginLeft))}
-                        </div>
-                        <div style={{flex: '0 1 auto', padding: '5px'}}>
-                            <h4>Performance Overview</h4>
-                            <PerformanceTimeline data={perfRecords} meta={this.props.meta}
-                                                 height={SamplingHistory.PLOT_HEIGHT}
-                                                 xDomain={[0, xMax * 1.25]}
-                                                 margin={{right: 20, left: marginLeft}}
-                                                 onCandidateSelection={this.props.onCandidateSelection}
-                                                 selectedCandidates={selectedCandidates}/>
+                            <div style={{display: 'flex'}}>
+                                <Heatbar label={meta.metric} scale={scale}/>
+                                <Button style={{marginLeft: '20px', marginTop: '3px'}}
+                                        onClick={() => onReset()}>Reset</Button>
+                            </div>
+
+                            {histories.map((hp, i) => this.renderSingleHp(hp, plotData[i], xMax, marginLeft, scale))}
                         </div>
                     </div>
                 }
