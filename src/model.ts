@@ -97,7 +97,7 @@ export namespace BO {
                     public readonly selected: number,
                     public readonly metric: string = 'Expected Improvement') {
             this.candidates = candidates.map((c, idx) =>
-                new Candidate(idx.toString(), undefined, undefined, loss[idx], undefined, c, undefined)
+                new Candidate(idx.toString(), undefined, undefined, loss[idx], undefined, c, undefined, false)
             )
         }
 
@@ -226,7 +226,8 @@ export class Candidate {
                 public readonly loss: number,
                 public readonly runtime: Runtime,
                 public readonly config: Config,
-                public readonly origin: ConfigOrigin) {
+                public readonly origin: ConfigOrigin,
+                public readonly filled: boolean) {
     }
 
     public static fromJson(candidate: Candidate): Candidate {
@@ -234,13 +235,13 @@ export class Candidate {
         Object.entries<string | number>(candidate.config as {})
             .forEach(k => config.set(k[0], k[1]));
 
-        return new Candidate(candidate.id, candidate.status, candidate.budget, candidate.loss, Runtime.fromJson(candidate.runtime), config, candidate.origin)
+        return new Candidate(candidate.id, candidate.status, candidate.budget, candidate.loss, Runtime.fromJson(candidate.runtime), config, candidate.origin, candidate.filled)
     }
 
     subConfig(step: PipelineStep, prune: boolean): Config {
         const subConfig = new Map<string, ConfigValue>()
         Array.from(this.config.keys())
-            .filter(k => k.startsWith(step.step_name + ':'))
+            .filter(k => k.startsWith(step.config_prefix + ':'))
             .forEach(key => {
                 const tokens = key.split(':')
                 subConfig.set(prune ? tokens[tokens.length - 1] : key, this.config.get(key))

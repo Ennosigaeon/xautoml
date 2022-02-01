@@ -402,6 +402,7 @@ export class Leaderboard extends React.Component<LeaderboardProps, LeaderboardSt
 
         this.props.structures.forEach(structure => {
             structure.configs
+                .filter(c => c.filled)
                 .filter(c => !this.props.hideUnselectedCandidates || this.props.selectedCandidates.has(c.id))
                 .forEach(c => {
                     rows.push(

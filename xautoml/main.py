@@ -62,6 +62,9 @@ class XAutoML:
     @no_warnings
     def _calc_pred_times(self):
         for candidate in self.run_history.cid_to_candidate.values():
+            if 'prediction_time' in candidate.runtime:
+                continue
+
             try:
                 start = time.time()
                 candidate.model.predict(self.X)
@@ -73,18 +76,18 @@ class XAutoML:
     def _load_models(self, cids: list[CandidateId]) -> tuple[pd.DataFrame, pd.Series, list[Pipeline]]:
         models = []
         for cid in cids:
-            try:
-                if cid == 'ENSEMBLE':
-                    models.append(deepcopy(self.run_history.ensemble.candidate.model))
-                else:
-                    models.append(deepcopy(self.run_history.cid_to_candidate[cid].model))
-            except FileNotFoundError:
-                pass
+            if cid == 'ENSEMBLE':
+                models.append(deepcopy(self.run_history.ensemble.candidate.model))
+            else:
+                models.append(deepcopy(self.run_history.cid_to_candidate[cid].model))
 
-        return self.X.copy(), self.y.copy(), models
+        return self.X.copy(), self.y.copy(), [m for m in models if m is not None]
 
     def _load_model(self, cid: CandidateId) -> tuple[pd.DataFrame, pd.Series, Pipeline]:
         X, y, models = self._load_models([cid])
+        if len(models) == 0:
+            raise ValueError('Candidate {} does not exist or has no fitted model'.format(cid))
+
         pipeline = models[0]
         return X, y, pipeline
 

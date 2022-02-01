@@ -17,11 +17,11 @@ def pipeline_to_networkx(pipeline, cid):
         if hasattr(component, 'choice'):
             return convert_component(component.choice, prefix, parent_nodes, other_paths)
 
-        if hasattr(component, 'column_transformer') or hasattr(component, 'transformers'):
+        if hasattr(component, 'transformer_list') or hasattr(component, 'transformers'):
             for p in parent_nodes:
                 g.nodes[p]['splitter'] = True
 
-            trans_tuple = component.transformers if hasattr(component, 'transformers') else component.column_transformer
+            trans_tuple = component.transformers if hasattr(component, 'transformers') else component.transformer_list
 
             transformers = []
             other_paths = [prefix_name(prefix, t[0]) for t in trans_tuple]
@@ -33,6 +33,10 @@ def pipeline_to_networkx(pipeline, cid):
 
                 transformers += convert_component(transformer, prefix_name(prefix, name), parent_nodes,
                                                   other_paths, [','.join([str(c) for c in cols])])
+
+            remainder = getattr(component, 'remainder', 'drop')
+            if remainder == 'passthrough':
+                transformers += parent_nodes
 
             return transformers
 
@@ -48,6 +52,7 @@ def pipeline_to_networkx(pipeline, cid):
         suffix = component.__class__.__module__.split('.')[-1]
         node = prefix_name(prefix, suffix)
         g.add_node(node,
+                   label=type(component).__name__,
                    step_name=prefix.replace(f':{suffix}', '') if prefix.endswith(suffix) else prefix,
                    config_prefix=prefix,
                    edge_labels={} if edge_labels is None else {p: l for p, l in zip(parent_nodes, edge_labels)},
@@ -71,7 +76,7 @@ def export_json(g: nx.DiGraph):
     for node, data in g.nodes(data=True):
         nodes.append({
             'id': node,
-            'label': node.split(':')[-1],
+            'label': data['label'] if 'label' in data else node,
             'step_name': data['step_name'] if 'step_name' in data else node,
             'config_prefix': data['config_prefix'] if 'config_prefix' in data else node,
             'parallel_paths': data['other_paths'],

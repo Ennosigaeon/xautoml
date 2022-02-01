@@ -34,7 +34,7 @@ class Candidate:
     runtime: dict[str, float]
     config: Configuration
     origin: str
-    model: Pipeline
+    model: Optional[Pipeline]
     y_transformer: Callable
 
     def as_dict(self):
@@ -45,7 +45,8 @@ class Candidate:
             'loss': self.loss,
             'runtime': self.runtime,
             'config': self.config.get_dictionary(),
-            'origin': self.origin
+            'origin': self.origin,
+            'filled': self.model is not None
         }
 
 

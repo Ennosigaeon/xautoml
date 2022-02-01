@@ -40,7 +40,7 @@ export class EnsembleDetailsComponent extends React.Component<EnsembleDetailsPro
         const {meta} = this.props
         const {selectedSample} = this.state
 
-        const candidate = new Candidate(ENSEMBLE, '', 0, 0, new Runtime(0, 0, 0), undefined, undefined)
+        const candidate = new Candidate(ENSEMBLE, '', 0, 0, new Runtime(0, 0, 0), undefined, undefined, false)
         const model = new DetailsModel(undefined, candidate, SOURCE, SOURCE, selectedSample)
 
         return (
