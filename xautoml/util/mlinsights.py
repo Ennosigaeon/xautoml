@@ -12,6 +12,7 @@ from sklearn.compose import ColumnTransformer, TransformedTargetRegressor
 from sklearn.pipeline import Pipeline, FeatureUnion
 
 from xautoml.util.auto_sklearn import AutoSklearnUtils
+from xautoml.util.flaml import FLAMLUtils
 
 
 def enumerate_pipeline_models(pipe, coor=None, vs=None):
@@ -80,6 +81,8 @@ def enumerate_pipeline_models(pipe, coor=None, vs=None):
         elif isinstance(pipe, (TransformerMixin, ClassifierMixin, RegressorMixin)):
             pass
         elif isinstance(pipe, BaseEstimator):  # pragma: no cover
+            pass
+        elif FLAMLUtils.isBaseEstimator(pipe):
             pass
         else:
             raise TypeError(  # pragma: no cover

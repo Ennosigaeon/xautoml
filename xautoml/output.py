@@ -64,6 +64,9 @@ class OutputCalculator:
             inputs = {}
             outputs = {}
             for coordinate, model, subset in enumerate_pipeline_models(pipeline):
+                if not hasattr(model, '_debug'):
+                    continue
+
                 input = OutputCalculator._load_data(model._debug.inputs, y, y_pred, confidence, method)
                 output = OutputCalculator._load_data(model._debug.outputs, y, y_pred, confidence, method)
 
