@@ -71,7 +71,7 @@ def test_pdp4():
 
 def test_fanova():
     main = get_autosklearn_hearts()
-    print(main.fanova('00:01', 'SOURCE').data)
+    print(main.fanova_overview('00:01', 'SOURCE').data)
 
 
 def test_simulate_surrogate():
