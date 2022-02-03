@@ -25,6 +25,7 @@ export class Model {
 
     private axesMap: Map<string, Axis>
     private explanations_: BO.Explanation
+    private memState_: number = Math.random()
 
     constructor(
         public readonly axes: Axis[][],
@@ -43,6 +44,14 @@ export class Model {
 
     getExplanations(axis: Axis) {
         return this.explanations_?.get(axis.name)
+    }
+
+    updateMemState() {
+        this.memState_ = Math.random()
+    }
+
+    get memState() {
+        return this.memState_
     }
 
     // noinspection JSMethodCanBeStatic
@@ -160,8 +169,10 @@ export class Choice {
     }
 
     collapse() {
-        if (this.collapsible)
+        if (this.collapsible && !this.collapsed) {
             this.collapsed = true
+            this.axes.forEach(column => column.forEach(row => row.choices.forEach(c => c.collapse())))
+        }
     }
 
     expand() {

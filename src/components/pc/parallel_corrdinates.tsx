@@ -124,6 +124,7 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
         const height = this.NODE_HEIGHT * maxNodes
         const yScale = d3.scaleBand([root.value.toString()], [0, height / root.getHeightWeight()])
         root.layout([0, width], yScale)
+        this.model.updateMemState()
         return [root, height]
     }
 

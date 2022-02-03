@@ -4,6 +4,7 @@ import React from "react";
 import {fixedPrec} from "../../util";
 import {CandidateId} from "../../model";
 import {Constants} from "./constants";
+import memoizeOne from "memoize-one";
 
 interface PCLineProps {
     line: cpc.Line
@@ -61,7 +62,7 @@ export class PCLine extends React.Component<PCLineProps, PCLineStats> {
         e.stopPropagation()
     }
 
-    private renderPath(): [d3.Path, d3.Path, Array<Tooltip>] {
+    private renderPath(_: number): [d3.Path, d3.Path, Array<Tooltip>] {
         const {line} = this.props
         const {model} = this.context
 
@@ -145,10 +146,12 @@ export class PCLine extends React.Component<PCLineProps, PCLineStats> {
         return [path, missingPath, tooltips]
     }
 
+    private memRenderPath = memoizeOne(this.renderPath)
+
 
     render() {
         const {missing} = this.props
-        const [path, missingPath, tooltips] = this.renderPath()
+        const [path, missingPath, tooltips] = this.memRenderPath(this.context.model.memState)
         const tooltipHeight = 20
 
         return (
