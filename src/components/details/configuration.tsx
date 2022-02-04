@@ -1,12 +1,8 @@
 import {BO, Candidate, CandidateId, ConfigOrigin, Explanations, Structure} from "../../model";
 import {JupyterContext} from "../../util";
 import React from "react";
-import {KeyValue} from "../../util/KeyValue";
-import {PipelineHyperparameters} from "./pipeline_hyperparameters";
-import {CollapseComp} from "../../util/collapse";
 import {ParallelCoordinates} from "../pc/parallel_corrdinates";
 import {DetailsModel} from "./model";
-import {JupyterButton} from "../../util/jupyter-button";
 import {ID} from "../../jupyter";
 import {StructureSearchGraph} from "../search_space/structure_search_graph";
 import {LoadingIndicator} from "../../util/loading";
@@ -16,6 +12,7 @@ import {WarningIndicator} from "../../util/warning";
 interface SurrogateExplanationProps {
     model: DetailsModel
     explanation: BO.Explanation
+    onExport: () => void
 }
 
 interface SurrogateExplanationState {
@@ -89,6 +86,7 @@ class SMBOSurrogateCPC extends React.Component<SurrogateExplanationProps, Surrog
                                              explanation={explanation}
                                              showExplanations={true}
                                              expand={true}
+                                             onExport={this.props.onExport}
                                              perfAxis={{
                                                  label: label, domain: [Math.min(...loss), Math.max(...loss)], log: true
                                              }}/>
@@ -157,31 +155,18 @@ ${ID}_hp
 
     render() {
         const {explanations, model} = this.props
-        const {candidate, structure} = model
+        const {candidate} = model
 
         return (
             <>
-                <div style={{display: 'flex', justifyContent: "space-between"}}>
-                    <KeyValue key_={'Origin'} value={candidate.origin}
-                              help={ConfigurationComponent.getHelp(candidate.origin)}/>
-                    <JupyterButton onClick={this.exportConfiguration}/>
-                </div>
-                <PipelineHyperparameters candidate={candidate} structure={structure}/>
+                <h4>Hyperparameters Optimization</h4>
+                <SMBOSurrogateCPC model={model}
+                                  onExport={this.exportConfiguration}
+                                  explanation={explanations?.configs.get(candidate.id)}/>
 
                 <hr/>
-                <CollapseComp name={'config-origin-reinforcement'} showInitial={true}
-                              help={StructureSearchGraph.HELP + '\n\n' +
-                                  'Highlighted in blue is the actual selected pipeline structure.'}>
-                    <h4>Pipeline Structure Search</h4>
-                    <StructureSearchGraph timestamp={candidate.index}/>
-                </CollapseComp>
-
-                <CollapseComp name={'config-origin-bo'} showInitial={true}
-                              help={ParallelCoordinates.HELP + '\n\n' + SMBOSurrogateCPC.HELP}>
-                    <h4>Hyperparameter Optimization</h4>
-                    <SMBOSurrogateCPC model={model}
-                                          explanation={explanations?.configs.get(candidate.id)}/>
-                </CollapseComp>
+                <h4>Pipeline Structure Search</h4>
+                <StructureSearchGraph timestamp={candidate.index}/>
             </>
         )
     }

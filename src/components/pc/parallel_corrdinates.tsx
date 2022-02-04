@@ -8,6 +8,7 @@ import {PCLine} from "./pc_line";
 import {RefableFlexibleSvg} from "../../util/flexible-svg";
 import {Checkbox} from "@material-ui/core";
 import {WarningIndicator} from "../../util/warning";
+import {JupyterButton} from "../../util/jupyter-button";
 
 
 interface PCProps {
@@ -22,6 +23,7 @@ interface PCProps {
     expand?: boolean
     onCandidateSelection?: (cid: Set<CandidateId>, show?: boolean) => void
     onAxisSelection?: (hyperparameter: string) => void
+    onExport?: () => void
 
     timestamp?: number
 }
@@ -67,6 +69,7 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
         },
         onAxisSelection: () => {
         },
+        onExport: undefined as () => void,
         timestamp: Infinity
     }
 
@@ -237,6 +240,7 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
                                       onChange={(_, checked) => this.setState({showCandidates: checked})}/>
                             <span>Show&nbsp;Candidates</span>
                         </label>
+                        {this.props.onExport && <JupyterButton onClick={this.props.onExport}/>}
                     </div>
                 }
                 {!this.props.explanation && <WarningIndicator message={'Surrogate model visualization not available'}/>}

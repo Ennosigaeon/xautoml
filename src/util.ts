@@ -19,7 +19,13 @@ export function prettyPrint(value: Primitive, prec: number = 3): string {
         return fixedPrec(value, prec).toString()
     else if (value instanceof Date)
         return (value as Date).toLocaleString()
-    else
+    else if (typeof value === 'string') {
+        const num = parseFloat(value)
+        if (!isNaN(num))
+            return fixedPrec(num, prec).toString()
+        else
+            return value
+    } else
         return String(value)
 }
 

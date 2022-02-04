@@ -71,7 +71,8 @@ export class SamplingHistory extends React.Component<SamplingHistoryProps> {
             yAxisProps = {
                 ticks: [...Array(encoder.labels.length).keys()],
                 interval: 0,
-                tickFormatter: (y: number) => prettyPrint(encoder.labels[y])
+                tickFormatter: (y: number) => prettyPrint(encoder.labels[y]),
+                domain: [0, encoder.labels.length - 1]
             }
             marginLeft = encoder.labels.map(l => prettyPrint(l).length).reduce((a, b) => Math.max(a, b), 0) * 5
 

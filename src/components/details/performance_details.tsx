@@ -100,10 +100,6 @@ ${ID}_cm
                                 <KeyValue key_={'Prediction Duration'}
                                           value={`${prettyPrint(data.duration)} sec`}/>
 
-                                <hr/>
-
-                                <h4>Information</h4>
-                                <KeyValue key_={'Status'} value={model.candidate.status}/>
                                 <KeyValue key_={'Budget'} value={model.candidate.budget}/>
                             </div>
 
@@ -154,7 +150,7 @@ ${ID}_cm
                                 <Heading help={RocCurve.HELP}>
                                     <h4>Receiver Operating Characteristic (ROC) Curve</h4>
                                 </Heading>
-                                <RocCurve selectedCandidates={new Set([model.candidate.id])} height={200}/>
+                                <RocCurve selectedCandidates={new Set([model.candidate.id])} height={175}/>
                             </div>
                         </div>
                     }
