@@ -160,7 +160,28 @@ export class OptimizationProgress extends React.Component<OptimizationProgressPr
                                                       cursor={'pointer'}/>
                                             ))}
                                     </Scatter>
-                                    <Legend verticalAlign="top"/>
+                                    <Legend verticalAlign="top" content={
+                                        <ul className="recharts-default-legend"
+                                            style={{padding: '0px', margin: '0px', textAlign: 'center'}}>
+                                            <li className="recharts-legend-item legend-item-0"
+                                                style={{display: 'inline-block', marginRight: '10px'}}>
+                                                <svg className="recharts-surface" width="14" height="14"
+                                                     viewBox="0 0 32 32" version="1.1">
+                                                    <path fill="#abe2fb" cx="16" cy="16" type="circle"
+                                                          className="recharts-symbols" transform="translate(16, 16)"
+                                                          d="M16,0A16,16,0,1,1,-16,0A16,16,0,1,1,16,0"/>
+                                                </svg>
+                                                <span className="recharts-legend-item-text">Candidates</span></li>
+                                            <li className="recharts-legend-item legend-item-1"
+                                                style={{display: 'inline-block', marginRight: '10px'}}>
+                                                <svg className="recharts-surface" width="14" height="14"
+                                                     viewBox="0 0 32 32" version="1.1">
+                                                    <path stroke="none" fill="#abe2fb" d="M0,0h30v30h-30z"
+                                                          className="recharts-legend-icon"/>
+                                                </svg>
+                                                <span className="recharts-legend-item-text">Incumbents</span></li>
+                                        </ul>
+                                    }/>
                                 </ComposedChart>
                             </ResponsiveContainer>
                         </div>

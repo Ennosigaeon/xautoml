@@ -582,3 +582,10 @@ text.pc-axis-label:hover {
     top: 0;
     background-color: white;
 }
+
+
+.recharts-default-legend svg {
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 4px;
+}
