@@ -1,3 +1,5 @@
+import math
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -57,6 +59,18 @@ def print_visual_design(df: pd.DataFrame):
     data = pd.DataFrame([de.mean() + 1, ds.mean() + 1, ar.mean() + 1, df.mean() + 1]).T
 
     print('###### Visual Design ######')
+    for _, row in data.iterrows():
+        print(f'\\({row[0]:.2f}\\)\t& \\({row[1]:.2f}\\)\t& \\({row[2]:.2f}\\)\t& \\({row[3]:.2f}\\) \\\\')
+    print('\n\n')
+
+
+def print_previous_knowledge(df: pd.DataFrame):
+    de = df[df['Role'] == 'domain expert']
+    ar = df[df['Role'] == 'automl researcher']
+    ds = df[df['Role'] == 'data scientist']
+    data = pd.DataFrame([de.mean() + 1, ds.mean() + 1, ar.mean() + 1, df.mean() + 1]).T
+
+    print('###### Previous Knowledge ######')
     for _, row in data.iterrows():
         print(f'\\({row[0]:.2f}\\)\t& \\({row[1]:.2f}\\)\t& \\({row[2]:.2f}\\)\t& \\({row[3]:.2f}\\) \\\\')
     print('\n\n')
@@ -138,7 +152,6 @@ def plot_priority_distribution(df: pd.DataFrame, group=True):
 
     print('\n\n')
 
-
     sns.set_theme(style="whitegrid")
     fig, ax = plt.subplots(1, 1, figsize=(15, 5))
     fig.tight_layout()
@@ -164,6 +177,12 @@ def plot_priority_distribution(df: pd.DataFrame, group=True):
 
 
 def calculate_trust_result(text_df: pd.DataFrame, vis_df: pd.DataFrame):
+    def cohen_d(x: pd.Series, y: pd.Series):
+        nx = len(x)
+        ny = len(y)
+        dof = nx + ny - 2
+        return (x.mean() - y.mean()) / math.sqrt(((nx - 1) * x.std() ** 2 + (ny - 1) * y.std() ** 2) / dof)
+
     vis_df.columns = text_df.columns
     print('###### Trust ######')
     for col in text_df:
@@ -175,7 +194,7 @@ def calculate_trust_result(text_df: pd.DataFrame, vis_df: pd.DataFrame):
 
         t = ttest_ind(text.values, vis.values, alternative='less')
         print(
-            f'{col}, \({text.mean() + 1:.2f} \pm {text.std():.2f}\), \({vis.mean() + 1:.2f} \pm {vis.std():.2f}\), {t.pvalue:.2e}')
+            f'{col}, \({text.mean() + 1:.2f} \pm {text.std():.2f}\), \({vis.mean() + 1:.2f} \pm {vis.std():.2f}\), \(p = {t.pvalue:.2e}\), \(d = {cohen_d(text, vis):.2f}\)')
 
     text_de, vis_de = text_df[text_df['Role'] == 'domain expert'], vis_df[vis_df['Role'] == 'domain expert']
     text_ar, vis_ar = text_df[text_df['Role'] == 'automl researcher'], vis_df[vis_df['Role'] == 'automl researcher']
@@ -202,6 +221,7 @@ def calculate_task_success(df: pd.DataFrame):
     with pd.option_context('display.precision', 0):
         print('Task success percentage')
         print(df.mean(axis=1) * 100)
+        print(df.mean().mean() * 100)
         print('\n\n')
 
 
@@ -213,6 +233,7 @@ def index(df: pd.DataFrame, slice_) -> pd.DataFrame:
 
 questionnaire, requirements, tasks = load_data()
 print_visual_design(index(questionnaire, slice(27, 32)))
+print_previous_knowledge(index(questionnaire, slice(6, 11)))
 calculate_sus(index(questionnaire, slice(32, 42)))
 plot_priority_distribution(requirements)
 calculate_task_success(tasks)
