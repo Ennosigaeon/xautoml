@@ -6,7 +6,7 @@ from xautoml.tests import get_autosklearn
 
 def test_roc_curve():
     main = get_autosklearn()
-    X, y, pipeline = main.get_pipeline('00:00:02')
+    X, y, pipeline = main.pipeline('00:00:02')
 
     micro = False
     macro = True
@@ -18,7 +18,7 @@ def test_roc_curve():
     # Transform into format suited for recharts
     for fpr, tpr, label in roc.get_data('00:00:02'):
         ls = []
-        sample_rate = len(fpr) // 50
+        sample_rate = max(1, len(fpr) // 50)
 
         for f, t in zip(fpr[::sample_rate], tpr[::sample_rate]):
             ls.append({'x': f, 'y': t})

@@ -71,49 +71,23 @@ def get_168746() -> XAutoML:
     return XAutoML(rh, X, y)
 
 
-def get_fixed_hearts() -> XAutoML:
-    X_test, y_test = stroke('/home/marc/phd/code/xautoml/user_study/stroke.csv', train=True)
-    with open('/home/marc/phd/code/xautoml/user_study/dswizard/output/fixed/dswizard.pkl', 'rb') as f:
+def get_fixed_31() -> XAutoML:
+    X, y = openml_task(31, 0, test=True)
+    with open('res/stroke/dswizard.pkl', 'rb') as f:
         (raw, ensemble) = joblib.load(f)
 
     rh = import_dswizard(raw, ensemble)
-    return XAutoML(rh, X_test, y_test)
+    return XAutoML(rh, X, y)
 
 
 def get_autosklearn() -> XAutoML:
-    with open('res/autosklearn/auto-sklearn_breast_cancer.pkl', 'rb') as f:
+    with open('res/autosklearn/auto-sklearn.pkl', 'rb') as f:
         raw = pickle.load(f)
 
     rh = import_auto_sklearn(raw)
-    X, y = _load_data('res/autosklearn/dataset.pkl')
+    X, y = openml_task(31, 0, test=True)
     return XAutoML(rh, X, y)
 
-
-def get_autosklearn_categorical() -> XAutoML:
-    with open('res/autosklearn_categorical/auto-sklearn_1461.pkl', 'rb') as f:
-        raw = pickle.load(f)
-
-    rh = import_auto_sklearn(raw)
-    X, y = _load_data('res/autosklearn_categorical/dataset.pkl')
-    return XAutoML(rh, X, y)
-
-
-def get_autosklearn_iris() -> XAutoML:
-    with open('res/autosklearn/auto-sklearn_iris.pkl', 'rb') as f:
-        raw = joblib.load(f)
-
-    rh = import_auto_sklearn(raw)
-    X, y = load_iris(return_X_y=True, as_frame=True)
-    return XAutoML(rh, X, y)
-
-
-def get_autosklearn_hearts() -> XAutoML:
-    with open('/opt/xautoml/autosklearn/output/autosklearn.pkl', 'rb') as f:
-        raw = joblib.load(f)
-
-    rh = import_auto_sklearn(raw)
-    X_test, y_test = openml_task(31, 0, test=True)
-    return XAutoML(rh, X_test, y_test)
 
 
 def _load_data(data_file) -> tuple[pd.DataFrame, pd.Series]:

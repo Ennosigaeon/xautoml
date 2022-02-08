@@ -61,14 +61,14 @@ export class PerformanceDetailsComponent extends React.Component<PerformanceDeta
 
     private exportClassReport() {
         this.context.createCell(`
-${ID}_report = gcx().get_class_report('${this.props.model.candidate.id}')
+${ID}_report = gcx().class_report('${this.props.model.candidate.id}')
 ${ID}_report
         `.trim())
     }
 
     private exportConfusionMatrix() {
         this.context.createCell(`
-${ID}_cm = gcx().get_cm('${this.props.model.candidate.id}')
+${ID}_cm = gcx().confusion_matrix('${this.props.model.candidate.id}')
 ${ID}_cm
         `.trim())
     }

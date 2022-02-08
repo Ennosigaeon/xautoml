@@ -5,7 +5,7 @@ from fanova import visualizer
 
 from xautoml.hp_importance import HPImportance
 from xautoml.output import RAW, OutputCalculator
-from xautoml.tests import get_168746, get_autosklearn, get_autosklearn_hearts
+from xautoml.tests import get_168746, get_autosklearn
 
 
 def test_overview():
@@ -108,11 +108,11 @@ def test_auto_sklearn():
 
 
 def test_all_auto_sklearn_steps():
-    main = get_autosklearn_hearts()
+    main = get_autosklearn()
 
-    X, y, pipeline = main.get_pipeline('00:03:17')
+    X, y, pipeline = main.pipeline('00:03:05')
 
     inputs, outputs = OutputCalculator.calculate_outputs(pipeline, X, y, method=RAW)
 
     for step_name in inputs.keys():
-        res = main.fanova('00:01', step_name)
+        res = main._decision_tree_surrogate('00:03:05', step_name, 3)

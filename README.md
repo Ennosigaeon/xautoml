@@ -5,15 +5,14 @@ constructed by AutoML. It combines interactive visualizations with established t
 make the complete AutoML procedure transparent and explainable. We integrate XAutoML with Jupyter to enable experienced
 users to extend the visual analytics with advanced ad-hoc visualizations based on information extracted from XAutoML
 
-Currently, XAutoML supports only [auto-sklearn](https://github.com/automl/auto-sklearn) and [dswizard](https://github.com/Ennosigaeon/dswizard)
+Currently, XAutoML supports only
+* [auto-sklearn](https://github.com/automl/auto-sklearn)
+* [dswizard](https://github.com/Ennosigaeon/dswizard)
+* [FLAML](https://github.com/microsoft/FLAML)
+* [Optuna](https://github.com/optuna/optuna)
+* [scikit-learn](https://github.com/scikit-learn/scikit-learn)
 but we plan to add support for further AutoML systems.
 
-
-
-
-## Requirements
-
-* JupyterLab >= 3.0
 
 ## Install
 
@@ -22,6 +21,40 @@ To install the extension, execute:
 ```bash
 pip install xautoml
 ```
+
+## Usage
+
+XAutoML currently only works with JupyterLab. You can find ready to use Notebook examples in the [examples](examples)
+folder.
+
+```shell
+cd examples
+jupyter lab
+```
+
+To use XAutoML, three steps are necessary:
+1) Perform an optimization in one of the supported AutoML frameworks
+2) Import the [RunHistory](xautoml/models.py) of the optimizer via the corresponding [adapter](xautoml/adapter.py)
+3) Create the [XAutoML](xautoml/main.py) visualization
+
+```python
+from xautoml.main import XAutoML
+from xautoml.adapter import import_sklearn
+from xautoml.util.datasets import openml_task
+from sklearn.model_selection import RandomizedSearchCV
+
+# 1) Perform AutoML optimization
+random_search = RandomizedSearchCV(...).fit(...)
+
+# 2) Use Adapter to create RunHistory
+rh = import_sklearn(random_search)
+
+# 3) Create Visualization
+X_test, y_test = openml_task(31, 0, test=True)
+main = XAutoML(rh, X_test, y_test)
+main.explain()
+```
+
 
 ## Uninstall
 

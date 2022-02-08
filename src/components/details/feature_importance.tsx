@@ -84,7 +84,7 @@ class PDPComp extends React.Component<PDPCompProps, PDPCompState> {
         const {cid, component, feature} = this.props
 
         this.context.createCell(`
-${ID}_pdp = gcx().get_pdp('${cid}', '${component}', ['${feature}'])
+${ID}_pdp = gcx().pdp('${cid}', '${component}', ['${feature}'])
 ${ID}_pdp
         `.trim())
     }
@@ -281,7 +281,7 @@ export class FeatureImportanceComponent extends React.Component<FeatureImportanc
         const {candidate, component} = this.props.model
 
         this.context.createCell(`
-${ID}_feature_importance = gcx().get_feature_importance('${candidate.id}', '${component}')
+${ID}_feature_importance = gcx().feature_importance('${candidate.id}', '${component}')
 ${ID}_feature_importance
         `.trim())
     }

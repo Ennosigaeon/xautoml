@@ -7,7 +7,7 @@ from xautoml.util import pipeline_utils
 
 def test_source():
     main = get_7306()
-    X, y, pipeline = main.get_pipeline('00:00:00')
+    X, y, pipeline = main.pipeline('00:00:00')
     step = 'SOURCE'
 
     pipeline, X, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X, y)
@@ -18,7 +18,7 @@ def test_source():
 
 def test_step():
     main = get_168746()
-    X, y, pipeline = main.get_pipeline('00:00:103')
+    X, y, pipeline = main.pipeline('00:00:103')
     step = "data_preprocessing:categorical:imputation"
 
     pipeline, X, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X, y)

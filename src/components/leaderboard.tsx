@@ -160,7 +160,7 @@ class LeaderboardRow extends React.Component<LeaderboardRowProps, LeaderboardRow
 
     private openCandidateInJupyter(e: React.MouseEvent) {
         this.context.createCell(`
-${ID}_X, ${ID}_y, ${ID}_pipeline = gcx().get_pipeline('${this.props.candidate.candidate[1].id}')
+${ID}_X, ${ID}_y, ${ID}_pipeline = gcx().pipeline('${this.props.candidate.candidate[1].id}')
 ${ID}_pipeline
         `.trim())
         e.stopPropagation()

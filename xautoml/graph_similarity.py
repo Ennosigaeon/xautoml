@@ -29,7 +29,7 @@ def pipeline_to_networkx(pipeline, cid):
                 if len(tuple_) == 3:
                     name, transformer, cols = tuple_
                 else:
-                    (name, transformer), cols = tuple_, 'all'
+                    (name, transformer), cols = tuple_, ['all']
 
                 transformers += convert_component(transformer, prefix_name(prefix, name), parent_nodes,
                                                   other_paths, [','.join([str(c) for c in cols])])

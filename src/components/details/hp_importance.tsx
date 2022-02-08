@@ -299,7 +299,7 @@ export class HPImportanceComp extends React.Component<HPImportanceProps, HPImpor
         const {model} = this.props
 
         this.context.createCell(`
-${ID}_hp_importance = gcx().get_hp_importance('${model.structure.cid}', '${model.component}')
+${ID}_hp_importance = gcx().hp_importance('${model.structure.cid}', '${model.component}')
 ${ID}_hp_importance
         `.trim())
     }
@@ -309,7 +309,7 @@ ${ID}_hp_importance
         const [hp1, hp2] = this.state.overview.keys[this.state.selectedRow]
 
         this.context.createCell(`
-${ID}_hp_interactions = gcx().get_hp_interactions('${model.structure.cid}', '${model.component}', '${hp1}', '${hp2}')
+${ID}_hp_interactions = gcx().hp_interactions('${model.structure.cid}', '${model.component}', '${hp1}', '${hp2}')
 ${ID}_hp_interactions
         `.trim())
     }

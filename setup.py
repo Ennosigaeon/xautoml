@@ -48,7 +48,9 @@ setup_args = dict(
         "jupyterlab~=3.2",
         "lime~=0.2",
         "fanova~=2.0",
-        "dswizard-components~=0.1"
+        "dswizard-components~=0.2",
+        "openml~=0.12",
+        "pandas~=1.3.5"
     ],
     zip_safe=False,
     include_package_data=True,

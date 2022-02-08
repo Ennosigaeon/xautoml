@@ -148,7 +148,7 @@ export class ConfigurationComponent extends React.Component<ConfigurationProps, 
     private exportConfiguration() {
         const {id} = this.props.model.candidate
         this.context.createCell(`
-${ID}_hp = gcx().get_config('${id}')
+${ID}_hp = gcx().config('${id}')
 ${ID}_hp
         `.trim())
     }

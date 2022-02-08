@@ -1,7 +1,7 @@
 import time
 from collections import OrderedDict
 from copy import deepcopy
-from typing import Any, Union
+from typing import Union
 
 import joblib
 import pandas as pd
@@ -15,7 +15,13 @@ from xautoml.models import RunHistory, MetaInformation, Explanations, CandidateS
     ConfigExplanation, Ensemble
 
 
-def import_flaml(pipeline: Union[Pipeline, Any]) -> RunHistory:
+def import_flaml(pipeline: Union[Pipeline, 'flaml.AutoML']) -> RunHistory:
+    """
+    Import the RunHistory from a FLAML optimization run
+
+    :param pipeline: sklearn pipeline with flaml.AutoML classifier
+    """
+
     from flaml import AutoML
     import flaml.tune.sample
 
@@ -113,7 +119,14 @@ def import_flaml(pipeline: Union[Pipeline, Any]) -> RunHistory:
                       Explanations({}, {}))
 
 
-def import_dswizard(dswizard: Any, ensemble: VotingClassifier) -> RunHistory:
+def import_dswizard(dswizard: 'dswizard.core.runhistory.RunHistory', ensemble: VotingClassifier) -> RunHistory:
+    """
+    Import the RunHistory from a dswizard optimization run. In addition, the final ensemble has to be provided.
+
+    :param dswizard: RunHistory produced by a dswizard optimization run
+    :param ensemble: Ensemble constructed by dswizard
+    """
+
     tmp = dswizard.complete_data['meta']
     meta = MetaInformation('dswizard', tmp['start_time'], tmp['end_time'], tmp['metric'], tmp['is_minimization'],
                            tmp['n_structures'], tmp['n_configs'], tmp['incumbent'], tmp['openml_task'],
@@ -151,7 +164,13 @@ def import_dswizard(dswizard: Any, ensemble: VotingClassifier) -> RunHistory:
     return RunHistory(meta, default_cs, structures, ens, explanations)
 
 
-def import_auto_sklearn(automl: Any) -> RunHistory:
+def import_auto_sklearn(automl: 'autosklearn.automl.AutoMLClassifier') -> RunHistory:
+    """
+    Import the RunHistory from an auto-sklearn classifier
+
+    :param automl: fitted AutoMLClassifier
+    """
+
     def build_meta_information() -> MetaInformation:
         try:
             start_time = backend.load_start_time(automl.seed)
@@ -316,7 +335,15 @@ def import_auto_sklearn(automl: Any) -> RunHistory:
                       Ensemble(automl, ensemble), Explanations({}, {}))
 
 
-def import_sklearn(search) -> RunHistory:
+def import_sklearn(search: Union['sklearn.model_selection.RandomizedSearchCV', 'sklearn.model_selection.GridSearchCV'],
+                   metric: str = None, start_time: float = None) -> RunHistory:
+    """
+    Import the RunHistory from a scikit-learn RandomizedSearchCV or GridSearchCV
+
+    :param search: fitted sklearn.model_selection.RandomizedSearchCV or sklearn.model_selection.GridSearchCV
+    :param metric: metric string if metric was not specified during the hyperparameter optimization
+    :param start_time: start_time as unix timestamp. Defaults to current system time
+    """
     from sklearn.model_selection import RandomizedSearchCV
 
     def parse_config_space() -> ConfigurationSpace:
@@ -383,11 +410,13 @@ def import_sklearn(search) -> RunHistory:
 
     cs = parse_config_space()
     structure = parse_structures(cs)
-    start = time.time()
+    start = start_time if start_time is not None else time.time()
+    metric = metric if metric is not None else (search.scoring if isinstance(search.scoring, str) else 'unknown')
+
     meta = MetaInformation('scikit-learn',
                            start,
                            start + structure.configs[-1].runtime['timestamp'],
-                           search.scoring if isinstance(search.scoring, str) else 'unknown',
+                           metric,
                            False,
                            1, len(structure.configs),
                            float(search.best_score_),
@@ -397,7 +426,15 @@ def import_sklearn(search) -> RunHistory:
                       Explanations({}, {}))
 
 
-def import_optuna(study, models: dict[int, Pipeline], metric: str = 'unknown') -> RunHistory:
+def import_optuna(study: 'optuna.study.Study', models: dict[int, Pipeline], metric: str = 'unknown') -> RunHistory:
+    """
+    Import the RunHistory from an optuna study
+
+    :param study: fitted optuna study
+    :param models: dict of fitted pipelines with the corresponding trial number
+    :param metric: optional metric used during the optimization
+    """
+
     from optuna.distributions import DiscreteUniformDistribution, LogUniformDistribution, CategoricalDistribution, \
         IntUniformDistribution, IntLogUniformDistribution, UniformDistribution
     from ConfigSpace import ConfigurationSpace, UniformFloatHyperparameter, UniformIntegerHyperparameter, \

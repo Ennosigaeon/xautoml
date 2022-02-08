@@ -40,9 +40,19 @@ def no_warnings(func):
 
 
 class XAutoML:
-    MAX_SAMPLES = 5000
 
     def __init__(self, run_history: RunHistory, X: pd.DataFrame, y: pd.Series, n_samples: int = 5000):
+        """
+        Main class for visualizing AutoML optimization procedures in XAutoML. This class provides methods to render
+        the visualization, provides endpoints for internal communication, and for exporting data to Jupyter.
+
+        :param run_history: A RunHistory instance containing the raw data of an optimization. Can be created via the
+        provided adapters
+        :param X: DataFrame containing the test data set. Used for all calculations
+        :param y: Series containing the test data set. Used for all calculations
+        :param n_samples: Maximum number of samples in the test data set. Due to the interactive nature of XAutoML,
+        calculations have to be quite fast. By default, the number of samples is limited to 5000
+        """
         self.run_history = run_history
 
         if X.shape[0] > n_samples:
@@ -144,17 +154,17 @@ class XAutoML:
     # Endpoints for internal communication
 
     @as_json
-    def output_description(self, cid: CandidateId):
+    def _output_description(self, cid: CandidateId):
         with pd.option_context('display.max_columns', 30, 'display.max_rows', 10):
             return self._calculate_output(cid, DESCRIPTION)
 
     @as_json
-    def output_complete(self, cid: CandidateId):
+    def _output_complete(self, cid: CandidateId):
         with pd.option_context('display.max_columns', 1024, 'display.max_rows', 30, 'display.min_rows', 20):
             return self._calculate_output(cid, COMPLETE)
 
     @as_json
-    def performance_data(self, cid: CandidateId):
+    def _performance_data(self, cid: CandidateId):
         X, y, pipeline = self._load_model(cid)
         details = ModelDetails()
 
@@ -169,7 +179,7 @@ class XAutoML:
         }
 
     @as_json
-    def decision_tree_surrogate(self, cid: CandidateId, step: str, max_leaf_nodes: Optional[int]):
+    def _decision_tree_surrogate(self, cid: CandidateId, step: str, max_leaf_nodes: Optional[int]):
         X, y, pipeline = self._load_model(cid)
 
         last_step = pipeline.steps[-1][0]
@@ -184,7 +194,7 @@ class XAutoML:
         return res.as_dict(additional_features)
 
     @as_json
-    def feature_importance(self, cid: CandidateId, step: str):
+    def _feature_importance(self, cid: CandidateId, step: str):
         X, y, pipeline = self._load_model(cid)
 
         last_step = pipeline.steps[-1][0]
@@ -206,11 +216,11 @@ class XAutoML:
         }
 
     @as_json
-    def pdp(self, cid: CandidateId, step: str, features: list[str] = None):
-        return self.get_pdp(cid, step, features)
+    def _pdp(self, cid: CandidateId, step: str, features: list[str] = None):
+        return self.pdp(cid, step, features)
 
     @as_json
-    def fanova_overview(self, sid: Optional[CandidateId], step: str):
+    def _fanova_overview(self, sid: Optional[CandidateId], step: str):
         try:
             f, X, actual_cs = self._construct_fanova(sid, step)
             overview = HPImportance.calculate_fanova_overview(f, X, step=step, filter_=actual_cs)
@@ -224,7 +234,7 @@ class XAutoML:
             return {'error': str(ex)}
 
     @as_json
-    def fanova_details(self, sid: Optional[CandidateId], step: str, hp1: str, hp2: str):
+    def _fanova_details(self, sid: Optional[CandidateId], step: str, hp1: str, hp2: str):
         try:
             f, X, actual_cs = self._construct_fanova(sid, step)
             return {'details': HPImportance.calculate_fanova_details(f, X, hps=[(hp1, hp2)])}
@@ -232,7 +242,7 @@ class XAutoML:
             return {'error': str(ex)}
 
     @as_json
-    def simulate_surrogate(self, sid: CandidateId, timestamp: float):
+    def _simulate_surrogate(self, sid: CandidateId, timestamp: float):
         try:
             matches = filter(lambda s: s.cid == sid, self.run_history.structures)
             structure = next(matches)
@@ -247,7 +257,7 @@ class XAutoML:
             raise ValueError('Unable to simulate surrogate model without trainings data')
 
     @as_json
-    def config_similarity(self):
+    def _config_similarity(self):
         configspaces = {}
         configs = {}
         loss = {}
@@ -272,7 +282,7 @@ class XAutoML:
         return res
 
     @as_json
-    def lime(self, cid: CandidateId, idx: int, step: str):
+    def _lime(self, cid: CandidateId, idx: int, step: str):
         X, y, pipeline = self._load_model(cid)
 
         if step == pipeline.steps[-1][0] or step == SINK:
@@ -289,8 +299,8 @@ class XAutoML:
         return res.to_dict(additional_features)
 
     @as_json
-    def roc_curve(self, cids: list[CandidateId], micro: bool = False, macro: bool = True, max_samples: int = 50,
-                  max_curves: int = 20):
+    def _roc_curve(self, cids: list[CandidateId], micro: bool = False, macro: bool = True, max_samples: int = 50,
+                   max_curves: int = 20):
         pruned_cids = cids[:max_curves]
 
         X, y, models = self._load_models(pruned_cids)
@@ -314,24 +324,24 @@ class XAutoML:
         return result
 
     @as_json
-    def ensemble_decision_surface(self):
+    def _ensemble_decision_surface(self):
         ensemble = self.run_history.ensemble
         if len(ensemble.members) == 0:
             return {}
 
         members = [self.run_history.cid_to_candidate[cid] for cid in ensemble.members]
-        X, y = self.get_data_set()
+        X, y = self.data_set()
 
         return EnsembleInspection.plot_decision_surface(ensemble, members, X, y)
 
     @as_json
-    def ensemble_overview(self):
+    def _ensemble_overview(self):
         ensemble = self.run_history.ensemble
         if len(ensemble.members) == 0:
             return {}
 
         members = [self.run_history.cid_to_candidate[cid] for cid in ensemble.members]
-        X, y = self.get_data_set()
+        X, y = self.data_set()
 
         y_pred = ensemble.model.predict(X)
         confidence = ensemble.model.predict_proba(X)
@@ -344,12 +354,12 @@ class XAutoML:
             return {'df': df, 'metrics': metrics}
 
     @as_json
-    def ensemble_predictions(self, idx: int):
+    def _ensemble_predictions(self, idx: int):
         ensemble = self.run_history.ensemble
         if len(ensemble.members) == 0:
             return {}
 
-        X, _ = self.get_data_set()
+        X, _ = self.data_set()
         X = X.loc[[idx], :]
 
         members = [self.run_history.cid_to_candidate[cid] for cid in ensemble.members]
@@ -361,7 +371,7 @@ class XAutoML:
         return res
 
     @as_json
-    def get_pipeline_history(self) -> dict:
+    def _get_pipeline_history(self) -> dict:
         candidates = []
         for struct in self.run_history.structures:
             candidates += [(c.runtime['timestamp'], struct.pipeline, c.id) for c in struct.configs]
@@ -372,61 +382,135 @@ class XAutoML:
 
     # Endpoints for external communication
 
-    def get_data_set(self) -> tuple[pd.DataFrame, pd.Series]:
+    def data_set(self) -> tuple[pd.DataFrame, pd.Series]:
+        """
+        Get the test data set
+        :return: tuple with DataFrame and Series
+        """
         return self.X.copy(), self.y.copy()
 
-    def get_pipeline(self, cid: CandidateId) -> tuple[pd.DataFrame, pd.Series, Pipeline]:
+    def pipeline(self, cid: CandidateId) -> tuple[pd.DataFrame, pd.Series, Pipeline]:
+        """
+        Get the pipeline of the given candidate id
+        :param cid: candidate id
+        :return: tuple containing 1) The input data, 2) target values, and 3) fitted pipeline
+        """
         return self._load_model(cid)
 
     @no_warnings
-    def get_sub_pipeline(self, cid: CandidateId, step: str) -> tuple[pd.DataFrame, pd.Series, Pipeline]:
+    def sub_pipeline(self, cid: CandidateId, step: str) -> tuple[pd.DataFrame, pd.Series, Pipeline]:
+        """
+        Get a sub-pipeline starting after the provided step
+        :param cid: candidate id
+        :param step: last pipeline step that will not be included in the pipeline
+        :return: tuple containing 1) The adjusted input data that can be used with the sub-pipeline, 2) target values,
+        and 3) new sub-pipeline starting after the provided step
+        """
         X, y, pipeline = self._load_model(cid)
         pipeline, X, _ = pipeline_utils.get_subpipeline(pipeline, step, X, y)
         return X, y, pipeline
 
     @no_warnings
-    def get_feature_importance(self, cid: CandidateId, step: str):
-        X, y, pipeline = self.get_sub_pipeline(cid, step)
+    def feature_importance(self, cid: CandidateId, step: str):
+        """
+        Calculate feature importance of all features
+        :param cid: candidate id
+        :param step: pipeline step
+        :return: DataFrame with feature importance
+        """
+        X, y, pipeline = self.sub_pipeline(cid, step)
         pipeline, X, _ = pipeline_utils.get_subpipeline(pipeline, step, X, y)
         return ModelDetails.calculate_feature_importance(X, y, pipeline, self.run_history.meta.metric, n_head=10000)
 
     @no_warnings
-    def get_pdp(self, cid: CandidateId, step: str, features: list[str]):
+    def pdp(self, cid: CandidateId, step: str, features: list[str]):
+        """
+        Calculate partial dependency plots
+        :param cid: candidate id
+        :param step: pipeline step
+        :param features: list of feature to calculate PDPs for
+        :return: dict with plot data for each requested feature
+        """
         X, y, pipeline = self._load_model(cid)
 
         pipeline, X, additional_features = pipeline_utils.get_subpipeline(pipeline, step, X, y)
         return ModelDetails.calculate_pdp(X, y, pipeline, features=features)
 
     @no_warnings
-    def get_global_surrogate(self, cid: CandidateId, step: str, max_leaf_nodes: int):
-        X, y, pipeline = self.get_sub_pipeline(cid, step)
+    def global_surrogate(self, cid: CandidateId, step: str, max_leaf_nodes: int):
+        """
+        Calculate a global surrogate in form of a decision tree for the given candidate
+        :param cid: candidate id
+        :param step: pipeline step
+        :param max_leaf_nodes: maximum number of leaf nodes in the decision tree
+        :return: scikit-learn decision tree
+        """
+        X, y, pipeline = self.sub_pipeline(cid, step)
         return pipeline_utils.fit_decision_tree(X, pipeline.predict(X), max_leaf_nodes=max_leaf_nodes)
 
     @no_warnings
-    def get_hp_importance(self, sid: Optional[str], step: str):
+    def hp_importance(self, sid: Optional[str], step: str):
+        """
+        Calculates the importance of all hyperparameters
+        :param sid: optional structure id. If given, only configurations from the given structure id are considered
+        :param step: pipeline step
+        :return: DataFrame with hyperparameter importance
+        """
+
         f, X, actual_cs = self._construct_fanova(sid, step)
         return HPImportance.calculate_fanova_overview(f, X, step=step, filter_=actual_cs, n_head=10000)
 
     @no_warnings
-    def get_hp_interactions(self, sid: Optional[str], step: str, hp1: str, hp2: str):
+    def hp_interactions(self, sid: Optional[str], step: str, hp1: str, hp2: str = None):
+        """
+        Calculates the interactions between the two given hyperparameters using fANOVA. Both hyperparameters can be
+        identical to compute the effects of a single hyperparameter.
+        :param sid: optional structure id. If given, only configurations from the given structure id are considered
+        :param step: pipeline step
+        :param hp1: name of the first hyperparameter
+        :param hp2: optional name of the second hyperparameter. If not given, the first hyperparameter is reused
+        :return: DataFrame with hyperparameter interactions
+        """
+
         f, X, actual_cs = self._construct_fanova(sid, step)
+        if hp2 is None:
+            hp2 = hp1
+
         return pd.DataFrame(HPImportance.calculate_fanova_details(f, X, hps=[(hp1, hp2)])[hp1][hp2]['data'])
 
     @no_warnings
-    def get_class_report(self, cid: str):
+    def class_report(self, cid: str):
+        """
+        Calculates a sklearn.metrics.classification_report
+        :param cid: candidate id
+        :return: DataFrame with class report
+        """
+
         X, y, pipeline = self._load_model(cid)
         details = ModelDetails()
         _, _, report, _, _ = details.calculate_performance_data(X, y, pipeline, self.run_history.meta.metric)
         return pd.DataFrame(report)
 
     @no_warnings
-    def get_cm(self, cid: str):
+    def confusion_matrix(self, cid: str):
+        """
+        Calculates the confusion matrix of the given candidate
+        :param cid: candidate id
+        :return: DataFrame with confusion matrix
+        """
+
         X, y, pipeline = self._load_model(cid)
         details = ModelDetails()
         _, _, _, _, cm = details.calculate_performance_data(X, y, pipeline, self.run_history.meta.metric)
         return cm
 
-    def get_config(self, cid: str):
+    def config(self, cid: str):
+        """
+        Returns the hyperparameters of the given candidate as a dictionary
+        :param cid: candidate id
+        :return: dict with hyperparameters
+        """
+
         return self.run_history.cid_to_candidate.get(cid).config.get_dictionary()
 
     def _repr_mimebundle_(self, include, exclude):
@@ -435,6 +519,10 @@ class XAutoML:
         }
 
     def explain(self):
+        """
+        Create the visualization
+        :return:
+        """
         try:
             # noinspection PyPackageRequirements
             from IPython.core.display import display
