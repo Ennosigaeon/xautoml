@@ -11,6 +11,7 @@ export function cidToSid(cid: CandidateId): string {
     return cid.substring(0, cid.indexOf(':', 4))
 }
 
+const floatRegex = /^-?\d+(?:[.,]\d*?)?$/;
 
 export function prettyPrint(value: Primitive, prec: number = 3): string {
     if (value === undefined || value === null)
@@ -21,7 +22,7 @@ export function prettyPrint(value: Primitive, prec: number = 3): string {
         return (value as Date).toLocaleString()
     else if (typeof value === 'string') {
         const num = parseFloat(value)
-        if (!isNaN(num))
+        if (floatRegex.test(value) && !isNaN(num))
             return fixedPrec(num, prec).toString()
         else
             return value
