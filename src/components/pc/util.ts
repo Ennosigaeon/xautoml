@@ -134,6 +134,7 @@ export namespace ParCord {
             const addedAxes = new Set<string>()
 
             steps.forEach(parAxes => {
+                // TODO longer path has to be the first one. Ensure this!
                 parAxes.otherPaths.forEach(pathId => {
                     if (addedAxes.has(pathId))
                         return

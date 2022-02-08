@@ -56,7 +56,7 @@ def pipeline_to_networkx(pipeline, cid):
                    step_name=prefix.replace(f':{suffix}', '') if prefix.endswith(suffix) else prefix,
                    config_prefix=prefix,
                    edge_labels={} if edge_labels is None else {p: l for p, l in zip(parent_nodes, edge_labels)},
-                   other_paths=set(other_paths),
+                   other_paths=dict.fromkeys(other_paths),
                    merger=len(parent_nodes) > 1,
                    cids=[cid])
         for p in parent_nodes:
@@ -65,7 +65,7 @@ def pipeline_to_networkx(pipeline, cid):
         return [node]
 
     g = nx.DiGraph()
-    g.add_node('SOURCE', cids=[cid], other_paths=[])
+    g.add_node('SOURCE', cids=[cid], other_paths={})
     convert_component(pipeline, '', ['SOURCE'], [])
 
     return g
@@ -79,7 +79,7 @@ def export_json(g: nx.DiGraph):
             'label': data['label'] if 'label' in data else node,
             'step_name': data['step_name'] if 'step_name' in data else node,
             'config_prefix': data['config_prefix'] if 'config_prefix' in data else node,
-            'parallel_paths': list(data['other_paths']),
+            'parallel_paths': list(data['other_paths'].keys()),
             'cids': data['cids'],
             'splitter': 'splitter' in data and data['splitter'],
             'merger': 'merger' in data and data['merger'],
@@ -121,6 +121,8 @@ class GraphMatching:
                         merged.nodes[node][key] += value
                     elif key in merged.nodes[node] and isinstance(merged.nodes[node][key], set):
                         merged.nodes[node][key] = merged.nodes[node][key].union(value)
+                    elif key in merged.nodes[node] and isinstance(merged.nodes[node][key], dict):
+                        merged.nodes[node][key] = {**merged.nodes[node][key], **value}
                     else:
                         merged.nodes[node][key] = value
 

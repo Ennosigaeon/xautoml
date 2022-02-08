@@ -152,11 +152,11 @@ tr.MuiTableRow-root.MuiTableRow-hover:hover {
 }
 
 .hierarchical-tree_node-content-splitter .hierarchical-tree_node-content {
-    border-right-width: 10px;
+    border-right-width: 10px !important;
 }
 
 .hierarchical-tree_node-content-merger .hierarchical-tree_node-content {
-    border-left-width: 10px;
+    border-left-width: 10px !important;
 }
 
 .hierarchical-tree_node-content h3 {
