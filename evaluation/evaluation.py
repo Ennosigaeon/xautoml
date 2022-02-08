@@ -100,11 +100,12 @@ def plot_priority_distribution(df: pd.DataFrame, group=True):
         'Domain Expert': 24 - mean.loc[mean['role'] == 'Domain Expert', 'y'].reset_index(drop=True),
         'Data Scientist': 24 - mean.loc[mean['role'] == 'Data Scientist', 'y'].reset_index(drop=True),
         'AutoML Researcher': 24 - mean.loc[mean['role'] == 'AutoML Researcher', 'y'].reset_index(drop=True),
+        'All': 24 - data.groupby('x').mean()['y'].reset_index(drop=True)
     })
 
     print('Average card rank')
     for _, row in mean.iterrows():
-        print(f'\\({row[0]:.1f}\\)\t& \\({row[1]:.1f}\\)\t& \\({row[2]:.1f}\\) \\\\')
+        print(f'\\({row[0]:.1f}\\)\t& \\({row[1]:.1f}\\)\t& \\({row[2]:.1f}\\)\t& \\({row[3]:.1f}\\) \\\\')
     print('\n\n')
 
     if group:
