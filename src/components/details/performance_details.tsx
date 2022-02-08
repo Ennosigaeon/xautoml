@@ -103,7 +103,7 @@ ${ID}_cm
                                 <KeyValue key_={'Budget'} value={model.candidate.budget}/>
                             </div>
 
-                            <div style={{flexGrow: 0, margin: "0 10px"}}>
+                            <div className={'flex-column'} style={{flexGrow: 0, margin: "0 10px"}}>
                                 <Heading help={'For each possible class, relevance metrics are displayed. Precision ' +
                                     '(also called positive predictive value) is the fraction of relevant instances ' +
                                     'among the retrieved instances, while recall (also known as sensitivity) is the ' +
@@ -134,7 +134,7 @@ ${ID}_cm
                                 <JupyterButton onClick={this.exportClassReport}/>
                             </div>
 
-                            <div style={{flexGrow: 0, margin: "0 10px"}}>
+                            <div className={'flex-column'} style={{flexGrow: 0, margin: "0 10px"}}>
                                 <Heading help={'A confusion matrix is a table layout that allows visualization of ' +
                                     'the performance of a classifier. Each row of the matrix represents the ' +
                                     'instances in an actual class while each column represents the instances in a ' +

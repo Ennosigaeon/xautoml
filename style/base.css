@@ -92,6 +92,15 @@ tr.MuiTableRow-root.MuiTableRow-hover:hover {
     top: 0.25em;
 }
 
+.flex-column {
+    display: flex;
+    flex-direction: column;
+}
+
+.flex-column > *:last-child {
+    margin-top: auto;
+}
+
 /** Flexible SVG */
 .flexible-svg-container {
     display: inline-block;
