@@ -59,9 +59,9 @@ class SMBOSurrogateCPC extends React.Component<SurrogateExplanationProps, Surrog
 
         const candidates: [Candidate, Structure][] = explanation && explanation.candidates.length > 0 ?
             explanation.candidates.map(c => [c, model.structure]) : [[model.candidate, model.structure]]
-        const label = explanation ? explanation.metric : 'Performance'
         const loss = candidates.map(([c, _]) => c.loss)
-
+        const domain = [Math.min(...loss), Math.max(...loss)] as [number, number]
+        const perfAxis = domain[0] === domain[1] ? undefined : {label: explanation.metric, domain: domain, log: true}
 
         const selected = new Set<CandidateId>([loss.length > 1 ? loss.reduce((argMax, x, idx, array) => {
             return x > array[argMax] ? idx : argMax
@@ -87,9 +87,7 @@ class SMBOSurrogateCPC extends React.Component<SurrogateExplanationProps, Surrog
                                              showExplanations={true}
                                              expand={true}
                                              onExport={this.props.onExport}
-                                             perfAxis={{
-                                                 label: label, domain: [Math.min(...loss), Math.max(...loss)], log: true
-                                             }}/>
+                                             perfAxis={perfAxis}/>
                     </>
                 }
             </div>

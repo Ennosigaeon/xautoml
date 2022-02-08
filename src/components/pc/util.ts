@@ -154,11 +154,13 @@ export namespace ParCord {
             return parallelAxes
         })
 
-        const lowerPerf = Math.min(...perfAxis.domain)
-        const upperPerf = Math.max(...perfAxis.domain)
-        columns.push([
-            cpc.Axis.Numerical('__performance__', perfAxis.label, new cpc.Domain(lowerPerf, upperPerf, perfAxis.log))
-        ])
+        if (perfAxis !== undefined) {
+            const lowerPerf = Math.min(...perfAxis.domain)
+            const upperPerf = Math.max(...perfAxis.domain)
+            columns.push([
+                cpc.Axis.Numerical('__performance__', perfAxis.label, new cpc.Domain(lowerPerf, upperPerf, perfAxis.log))
+            ])
+        }
 
         return columns.map(rows => {
             return rows.map(axis => {
