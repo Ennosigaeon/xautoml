@@ -12,7 +12,9 @@ Currently, XAutoML supports only
 * [Optuna](https://github.com/optuna/optuna)
 * [scikit-learn](https://github.com/scikit-learn/scikit-learn)
 
-but we plan to add support for further AutoML systems.
+but we plan to add support for further AutoML systems. You can find a video introducing XAutoML on [YouTube](https://www.youtube.com/watch?v=Ypx8mKyoXCg).
+
+[![XAutoML: A Visual ](https://yt-embed.herokuapp.com/embed?v=Ypx8mKyoXCg)](https://www.youtube.com/watch?v=Ypx8mKyoXCg "Everything Is AWESOME")
 
 
 ## Install
