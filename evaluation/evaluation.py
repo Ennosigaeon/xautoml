@@ -76,7 +76,7 @@ def print_previous_knowledge(df: pd.DataFrame):
     print('\n\n')
 
 
-def plot_priority_distribution(df: pd.DataFrame, group=True):
+def plot_priority_distribution(df: pd.DataFrame, group=False):
     def calc_user_group(value: str):
         return value.strip().split('.')[0]
 
@@ -137,8 +137,36 @@ def plot_priority_distribution(df: pd.DataFrame, group=True):
             '#23': 'Comp. Pipelines',
             '#24': 'Comp. Hyperparam.'
         }
-        for old, new in rename.items():
-            data.loc[data['x'] == old, 'x'] = new
+    else:
+        rename = {
+            '#01': 'R01 View Input',
+            '#02': 'R02 Desc Input',
+            '#03': 'R03 Input Stat',
+            '#04': 'R04 Plot Input',
+            '#05': 'R05 View Pre-Proc',
+            '#06': 'R06 Desc Pre-Proc',
+            '#07': 'R07 Pre-Proc Stat',
+            '#08': 'R08 Plot Pre-Proc',
+            '#09': 'R09 View Feat-Eng',
+            '#10': 'R10 Feat-Eng Stat',
+            '#11': 'R11 Plot Feat-Eng',
+            '#12': 'R12 Desc Feat-Eng',
+            '#13': 'R13 Complete Pipe',
+            '#14': 'R14 Search Space',
+            '#15': 'R15 Pipe Search Strat',
+            '#16': 'R16 HP Search Strat',
+            '#17': 'R17 View Perf Metrics',
+            '#18': 'R18 Plot Perf Visual',
+            '#19': 'R19 Global Expl',
+            '#20': 'R20 Local Expl',
+            '#21': 'R21 View HP',
+            '#22': 'R22 Comp Perf',
+            '#23': 'R23 Comp Pipe',
+            '#24': 'R24 Comp HP'
+        }
+
+    for old, new in rename.items():
+        data.loc[data['x'] == old, 'x'] = new
 
     data.loc[data['role'] == 'AutoML Researcher', 'role'] = 'Data Scientist'
 
@@ -164,15 +192,21 @@ def plot_priority_distribution(df: pd.DataFrame, group=True):
     ax.set_yticklabels([])
     ax.set_ylabel(None)
     ax.set_xlabel(None)
-    plt.xticks(rotation=15)
-
-    fig.text(0.0125, 0.2, 'least important', rotation=90, va='bottom')
-    fig.text(0.0125, 0.95, 'most important', rotation=90, va='top')
-
     box = ax.get_position()
-    ax.set_position([box.x0, box.y0 + box.height * 0.125, box.width, box.height * 0.875])
-    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=2)
+    if group:
+        plt.xticks(rotation=15)
+        fig.text(0.0125, 0.2, 'least important', rotation=90, va='bottom')
+        fig.text(0.0125, 0.95, 'most important', rotation=90, va='top')
 
+        ax.set_position([box.x0, box.y0 + box.height * 0.125, box.width, box.height * 0.875])
+        ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=2)
+    else:
+        plt.xticks(rotation=25, ha='right', rotation_mode='anchor')
+        fig.text(0.025, 0.225, 'least important', rotation=90, va='bottom')
+        fig.text(0.025, 0.91, 'most important', rotation=90, va='top')
+
+        ax.set_position([box.x0 + 0.015, box.y0 + box.height * 0.15, box.width, box.height * 0.8])
+        ax.legend(loc='upper center', bbox_to_anchor=(0.5, 1.13), ncol=2)
     fig.show()
     fig.savefig('requirement_cards.pdf')
 
