@@ -18,16 +18,19 @@ class RocCurve:
         self.micro = micro
         self.macro = macro
 
+    # noinspection PyAttributeOutsideInit
     def score(self, model, X, y=None, json: bool = False):
         '''
         Generates the predicted target values using the Scikit-Learn
         estimator.
         Parameters
         ----------
+        model :
         X : ndarray or DataFrame of shape n x m
             A matrix of n instances with m features
         y : ndarray or Series of length n
             An array or series of target or class values
+        json :
         Returns
         -------
         score_ : float

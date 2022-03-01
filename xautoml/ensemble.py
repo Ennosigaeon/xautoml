@@ -1,4 +1,5 @@
 import io
+from typing import List
 
 import joblib
 import matplotlib
@@ -18,7 +19,7 @@ from xautoml.util.pipeline_utils import DataFrameImputer, InplaceOrdinalEncoder
 class EnsembleInspection:
 
     @staticmethod
-    def member_predictions(candidates: list[Candidate], X: pd.DataFrame, n_jobs=1):
+    def member_predictions(candidates: List[Candidate], X: pd.DataFrame, n_jobs=1):
         def _model_predict(candidate: Candidate, X: pd.DataFrame) -> np.ndarray:
             return candidate.y_transformer(candidate.model.predict(X.copy()))
 
@@ -29,7 +30,7 @@ class EnsembleInspection:
         return all_predictions
 
     @staticmethod
-    def ensemble_overview(ensemble: Ensemble, candidates: list[Candidate], X: pd.DataFrame, y_pred: pd.Series,
+    def ensemble_overview(ensemble: Ensemble, candidates: List[Candidate], X: pd.DataFrame, y_pred: pd.Series,
                           n_jobs=1):
         all_predictions = EnsembleInspection.member_predictions(candidates, X, n_jobs)
 
@@ -49,7 +50,7 @@ class EnsembleInspection:
         return metrics, indices
 
     @staticmethod
-    def plot_decision_surface(ensemble: Ensemble, candidates: list[Candidate], X: pd.DataFrame, y: pd.Series):
+    def plot_decision_surface(ensemble: Ensemble, candidates: List[Candidate], X: pd.DataFrame, y: pd.Series):
         # Dimension reduction for plotting
         cat_columns = make_column_selector(dtype_exclude=np.number)(X)
         pipeline = Pipeline(steps=[

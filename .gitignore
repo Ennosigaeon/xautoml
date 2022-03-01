@@ -17,3 +17,7 @@ hypertendril/
 *.ipynb
 user_study/**/output/
 evaluation/
+/dist
+
+examples/_auto-sklearn_
+examples/_dswizard_

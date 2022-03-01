@@ -1,6 +1,7 @@
 import itertools as it
 import tempfile
 from collections import defaultdict
+from typing import Dict, Tuple, List
 
 import numpy as np
 import pandas as pd
@@ -67,7 +68,7 @@ class HPImportance:
         return df
 
     @staticmethod
-    def calculate_fanova_details(f: fANOVA, X: pd.DataFrame, resolution: int = 20, hps: list[tuple[str, str]] = None):
+    def calculate_fanova_details(f: fANOVA, X: pd.DataFrame, resolution: int = 20, hps: List[Tuple[str, str]] = None):
         with tempfile.TemporaryDirectory() as tmp:
             vis = visualizer.Visualizer(f, f.cs, tmp)
 
@@ -78,7 +79,7 @@ class HPImportance:
                 keys = list(map(lambda t: (f.cs.get_idx_by_hyperparameter_name(t[0]),
                                            f.cs.get_idx_by_hyperparameter_name(t[1])), hps))
 
-            res: dict[int, dict[int, dict]] = defaultdict(dict)
+            res: Dict[int, Dict[int, Dict]] = defaultdict(dict)
             for i, j in keys:
                 i_name = f.cs.get_hyperparameter_by_idx(i)
                 j_name = f.cs.get_hyperparameter_by_idx(j)
@@ -91,7 +92,7 @@ class HPImportance:
             return res
 
     @staticmethod
-    def simulate_surrogate(f: fANOVA, X: pd.DataFrame, resolution: int = 10) -> dict:
+    def simulate_surrogate(f: fANOVA, X: pd.DataFrame, resolution: int = 10) -> Dict:
         with tempfile.TemporaryDirectory() as tmp:
             vis = visualizer.Visualizer(f, f.cs, tmp)
 
@@ -113,7 +114,7 @@ class HPImportance:
     @staticmethod
     def _get_plot_data(vis: visualizer.Visualizer,
                        idx: int,
-                       resolution: int = 10) -> dict:
+                       resolution: int = 10) -> Dict:
         name = vis.cs.get_hyperparameter_names()[idx]
         hp = vis.cs.get_hyperparameter(name)
 
@@ -143,7 +144,7 @@ class HPImportance:
             return {'name': [name], 'data': d, 'mode': 'discrete'}
 
     @staticmethod
-    def _get_pairwise_plot_data(vis: visualizer.Visualizer, idx: (int, int), resolution: int = 10) -> dict:
+    def _get_pairwise_plot_data(vis: visualizer.Visualizer, idx: (int, int), resolution: int = 10) -> Dict:
         name1 = vis.cs.get_hyperparameter_names()[idx[0]]
         hp1 = vis.cs.get_hyperparameter(name1)
 
@@ -170,7 +171,7 @@ class HPImportance:
             return {'name': [name1, name2], 'data': df.round(NUMBER_PRECISION).to_dict(), 'mode': 'heatmap'}
 
     @staticmethod
-    def construct_fanova(cs: ConfigurationSpace, configs: list[Configuration], performances: np.ndarray):
+    def construct_fanova(cs: ConfigurationSpace, configs: List[Configuration], performances: np.ndarray):
         y = performances.astype(float)
         pruned_cs, X = configs_as_dataframe(cs, configs)
         f = fANOVA(X, y, config_space=pruned_cs)

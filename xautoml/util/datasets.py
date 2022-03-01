@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import numpy as np
 import openml
 import pandas as pd
@@ -94,7 +96,7 @@ def stroke(file: str, train: bool = False, test: bool = False):
     return X.reset_index(drop=True), y.reset_index(drop=True)
 
 
-def down_sample(X: pd.DataFrame, y: pd.Series, n_samples: int) -> tuple[pd.DataFrame, pd.Series]:
+def down_sample(X: pd.DataFrame, y: pd.Series, n_samples: int) -> Tuple[pd.DataFrame, pd.Series]:
     if X.shape[0] > n_samples:
         idx = np.random.choice(X.shape[0], size=n_samples, replace=False)
         X = X.loc[idx, :].reset_index(drop=True)

@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -7,7 +7,7 @@ from ConfigSpace.util import impute_inactive_values
 
 
 def configs_as_dataframe(cs: ConfigurationSpace,
-                         configs: list[Configuration]) -> Union[pd.DataFrame, tuple[ConfigurationSpace, pd.DataFrame]]:
+                         configs: List[Configuration]) -> Union[pd.DataFrame, Tuple[ConfigurationSpace, pd.DataFrame]]:
     def prep_config(c: Configuration):
         conf = impute_inactive_values(c)
         return conf.get_dictionary()

@@ -1,5 +1,6 @@
 import time
 from dataclasses import dataclass
+from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -23,12 +24,12 @@ from xautoml.util.pipeline_utils import export_tree, DataFrameImputer, Node, Inp
 @dataclass
 class LimeResult:
     idx: int
-    explanations: dict[float, list[tuple[str, float]]]
-    probabilities: dict[float, float]
+    explanations: Dict[float, List[Tuple[str, float]]]
+    probabilities: Dict[float, float]
     label: float
     categorical_input: bool = False
 
-    def to_dict(self, additional_features: list[str]):
+    def to_dict(self, additional_features: List[str]):
         return {
             'idx': self.idx,
             'expl': self.explanations,
@@ -57,10 +58,10 @@ class DecisionTreeResult:
 
 @dataclass()
 class GlobalSurrogateResult:
-    candidates: list[DecisionTreeResult]
+    candidates: List[DecisionTreeResult]
     best: int
 
-    def as_dict(self, additional_features: list[str]):
+    def as_dict(self, additional_features: List[str]):
         return {'candidates': [c.as_dict() for c in self.candidates], 'best': self.best,
                 'additional_features': additional_features}
 
@@ -166,7 +167,6 @@ class ModelDetails:
 
     @staticmethod
     def _fit_single_dt(df: pd.DataFrame, y_pred: np.ndarray, max_leaf_nodes: int):
-        num_columns = make_column_selector(dtype_include=np.number)
         cat_columns = make_column_selector(dtype_exclude=np.number)
 
         # Use simple pipeline being able to handle categorical and missing input
@@ -212,9 +212,9 @@ class ModelDetails:
         return df.head(n_head)
 
     @staticmethod
-    def calculate_pdp(X: pd.DataFrame, y: pd.Series, model: Pipeline, features: list[str] = None, subsample: int = 50,
+    def calculate_pdp(X: pd.DataFrame, y: pd.Series, model: Pipeline, features: List[str] = None, subsample: int = 50,
                       n_jobs: int = 1):
-        targets: list = np.unique(y).tolist()
+        targets: List = np.unique(y).tolist()
         if len(targets) == 2:
             targets = [targets[0]]
 

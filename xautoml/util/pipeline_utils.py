@@ -1,6 +1,7 @@
 import math
 from copy import deepcopy
 from dataclasses import dataclass
+from typing import List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -21,7 +22,7 @@ from xautoml.util.mlinsights import get_component, enumerate_pipeline_models
 def get_subpipeline(pipeline: Pipeline,
                     start_after: str,
                     X: pd.DataFrame,
-                    y: pd.Series) -> tuple[Pipeline, pd.DataFrame, list[str]]:
+                    y: pd.Series) -> Tuple[Pipeline, pd.DataFrame, List[str]]:
     if start_after == SOURCE or start_after == SINK or start_after == pipeline.steps[-1][0]:
         additional_features = []
     else:
@@ -154,6 +155,7 @@ class DataFrameImputer(TransformerMixin):
 
         """
 
+    # noinspection PyAttributeOutsideInit
     def fit(self, X: pd.DataFrame, y=None):
         self.nan_fraction_ = pd.isna(X).sum(axis=0) / X.shape[0]
 
@@ -227,8 +229,8 @@ class InplaceOrdinalEncoder(ColumnTransformer):
 class Node:
     label: str
     impurity: float
-    children: list['Node']
-    child_labels: list[str]
+    children: List['Node']
+    child_labels: List[str]
 
     def as_dict(self):
         return {

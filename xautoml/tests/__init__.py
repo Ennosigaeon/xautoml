@@ -1,4 +1,5 @@
 import pickle
+from typing import Tuple
 
 import joblib
 import pandas as pd
@@ -90,7 +91,7 @@ def get_autosklearn() -> XAutoML:
 
 
 
-def _load_data(data_file) -> tuple[pd.DataFrame, pd.Series]:
+def _load_data(data_file) -> Tuple[pd.DataFrame, pd.Series]:
     with open(data_file, 'rb') as f:
         X, y, feature_labels = joblib.load(f)
     X = pd.DataFrame(X, columns=feature_labels).convert_dtypes()

@@ -1,3 +1,5 @@
+from typing import List
+
 import pandas as pd
 
 from sklearn.base import TransformerMixin, BaseEstimator
@@ -30,7 +32,7 @@ class AutoSklearnUtils:
             return False
 
     @staticmethod
-    def patchCategoricalPreprocessing(steps: list):
+    def patchCategoricalPreprocessing(steps: List):
         try:
             from autosklearn.pipeline.components.data_preprocessing.category_shift.category_shift import CategoryShift
             from autosklearn.pipeline.components.data_preprocessing.minority_coalescense import CoalescenseChoice

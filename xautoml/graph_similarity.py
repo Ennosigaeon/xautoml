@@ -1,3 +1,5 @@
+from typing import List
+
 import networkx as nx
 import numpy as np
 from scipy.optimize import linear_sum_assignment
@@ -11,8 +13,8 @@ def pipeline_to_networkx(pipeline, cid):
             return '{}:{}'.format(prefix, name)
         return name
 
-    def convert_component(component, prefix: str, parent_nodes: list[str], other_paths: list[str],
-                          edge_labels: list[str] = None) -> list[str]:
+    def convert_component(component, prefix: str, parent_nodes: List[str], other_paths: List[str],
+                          edge_labels: List[str] = None) -> List[str]:
 
         if hasattr(component, 'choice'):
             return convert_component(component.choice, prefix, parent_nodes, other_paths)
@@ -92,7 +94,7 @@ def export_json(g: nx.DiGraph):
 class GraphMatching:
 
     @staticmethod
-    def create_structure_history(graphs: list[nx.DiGraph]):
+    def create_structure_history(graphs: List[nx.DiGraph]):
         if len(graphs) == 0:
             return []
 

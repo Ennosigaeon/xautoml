@@ -1,7 +1,7 @@
 import time
 from collections import OrderedDict
 from copy import deepcopy
-from typing import Union
+from typing import Union, Dict, List, Tuple
 
 import joblib
 import pandas as pd
@@ -58,7 +58,7 @@ def import_flaml(pipeline: Union[Pipeline, 'flaml.AutoML']) -> RunHistory:
     def parse_structures():
         candidates = {}
 
-        best_idx: dict[str, int] = {}
+        best_idx: Dict[str, int] = {}
         for idx, (classifier, _, _) in automl.config_history.items():
             if classifier not in best_idx:
                 best_idx[classifier] = idx
@@ -211,7 +211,7 @@ def import_auto_sklearn(automl: 'autosklearn.automl.AutoMLClassifier') -> RunHis
 
         return meta
 
-    def build_structures() -> tuple[dict[CandidateId, CandidateStructure], dict[CandidateId, float]]:
+    def build_structures() -> Tuple[Dict[CandidateId, CandidateStructure], Dict[CandidateId, float]]:
         from dswizard.components.pipeline import ConfigurablePipeline
         from dswizard.components.sklearn import ColumnTransformerComponent
 
@@ -254,7 +254,7 @@ def import_auto_sklearn(automl: 'autosklearn.automl.AutoMLClassifier') -> RunHis
             a = convert_component(simple_pipeline)[0]
             return a
 
-        ensemble_members: list[tuple] = automl.automl_.ensemble_.get_selected_model_identifiers()
+        ensemble_members: List[Tuple] = automl.automl_.ensemble_.get_selected_model_identifiers()
         ensemble_weights = [w for w in automl.automl_.ensemble_.weights_ if w > 0]
         mapped_ensemble_member = {}
 
@@ -426,7 +426,7 @@ def import_sklearn(search: Union['sklearn.model_selection.RandomizedSearchCV', '
                       Explanations({}, {}))
 
 
-def import_optuna(study: 'optuna.study.Study', models: dict[int, Pipeline], metric: str = 'unknown') -> RunHistory:
+def import_optuna(study: 'optuna.study.Study', models: Dict[int, Pipeline], metric: str = 'unknown') -> RunHistory:
     """
     Import the RunHistory from an optuna study
 

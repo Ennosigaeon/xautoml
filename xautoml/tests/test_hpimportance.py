@@ -37,6 +37,7 @@ def test_for_step():
     print(json.dumps(details))
 
 
+# noinspection PyUnusedLocal
 def test_details():
     main = get_168746()
 

@@ -1,5 +1,5 @@
 import warnings
-from typing import Union, Optional
+from typing import Union, Optional, Tuple, Dict
 
 import numpy as np
 import pandas as pd
@@ -15,7 +15,7 @@ RAW = 2
 class OutputCalculator:
 
     @staticmethod
-    def _load_data(d: Union[dict, pd.DataFrame],
+    def _load_data(d: Union[Dict, pd.DataFrame],
                    y: pd.Series,
                    y_pred: pd.Series,
                    confidence: np.ndarray,
@@ -48,7 +48,7 @@ class OutputCalculator:
 
     @staticmethod
     def calculate_outputs(pipeline, X: pd.DataFrame, y: Optional[pd.Series], method: int = RAW) -> \
-        tuple[dict[str, Union[str, pd.DataFrame]], dict[str, Union[str, pd.DataFrame]]]:
+        Tuple[Dict[str, Union[str, pd.DataFrame]], Dict[str, Union[str, pd.DataFrame]]]:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", UserWarning)
             alter_pipeline_for_debugging(pipeline)
@@ -67,19 +67,19 @@ class OutputCalculator:
                 if not hasattr(model, '_debug'):
                     continue
 
-                input = OutputCalculator._load_data(model._debug.inputs, y, y_pred, confidence, method)
+                input_ = OutputCalculator._load_data(model._debug.inputs, y, y_pred, confidence, method)
                 output = OutputCalculator._load_data(model._debug.outputs, y, y_pred, confidence, method)
 
                 if len(coordinate) == 1:
                     # Populate SINK and SOURCE instead of single step
-                    inputs[SOURCE] = input
-                    outputs[SOURCE] = input
+                    inputs[SOURCE] = input_
+                    outputs[SOURCE] = input_
 
                     inputs[SINK] = output
                     outputs[SINK] = output
                 else:
                     step_name, _ = get_component(coordinate, pipeline)
-                    inputs[step_name] = input
+                    inputs[step_name] = input_
                     outputs[step_name] = output
 
             return inputs, outputs

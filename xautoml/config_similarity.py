@@ -1,4 +1,5 @@
 from copy import deepcopy
+from typing import List
 
 import numpy as np
 import pandas as pd
@@ -14,7 +15,7 @@ from xautoml.util.constants import NUMBER_PRECISION
 class ConfigSimilarity:
 
     @staticmethod
-    def compute(configspaces: list[ConfigurationSpace], configs: list[list[Configuration]], loss: np.ndarray,
+    def compute(configspaces: List[ConfigurationSpace], configs: List[List[Configuration]], loss: np.ndarray,
                 is_minimization: bool):
         pruned_cs, configs = ConfigSimilarity._merge_config_spaces(configspaces, configs)
 
@@ -40,7 +41,7 @@ class ConfigSimilarity:
         }
 
     @staticmethod
-    def _merge_config_spaces(configspaces: list[ConfigurationSpace], configs: list[list[Configuration]]):
+    def _merge_config_spaces(configspaces: List[ConfigurationSpace], configs: List[List[Configuration]]):
         combined_cs = ConfigurationSpace()
 
         choice = CategoricalHyperparameter('__structure__', list(range(len(configspaces))))

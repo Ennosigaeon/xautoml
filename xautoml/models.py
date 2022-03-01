@@ -1,5 +1,5 @@
 from dataclasses import dataclass, asdict
-from typing import Optional, Any, Callable
+from typing import Optional, Any, Callable, Dict, List, Tuple
 
 from ConfigSpace import ConfigurationSpace, Configuration
 from ConfigSpace.read_and_write import json as config_json
@@ -22,7 +22,7 @@ class MetaInformation:
     incumbent: float
     openml_task: Optional[int]
     openml_fold: Optional[int]
-    config: dict[str, Any]
+    config: Dict[str, Any]
 
 
 @dataclass()
@@ -31,7 +31,7 @@ class Candidate:
     budget: float
     status: str
     loss: float
-    runtime: dict[str, float]
+    runtime: Dict[str, float]
     config: Configuration
     origin: str
     model: Optional[Pipeline]
@@ -55,10 +55,10 @@ class CandidateStructure:
     cid: CandidateId
     configspace: Optional[ConfigurationSpace]
     pipeline: Pipeline
-    configs: list[Candidate]
+    configs: List[Candidate]
 
     def __init__(self, cid: CandidateId, configspace: Optional[ConfigurationSpace],
-                 pipeline: Pipeline, configs: list[Candidate]):
+                 pipeline: Pipeline, configs: List[Candidate]):
         self.cid = cid
         self.configspace = configspace
         self.pipeline = pipeline
@@ -76,9 +76,9 @@ class CandidateStructure:
 
 @dataclass()
 class ConfigExplanation:
-    candidates: dict
-    loss: list[float]
-    marginalization: dict[str, dict[str, list[tuple[float, float]]]]
+    candidates: Dict
+    loss: List[float]
+    marginalization: Dict[str, Dict[str, List[Tuple[float, float]]]]
 
 
 StructureExplanation = Any
@@ -86,8 +86,8 @@ StructureExplanation = Any
 
 @dataclass()
 class Explanations:
-    structures: dict[CandidateId, StructureExplanation]
-    configs: dict[CandidateId, ConfigExplanation]
+    structures: Dict[CandidateId, StructureExplanation]
+    configs: Dict[CandidateId, ConfigExplanation]
 
     def as_dict(self):
         return {
@@ -98,11 +98,11 @@ class Explanations:
 
 @dataclass()
 class Ensemble:
-    weights: list[float]
-    members: list[CandidateId]
+    weights: List[float]
+    members: List[CandidateId]
     model: Pipeline
 
-    def __init__(self, model: Pipeline, members: dict[CandidateId, float]):
+    def __init__(self, model: Pipeline, members: Dict[CandidateId, float]):
         self.members = list(members.keys())
         self.weights = list(members.values())
         self.weight_map = members
@@ -121,12 +121,12 @@ class Ensemble:
 class RunHistory:
     meta: MetaInformation
     default_configspace: Optional[ConfigurationSpace]
-    structures: list[CandidateStructure]
+    structures: List[CandidateStructure]
     ensemble: Ensemble
     explanations: Explanations
 
     def __init__(self, meta: MetaInformation, default_configspace: Optional[ConfigurationSpace],
-                 structures: list[CandidateStructure], ensemble: Ensemble, explanations: Explanations):
+                 structures: List[CandidateStructure], ensemble: Ensemble, explanations: Explanations):
         self.meta = meta
         self.default_configspace = default_configspace
         self.structures = structures

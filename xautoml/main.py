@@ -1,7 +1,7 @@
 import time
 import warnings
 from copy import deepcopy
-from typing import Optional
+from typing import Optional, List, Tuple, Dict
 
 import numpy as np
 import pandas as pd
@@ -83,7 +83,7 @@ class XAutoML:
             except Exception:
                 candidate.runtime['prediction_time'] = 1000
 
-    def _load_models(self, cids: list[CandidateId]) -> tuple[pd.DataFrame, pd.Series, list[Pipeline]]:
+    def _load_models(self, cids: List[CandidateId]) -> Tuple[pd.DataFrame, pd.Series, List[Pipeline]]:
         models = []
         for cid in cids:
             if cid == 'ENSEMBLE':
@@ -93,7 +93,7 @@ class XAutoML:
 
         return self.X.copy(), self.y.copy(), [m for m in models if m is not None]
 
-    def _load_model(self, cid: CandidateId) -> tuple[pd.DataFrame, pd.Series, Pipeline]:
+    def _load_model(self, cid: CandidateId) -> Tuple[pd.DataFrame, pd.Series, Pipeline]:
         X, y, models = self._load_models([cid])
         if len(models) == 0:
             raise ValueError('Candidate {} does not exist or has no fitted model'.format(cid))
@@ -114,7 +114,7 @@ class XAutoML:
 
     def _get_equivalent_configs(self,
                                 structure: Optional[CandidateStructure],
-                                timestamp: float = np.inf) -> tuple[list[Configuration], np.ndarray]:
+                                timestamp: float = np.inf) -> Tuple[List[Configuration], np.ndarray]:
         configs = []
         loss = []
         hash_ = structure.hash if structure is not None else hash(str(None))
@@ -126,7 +126,7 @@ class XAutoML:
                 loss += [c.loss for c in s.configs if c.runtime['timestamp'] < timestamp]
         return configs, np.array(loss)
 
-    def _construct_fanova(self, sid: Optional[str], step: str):
+    def _construct_fanova(self, sid: Optional[str]):
         if sid is not None:
             matches = filter(lambda s: s.cid == sid, self.run_history.structures)
             structure = next(matches)
@@ -168,11 +168,11 @@ class XAutoML:
         X, y, pipeline = self._load_model(cid)
         details = ModelDetails()
 
-        duration, validation_score, report, accuracy, cm = details.calculate_performance_data(X, y, pipeline,
-                                                                                              self.run_history.meta.metric)
+        duration, val_score, report, accuracy, cm = details.calculate_performance_data(X, y, pipeline,
+                                                                                       self.run_history.meta.metric)
         return {
             'duration': duration,
-            'val_score': float(validation_score),
+            'val_score': float(val_score),
             'report': {np.asscalar(key): value for key, value in report.items()},
             'accuracy': accuracy,
             'cm': {"classes": cm.columns.to_list(), "values": cm.values.tolist()}
@@ -216,13 +216,13 @@ class XAutoML:
         }
 
     @as_json
-    def _pdp(self, cid: CandidateId, step: str, features: list[str] = None):
+    def _pdp(self, cid: CandidateId, step: str, features: List[str] = None):
         return self.pdp(cid, step, features)
 
     @as_json
     def _fanova_overview(self, sid: Optional[CandidateId], step: str):
         try:
-            f, X, actual_cs = self._construct_fanova(sid, step)
+            f, X, actual_cs = self._construct_fanova(sid)
             overview = HPImportance.calculate_fanova_overview(f, X, step=step, filter_=actual_cs)
             overview = {
                 'column_names': np.unique(np.array(overview.index.to_list()).flatten()).tolist(),
@@ -236,7 +236,7 @@ class XAutoML:
     @as_json
     def _fanova_details(self, sid: Optional[CandidateId], step: str, hp1: str, hp2: str):
         try:
-            f, X, actual_cs = self._construct_fanova(sid, step)
+            f, X, actual_cs = self._construct_fanova(sid)
             return {'details': HPImportance.calculate_fanova_details(f, X, hps=[(hp1, hp2)])}
         except ValueError as ex:
             return {'error': str(ex)}
@@ -272,13 +272,13 @@ class XAutoML:
 
         cs = []
         conf = []
-        l = []
+        lo = []
         for key in configspaces.keys():
             cs.append(configspaces[key] if configspaces[key] is not None else self.run_history.default_configspace)
             conf.append(configs[key])
-            l += loss[key]
+            lo += loss[key]
 
-        res = ConfigSimilarity.compute(cs, conf, np.array(l), self.run_history.meta.is_minimization)
+        res = ConfigSimilarity.compute(cs, conf, np.array(lo), self.run_history.meta.is_minimization)
         return res
 
     @as_json
@@ -299,7 +299,7 @@ class XAutoML:
         return res.to_dict(additional_features)
 
     @as_json
-    def _roc_curve(self, cids: list[CandidateId], micro: bool = False, macro: bool = True, max_samples: int = 50,
+    def _roc_curve(self, cids: List[CandidateId], micro: bool = False, macro: bool = True, max_samples: int = 50,
                    max_curves: int = 20):
         pruned_cids = cids[:max_curves]
 
@@ -371,7 +371,7 @@ class XAutoML:
         return res
 
     @as_json
-    def _get_pipeline_history(self) -> dict:
+    def _get_pipeline_history(self) -> Dict:
         candidates = []
         for struct in self.run_history.structures:
             candidates += [(c.runtime['timestamp'], struct.pipeline, c.id) for c in struct.configs]
@@ -382,14 +382,14 @@ class XAutoML:
 
     # Endpoints for external communication
 
-    def data_set(self) -> tuple[pd.DataFrame, pd.Series]:
+    def data_set(self) -> Tuple[pd.DataFrame, pd.Series]:
         """
         Get the test data set
         :return: tuple with DataFrame and Series
         """
         return self.X.copy(), self.y.copy()
 
-    def pipeline(self, cid: CandidateId) -> tuple[pd.DataFrame, pd.Series, Pipeline]:
+    def pipeline(self, cid: CandidateId) -> Tuple[pd.DataFrame, pd.Series, Pipeline]:
         """
         Get the pipeline of the given candidate id
         :param cid: candidate id
@@ -398,7 +398,7 @@ class XAutoML:
         return self._load_model(cid)
 
     @no_warnings
-    def sub_pipeline(self, cid: CandidateId, step: str) -> tuple[pd.DataFrame, pd.Series, Pipeline]:
+    def sub_pipeline(self, cid: CandidateId, step: str) -> Tuple[pd.DataFrame, pd.Series, Pipeline]:
         """
         Get a sub-pipeline starting after the provided step
         :param cid: candidate id
@@ -423,7 +423,7 @@ class XAutoML:
         return ModelDetails.calculate_feature_importance(X, y, pipeline, self.run_history.meta.metric, n_head=10000)
 
     @no_warnings
-    def pdp(self, cid: CandidateId, step: str, features: list[str]):
+    def pdp(self, cid: CandidateId, step: str, features: List[str]):
         """
         Calculate partial dependency plots
         :param cid: candidate id
@@ -457,7 +457,7 @@ class XAutoML:
         :return: DataFrame with hyperparameter importance
         """
 
-        f, X, actual_cs = self._construct_fanova(sid, step)
+        f, X, actual_cs = self._construct_fanova(sid)
         return HPImportance.calculate_fanova_overview(f, X, step=step, filter_=actual_cs, n_head=10000)
 
     @no_warnings
@@ -472,7 +472,7 @@ class XAutoML:
         :return: DataFrame with hyperparameter interactions
         """
 
-        f, X, actual_cs = self._construct_fanova(sid, step)
+        f, X, actual_cs = self._construct_fanova(sid)
         if hp2 is None:
             hp2 = hp1
 
