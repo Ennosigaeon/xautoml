@@ -121,7 +121,7 @@ export class PipelineVisualizationComponent extends React.Component<PipelineVisu
             return (
                 <GraphNode key={node.data.label}
                            node={node}
-                           highlight={node.data.step_name === selectedComponent}
+                           highlight={node.data.step_name === selectedComponent || node.data.id === selectedComponent}
                            virtual={isPipEnd(node.data.id)}
                            nodeWidth={PipelineVisualizationComponent.NODE_WIDTH}
                            nodeHeight={PipelineVisualizationComponent.NODE_HEIGHT}

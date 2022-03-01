@@ -269,7 +269,7 @@ export class MetaInformation {
         const bestPerformance = meta.is_minimization ? Math.min(...losses) : Math.max(...losses)
         const worstPerformance = meta.is_minimization ? Math.max(...losses) : Math.min(...losses)
 
-        return new MetaInformation('dswizard', meta.start_time, meta.end_time, meta.metric, meta.is_minimization,
+        return new MetaInformation(meta.framework, meta.start_time, meta.end_time, meta.metric, meta.is_minimization,
             meta.openml_task, meta.openml_fold, meta.n_structures, meta.n_configs,
             bestPerformance, worstPerformance, new Map<string, ConfigValue>(Object.entries(meta.config)))
     }

@@ -150,11 +150,17 @@ class LeaderboardRow extends React.Component<LeaderboardRowProps, LeaderboardRow
     }
 
     private openComponent(step: PipelineStep) {
-        if (this.state.open && this.state.selectedComponent[0] === step.id) {
+        if (this.state.open &&
+            (this.state.selectedComponent[0] === step.id || this.state.selectedComponent[0] === step.step_name)) {
             // Close details when selecting the same step again
             this.setState({open: false, selectedComponent: [undefined, undefined]})
         } else {
-            this.setState({open: true, selectedComponent: [step.step_name, step.label]})
+            // quick and dirty fix for dswizard to select pipeline steps.
+            // TODO clean-up the pipeline id, step_name, label mess
+            if (this.props.meta.framework === 'dswizard')
+                this.setState({open: true, selectedComponent: [step.id, step.label]})
+            else
+                this.setState({open: true, selectedComponent: [step.step_name, step.label]})
         }
     }
 
@@ -455,15 +461,15 @@ export class Leaderboard extends React.Component<LeaderboardProps, LeaderboardSt
                                 .map(row => {
                                     return (
                                         <LeaderboardRow key={row.id}
-                                                           candidate={row}
-                                                           meta={this.props.meta}
-                                                           selected={this.props.selectedCandidates.has(row.id)}
-                                                           onRowClick={this.handleRowClick}
-                                                           onRowHide={this.props.onCandidateHide}
-                                                           structures={structures}
-                                                           explanations={explanations}
-                                                           onComparisonRequest={this.handleComparisonRequest}
-                                                           open={row.id === this.props.showCandidate}/>
+                                                        candidate={row}
+                                                        meta={this.props.meta}
+                                                        selected={this.props.selectedCandidates.has(row.id)}
+                                                        onRowClick={this.handleRowClick}
+                                                        onRowHide={this.props.onCandidateHide}
+                                                        structures={structures}
+                                                        explanations={explanations}
+                                                        onComparisonRequest={this.handleComparisonRequest}
+                                                        open={row.id === this.props.showCandidate}/>
                                     );
                                 })}
                         </TableBody>
