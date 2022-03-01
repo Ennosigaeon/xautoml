@@ -137,3 +137,11 @@ pip uninstall xautoml
 In development mode, you will also need to remove the symlink created by `jupyter labextension develop`
 command. To find its location, you can run `jupyter labextension list` to figure out where the `labextensions`
 folder is located. Then you can remove the symlink named `xautoml` within that folder.
+
+
+### Release new version
+Increase version number in `package.json` and upload the latest build to pypi.
+```bash
+python setup.py sdist
+python -m twine upload dist/*
+```
