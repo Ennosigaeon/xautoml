@@ -145,3 +145,20 @@ Increase version number in `package.json` and upload the latest build to pypi.
 python setup.py sdist
 python -m twine upload dist/*
 ```
+
+
+## Citation
+If you are using `XAutoML`, please cite it as
+
+    @article{Zoller2022,
+        author = "Z{\"{o}}ller, Marc-Andr{\'{e}} and Titov, Waldemar and Schlegel, Thomas and Huber, Marco F.",
+        title = "{XAutoML: A Visual Analytics Tool for Establishing Trust in Automated Machine Learning}",
+        journal = "arXiv preprint arXiv: 2202.11954",
+        volume = "1",
+        year = "2022",
+        pages = "1-34",
+        url = "http://arxiv.org/abs/2202.11954",
+        eprint = "2202.11954",
+        archivePrefix = "arXiv",
+        arxivId = "2202.11954"
+    }
