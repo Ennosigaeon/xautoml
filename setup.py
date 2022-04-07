@@ -50,7 +50,7 @@ setup_args = dict(
         "fanova~=2.0",
         "dswizard-components~=0.2",
         "openml~=0.12",
-        "pandas~=1.4.1"
+        "pandas>=1.3.0"
     ],
     zip_safe=False,
     include_package_data=True,
