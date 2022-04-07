@@ -1,6 +1,6 @@
 {
   "name": "xautoml",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A JupyterLab extension to visualize and explain AutoML optimization procedures.",
   "keywords": [
     "jupyter",

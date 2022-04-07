@@ -19,6 +19,13 @@ but we plan to add support for further AutoML systems. You can find a video intr
 
 ## Install
 
+Create a new environment with python >= 3.7 and make sure swig is installed either on your system or inside the
+environment.
+
+Install swig
+- You can either install swig via conda (`conda install swig`)
+- Or follow the [official documentation](https://www.swig.org/download.html) to install it
+
 To install the extension, execute:
 
 ```bash
@@ -84,6 +91,18 @@ the frontend extension, check the frontend extension is installed:
 jupyter labextension list
 ```
 
+If the installation failed with the following exception
+```
+[...]
+    Running setup.py install for pyrfr ... error
+    ERROR: Command errored out with exit status 1:
+    [...]
+    swig.exe -python -c++ -modern -py3 -features nondynamic -I./include -o pyrfr/regression_wrap.cpp pyrfr/regression.i
+    error: command 'swig.exe' failed: No such file or directory
+[...]
+```
+verify that you have swig installed (see [Installation](#Introduction) above).
+
 
 ## Contributing
 
@@ -142,7 +161,8 @@ folder is located. Then you can remove the symlink named `xautoml` within that f
 ### Release new version
 Increase version number in `package.json` and upload the latest build to pypi.
 ```bash
-python setup.py sdist
+pip install build
+python -m build -s
 python -m twine upload dist/*
 ```
 
