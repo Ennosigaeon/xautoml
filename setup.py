@@ -45,12 +45,12 @@ setup_args = dict(
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(),
     install_requires=[
-        "jupyterlab~=3.2",
+        "jupyterlab~=3.3",
         "lime~=0.2",
         "fanova~=2.0",
         "dswizard-components~=0.2",
         "openml~=0.12",
-        "pandas~=1.3.5"
+        "pandas~=1.4.1"
     ],
     zip_safe=False,
     include_package_data=True,
