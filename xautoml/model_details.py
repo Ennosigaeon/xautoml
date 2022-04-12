@@ -74,7 +74,7 @@ class ModelDetails:
         y_pred = model.predict(X)
         duration = time.time() - start
 
-        if scoreing == 'roc_auc':
+        if scoreing == 'roc_auc' or scoreing == 'auc':
             y_prob = model.predict_proba(X)
             y_type = type_of_target(y)
             if y_type == "binary" and y_prob.ndim > 1:
