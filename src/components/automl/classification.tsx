@@ -14,6 +14,7 @@ import {
     TextField
 } from "@material-ui/core";
 import {KernelWrapper} from "../../jupyter";
+import {DataSetTable} from "../details/dataset_table";
 
 interface FormValues {
     timeout: number
@@ -30,6 +31,7 @@ interface ClassificationRootState {
     target_columns: string[]
     configValid: boolean
     formValid: boolean
+    dfPreview: string
 }
 
 interface ClassificationRootProps {
@@ -53,7 +55,8 @@ export class ClassificationRoot extends React.Component<ClassificationRootProps,
             },
             target_columns: undefined,
             configValid: true,
-            formValid: false
+            formValid: false,
+            dfPreview: undefined
         }
 
         this.handleInputChange = this.handleInputChange.bind(this)
@@ -105,6 +108,15 @@ from xautoml.gui import get_columns
 get_columns('${file}')
                 `
             ).then(columns => this.setState({target_columns: columns}))
+
+            this.props.kernel.executeCode<{ preview: string }>(
+                `
+from xautoml.gui import dataset_preview
+dataset_preview('${file}')
+                `
+            ).then(response => {
+                this.setState({dfPreview: response.preview})
+            })
         }
     }
 
@@ -278,6 +290,14 @@ validate_configuration('''${e.target.value}''')
                         </form>
                     </div>
 
+                    <>
+                        {this.state.dfPreview &&
+                            <>
+                                <h2>Data Set Preview</h2>
+                                <DataSetTable data={this.state.dfPreview} selectedSample={undefined}/>
+                            </>
+                        }
+                    </>
                 </TwoColumnLayout>
             </div>
         );

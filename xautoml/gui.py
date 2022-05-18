@@ -23,3 +23,9 @@ def validate_configuration(config_str: str) -> List[bool]:
         return [True]
     except SyntaxError:
         return [False]
+
+
+@as_json
+def dataset_preview(path: str):
+    with pd.option_context('display.max_columns', 1024, 'display.max_rows', 30, 'display.min_rows', 20):
+        return {'preview': pd.read_csv(path)._repr_html_()}
