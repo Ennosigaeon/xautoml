@@ -10,6 +10,7 @@ import {Jupyter} from "./jupyter";
 import {reactIcon} from '@jupyterlab/ui-components';
 import {ClassificationWidget, TimeSeriesWidget} from "./automl";
 import {IFileBrowserFactory} from '@jupyterlab/filebrowser';
+import {KernelPanel} from "./components/automl/panel";
 
 const MIME_TYPE = 'application/xautoml+json';
 
@@ -58,8 +59,10 @@ const extension: JupyterFrontEndPlugin<void> = {
             label: 'Automatic Classification',
             icon: (args) => (args['isPalette'] ? null : reactIcon),
             execute: () => {
-                const content = new ClassificationWidget(fileBrowserFactory);
-                const widget = new MainAreaWidget<ClassificationWidget>({content});
+                const content = new ClassificationWidget(fileBrowserFactory)
+                const kernelWrapper = new KernelPanel(content, app.serviceManager);
+                content.kernel = kernelWrapper.model;
+                const widget = new MainAreaWidget<KernelPanel>({content: kernelWrapper});
                 widget.title.label = 'Data Science Wizard';
                 widget.title.icon = reactIcon;
                 app.shell.add(widget, 'main');

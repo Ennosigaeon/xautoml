@@ -26,6 +26,7 @@ import {BO, CandidateId, PipelineStep, Prediction} from "./model";
 import {Components} from "./util";
 import memoizee from "memoizee";
 import SOURCE = Components.SOURCE;
+import {ISessionContext} from "@jupyterlab/apputils";
 
 export class ServerError extends Error {
 
@@ -64,38 +65,16 @@ export class OpenedCache {
     }
 }
 
-export class Jupyter {
+export class KernelWrapper {
 
-    private readonly LOCAL_STORAGE_CONTENT = 'xautoml-previousCellContent'
-    private readonly TAG_NAME = 'xautoml-generated'
-    private previousCellContent: string = undefined;
-
-    private initialized: boolean
-    public readonly collapsedState = new OpenedCache()
-
-    constructor(private notebooks: INotebookTracker, private tags: TagTool) {
-        this.previousCellContent = localStorage.getItem(this.LOCAL_STORAGE_CONTENT)
-
-        this.initialized = false
-    }
-
-    unmount() {
-        this.memExecuteCode.clear()
-        this.initialized = false
+    constructor(private readonly sessionContext: ISessionContext) {
     }
 
     executeCode<T>(code: string): Promise<T> {
-        if (!this.initialized) {
-            this.initialized = true
-            return this.executeCode('from xautoml._helper import gcx')
-                .then(() => this.executeCode(code))
-        }
-        const sessionContext = this.notebooks.currentWidget.context.sessionContext
-
-        if (!sessionContext || !sessionContext.session?.kernel)
+        if (!this.sessionContext || !this.sessionContext.session?.kernel)
             return new Promise((resolve, reject) => reject('Not connected to kernel'))
 
-        const request = sessionContext.session?.kernel?.requestExecute({code})
+        const request = this.sessionContext.session?.kernel?.requestExecute({code})
 
         const outputBuffer: string[] = []
         let result: IExecuteResult = undefined
@@ -129,6 +108,41 @@ export class Jupyter {
                 return result.data['application/json'] as unknown as T
             return undefined
         })
+    }
+
+    close() {
+        this.sessionContext.dispose()
+    }
+}
+
+export class Jupyter {
+
+    private readonly LOCAL_STORAGE_CONTENT = 'xautoml-previousCellContent'
+    private readonly TAG_NAME = 'xautoml-generated'
+    private previousCellContent: string = undefined;
+
+    private initialized: boolean
+    public readonly collapsedState = new OpenedCache()
+
+    constructor(private notebooks: INotebookTracker, private tags: TagTool) {
+        this.previousCellContent = localStorage.getItem(this.LOCAL_STORAGE_CONTENT)
+
+        this.initialized = false
+    }
+
+    unmount() {
+        this.memExecuteCode.clear()
+        this.initialized = false
+    }
+
+    executeCode<T>(code: string): Promise<T> {
+        if (!this.initialized) {
+            this.initialized = true
+            return this.executeCode('from xautoml._helper import gcx')
+                .then(() => this.executeCode(code))
+        }
+        const wrapper = new KernelWrapper(this.notebooks.currentWidget.context.sessionContext);
+        return wrapper.executeCode(code)
     }
 
     private memExecuteCode = memoizee(this.executeCode, {
