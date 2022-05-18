@@ -1,20 +1,34 @@
-import {JupyterFrontEnd, JupyterFrontEndPlugin} from '@jupyterlab/application';
+import {ILayoutRestorer, JupyterFrontEnd, JupyterFrontEndPlugin} from '@jupyterlab/application';
 import {IRenderMimeRegistry} from '@jupyterlab/rendermime';
 import {INotebookTracker} from '@jupyterlab/notebook';
+import {ICommandPalette, MainAreaWidget, WidgetTracker} from '@jupyterlab/apputils';
+import {ILauncher} from '@jupyterlab/launcher';
 import {IRenderMime} from '@jupyterlab/rendermime-interfaces';
-import {JupyterWidget} from "./root";
+import {JupyterWidget} from "./xautoml";
 import {TagTool} from "@jupyterlab/celltags";
 import {Jupyter} from "./jupyter";
+import {reactIcon} from '@jupyterlab/ui-components';
+import {ClassificationWidget, TimeSeriesWidget} from "./automl";
+import {IFileBrowserFactory} from '@jupyterlab/filebrowser';
 
 const MIME_TYPE = 'application/xautoml+json';
+
+namespace CommandIDs {
+    export const classification = 'create-dswizard-classification';
+    export const timeseries = 'create-dswizard-timeseries';
+}
 
 const extension: JupyterFrontEndPlugin<void> = {
     id: 'xautoml:plugin',
     autoStart: true,
-    requires: [IRenderMimeRegistry, INotebookTracker],
+    requires: [IRenderMimeRegistry, INotebookTracker, ICommandPalette, IFileBrowserFactory, ILayoutRestorer, ILauncher],
     activate: (app: JupyterFrontEnd,
                rendermime: IRenderMimeRegistry,
-               notebooks: INotebookTracker) => {
+               notebooks: INotebookTracker,
+               palette: ICommandPalette,
+               fileBrowserFactory: IFileBrowserFactory,
+               layoutRestorer: ILayoutRestorer,
+               launcher: ILauncher) => {
         const rendererFactory: IRenderMime.IRendererFactory = {
             safe: true,
             mimeTypes: [MIME_TYPE],
@@ -37,6 +51,61 @@ const extension: JupyterFrontEndPlugin<void> = {
             mimeTypes: [MIME_TYPE],
             extensions: ['.xautoml', '.xautoml.json']
         });
+
+        const classification = CommandIDs.classification;
+        app.commands.addCommand(classification, {
+            caption: 'Start a new AutoML classification optimization',
+            label: 'Automatic Classification',
+            icon: (args) => (args['isPalette'] ? null : reactIcon),
+            execute: () => {
+                const content = new ClassificationWidget(fileBrowserFactory);
+                const widget = new MainAreaWidget<ClassificationWidget>({content});
+                widget.title.label = 'Data Science Wizard';
+                widget.title.icon = reactIcon;
+                app.shell.add(widget, 'main');
+            },
+        });
+
+        if (launcher) {
+            launcher.add({
+                command: classification,
+                category: 'Data Science Wizard',
+                rank: 1,
+            });
+        }
+
+        const timeseries = CommandIDs.timeseries;
+        app.commands.addCommand(timeseries, {
+            caption: 'Start a new AutoML timeseries forecasting optimization',
+            label: 'Automatic Timeseries Forecasting',
+            icon: (args) => (args['isPalette'] ? null : reactIcon),
+            execute: () => {
+                console.log('Timeseries not implemented yet')
+                const content = new TimeSeriesWidget();
+                const widget = new MainAreaWidget<TimeSeriesWidget>({content});
+                widget.title.label = 'Data Science Wizard';
+                widget.title.icon = reactIcon;
+                app.shell.add(widget, 'main');
+            },
+        });
+
+        if (launcher) {
+            launcher.add({
+                command: timeseries,
+                category: 'Data Science Wizard',
+                rank: 2,
+            });
+        }
+
+        // Track and restore the widget state
+        const trackerClassification = new WidgetTracker<MainAreaWidget<ClassificationWidget>>({
+            namespace: 'dswizard'
+        });
+        layoutRestorer.restore(trackerClassification, {
+            command: classification,
+            name: () => 'dswizard'
+        });
+
     }
 }
 
