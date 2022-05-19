@@ -5,14 +5,17 @@ import {
     FormControlLabel,
     FormLabel,
     Grid,
-    MenuItem, Radio,
+    MenuItem,
+    Radio,
     RadioGroup,
-    Select, TextareaAutosize,
+    Select,
+    TextareaAutosize,
     TextField
 } from "@material-ui/core";
 import React from "react";
 import {FileDialog, IFileBrowserFactory} from "@jupyterlab/filebrowser";
 import {KernelWrapper} from "../../jupyter";
+import {CollapseComp} from "../../util/collapse";
 
 interface InputFormProps {
     fileBrowserFactory: IFileBrowserFactory
@@ -180,95 +183,101 @@ validate_configuration('''${e.target.value}''')
                         </Grid>}
 
                         <hr style={{minWidth: '80%'}}/>
-                        <Grid item>
+                        <CollapseComp showInitial={false} help={
+                            'Provide additional configuration to fine-tune the optimization procedure'}>
                             <h2>Optimizer Configuration</h2>
-                        </Grid>
-                        <Grid item>
-                            <FormControl>
-                                <FormLabel>Optimizer</FormLabel>
-                                <RadioGroup
-                                    name="optimizer"
-                                    value={formValues.optimizer}
-                                    onChange={this.handleInputChange}
-                                    row
-                                >
-                                    <FormControlLabel
-                                        key="dswizard"
-                                        value="dswizard"
-                                        control={<Radio size="small"/>}
-                                        label="dswizard"
-                                    />
-                                    <FormControlLabel
-                                        key="auto-sklearn"
-                                        value="auto-sklearn"
-                                        control={<Radio size="small"/>}
-                                        label="auto-sklearn"
-                                    />
-                                    <FormControlLabel
-                                        key="tpot"
-                                        value="tpot"
-                                        control={<Radio size="small"/>}
-                                        label="tpot"
-                                    />
-                                </RadioGroup>
-                            </FormControl>
-                        </Grid>
 
-                        <Grid item>
-                            <FormControl>
-                                <FormLabel>Optimization Duration</FormLabel>
-                                <TextField
-                                    id="runtime"
-                                    name="runtime"
-                                    type="number"
-                                    label={'seconds'}
-                                    value={formValues.runtime}
-                                    onChange={this.handleInputChange}
-                                />
-                            </FormControl>
-                        </Grid>
+                            <Grid container direction="column" spacing={2}>
+                                <Grid item>
+                                    <FormControl>
+                                        <FormLabel>Optimizer</FormLabel>
+                                        <RadioGroup
+                                            name="optimizer"
+                                            value={formValues.optimizer}
+                                            onChange={this.handleInputChange}
+                                            row
+                                        >
+                                            <FormControlLabel
+                                                key="dswizard"
+                                                value="dswizard"
+                                                control={<Radio size="small"/>}
+                                                label="dswizard"
+                                            />
+                                            <FormControlLabel
+                                                key="auto-sklearn"
+                                                value="auto-sklearn"
+                                                control={<Radio size="small"/>}
+                                                label="auto-sklearn"
+                                            />
+                                            <FormControlLabel
+                                                key="tpot"
+                                                value="tpot"
+                                                control={<Radio size="small"/>}
+                                                label="tpot"
+                                            />
+                                        </RadioGroup>
+                                    </FormControl>
+                                </Grid>
 
-                        <Grid item>
-                            <FormControl>
-                                <FormLabel>Evaluation Timeout</FormLabel>
-                                <TextField
-                                    id="timeout"
-                                    name="timeout"
-                                    type="number"
-                                    label={'seconds'}
-                                    value={formValues.timeout}
-                                    onChange={this.handleInputChange}
-                                />
-                            </FormControl>
-                        </Grid>
+                                <Grid item>
+                                    <FormControl>
+                                        <FormLabel>Optimization Duration</FormLabel>
+                                        <TextField
+                                            id="runtime"
+                                            name="runtime"
+                                            type="number"
+                                            label={'seconds'}
+                                            value={formValues.runtime}
+                                            onChange={this.handleInputChange}
+                                        />
+                                    </FormControl>
+                                </Grid>
 
-                        <Grid item>
-                            <FormControl>
-                                <FormLabel>Cost Metric</FormLabel>
-                                <Select
-                                    name="metric"
-                                    value={formValues.metric}
-                                    onChange={this.handleInputChange}
-                                >
-                                    <MenuItem key="accuracy" value="accuracy">Accuracy</MenuItem>
-                                    <MenuItem key="roc_auc" value="roc_auc">ROC AUC</MenuItem>
-                                    <MenuItem key="f1 " value="f1">f1</MenuItem>
-                                </Select>
-                            </FormControl>
-                        </Grid>
+                                <Grid item>
+                                    <FormControl>
+                                        <FormLabel>Evaluation Timeout</FormLabel>
+                                        <TextField
+                                            id="timeout"
+                                            name="timeout"
+                                            type="number"
+                                            label={'seconds'}
+                                            value={formValues.timeout}
+                                            onChange={this.handleInputChange}
+                                        />
+                                    </FormControl>
+                                </Grid>
 
-                        <Grid item>
-                            <FormControl>
-                                <FormLabel>Additional Configuration</FormLabel>
-                                <TextareaAutosize
-                                    name="config"
-                                    cols={40}
-                                    minRows={5}
-                                    value={formValues.config}
-                                    onChange={this.validateConfig}
-                                />
-                            </FormControl>
-                        </Grid>
+                                <Grid item>
+                                    <FormControl>
+                                        <FormLabel>Cost Metric</FormLabel>
+                                        <Select
+                                            name="metric"
+                                            value={formValues.metric}
+                                            onChange={this.handleInputChange}
+                                        >
+                                            <MenuItem key="accuracy" value="accuracy">Accuracy</MenuItem>
+                                            <MenuItem key="roc_auc" value="roc_auc">ROC AUC</MenuItem>
+                                            <MenuItem key="f1 " value="f1">f1</MenuItem>
+                                        </Select>
+                                    </FormControl>
+                                </Grid>
+
+                                <Grid item>
+                                    <FormControl>
+                                        <FormLabel>Additional Configuration</FormLabel>
+                                        <TextareaAutosize
+                                            name="config"
+                                            cols={40}
+                                            minRows={5}
+                                            value={formValues.config}
+                                            onChange={this.validateConfig}
+                                        />
+                                    </FormControl>
+                                </Grid>
+                            </Grid>
+                        </CollapseComp>
+
+                        <hr style={{minWidth: '80%'}}/>
                         <Grid item>
                             <Button variant="contained" color="primary" disabled={!this.state.formValid}
                                     onClick={(e) => {
