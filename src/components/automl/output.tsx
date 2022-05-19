@@ -39,7 +39,7 @@ export class OutputPanel extends React.Component<OutputPanelProps, OutputPanelSt
                 break
             case 'execute_result':
                 const result = msg.content as IExecuteResult
-                this.state.messages.push(result.data['plain/text'] as string)
+                this.state.messages.push(result.data['text/plain'] as string)
                 this.props.finish()
                 break
             default:

@@ -3,7 +3,7 @@ import {Button, Grid} from "@material-ui/core";
 
 
 interface ResultProps {
-
+    onReset: () => void
 }
 
 interface ResultState {
@@ -25,7 +25,7 @@ export class Result extends React.Component<ResultProps, ResultState> {
                         <Button variant="contained" color="primary">Deploy</Button>
                     </Grid>
                     <Grid item>
-                        <Button variant="contained" color="secondary">Reset</Button>
+                        <Button variant="contained" color="secondary" onClick={this.props.onReset}>Reset</Button>
                     </Grid>
                 </Grid>
             </>

@@ -2,21 +2,22 @@ import {IFileBrowserFactory} from "@jupyterlab/filebrowser";
 import React from "react";
 import {TwoColumnLayout} from "../../util/layout";
 import {KernelWrapper} from "../../jupyter";
-import {DataSetTable} from "../details/dataset_table";
-import {FormValues, InputForm} from "./form";
-import {Button} from "@material-ui/core";
+import {DataSetSelector} from "./dataset_configuration";
 import {IDocumentManager} from '@jupyterlab/docmanager';
 import {OutputPanel} from "./output";
 import {ProgressBar} from "./progress";
 import {Result} from "./result";
+import {ClassifierConfiguration} from "./classifier_configuration";
+import {Button} from "@material-ui/core";
 
 
 interface ClassificationRootState {
     running: boolean
     duration: number
     finish: boolean
-    file: string
-    dfPreview: string
+
+    classifierValid: boolean
+    dataSetValid: boolean
 }
 
 interface ClassificationRootProps {
@@ -27,7 +28,9 @@ interface ClassificationRootProps {
 
 export class ClassificationRoot extends React.Component<ClassificationRootProps, ClassificationRootState> {
 
-    private readonly ref: React.RefObject<OutputPanel> = React.createRef<OutputPanel>();
+    private readonly classifierConfigRef: React.RefObject<ClassifierConfiguration> = React.createRef<ClassifierConfiguration>();
+    private readonly dataSetConfigRef: React.RefObject<DataSetSelector> = React.createRef<DataSetSelector>();
+    private readonly outpuRef: React.RefObject<OutputPanel> = React.createRef<OutputPanel>();
 
     constructor(props: ClassificationRootProps) {
         super(props);
@@ -35,79 +38,82 @@ export class ClassificationRoot extends React.Component<ClassificationRootProps,
             running: false,
             finish: false,
             duration: undefined,
-            file: undefined,
-            dfPreview: undefined
+
+            classifierValid: true,
+            dataSetValid: false
         }
 
-        this.loadPreview = this.loadPreview.bind(this)
-        this.onStart = this.onStart.bind(this)
-        this.onShowDataSet = this.onShowDataSet.bind(this)
+        this.startOptimization = this.startOptimization.bind(this)
         this.onFinish = this.onFinish.bind(this)
+        this.onClassifierValid = this.onClassifierValid.bind(this)
+        this.onDataSetValid = this.onDataSetValid.bind(this)
+        this.reset = this.reset.bind(this)
     }
 
     componentWillUnmount() {
         this.props.kernel.close()
     }
 
-    private loadPreview(file: string) {
-        this.props.kernel.executeCode<{ preview: string }>(
-            `
-from xautoml.gui import dataset_preview
-dataset_preview('${file}')
-                `
-        ).then(response => {
-            this.setState({dfPreview: response.preview, file: file})
-        })
-    }
-
-    private onStart(data: FormValues) {
-        console.log(`Starting optimization with configuration ${JSON.stringify(data)}`)
-        this.setState({running: true, duration: data.runtime, finish: false})
+    private startOptimization() {
+        const data = this.dataSetConfigRef.current.state.config
+        const classifier = this.classifierConfigRef.current.state.config
+        this.setState({running: true, duration: classifier.runtime, finish: false})
 
         this.props.kernel.executeCode<any>(
             `
 from xautoml.gui import optimize
-optimize('${data.optimizer}', ${data.runtime}, ${data.timeout}, '${data.metric}', '''${data.config}''')
+optimize('${classifier.optimizer}', ${classifier.runtime}, ${classifier.timeout}, '${classifier.metric}', '''${classifier.config}''', '${data.inputFile}', '${data.target}')
             `,
             (msg) => {
-                this.ref.current?.addMessage(msg)
+                this.outpuRef.current?.addMessage(msg)
             }
         )
     }
 
-    private onShowDataSet() {
-        this.props.documentManager.openOrReveal(this.state.file)
+    private onDataSetValid(valid: boolean) {
+        this.setState({dataSetValid: valid})
+    }
+
+    private onClassifierValid(valid: boolean) {
+        this.setState({classifierValid: valid})
     }
 
     private onFinish() {
         this.setState({finish: true, running: false})
     }
 
+    private reset() {
+        this.setState({finish: false, running: false, duration: undefined})
+    }
+
     render() {
         return (
             <div>
+                <h1>AutoML Classification</h1>
                 <TwoColumnLayout>
-                    <InputForm fileBrowserFactory={this.props.fileBrowserFactory} kernel={this.props.kernel}
-                               onFileSelection={this.loadPreview} onSubmit={this.onStart}
-                               submitDisabled={this.state.running}/>
+                    <DataSetSelector fileBrowserFactory={this.props.fileBrowserFactory}
+                                     documentManager={this.props.documentManager} kernel={this.props.kernel}
+                                     isValid={this.onDataSetValid}
+                                     ref={this.dataSetConfigRef}/>
                     <>
-                        {(this.state.dfPreview && !this.state.running && !this.state.finish) &&
+                        {(!this.state.running && !this.state.finish) &&
                             <>
-                                <h2>Data Set Preview</h2>
-                                <DataSetTable data={this.state.dfPreview} selectedSample={undefined}/>
-                                <Button variant="contained" color="primary" onClick={this.onShowDataSet}>Show Complete
-                                    Data Set
+                                <ClassifierConfiguration kernel={this.props.kernel}
+                                                         isValid={this.onClassifierValid}
+                                                         ref={this.classifierConfigRef}/>
+
+                                <hr style={{minWidth: '80%'}}/>
+                                <Button variant="contained" color="primary"
+                                        disabled={!this.state.dataSetValid || !this.state.classifierValid}
+                                        onClick={this.startOptimization}>
+                                    Submit
                                 </Button>
                             </>
                         }
-
+                        {this.state.running && <ProgressBar duration={this.state.duration}/>}
+                        {this.state.finish && <Result onReset={this.reset}/>}
                         {(this.state.running || this.state.finish) &&
-                            <>
-                                {!this.state.finish && <ProgressBar duration={this.state.duration}/>}
-                                {this.state.finish && <Result/>}
-                                <OutputPanel ref={this.ref} finish={this.onFinish}/>
-                            </>
-                        }
+                            <OutputPanel ref={this.outpuRef} finish={this.onFinish}/>}
                     </>
                 </TwoColumnLayout>
             </div>

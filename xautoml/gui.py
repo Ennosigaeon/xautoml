@@ -39,7 +39,7 @@ def dataset_preview(path: str):
         return {'preview': pd.read_csv(path)._repr_html_()}
 
 
-def optimize(optimizer: str, duration: int, timeout: int, metric: str, config_str: str):
+def optimize(optimizer: str, duration: int, timeout: int, metric: str, config_str: str, input_file: str, target: str):
     valid_optimizers = ('dswizard', 'auto-sklearn', 'tpot')
     if optimizer not in valid_optimizers:
         raise ValueError(f'{optimizer} is no valid optimizer. Expected one of {valid_optimizers}')
