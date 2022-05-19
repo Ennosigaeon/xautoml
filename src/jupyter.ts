@@ -70,7 +70,7 @@ export class KernelWrapper {
     constructor(private readonly sessionContext: ISessionContext) {
     }
 
-    executeCode<T>(code: string): Promise<T> {
+    executeCode<T>(code: string, callback?: (msg: KernelMessage.IIOPubMessage) => void): Promise<T> {
         if (!this.sessionContext || !this.sessionContext.session?.kernel)
             return new Promise((resolve, reject) => reject('Not connected to kernel'))
 
@@ -96,6 +96,10 @@ export class KernelWrapper {
                 default:
                     break;
             }
+
+            if (callback)
+                callback(msg)
+
             return;
         }
 

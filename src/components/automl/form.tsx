@@ -20,6 +20,7 @@ import {CollapseComp} from "../../util/collapse";
 interface InputFormProps {
     fileBrowserFactory: IFileBrowserFactory
     kernel: KernelWrapper
+    submitDisabled: boolean
     onSubmit: (formValues: FormValues) => void
     onFileSelection?: (path: string) => void
 }
@@ -49,7 +50,7 @@ export class InputForm extends React.Component<InputFormProps, InputFormState> {
         this.state = {
             formValues: {
                 timeout: 10,
-                runtime: 30,
+                runtime: 10,
                 optimizer: "dswizard",
                 metric: "accuracy",
                 config: "{}",
@@ -279,7 +280,8 @@ validate_configuration('''${e.target.value}''')
 
                         <hr style={{minWidth: '80%'}}/>
                         <Grid item>
-                            <Button variant="contained" color="primary" disabled={!this.state.formValid}
+                            <Button variant="contained" color="primary"
+                                    disabled={!this.state.formValid || this.props.submitDisabled}
                                     onClick={(e) => {
                                         this.props.onSubmit(this.state.formValues)
                                         e.stopPropagation()
