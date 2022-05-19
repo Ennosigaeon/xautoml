@@ -6,17 +6,20 @@ import {IFileBrowserFactory} from "@jupyterlab/filebrowser";
 import {ClassificationRoot} from "./components/automl/classification";
 import {TimeSeriesRoot} from "./components/automl/timeseries";
 import {KernelWrapper} from "./jupyter";
+import {IDocumentManager} from "@jupyterlab/docmanager";
 
 export class ClassificationWidget extends ReactWidget {
 
     public kernel: KernelWrapper;
 
-    constructor(private readonly fileBrowserFactory: IFileBrowserFactory) {
+    constructor(private readonly fileBrowserFactory: IFileBrowserFactory,
+                private readonly documentManager: IDocumentManager) {
         super();
     }
 
     render(): JSX.Element {
-        return <ClassificationRoot fileBrowserFactory={this.fileBrowserFactory} kernel={this.kernel}/>;
+        return <ClassificationRoot fileBrowserFactory={this.fileBrowserFactory} kernel={this.kernel}
+                                   documentManager={this.documentManager}/>;
     }
 }
 

@@ -11,6 +11,7 @@ import {reactIcon} from '@jupyterlab/ui-components';
 import {ClassificationWidget, TimeSeriesWidget} from "./automl";
 import {IFileBrowserFactory} from '@jupyterlab/filebrowser';
 import {KernelPanel} from "./components/automl/panel";
+import {IDocumentManager} from "@jupyterlab/docmanager";
 
 const MIME_TYPE = 'application/xautoml+json';
 
@@ -22,13 +23,14 @@ namespace CommandIDs {
 const extension: JupyterFrontEndPlugin<void> = {
     id: 'xautoml:plugin',
     autoStart: true,
-    requires: [IRenderMimeRegistry, INotebookTracker, ICommandPalette, IFileBrowserFactory, ILayoutRestorer, ILauncher],
+    requires: [IRenderMimeRegistry, INotebookTracker, ICommandPalette, IFileBrowserFactory, ILayoutRestorer, IDocumentManager, ILauncher],
     activate: (app: JupyterFrontEnd,
                rendermime: IRenderMimeRegistry,
                notebooks: INotebookTracker,
                palette: ICommandPalette,
                fileBrowserFactory: IFileBrowserFactory,
                layoutRestorer: ILayoutRestorer,
+               documentManager: IDocumentManager,
                launcher: ILauncher) => {
         const rendererFactory: IRenderMime.IRendererFactory = {
             safe: true,
@@ -59,7 +61,7 @@ const extension: JupyterFrontEndPlugin<void> = {
             label: 'Automatic Classification',
             icon: (args) => (args['isPalette'] ? null : reactIcon),
             execute: () => {
-                const content = new ClassificationWidget(fileBrowserFactory)
+                const content = new ClassificationWidget(fileBrowserFactory, documentManager)
                 const kernelWrapper = new KernelPanel(content, app.serviceManager);
                 content.kernel = kernelWrapper.model;
                 const widget = new MainAreaWidget<KernelPanel>({content: kernelWrapper});
