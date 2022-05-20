@@ -1,9 +1,8 @@
-import json
 from typing import List, Dict, Any
 
 import pandas as pd
 
-from xautoml.main import as_json
+from xautoml.main import as_json, XAutoML
 
 
 @as_json
@@ -61,6 +60,11 @@ def optimize(optimizer: str, duration: int, timeout: int, metric: str, config_st
         return _optimize_auto_sklearn(X, y, duration, timeout, metric, additional_config)
 
 
+def render_xautoml():
+    global main
+    return main.explain()
+
+
 def _optimize_dswizard(X: pd.DataFrame, y: pd.Series, duration: int, timeout: int, metric: str, config: Dict[str, Any]):
     from dswizard.core.master import Master
     from dswizard.core.model import Dataset
@@ -82,8 +86,8 @@ def _optimize_dswizard(X: pd.DataFrame, y: pd.Series, duration: int, timeout: in
 
     rh = import_dswizard(run_history, ensemble)
 
-    with open('dswizard.xautoml', 'w') as f:
-        json.dump(rh.as_dict(), f)
+    global main
+    main = XAutoML(rh, X, y)
 
 
 def _optimize_auto_sklearn(X: pd.DataFrame, y: pd.Series, duration: int, timeout: int, metric: str,
@@ -174,5 +178,5 @@ def _optimize_auto_sklearn(X: pd.DataFrame, y: pd.Series, duration: int, timeout
 
     rh = import_auto_sklearn(automl)
 
-    with open('auto_sklearn.xautoml', 'w') as f:
-        json.dump(rh.as_dict(), f)
+    global main
+    main = XAutoML(rh, X, y)

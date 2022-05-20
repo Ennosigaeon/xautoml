@@ -131,7 +131,7 @@ ${ID}_cm
                                     </TableBody>
                                 </Table>
 
-                                <JupyterButton onClick={this.exportClassReport}/>
+                                <JupyterButton onClick={this.exportClassReport} active={this.context.canCreateCell()}/>
                             </div>
 
                             <div className={'flex-column'} style={{flexGrow: 0, margin: "0 10px"}}>
@@ -143,7 +143,7 @@ ${ID}_cm
                                 </Heading>
                                 <ConfusionMatrix cm={data.cm}/>
 
-                                <JupyterButton onClick={this.exportConfusionMatrix}/>
+                                <JupyterButton onClick={this.exportConfusionMatrix} active={this.context.canCreateCell()}/>
                             </div>
 
                             <div style={{flexGrow: 0, flexBasis: "25%"}}>

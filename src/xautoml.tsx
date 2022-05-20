@@ -27,9 +27,9 @@ export class JupyterWidget extends ReactWidget implements IRenderMime.IRenderer 
     private readonly jupyter: Jupyter;
     private runHistory: RunHistory = undefined;
 
-    constructor(options: IRenderMime.IRendererOptions, jupyter: Jupyter) {
+    constructor(mimeType: string, jupyter: Jupyter) {
         super();
-        this._mimeType = options.mimeType;
+        this._mimeType = mimeType;
         this.jupyter = jupyter
 
         this.addClass(CLASS_NAME);

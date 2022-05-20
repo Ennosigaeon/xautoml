@@ -21,7 +21,7 @@ import {
 import {INotebookTracker, Notebook, NotebookActions} from "@jupyterlab/notebook";
 import {TagTool} from "@jupyterlab/celltags";
 import {KernelMessage} from "@jupyterlab/services";
-import {IError, IExecuteResult, IStream} from '@jupyterlab/nbformat';
+import {IDisplayData, IError, IExecuteResult, IMimeBundle, IStream} from '@jupyterlab/nbformat';
 import {BO, CandidateId, PipelineStep, Prediction} from "./model";
 import {Components} from "./util";
 import memoizee from "memoizee";
@@ -70,6 +70,10 @@ export class KernelWrapper {
     constructor(private readonly sessionContext: ISessionContext) {
     }
 
+    getSessionContext(): ISessionContext {
+        return this.sessionContext
+    }
+
     executeCode<T>(code: string, callback?: (msg: KernelMessage.IIOPubMessage) => void): Promise<T> {
         if (!this.sessionContext || !this.sessionContext.session?.kernel)
             return new Promise((resolve, reject) => reject('Not connected to kernel'))
@@ -78,6 +82,7 @@ export class KernelWrapper {
 
         const outputBuffer: string[] = []
         let result: IExecuteResult = undefined
+        let mimeBundle: IMimeBundle = undefined
         let error: IError = undefined
 
         request.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
@@ -89,6 +94,10 @@ export class KernelWrapper {
                 case 'stream':
                     const text = (msg.content as IStream).text
                     outputBuffer.push(typeof text === 'string' ? text : text.join('\n'))
+                    break
+                case 'display_data':
+                    const display = msg.content as IDisplayData
+                    mimeBundle = display.data
                     break
                 case 'execute_result':
                     result = msg.content as IExecuteResult
@@ -110,6 +119,8 @@ export class KernelWrapper {
             }
             if (result !== undefined)
                 return result.data['application/json'] as unknown as T
+            else if (mimeBundle !== undefined)
+                return mimeBundle as unknown as T
             return undefined
         })
     }
@@ -128,7 +139,7 @@ export class Jupyter {
     private initialized: boolean
     public readonly collapsedState = new OpenedCache()
 
-    constructor(private notebooks: INotebookTracker, private tags: TagTool) {
+    constructor(private notebooks: INotebookTracker = undefined, private tags: TagTool = undefined, private sessionContext: ISessionContext = undefined) {
         this.previousCellContent = localStorage.getItem(this.LOCAL_STORAGE_CONTENT)
 
         this.initialized = false
@@ -145,7 +156,8 @@ export class Jupyter {
             return this.executeCode('from xautoml._helper import gcx')
                 .then(() => this.executeCode(code))
         }
-        const wrapper = new KernelWrapper(this.notebooks.currentWidget.context.sessionContext);
+        const sessionContext = this.sessionContext !== undefined ? this.sessionContext : this.notebooks.currentWidget.context.sessionContext
+        const wrapper = new KernelWrapper(sessionContext);
         return wrapper.executeCode(code)
     }
 
@@ -153,7 +165,14 @@ export class Jupyter {
         promise: true, primitive: true, length: 1, max: 100
     });
 
+    canCreateCell(): boolean {
+        return this.notebooks !== undefined
+    }
+
     createCell(content: string = ''): void {
+        if (this.notebooks === undefined || this.tags === undefined)
+            return
+
         const current = this.notebooks.currentWidget
         const notebook: Notebook = current.content
         const xautomlCell = notebook.activeCellIndex

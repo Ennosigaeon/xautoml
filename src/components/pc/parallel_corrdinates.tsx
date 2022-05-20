@@ -24,6 +24,7 @@ interface PCProps {
     onCandidateSelection?: (cid: Set<CandidateId>, show?: boolean) => void
     onAxisSelection?: (hyperparameter: string) => void
     onExport?: () => void
+    exportActive?: boolean
 
     timestamp?: number
 }
@@ -70,7 +71,8 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
         onAxisSelection: () => {
         },
         onExport: undefined as () => void,
-        timestamp: Infinity
+        timestamp: Infinity,
+        exportActive: true
     }
 
     private model: cpc.Model
@@ -240,7 +242,7 @@ export class ParallelCoordinates extends React.Component<PCProps, PCState> {
                                       onChange={(_, checked) => this.setState({showCandidates: checked})}/>
                             <span>Show&nbsp;Candidates</span>
                         </label>
-                        {this.props.onExport && <JupyterButton onClick={this.props.onExport}/>}
+                        {this.props.onExport && <JupyterButton onClick={this.props.onExport} active={this.props.exportActive}/>}
                     </div>
                 }
                 {!this.props.explanation && <WarningIndicator message={'Surrogate model visualization not available'}/>}

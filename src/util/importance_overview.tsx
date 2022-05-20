@@ -11,6 +11,7 @@ interface ImportanceOverviewProps {
 
     onSelectRow: (i: number) => void
     onExportClick: () => void
+    exportActive: boolean
 }
 
 
@@ -110,7 +111,7 @@ export class ImportanceOverviewComp extends React.Component<ImportanceOverviewPr
                             </Bar>
                         </BarChart>
                     </div>
-                    <JupyterButton onClick={this.props.onExportClick}/>
+                    <JupyterButton onClick={this.props.onExportClick} active={this.props.exportActive}/>
                 </div>
             </>
         )

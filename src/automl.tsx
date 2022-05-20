@@ -13,13 +13,14 @@ export class ClassificationWidget extends ReactWidget {
     public kernel: KernelWrapper;
 
     constructor(private readonly fileBrowserFactory: IFileBrowserFactory,
-                private readonly documentManager: IDocumentManager) {
+                private readonly documentManager: IDocumentManager,
+                private readonly mimeType: string) {
         super();
     }
 
     render(): JSX.Element {
         return <ClassificationRoot fileBrowserFactory={this.fileBrowserFactory} kernel={this.kernel}
-                                   documentManager={this.documentManager}/>;
+                                   documentManager={this.documentManager} mimeType={this.mimeType}/>;
     }
 }
 

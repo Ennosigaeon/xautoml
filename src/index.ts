@@ -35,7 +35,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         const rendererFactory: IRenderMime.IRendererFactory = {
             safe: true,
             mimeTypes: [MIME_TYPE],
-            createRenderer: (options) => new JupyterWidget(options, new Jupyter(notebooks, new TagTool(notebooks, app))),
+            createRenderer: (options) => new JupyterWidget(MIME_TYPE, new Jupyter(notebooks, new TagTool(notebooks, app))),
         };
 
         // Add a renderer factory to application rendermime registry.
@@ -61,7 +61,7 @@ const extension: JupyterFrontEndPlugin<void> = {
             label: 'Automatic Classification',
             icon: (args) => (args['isPalette'] ? null : reactIcon),
             execute: () => {
-                const content = new ClassificationWidget(fileBrowserFactory, documentManager)
+                const content = new ClassificationWidget(fileBrowserFactory, documentManager, MIME_TYPE)
                 const kernelWrapper = new KernelPanel(content, app.serviceManager);
                 content.kernel = kernelWrapper.model;
                 const widget = new MainAreaWidget<KernelPanel>({content: kernelWrapper});
