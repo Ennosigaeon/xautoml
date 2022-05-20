@@ -8,7 +8,7 @@ import {OutputPanel} from "./output";
 import {ProgressBar} from "./progress";
 import {Result} from "./result";
 import {ClassifierConfiguration} from "./classifier_configuration";
-import {Button} from "@material-ui/core";
+import {Box, Button} from "@material-ui/core";
 
 
 interface ClassificationRootState {
@@ -88,7 +88,7 @@ optimize('${classifier.optimizer}', ${classifier.runtime}, ${classifier.timeout}
 
     render() {
         return (
-            <div>
+            <Box component={'div'} m={2}>
                 <h1>AutoML Classification</h1>
                 <TwoColumnLayout>
                     <DataSetSelector fileBrowserFactory={this.props.fileBrowserFactory}
@@ -116,7 +116,7 @@ optimize('${classifier.optimizer}', ${classifier.runtime}, ${classifier.timeout}
                             <OutputPanel ref={this.outpuRef} finish={this.onFinish}/>}
                     </>
                 </TwoColumnLayout>
-            </div>
+            </Box>
         );
     }
 }

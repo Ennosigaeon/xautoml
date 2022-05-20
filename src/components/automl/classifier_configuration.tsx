@@ -101,12 +101,6 @@ validate_configuration('''${e.target.value}''')
                                                 control={<Radio size="small"/>}
                                                 label="auto-sklearn"
                                             />
-                                            <FormControlLabel
-                                                key="tpot"
-                                                value="tpot"
-                                                control={<Radio size="small"/>}
-                                                label="tpot"
-                                            />
                                         </RadioGroup>
                                     </FormControl>
                                 </Grid>

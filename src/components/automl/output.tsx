@@ -2,6 +2,7 @@ import React from "react";
 
 import {IError, IExecuteResult, IStream} from '@jupyterlab/nbformat';
 import {KernelMessage} from "@jupyterlab/services";
+import {IStatusMsg} from "@jupyterlab/services/lib/kernel/messages";
 
 interface OutputPanelProps {
     finish: () => void
@@ -41,6 +42,12 @@ export class OutputPanel extends React.Component<OutputPanelProps, OutputPanelSt
                 const result = msg.content as IExecuteResult
                 this.state.messages.push(result.data['text/plain'] as string)
                 this.props.finish()
+                break
+            case 'status':
+                const status = msg.content as IStatusMsg
+                // @ts-ignore
+                if (status.execution_state == 'idle')
+                    this.props.finish()
                 break
             default:
                 break;

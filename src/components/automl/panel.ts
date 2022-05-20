@@ -31,6 +31,7 @@ export class KernelPanel extends StackedPanel {
         });
 
         this._child = child
+        child.addClass('jp-Notebook')
         this.model = new KernelWrapper(this._sessionContext);
 
         this.addWidget(this._child);
