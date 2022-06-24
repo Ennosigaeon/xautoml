@@ -217,7 +217,7 @@ ${ID}_pipeline
                                                         onComponentSelection={this.openComponent}/>
                     </TableCell>
                     <TableCell>
-                        <JupyterButton onClick={this.openCandidateInJupyter}/>
+                        <JupyterButton onClick={this.openCandidateInJupyter} active={this.context.canCreateCell()}/>
                         <IconButton aria-label='expand row' size='small' onClick={this.toggleDetails}>
                             {this.state.open ? <KeyboardArrowUpIcon/> : <KeyboardArrowDownIcon/>}
                         </IconButton>

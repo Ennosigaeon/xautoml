@@ -87,6 +87,7 @@ class SMBOSurrogateCPC extends React.Component<SurrogateExplanationProps, Surrog
                                              showExplanations={true}
                                              expand={true}
                                              onExport={this.props.onExport}
+                                             exportActive={this.context.canCreateCell()}
                                              perfAxis={perfAxis}/>
                     </>
                 }

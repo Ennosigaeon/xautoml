@@ -3,7 +3,7 @@ import React from "react";
 interface DatasetTableProps {
     data: string
     selectedSample: number | undefined
-    onSampleClick: (idx: number) => void
+    onSampleClick?: (idx: number) => void
 }
 
 
@@ -53,7 +53,9 @@ export class DataSetTable extends React.Component<DatasetTableProps> {
             .forEach(el => el.classList.remove(DataSetTable.selectedClassName))
         row.classList.add(DataSetTable.selectedClassName)
 
-        this.props.onSampleClick(idx)
+        if (this.props.onSampleClick) {
+            this.props.onSampleClick(idx)
+        }
     }
 
     render() {

@@ -6,20 +6,30 @@ import JupyterLogo from '../../style/jupyter.svg';
 
 interface JupyterButtonProps {
     onClick: (event: React.MouseEvent) => void
+    active?: boolean
     style?: CSSProperties | undefined
 }
 
 export class JupyterButton extends React.Component<JupyterButtonProps, {}> {
 
+    static defaultProps = {
+        active: true
+    }
+
     render() {
-        const {onClick, style} = this.props
+        const {onClick, active, style} = this.props
+
 
         return (
-            <Button className={'jupyter-button'}
-                    onClick={onClick}
-                    style={style}>
-                Continue in <div style={{marginLeft: '-5px'}} dangerouslySetInnerHTML={{__html: JupyterLogo}}/>
-            </Button>
-        );
+            <>
+                {active &&
+                    <Button className={'jupyter-button'}
+                            onClick={onClick}
+                            style={style}>
+                        Continue in <div style={{marginLeft: '-5px'}} dangerouslySetInnerHTML={{__html: JupyterLogo}}/>
+                    </Button>
+                }
+            </>
+        )
     }
 }

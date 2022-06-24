@@ -33,6 +33,7 @@ interface SingleHPProps {
     metric: string
 
     onExportClick: () => void
+    exportActive: boolean
 }
 
 class SingleHP extends React.Component<SingleHPProps> {
@@ -163,7 +164,7 @@ class SingleHP extends React.Component<SingleHPProps> {
                 <div style={{display: "flex", alignItems: "end"}}>
                     <div>
                         <p>{description}</p>
-                        <JupyterButton onClick={this.props.onExportClick}/>
+                        <JupyterButton onClick={this.props.onExportClick} active={this.props.exportActive}/>
                     </div>
                 </div>
 
@@ -328,6 +329,7 @@ ${ID}_hp_interactions
                     {overview?.keys.length > 0 && <>
                         <ImportanceOverviewComp overview={overview} selectedRow={selectedRow}
                                                 onExportClick={this.exportOverview}
+                                                exportActive={this.context.canCreateCell()}
                                                 onSelectRow={this.selectRow}/>
                         <div style={{
                             marginLeft: '20px',
@@ -345,7 +347,8 @@ ${ID}_hp_interactions
                                     <LoadingIndicator loading={this.state.details === undefined}/>
                                     {this.state.details && <SingleHP data={this.getDetails(selectedRow)}
                                                                      metric={this.props.metric}
-                                                                     onExportClick={this.exportDetails}/>}
+                                                                     onExportClick={this.exportDetails}
+                                                                     exportActive={this.context.canCreateCell()}/>}
                                 </>
 
                             }

@@ -172,7 +172,7 @@ ${ID}_pdp
                                             </FormControl> : <i>{this.state.clazz}</i>
                                         }</h4>
                                 </Heading>
-                                <JupyterButton onClick={this.exportDataFrame}/>
+                                <JupyterButton onClick={this.exportDataFrame} active={this.context.canCreateCell()}/>
                             </div>
 
                             {typeof pdp.avg[0].x === 'number' && this.renderNumerical(data)}
@@ -302,6 +302,7 @@ ${ID}_feature_importance
                                 <div style={{display: 'flex'}}>
                                     <ImportanceOverviewComp overview={data.data} selectedRow={selectedRow}
                                                             onExportClick={this.exportDataFrame}
+                                                            exportActive={this.context.canCreateCell()}
                                                             onSelectRow={this.selectRow}/>
                                     <div style={{
                                         marginLeft: '20px',

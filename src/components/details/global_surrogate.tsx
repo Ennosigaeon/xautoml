@@ -186,7 +186,7 @@ ${ID}_dt
                                         onChange={this.onMaxLeavesChange}/>
                             </div>
                             <div style={{flexGrow: 1, alignSelf: "center"}}>
-                                <JupyterButton style={{float: "right"}} onClick={this.exportTree}/>
+                                <JupyterButton style={{float: "right"}} onClick={this.exportTree} active={this.context.canCreateCell()}/>
                             </div>
                         </div>
                         {loading ? <LoadingIndicator loading={loading}/> :

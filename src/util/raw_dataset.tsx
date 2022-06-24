@@ -92,7 +92,7 @@ ${ID}_X
                 <TwoColumnLayout>
                     <h3>Output of <i>{algorithm} ({component})</i></h3>
                     {(!loadingDf && outputs.has(component)) &&
-                        <JupyterButton style={{marginTop: 0, float: 'right'}} onClick={this.handleLoadDataframe}/>
+                        <JupyterButton style={{marginTop: 0, float: 'right'}} onClick={this.handleLoadDataframe} active={this.context.canCreateCell()}/>
                     }
                 </TwoColumnLayout>
                 <ErrorIndicator error={error}/>

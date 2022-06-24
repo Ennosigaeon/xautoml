@@ -21,11 +21,12 @@ import {
 import {INotebookTracker, Notebook, NotebookActions} from "@jupyterlab/notebook";
 import {TagTool} from "@jupyterlab/celltags";
 import {KernelMessage} from "@jupyterlab/services";
-import {IError, IExecuteResult, IStream} from '@jupyterlab/nbformat';
+import {IDisplayData, IError, IExecuteResult, IMimeBundle, IStream} from '@jupyterlab/nbformat';
 import {BO, CandidateId, PipelineStep, Prediction} from "./model";
 import {Components} from "./util";
 import memoizee from "memoizee";
 import SOURCE = Components.SOURCE;
+import {ISessionContext} from "@jupyterlab/apputils";
 
 export class ServerError extends Error {
 
@@ -64,6 +65,71 @@ export class OpenedCache {
     }
 }
 
+export class KernelWrapper {
+
+    constructor(private readonly sessionContext: ISessionContext) {
+    }
+
+    getSessionContext(): ISessionContext {
+        return this.sessionContext
+    }
+
+    executeCode<T>(code: string, callback?: (msg: KernelMessage.IIOPubMessage) => void): Promise<T> {
+        if (!this.sessionContext || !this.sessionContext.session?.kernel)
+            return new Promise((resolve, reject) => reject('Not connected to kernel'))
+
+        const request = this.sessionContext.session?.kernel?.requestExecute({code})
+
+        const outputBuffer: string[] = []
+        let result: IExecuteResult = undefined
+        let mimeBundle: IMimeBundle = undefined
+        let error: IError = undefined
+
+        request.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
+            const msgType = msg.header.msg_type;
+            switch (msgType) {
+                case 'error':
+                    error = msg.content as IError
+                    break
+                case 'stream':
+                    const text = (msg.content as IStream).text
+                    outputBuffer.push(typeof text === 'string' ? text : text.join('\n'))
+                    break
+                case 'display_data':
+                    const display = msg.content as IDisplayData
+                    mimeBundle = display.data
+                    break
+                case 'execute_result':
+                    result = msg.content as IExecuteResult
+                    break
+                default:
+                    break;
+            }
+
+            if (callback)
+                callback(msg)
+
+            return;
+        }
+
+        return request.done.then(() => {
+            console.log(outputBuffer.join('\n'))
+            if (error) {
+                throw new ServerError(error.ename, error.evalue, error.traceback)
+            }
+            if (result !== undefined)
+                return result.data['application/json'] as unknown as T
+            else if (mimeBundle !== undefined)
+                return mimeBundle as unknown as T
+            return undefined
+        })
+    }
+
+    close() {
+        this.sessionContext.dispose()
+    }
+}
+
 export class Jupyter {
 
     private readonly LOCAL_STORAGE_CONTENT = 'xautoml-previousCellContent'
@@ -73,7 +139,7 @@ export class Jupyter {
     private initialized: boolean
     public readonly collapsedState = new OpenedCache()
 
-    constructor(private notebooks: INotebookTracker, private tags: TagTool) {
+    constructor(private notebooks: INotebookTracker = undefined, private tags: TagTool = undefined, private sessionContext: ISessionContext = undefined) {
         this.previousCellContent = localStorage.getItem(this.LOCAL_STORAGE_CONTENT)
 
         this.initialized = false
@@ -90,52 +156,23 @@ export class Jupyter {
             return this.executeCode('from xautoml._helper import gcx')
                 .then(() => this.executeCode(code))
         }
-        const sessionContext = this.notebooks.currentWidget.context.sessionContext
-
-        if (!sessionContext || !sessionContext.session?.kernel)
-            return new Promise((resolve, reject) => reject('Not connected to kernel'))
-
-        const request = sessionContext.session?.kernel?.requestExecute({code})
-
-        const outputBuffer: string[] = []
-        let result: IExecuteResult = undefined
-        let error: IError = undefined
-
-        request.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
-            const msgType = msg.header.msg_type;
-            switch (msgType) {
-                case 'error':
-                    error = msg.content as IError
-                    break
-                case 'stream':
-                    const text = (msg.content as IStream).text
-                    outputBuffer.push(typeof text === 'string' ? text : text.join('\n'))
-                    break
-                case 'execute_result':
-                    result = msg.content as IExecuteResult
-                    break
-                default:
-                    break;
-            }
-            return;
-        }
-
-        return request.done.then(() => {
-            console.log(outputBuffer.join('\n'))
-            if (error) {
-                throw new ServerError(error.ename, error.evalue, error.traceback)
-            }
-            if (result !== undefined)
-                return result.data['application/json'] as unknown as T
-            return undefined
-        })
+        const sessionContext = this.sessionContext !== undefined ? this.sessionContext : this.notebooks.currentWidget.context.sessionContext
+        const wrapper = new KernelWrapper(sessionContext);
+        return wrapper.executeCode(code)
     }
 
     private memExecuteCode = memoizee(this.executeCode, {
         promise: true, primitive: true, length: 1, max: 100
     });
 
+    canCreateCell(): boolean {
+        return this.notebooks !== undefined
+    }
+
     createCell(content: string = ''): void {
+        if (this.notebooks === undefined || this.tags === undefined)
+            return
+
         const current = this.notebooks.currentWidget
         const notebook: Notebook = current.content
         const xautomlCell = notebook.activeCellIndex
