@@ -74,7 +74,7 @@ validate_configuration('''${e.target.value}''')
         return (
             <>
                 <Box sx={{flexGrow: 1}}>
-                    <Grid container direction="column" alignContent={"center"} spacing={2}>
+                    <Grid container direction="column" alignContent={"center"} spacing={2} className={'no-margin'}>
                         <CollapseComp showInitial={false} help={
                             'Provide additional configuration to fine-tune the optimization procedure'}>
                             <h2>Optimizer Configuration</h2>

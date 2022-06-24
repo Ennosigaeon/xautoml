@@ -598,3 +598,19 @@ text.pc-axis-label:hover {
     vertical-align: middle;
     margin-right: 4px;
 }
+
+
+/** automl **/
+.automl .container {
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.automl .jp-OutputPrompt {
+    flex: none;
+}
+
+.automl .no-margin {
+    width: 100% !important;
+    margin: 0 !important;
+}

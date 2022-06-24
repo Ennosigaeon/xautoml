@@ -118,11 +118,11 @@ render_xautoml()
         }
 
         return (
-            <Box component={'div'} m={2}>
+            <Box component={'div'} m={2} className={'automl'}>
                 {!this.state.runhistory &&
                     <>
                         <h1>AutoML Classification</h1>
-                        <TwoColumnLayout>
+                        <TwoColumnLayout flexShrinkLeft={"0.25"} flexGrowRight={"0.75"}>
                             <DataSetSelector fileBrowserFactory={this.props.fileBrowserFactory}
                                              documentManager={this.props.documentManager} kernel={this.props.kernel}
                                              isValid={this.onDataSetValid}

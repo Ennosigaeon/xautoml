@@ -17,8 +17,6 @@ export class Result extends React.Component<ResultProps, ResultState> {
         return (
             <>
                 <h2>Results</h2>
-                <p>The results are available in the file system</p>
-
                 <Grid container direction="row" alignContent={"center"} justifyContent={"space-evenly"} spacing={2}>
                     <Grid item>
                         <Button variant="contained" color="primary" onClick={this.props.onXAutoML}>Show In XAutoML</Button>

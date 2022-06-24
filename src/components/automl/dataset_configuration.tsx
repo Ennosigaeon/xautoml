@@ -4,6 +4,7 @@ import {FileDialog, IFileBrowserFactory} from "@jupyterlab/filebrowser";
 import {KernelWrapper} from "../../jupyter";
 import {DataSetTable} from "../details/dataset_table";
 import {IDocumentManager} from "@jupyterlab/docmanager";
+import {LoadingIndicator} from "../../util/loading";
 
 export interface DataSetValues {
     inputFile: string
@@ -22,6 +23,8 @@ interface DataSetState {
     target_columns: string[]
     formValid: boolean
     dfPreview: string
+
+    loadingFile: boolean
 }
 
 export class DataSetSelector extends React.Component<DataSetProps, DataSetState> {
@@ -36,7 +39,8 @@ export class DataSetSelector extends React.Component<DataSetProps, DataSetState>
             },
             target_columns: undefined,
             formValid: false,
-            dfPreview: undefined
+            dfPreview: undefined,
+            loadingFile: false
         }
 
         this.handleInputChange = this.handleInputChange.bind(this)
@@ -80,6 +84,7 @@ export class DataSetSelector extends React.Component<DataSetProps, DataSetState>
             const formValues = {...this.state.config, ['inputFile']: file}
             this.setState({
                 config: formValues,
+                loadingFile: true,
                 formValid: this.formValid(formValues)
             })
             this.props.kernel.executeCode<string[]>(
@@ -87,7 +92,7 @@ export class DataSetSelector extends React.Component<DataSetProps, DataSetState>
 from xautoml.gui import get_columns
 get_columns('${file}')
                 `
-            ).then(columns => this.setState({target_columns: columns}))
+            ).then(columns => this.setState({target_columns: columns, loadingFile: false}))
 
             this.loadPreview(file)
         }
@@ -115,7 +120,8 @@ dataset_preview('${file}')
             <div className={'lm-Widget p-Widget '}>
                 <Box sx={{flexGrow: 1}}>
                     <h2>Data Set</h2>
-                    <Grid container direction="row" alignContent={"center"} justifyContent={"space-around"}>
+                    <Grid container direction="row" alignContent={"center"} justifyContent={"space-around"}
+                          wrap={"nowrap"}>
                         <Grid item>
                             <FormControl>
                                 <FormLabel>Data Set</FormLabel>
@@ -143,22 +149,31 @@ dataset_preview('${file}')
                             </FormControl>
                         </Grid>
 
-                        {this.state.target_columns !== undefined && <Grid item>
+                        <Grid item>
                             <FormControl>
-                                <FormLabel>Target Column</FormLabel>
-                                <Select
-                                    name="target"
-                                    value={config.target}
-                                    onChange={this.handleInputChange}
-                                >
-                                    {this.state.target_columns.map(c => <MenuItem key={c}
-                                                                                  value={c}>{c}</MenuItem>)}
-                                </Select>
+                                <FormLabel style={{"whiteSpace": "nowrap"}}>Target Column</FormLabel>
+
+                                <Grid container direction="row" justifyContent={"space-between"}
+                                      alignContent={"center"}
+                                      spacing={2}>
+                                    <Grid item xs={12}>
+                                        <Select
+                                            name="target"
+                                            value={config.target}
+                                            onChange={this.handleInputChange}
+                                            style={{"width": "100%"}}
+                                            disabled={this.state.target_columns === undefined}
+                                        >
+                                            {this.state.target_columns?.map(c => <MenuItem key={c}
+                                                                                          value={c}>{c}</MenuItem>)}
+                                        </Select>
+                                    </Grid>
+                                </Grid>
                             </FormControl>
-                        </Grid>}
+                        </Grid>
                     </Grid>
 
-
+                    <LoadingIndicator loading={this.state.loadingFile}/>
                     {this.state.dfPreview &&
                         <>
                             <h2>Data Set Preview</h2>
