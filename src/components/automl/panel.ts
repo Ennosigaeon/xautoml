@@ -21,7 +21,7 @@ export class KernelPanel extends StackedPanel {
         super();
         this.addClass(PANEL_CLASS);
         this.id = 'kernel-messaging-panel';
-        this.title.label = 'Data Sciece Wizard Kernel'
+        this.title.label = 'Data Science Wizard Kernel'
         this.title.closable = true;
 
         this._sessionContext = new SessionContext({

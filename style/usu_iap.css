@@ -1,0 +1,129 @@
+.usu_iap .flex-container {
+    display: flex;
+}
+
+.usu_iap .flex-container > div {
+    flex-grow: 1;
+    padding: 5px 5px 0;
+    min-width: 340px;
+}
+
+.usu_iap .slider-container > div {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.usu_iap .slider-container label {
+    min-width: 100px;
+    padding-top: 5px;
+}
+
+.usu_iap .slider-container input {
+    width: 110px;
+    margin-left: 10px;
+}
+
+.usu_iap.go-deployment-dialog-body h3 {
+    margin: 0;
+}
+
+.usu_iap.go-deployment-dialog-body .bp3-checkbox {
+    flex-grow: 1;
+}
+
+.usu_iap .inline-button-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.usu_iap .inline-button-container button {
+    height: 1em;
+    line-height: 1em;
+}
+
+.usu_iap .full-width {
+    width: 100%;
+}
+
+.usu_iap .input-error {
+    border-left: 5px solid #ba433c !important;
+}
+
+.usu_iap .input-valid {
+    border-left: 5px solid #28a745 !important;
+}
+
+.usu_iap .read-only-textbox {
+    color: darkgray !important;
+}
+
+.usu_iap textarea.jp-mod-styled {
+    resize: vertical;
+    background: var(--jp-input-background);
+    box-sizing: border-box;
+    border: 1 solid var(--jp-border-color1);
+    padding-left: 7px;
+    padding-right: 7px;
+    font-size: 13px;
+    color: var(--jp-ui-font-color0);
+    outline: none;
+    font-family: Arial;
+}
+
+.usu_iap .file-list {
+    /* height: 144px; */
+    overflow-y: auto;
+    background: var(--jp-input-background);
+    box-sizing: border-box;
+    border: 1px solid var(--jp-border-color1);
+    border-radius: 3px;
+    padding-left: 7px;
+    padding-right: 7px;
+    font-size: var(--jp-ui-font-size) !important;
+    color: var(--jp-ui-font-color0);
+    outline: none;
+    font-family: Arial;
+    margin: 0;
+}
+
+.usu_iap .file-list-item {
+    padding: 2px;
+    border-bottom: 1px solid e4e4e4;
+    text-align: left;
+    border: solid #e4e4e4;
+    border-width: 0 0 1px;
+    list-style-type: none;
+}
+
+.usu_iap input.jp-mod-styled {
+    font-size: var(--jp-ui-font-size) !important;
+}
+
+.usu_iap button[disabled].jp-Dialog-button.jp-mod-accept.jp-mod-styled {
+    background-color: var(--md-blue-100);
+}
+
+.usu_iap div > div.inline-button-container > div > label.bp3-control.bp3-radio.bp3-inline {
+    margin-bottom: 0;
+    margin-top: 3px;
+}
+
+.usu_iap .read-only-hint {
+    margin-top: -3px;
+}
+
+.usu_iap .read-only-hint > label {
+    background: var(--jp-layout-color3);
+    padding: 4px;
+    color: white;
+}
+
+.usu_iap .hint {
+    margin-top: -12px;
+}
+
+.usu_iap .monospace {
+    font-family: monospace;
+}

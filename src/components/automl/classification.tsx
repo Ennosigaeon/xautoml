@@ -12,7 +12,7 @@ import {Box, Button} from "@material-ui/core";
 import {IMimeBundle} from "@jupyterlab/nbformat";
 import ReactRoot from "../../xautoml";
 import {RunHistory} from "../../model";
-
+import {GoDeploymentComponent} from "../usu_iap/deployment-dialog";
 
 interface ClassificationRootState {
     running: boolean
@@ -107,7 +107,8 @@ render_xautoml()
     }
 
     private deployModel() {
-        // TODO
+        const file = this.dataSetConfigRef.current.state.config.inputFile
+        new GoDeploymentComponent(file, this.props.fileBrowserFactory.createFileBrowser('usu_iap')).open()
     }
 
     render() {
