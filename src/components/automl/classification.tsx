@@ -8,7 +8,7 @@ import {OutputPanel} from "./output";
 import {ProgressBar} from "./progress";
 import {Result} from "./result";
 import {ClassifierConfiguration} from "./classifier_configuration";
-import {Box, Button} from "@material-ui/core";
+import {Box} from "@material-ui/core";
 import {IMimeBundle} from "@jupyterlab/nbformat";
 import ReactRoot from "../../xautoml";
 import {RunHistory} from "../../model";
@@ -136,11 +136,13 @@ render_xautoml()
                                                                  ref={this.classifierConfigRef}/>
 
                                         <hr style={{minWidth: '80%'}}/>
-                                        <Button variant="contained" color="primary"
-                                                disabled={!this.state.dataSetValid || !this.state.classifierValid}
-                                                onClick={this.startOptimization}>
+                                        <button
+                                            className="jp-Dialog-button jp-mod-accept jp-mod-styled"
+                                            disabled={!this.state.dataSetValid || !this.state.classifierValid}
+                                            onClick={this.startOptimization}
+                                        >
                                             Submit
-                                        </Button>
+                                        </button>
                                     </>
                                 }
                                 {this.state.running && <ProgressBar duration={this.state.duration}/>}

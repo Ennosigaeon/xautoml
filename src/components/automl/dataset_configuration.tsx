@@ -1,4 +1,4 @@
-import {Box, Button, FormControl, FormLabel, Grid, MenuItem, Select, TextField} from "@material-ui/core";
+import {Box, FormControl, FormLabel, Grid, MenuItem, Select, TextField} from "@material-ui/core";
 import React from "react";
 import {FileDialog, IFileBrowserFactory} from "@jupyterlab/filebrowser";
 import {KernelWrapper} from "../../jupyter";
@@ -140,10 +140,12 @@ dataset_preview('${file}')
                                     </Grid>
 
                                     <Grid item xs={6}>
-                                        <Button variant="contained" color="primary"
-                                                onClick={this.selectFile}>
+                                        <button
+                                            className="jp-Dialog-button jp-mod-accept jp-mod-styled"
+                                            onClick={this.selectFile}
+                                        >
                                             Select
-                                        </Button>
+                                        </button>
                                     </Grid>
                                 </Grid>
                             </FormControl>
@@ -165,7 +167,7 @@ dataset_preview('${file}')
                                             disabled={this.state.target_columns === undefined}
                                         >
                                             {this.state.target_columns?.map(c => <MenuItem key={c}
-                                                                                          value={c}>{c}</MenuItem>)}
+                                                                                           value={c}>{c}</MenuItem>)}
                                         </Select>
                                     </Grid>
                                 </Grid>
@@ -178,9 +180,12 @@ dataset_preview('${file}')
                         <>
                             <h2>Data Set Preview</h2>
                             <DataSetTable data={this.state.dfPreview} selectedSample={undefined}/>
-                            <Button variant="contained" color="primary" onClick={this.onShowDataSet}>
+                            <button
+                                className="jp-Dialog-button jp-mod-accept jp-mod-styled"
+                                onClick={this.onShowDataSet}
+                            >
                                 Show Complete Data Set
-                            </Button>
+                            </button>
                         </>
                     }
                 </Box>

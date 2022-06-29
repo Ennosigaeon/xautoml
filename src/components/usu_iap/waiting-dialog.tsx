@@ -2,6 +2,7 @@ import React from 'react';
 import {DeploymentModel, DeploymentResult, GoDeploymentState} from "./model";
 import {LoadingIndicator} from "../../util/loading";
 import {IAPService} from "./service";
+import {ErrorIndicator} from "../../util/error";
 
 interface Props {
     config: DeploymentModel
@@ -9,6 +10,7 @@ interface Props {
 
 interface State {
     result: DeploymentResult
+    error: Error
 }
 
 export class WaitingComponent extends React.Component<Props, State> {
@@ -16,16 +18,16 @@ export class WaitingComponent extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.state = {
-            result: undefined
+            result: undefined,
+            error: undefined
         }
 
-        IAPService.createDeployment(this.props.config).then(result => {
-            this.setState({result: result})
-        })
+        IAPService.createDeployment(this.props.config).then(result => this.setState({result: result}))
+            .catch(error => this.setState({error: error}))
     }
 
     render() {
-        const {result} = this.state
+        const {result, error} = this.state
 
         let title = '';
         let message = '';
@@ -48,7 +50,8 @@ export class WaitingComponent extends React.Component<Props, State> {
 
         return (
             <>
-                <LoadingIndicator loading={result === undefined}/>
+                <LoadingIndicator loading={result === undefined && error === undefined}/>
+                <ErrorIndicator error={error}/>
                 {title !== '' &&
                     <div style={{margin: '1px'}}>
                         <h3>{title}</h3>

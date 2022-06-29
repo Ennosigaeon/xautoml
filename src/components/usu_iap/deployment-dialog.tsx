@@ -9,6 +9,7 @@ import {WaitingComponent} from "./waiting-dialog";
 import {IAPService} from "./service";
 import {LoadingIndicator} from "../../util/loading";
 import basename = PathExt.basename;
+import {ErrorIndicator} from "../../util/error";
 
 export class GoDeploymentComponent {
 
@@ -86,6 +87,7 @@ interface DialogProps {
 
 interface DialogState {
     limits: ResourceLimits
+    error: Error
 }
 
 class DialogContent extends React.Component<DialogProps, DialogState> {
@@ -93,12 +95,12 @@ class DialogContent extends React.Component<DialogProps, DialogState> {
     constructor(props: DialogProps) {
         super(props);
         this.state = {
-            limits: undefined
+            limits: undefined,
+            error: undefined
         }
 
-        IAPService.getLimits().then(limits => {
-            this.setState({limits: limits})
-        })
+        IAPService.getLimits().then(limits => this.setState({limits: limits}))
+            .catch(error => this.setState({error: error}))
 
         this.changeHandler = this.changeHandler.bind(this)
     }
@@ -134,12 +136,13 @@ class DialogContent extends React.Component<DialogProps, DialogState> {
 
     render() {
         const {model} = this.props
-        const {limits} = this.state
+        const {limits, error} = this.state
 
         if (limits === undefined)
             return (
                 <div className="go-deployment-dialog-body usu_iap">
-                    <LoadingIndicator loading={true}/>
+                    <LoadingIndicator loading={error === undefined}/>
+                    <ErrorIndicator error={error}/>
                 </div>
             )
 

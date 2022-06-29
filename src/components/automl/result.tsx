@@ -1,5 +1,5 @@
 import React from "react";
-import {Button, Grid} from "@material-ui/core";
+import {Grid} from "@material-ui/core";
 
 
 interface ResultProps {
@@ -19,13 +19,28 @@ export class Result extends React.Component<ResultProps, ResultState> {
                 <h2>Results</h2>
                 <Grid container direction="row" alignContent={"center"} justifyContent={"space-evenly"} spacing={2}>
                     <Grid item>
-                        <Button variant="contained" color="primary" onClick={this.props.onXAutoML}>Show In XAutoML</Button>
+                        <button
+                            className="jp-Dialog-button jp-mod-accept jp-mod-styled"
+                            onClick={this.props.onXAutoML}
+                        >
+                            Show In XAutoML
+                        </button>
                     </Grid>
                     <Grid item>
-                        <Button variant="contained" color="primary" onClick={this.props.onDeploy}>Deploy</Button>
+                        <button
+                            className="jp-Dialog-button jp-mod-accept jp-mod-styled"
+                            onClick={this.props.onDeploy}
+                        >
+                            Deploy
+                        </button>
                     </Grid>
                     <Grid item>
-                        <Button variant="contained" color="secondary" onClick={this.props.onReset}>Reset</Button>
+                        <button
+                            className="jp-Dialog-button jp-mod-reject jp-mod-styled"
+                            onClick={this.props.onReset}
+                        >
+                            Reset
+                        </button>
                     </Grid>
                 </Grid>
             </>
