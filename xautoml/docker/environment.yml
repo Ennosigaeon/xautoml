@@ -1,0 +1,7 @@
+name: xautoml-deployment
+
+dependencies:
+    - pip
+    -   pip:
+            - dswizard-components~=0.2.2
+            - dswizard~=0.2.4

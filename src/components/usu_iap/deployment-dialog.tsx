@@ -19,17 +19,17 @@ export class GoDeploymentComponent {
     constructor(private fileName: string, private readonly fileBrowser: FileBrowser) {
         const name = basename(fileName, '.csv')
 
-        this.model = new DeploymentModel(DeploymentIdUtils.suggestDeploymentId(name), 500, 1)
+        this.model = new DeploymentModel(DeploymentIdUtils.suggestDeploymentId(name), 1024, 500)
 
         this.openFileBrowser = this.openFileBrowser.bind(this)
-        this.onConfigChange = this.onConfigChange.bind(this)
+        this.onValidation = this.onValidation.bind(this)
     }
 
     open() {
         const body = <DialogContent model={this.model}
                                     fileBrowser={this.fileBrowser}
                                     onOpenFileBrowser={this.openFileBrowser}
-                                    onConfigChange={this.onConfigChange}/>
+                                    onValidation={this.onValidation}/>
 
         this.dialog = new Dialog({
             title: 'Create new Deployment Instance',
@@ -44,6 +44,8 @@ export class GoDeploymentComponent {
         this.dialog.launch().then((event: Dialog.IResult<DeploymentModel>) => {
             if (!event.button.accept)
                 return
+
+            this.model.active = event.button.label === 'Activate';
 
             const widget = <WaitingComponent config={this.model}/>
             const deployingDialog = new Dialog({
@@ -68,7 +70,7 @@ export class GoDeploymentComponent {
         })
     }
 
-    private onConfigChange(config: DeploymentModel, valid: boolean) {
+    private onValidation(valid: boolean) {
         const disabled = !valid
         const buttons = this.dialog.node.getElementsByClassName('jp-Dialog-button jp-mod-accept jp-mod-styled')
         for (const button of buttons)
@@ -82,7 +84,7 @@ interface DialogProps {
     model: DeploymentModel
     fileBrowser: FileBrowser;
     onOpenFileBrowser: () => void;
-    onConfigChange: (model: DeploymentModel, valid: boolean) => void
+    onValidation: (valid: boolean) => void
 }
 
 interface DialogState {
@@ -91,6 +93,8 @@ interface DialogState {
 }
 
 class DialogContent extends React.Component<DialogProps, DialogState> {
+
+    private readonly configMapRegex = RegExp(/^\w+=\w+$/, 'g')
 
     constructor(props: DialogProps) {
         super(props);
@@ -106,7 +110,6 @@ class DialogContent extends React.Component<DialogProps, DialogState> {
     }
 
     private changeHandler(key: string, value: any) {
-        // TODO there got to be a better way
         if (key === 'id')
             this.props.model.id = value
         else if (key == 'deploymentDescription')
@@ -124,14 +127,20 @@ class DialogContent extends React.Component<DialogProps, DialogState> {
         else
             throw new Error(`Unknown field ${key}`)
 
-        this.props.onConfigChange(this.props.model, this.isValidModel(this.props.model))
+        this.props.onValidation(this.isValidModel(this.props.model))
         this.forceUpdate()
     }
 
     private isValidModel(model: DeploymentModel): boolean {
+        const configValid = model.configMap
+            .split('\n')
+            .map(line => line.trim().length === 0 || this.configMapRegex.test(line))
+            .reduce((prev, cur) => prev && cur, true)
+
         return !!model.id && DeploymentIdUtils.isValidId(model.id) &&
             model.memoryResources >= this.state.limits.memory[0] && model.memoryResources <= this.state.limits.memory[1] &&
-            model.cpuResources >= this.state.limits.memory[0] && model.memoryResources <= this.state.limits.memory[1]
+            model.cpuResources >= this.state.limits.memory[0] && model.memoryResources <= this.state.limits.memory[1] &&
+            configValid
     }
 
     render() {
@@ -276,10 +285,6 @@ class DialogContent extends React.Component<DialogProps, DialogState> {
                             </ul>
                         </label>
                     </div>
-                </div>
-                <div className="hint">
-                    <i>Note:</i> The current folder's Anaconda <label className="monospace">environment.yml</label> will
-                    be loaded into deployments. This can be used to install additional dependencies.
                 </div>
             </div>
         )

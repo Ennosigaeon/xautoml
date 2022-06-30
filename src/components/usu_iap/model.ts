@@ -8,7 +8,7 @@ export class DeploymentModel {
         public deploymentDescription: string = '',
         public instanceDescription: string = '',
         public active: boolean = false,
-        public configMap: string = '{}',
+        public configMap: string = '',
     ) {
     }
 }

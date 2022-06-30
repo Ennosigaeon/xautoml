@@ -108,6 +108,12 @@ render_xautoml()
 
     private deployModel() {
         const file = this.dataSetConfigRef.current.state.config.inputFile
+
+        this.props.kernel.executeCode<IMimeBundle>(`
+from xautoml.gui import export
+export('ENSEMBLE')
+        `)
+
         new GoDeploymentComponent(file, this.props.fileBrowserFactory.createFileBrowser('usu_iap')).open()
     }
 

@@ -1,18 +1,17 @@
 from typing import Tuple
 
 import numpy as np
-import openml
 import pandas as pd
-from openml import OpenMLClassificationTask
 from sklearn.model_selection import train_test_split
 
 
 def openml_task(task: int, fold: int, train: bool = False, test: bool = False):
+    import openml
     if test == train:
         raise ValueError('Please set either train or test to True')
 
     # noinspection PyTypeChecker
-    task: OpenMLClassificationTask = openml.tasks.get_task(task)
+    task: openml.tasks.OpenMLClassificationTask = openml.tasks.get_task(task)
     train_indices, test_indices = task.get_train_test_split_indices(fold=fold)
 
     X, y = task.get_X_and_y(dataset_format='dataframe')

@@ -1,9 +1,8 @@
-import json
-
 import requests
 import tornado.web
 
 from xautoml.usu_iap import BaseHandler
+from xautoml.usu_iap.iap_service import UsuPlatformApiService
 
 
 class IAPLimitsHandler(BaseHandler):
@@ -42,23 +41,8 @@ class IAPLimitsHandler(BaseHandler):
             self.send_error(500, message='Unknown error while getting resources.')
 
     def get_deployment_resources(self) -> requests.Response:
-        # api_service = UsuPlatformApiService(config=self.config)
-        # return api_service.get('ia/v1/go/deployments/resources', req=self.request)
-
-        # TODO remove mock
-        response = requests.Response()
-        response.status_code = 200
-        response._content = str.encode(json.dumps({
-            'memoryResource': {
-                'min': 100,
-                'max': 1000,
-            },
-            'cpuResource': {
-                'min': 0.5,
-                'max': 4
-            },
-        }))
-        return response
+        api_service = UsuPlatformApiService(config=self.config)
+        return api_service.get('ia/v1/go/deployments/resources')
 
     @staticmethod
     def _extract_resource_config(json_resp):

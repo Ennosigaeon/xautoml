@@ -10,7 +10,7 @@ def _fetchVersion():
     for settings in HERE.rglob("package.json"):
         try:
             with settings.open() as f:
-                return json.load(f)["version"]
+                return json.load(f).get("version", "0.0.0")
         except FileNotFoundError:
             pass
 
