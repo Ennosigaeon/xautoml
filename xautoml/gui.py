@@ -1,8 +1,14 @@
-from typing import List, Dict, Any
+import os.path
+import pickle
+import tempfile
+from typing import List, Dict, Any, Optional
 
 import pandas as pd
 
 from xautoml.main import as_json, XAutoML
+from xautoml.models import CandidateId
+
+main: Optional[XAutoML] = None
 
 
 @as_json
@@ -58,6 +64,14 @@ def optimize(optimizer: str, duration: int, timeout: int, metric: str, config_st
         return _optimize_dswizard(X, y, duration, timeout, metric, additional_config)
     elif optimizer == 'auto-sklearn':
         return _optimize_auto_sklearn(X, y, duration, timeout, metric, additional_config)
+
+
+def export(cid: CandidateId):
+    global main
+
+    _, _, pipeline = main.pipeline(cid)
+    with open(os.path.join(tempfile.gettempdir(), 'xautoml.pkl'), 'wb') as f:
+        pickle.dump(pipeline, f)
 
 
 def render_xautoml():

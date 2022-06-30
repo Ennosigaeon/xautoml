@@ -8,11 +8,14 @@ import {OutputPanel} from "./output";
 import {ProgressBar} from "./progress";
 import {Result} from "./result";
 import {ClassifierConfiguration} from "./classifier_configuration";
-import {Box, Button} from "@material-ui/core";
+import {Box} from "@material-ui/core";
 import {IMimeBundle} from "@jupyterlab/nbformat";
 import ReactRoot from "../../xautoml";
 import {RunHistory} from "../../model";
-
+import {GoDeploymentComponent} from "../usu_iap/deployment-dialog";
+import {IAPService} from "../usu_iap/service";
+import {PathExt} from "@jupyterlab/coreutils";
+import basename = PathExt.basename;
 
 interface ClassificationRootState {
     running: boolean
@@ -23,6 +26,8 @@ interface ClassificationRootState {
     dataSetValid: boolean
 
     runhistory: RunHistory
+
+    deploymentEnabled: boolean
 }
 
 interface ClassificationRootProps {
@@ -49,7 +54,9 @@ export class ClassificationRoot extends React.Component<ClassificationRootProps,
             classifierValid: true,
             dataSetValid: false,
 
-            runhistory: undefined
+            runhistory: undefined,
+
+            deploymentEnabled: false
         }
 
         this.startOptimization = this.startOptimization.bind(this)
@@ -59,6 +66,11 @@ export class ClassificationRoot extends React.Component<ClassificationRootProps,
         this.reset = this.reset.bind(this)
         this.openXAutoML = this.openXAutoML.bind(this)
         this.deployModel = this.deployModel.bind(this)
+    }
+
+    componentDidMount() {
+        IAPService.enabled().then(enabled => this.setState({deploymentEnabled: enabled}))
+            .catch(_ => this.setState({deploymentEnabled: false}))
     }
 
     componentWillUnmount() {
@@ -107,13 +119,23 @@ render_xautoml()
     }
 
     private deployModel() {
-        // TODO
+        if (!this.state.deploymentEnabled) {
+            window.alert('Deployment not enabled')
+            return
+        }
+
+        this.props.kernel.executeCode<IMimeBundle>(`
+from xautoml.gui import export
+export('ENSEMBLE')
+        `)
+        const name = basename(this.dataSetConfigRef.current.state.config.inputFile, '.csv')
+        new GoDeploymentComponent(name, this.props.fileBrowserFactory.createFileBrowser('usu_iap')).open()
     }
 
     render() {
         if (!!this.state.runhistory) {
             const runHistory = RunHistory.fromJson(this.state.runhistory);
-            const jupyter = new Jupyter(undefined, undefined, this.props.kernel.getSessionContext())
+            const jupyter = new Jupyter(undefined, undefined, this.props.kernel.getSessionContext(), this.props.fileBrowserFactory)
             return <ReactRoot runHistory={runHistory} jupyter={jupyter}/>
         }
 
@@ -135,11 +157,13 @@ render_xautoml()
                                                                  ref={this.classifierConfigRef}/>
 
                                         <hr style={{minWidth: '80%'}}/>
-                                        <Button variant="contained" color="primary"
-                                                disabled={!this.state.dataSetValid || !this.state.classifierValid}
-                                                onClick={this.startOptimization}>
+                                        <button
+                                            className="jp-Dialog-button jp-mod-accept jp-mod-styled"
+                                            disabled={!this.state.dataSetValid || !this.state.classifierValid}
+                                            onClick={this.startOptimization}
+                                        >
                                             Submit
-                                        </Button>
+                                        </button>
                                     </>
                                 }
                                 {this.state.running && <ProgressBar duration={this.state.duration}/>}

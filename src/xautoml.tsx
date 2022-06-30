@@ -12,6 +12,7 @@ import {TabPanel} from "./util/tabpanel";
 import {SearchSpace} from "./components/search_space";
 import {GeneralInformation} from "./components/optimization_overview";
 import {Ensemble} from "./components/ensemble";
+import {IAPService} from "./components/usu_iap/service";
 
 
 /**
@@ -66,6 +67,7 @@ interface ReactRootState {
     openTab: string
     mounted: boolean
     hideUnselected: boolean
+    iapEnabled: boolean
 }
 
 export default class ReactRoot extends React.Component<ReactRootProps, ReactRootState> {
@@ -80,7 +82,8 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
             mounted: false,
             openTab: '1',
             showCandidate: undefined,
-            hideUnselected: false
+            hideUnselected: false,
+            iapEnabled: false
         }
 
         this.onCandidateSelection = this.onCandidateSelection.bind(this)
@@ -116,6 +119,9 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
             // Jupyter renders all components before output containers are rendered.
             // Delay rendering to get the container width.
             window.setTimeout(() => this.setState({mounted: true}), 100)
+
+        IAPService.enabled().then(enabled => this.setState({iapEnabled: enabled}))
+            .catch(_ => this.setState({iapEnabled: false}))
     }
 
     componentWillUnmount() {
@@ -132,7 +138,7 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
 
     render() {
         const {runHistory, jupyter} = this.props
-        const {selectedCandidates, showCandidate, mounted, openTab, hideUnselected} = this.state
+        const {selectedCandidates, showCandidate, mounted, openTab, hideUnselected, iapEnabled} = this.state
 
         class DivInTabs extends React.Component<any> {
             render() {
@@ -204,6 +210,7 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
                                              meta={runHistory.meta}
                                              explanations={runHistory.explanations}
                                              showCandidate={showCandidate}
+                                             iapEnabled={iapEnabled}
                                              onCandidateSelection={this.onCandidateSelection}
                                              onCandidateHide={this.onCandidateHide}/>
                             </TabPanel>

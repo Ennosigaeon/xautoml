@@ -27,6 +27,7 @@ import {Components} from "./util";
 import memoizee from "memoizee";
 import SOURCE = Components.SOURCE;
 import {ISessionContext} from "@jupyterlab/apputils";
+import {IFileBrowserFactory} from "@jupyterlab/filebrowser";
 
 export class ServerError extends Error {
 
@@ -139,7 +140,11 @@ export class Jupyter {
     private initialized: boolean
     public readonly collapsedState = new OpenedCache()
 
-    constructor(private notebooks: INotebookTracker = undefined, private tags: TagTool = undefined, private sessionContext: ISessionContext = undefined) {
+    constructor(private notebooks: INotebookTracker = undefined,
+                private tags: TagTool = undefined,
+                private sessionContext: ISessionContext = undefined,
+                public readonly fileBrowserFactory: IFileBrowserFactory = undefined
+    ) {
         this.previousCellContent = localStorage.getItem(this.LOCAL_STORAGE_CONTENT)
 
         this.initialized = false
