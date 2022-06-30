@@ -5,8 +5,10 @@ from jupyter_server.utils import url_path_join
 from xautoml.usu_iap import BaseHandler
 from xautoml.usu_iap.config_handler import IAPLimitsHandler
 from xautoml.usu_iap.deployment_handler import IAPDeploymentRouteHandler
+from xautoml.usu_iap.enabled_handler import IAPEnabledHandler
 
 handlers: List[Type[BaseHandler]] = [
+    IAPEnabledHandler,
     IAPLimitsHandler,
     IAPDeploymentRouteHandler,
 ]

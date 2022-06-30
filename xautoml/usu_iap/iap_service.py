@@ -9,7 +9,7 @@ class IAPAuth(Configurable):
     client_id = Unicode(default_value='ia', config=True)
     offline_token = Unicode(config=True)
 
-    def get_token(self):
+    def get_token(self) -> str:
         assert self.offline_token != '', 'Provide valid offline token via IAPAuth.offline_token configuration'
 
         response = requests.post(
@@ -21,6 +21,9 @@ class IAPAuth(Configurable):
             })
         body = response.json()
         return body['access_token']
+
+    def enabled(self) -> bool:
+        return self.offline_token != ''
 
 
 class UsuPlatformApiService(Configurable):

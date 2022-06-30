@@ -83,4 +83,8 @@ export namespace IAPService {
             method: 'POST'
         });
     }
+
+    export function enabled(): Promise<boolean> {
+        return RestApiService.requestAPI<boolean>('iap', {method: 'GET'})
+    }
 }

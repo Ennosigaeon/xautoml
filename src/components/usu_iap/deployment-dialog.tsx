@@ -8,7 +8,6 @@ import {PathExt} from "@jupyterlab/coreutils";
 import {WaitingComponent} from "./waiting-dialog";
 import {IAPService} from "./service";
 import {LoadingIndicator} from "../../util/loading";
-import basename = PathExt.basename;
 import {ErrorIndicator} from "../../util/error";
 
 export class GoDeploymentComponent {
@@ -16,9 +15,7 @@ export class GoDeploymentComponent {
     private dialog: Dialog<any>
     private readonly model: DeploymentModel
 
-    constructor(private fileName: string, private readonly fileBrowser: FileBrowser) {
-        const name = basename(fileName, '.csv')
-
+    constructor(private name: string, private readonly fileBrowser: FileBrowser) {
         this.model = new DeploymentModel(DeploymentIdUtils.suggestDeploymentId(name), 1024, 500)
 
         this.openFileBrowser = this.openFileBrowser.bind(this)

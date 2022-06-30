@@ -35,7 +35,9 @@ const extension: JupyterFrontEndPlugin<void> = {
         const rendererFactory: IRenderMime.IRendererFactory = {
             safe: true,
             mimeTypes: [MIME_TYPE],
-            createRenderer: (options) => new JupyterWidget(MIME_TYPE, new Jupyter(notebooks, new TagTool(notebooks, app))),
+            createRenderer: (options) => new JupyterWidget(
+                MIME_TYPE, new Jupyter(notebooks, new TagTool(notebooks, app), undefined, fileBrowserFactory)
+            ),
         };
 
         // Add a renderer factory to application rendermime registry.

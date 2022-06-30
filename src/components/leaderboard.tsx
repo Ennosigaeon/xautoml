@@ -6,7 +6,7 @@ import TablePagination from '@material-ui/core/TablePagination';
 import TableRow from '@material-ui/core/TableRow';
 import TableSortLabel from '@material-ui/core/TableSortLabel';
 import Checkbox from '@material-ui/core/Checkbox';
-import {Box, IconButton, Menu, MenuItem, Table, TableContainer} from '@material-ui/core';
+import {Box, Button, IconButton, Menu, MenuItem, Table, TableContainer} from '@material-ui/core';
 import {Candidate, CandidateId, Explanations, MetaInformation, PipelineStep, Structure} from '../model';
 import {Components, JupyterContext, prettyPrint} from '../util';
 import {PipelineVisualizationComponent} from './details/pipeline_visualization';
@@ -18,7 +18,9 @@ import {JupyterButton} from "../util/jupyter-button";
 import {ID} from "../jupyter";
 import {MoreVert} from "@material-ui/icons";
 import {Comparison} from "./comparison";
-import {DetailsModel, ComparisonType} from "./details/model";
+import {ComparisonType, DetailsModel} from "./details/model";
+import {IMimeBundle} from "@jupyterlab/nbformat";
+import {GoDeploymentComponent} from "./usu_iap/deployment-dialog";
 
 interface SingleCandidate {
     id: CandidateId;
@@ -110,6 +112,7 @@ interface LeaderboardRowProps {
     explanations: Explanations
 
     open: boolean
+    iapEnabled: boolean
 }
 
 interface LeaderboardRowState {
@@ -132,6 +135,7 @@ class LeaderboardRow extends React.Component<LeaderboardRowProps, LeaderboardRow
         this.onRowClick = this.onRowClick.bind(this)
         this.onCheckBoxClick = this.onCheckBoxClick.bind(this)
         this.onHide = this.onHide.bind(this)
+        this.onDeploy = this.onDeploy.bind(this)
     }
 
     componentDidUpdate(prevProps: Readonly<LeaderboardRowProps>, prevState: Readonly<LeaderboardRowState>, snapshot?: any) {
@@ -188,8 +192,18 @@ ${ID}_pipeline
         this.props.onRowHide(this.props.candidate.id)
     }
 
+    private onDeploy(e: React.MouseEvent) {
+        this.context.executeCode<IMimeBundle>(`
+from xautoml.gui import export
+export('${this.props.candidate.id}')
+        `)
+        new GoDeploymentComponent('', this.context.fileBrowserFactory.createFileBrowser('usu_iap')).open()
+
+        e.stopPropagation()
+    }
+
     render() {
-        const {candidate, meta, selected, structures, explanations, onComparisonRequest} = this.props
+        const {candidate, meta, selected, structures, explanations, onComparisonRequest, iapEnabled} = this.props
         const {open} = this.state
 
         const selectedComponent = (open && this.state.selectedComponent[0] === undefined) ?
@@ -218,6 +232,7 @@ ${ID}_pipeline
                     </TableCell>
                     <TableCell>
                         <JupyterButton onClick={this.openCandidateInJupyter} active={this.context.canCreateCell()}/>
+                        {iapEnabled && <Button onClick={this.onDeploy}>Go</Button>}
                         <IconButton aria-label='expand row' size='small' onClick={this.toggleDetails}>
                             {this.state.open ? <KeyboardArrowUpIcon/> : <KeyboardArrowDownIcon/>}
                         </IconButton>
@@ -306,6 +321,7 @@ interface LeaderboardProps {
     explanations: Explanations;
     onCandidateSelection: (cid: Set<CandidateId>) => void;
     onCandidateHide: (cid: CandidateId) => void;
+    iapEnabled: boolean;
 }
 
 interface LeaderboardState {
@@ -425,7 +441,7 @@ export class Leaderboard extends React.Component<LeaderboardProps, LeaderboardSt
     }
 
     render() {
-        const {structures, explanations, hiddenCandidates} = this.props
+        const {structures, explanations, hiddenCandidates, iapEnabled} = this.props
         const {rows, order, orderBy, page, rowsPerPage} = this.state
 
         const headCells: HeaderCell[] = [
@@ -469,6 +485,7 @@ export class Leaderboard extends React.Component<LeaderboardProps, LeaderboardSt
                                                         structures={structures}
                                                         explanations={explanations}
                                                         onComparisonRequest={this.handleComparisonRequest}
+                                                        iapEnabled={iapEnabled}
                                                         open={row.id === this.props.showCandidate}/>
                                     );
                                 })}
