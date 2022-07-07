@@ -114,6 +114,7 @@ export class KernelWrapper {
         }
 
         return request.done.then(() => {
+            console.log(code)
             console.log(outputBuffer.join('\n'))
             if (error) {
                 throw new ServerError(error.ename, error.evalue, error.traceback)

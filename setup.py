@@ -49,6 +49,7 @@ setup_args = dict(
         "lime~=0.2",
         "fanova~=2.0",
         "dswizard-components~=0.2",
+        "scikit-learn~=1.0",
         "openml~=0.12",
         "pandas>=1.3.0"
     ],

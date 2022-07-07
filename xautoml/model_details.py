@@ -247,6 +247,9 @@ class ModelDetails:
         for target_idx, target in enumerate(targets):
             result[target] = {'y_range': pdp_lim[target], 'features': {}}
             for feature_idx, pd_result in zip(features, pd_results):
+                if isinstance(feature_idx, tuple):
+                    feature_idx = feature_idx[0]
+
                 feature = {}
                 rng = check_random_state(1)
                 feature_values = pd_result["values"][0].tolist()
