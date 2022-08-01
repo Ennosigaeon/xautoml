@@ -579,17 +579,23 @@ text.pc-axis-label:hover {
 
 
 /** Comparison **/
-.comparison-anchor {
-    position: relative;
+.overlay-anchor {
+    display: grid;
+    grid-template-rows: 1fr;
 }
 
-.comparison-container {
+.overlay-container {
     padding: 10px;
-    width: 1000px;
-    position: absolute;
-    right: 0;
-    top: 0;
+    width: -webkit-calc(100% - 230px);
+    width:    -moz-calc(100% - 230px);
+    width:         calc(100% - 230px);
+    margin-left: 230px;
+    min-height: 100%;
     background-color: white;
+    box-sizing: border-box;
+    grid-row-start: 1;
+    grid-column-start: 1;
+    z-index: 1;
 }
 
 

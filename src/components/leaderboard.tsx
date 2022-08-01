@@ -21,6 +21,7 @@ import {Comparison} from "./comparison";
 import {ComparisonType, DetailsModel} from "./details/model";
 import {IMimeBundle} from "@jupyterlab/nbformat";
 import {GoDeploymentComponent} from "./usu_iap/deployment-dialog";
+import {Overlay} from "../util/overlay";
 
 interface SingleCandidate {
     id: CandidateId;
@@ -332,6 +333,7 @@ interface LeaderboardState {
     rowsPerPage: number
 
     selectedRow: number
+    selectedCandidate: CandidateId
     comparisonType: ComparisonType
 }
 
@@ -452,8 +454,8 @@ export class Leaderboard extends React.Component<LeaderboardProps, LeaderboardSt
         ];
 
         return (
-            <div className={'comparison-anchor'}>
-                <TableContainer>
+            <div className={'overlay-anchor'}>
+                <TableContainer style={{gridRowStart: 1, gridColumnStart: 1}}>
                     <Table style={{tableLayout: 'fixed'}}
                            size="small"
                            onMouseDown={(e => {
@@ -504,10 +506,11 @@ export class Leaderboard extends React.Component<LeaderboardProps, LeaderboardSt
 
 
                 {this.state.comparisonType !== undefined &&
-                    <Comparison meta={this.props.meta} type={this.state.comparisonType}
-                                onClose={() => this.handleComparisonRequest(undefined, undefined)}
-                                models={rows.filter(r => this.props.selectedCandidates.has(r.id))
-                                    .map(r => new DetailsModel(r.candidate[0], r.candidate[1], Components.SOURCE, Components.SOURCE, this.state.selectedRow))}/>
+                    <Overlay title={'Comparison'} onClose={() => this.handleComparisonRequest(undefined, undefined)}>
+                        <Comparison meta={this.props.meta} type={this.state.comparisonType}
+                                    models={rows.filter(r => this.props.selectedCandidates.has(r.id))
+                                        .map(r => new DetailsModel(r.candidate[0], r.candidate[1], Components.SOURCE, Components.SOURCE, this.state.selectedRow))}/>
+                    </Overlay>
                 }
             </div>
         )

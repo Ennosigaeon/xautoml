@@ -7,8 +7,6 @@ import {Label} from "../dao";
 import {GlobalSurrogateComponent} from "./details/global_surrogate";
 import {HPImportanceComp} from "./details/hp_importance";
 import {CollapseComp} from "../util/collapse";
-import {ArrowForwardIos} from "@material-ui/icons";
-import {IconButton} from "@material-ui/core";
 import {HyperparameterTable} from "./details/pipeline_hyperparameters";
 import {PerformanceDetailsComponent} from "./details/performance_details";
 
@@ -17,8 +15,6 @@ interface ComparisonProps {
     models: DetailsModel[]
     meta: MetaInformation
     type: ComparisonType
-
-    onClose: () => void
 }
 
 interface ComparisonState {
@@ -68,14 +64,7 @@ export class Comparison extends React.Component<ComparisonProps, ComparisonState
         const n = 3
 
         return (
-            <div className={'comparison-container container'}>
-                <div style={{display: "flex", marginBottom: '10px'}}>
-                    <IconButton style={{flexShrink: 1, maxHeight: '18px'}} size='small' onClick={this.props.onClose}>
-                        <ArrowForwardIos/>
-                    </IconButton>
-                    <h3 style={{margin: 0, lineHeight: '24px', textAlign: 'center'}}>Comparisons</h3>
-                </div>
-
+            <>
                 {models.length > n && <p>Only up to {n} models can be compared at once</p>}
                 {models.slice(0, n).map(model =>
                     <CollapseComp showInitial={true} key={model.candidate.id}>
@@ -98,12 +87,11 @@ export class Comparison extends React.Component<ComparisonProps, ComparisonState
                                               onHpChange={this.onHpImportanceChange}
                                               selectedHp1={this.state.hpImportanceSelectedHp1}
                                               selectedHp2={this.state.hpImportanceSelectedHp2}/>}
-
                         {type === 'configuration' &&
                             <HyperparameterTable config={model.candidate.config} twoColumns={true}/>}
                     </CollapseComp>
                 )}
-            </div>
+            </>
         )
     }
 
