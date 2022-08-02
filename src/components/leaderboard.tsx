@@ -72,7 +72,7 @@ class LeaderboardHeader extends React.Component<LeaderboardHeaderProps> {
                     {headCells.map(headCell => (
                         <TableCell
                             key={headCell.id}
-                            align={headCell.numeric ? 'right' : 'left'}
+                            align={headCell.numeric ? 'right' : 'center'}
                             sortDirection={orderBy === headCell.id ? order : false}
                             style={{width: headCell.width}}
                         >
@@ -185,11 +185,12 @@ export('${this.props.candidate.id}')
                         </div>
                     </TableCell>
                     <TableCell>
-                        <JupyterButton onClick={this.openCandidateInJupyter} active={this.context.canCreateCell()}/>
-                        {iapEnabled && <Button onClick={this.onDeploy} style={{margin: '0 10px'}}>Deploy</Button>}
                         <IconButton aria-label='expand row' size='small'>
                             <Search/>
                         </IconButton>
+                        <JupyterButton onClick={this.openCandidateInJupyter} active={this.context.canCreateCell()}
+                                       style={{margin: '0 10px'}}/>
+                        {iapEnabled && <Button onClick={this.onDeploy}>Deploy</Button>}
                         {/*<BasicMenu onHide={this.onHide}/>*/}
                     </TableCell>
                 </TableRow>
