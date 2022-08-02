@@ -139,7 +139,7 @@ tr.MuiTableRow-root.MuiTableRow-hover:hover {
     cursor: pointer;
     border: 1px solid var(--border-color);
     border-radius: 5px;
-    padding: 2px 5px;
+    padding: 3px 5px;
     width: 100%;
     overflow: hidden;
     text-align: center;
