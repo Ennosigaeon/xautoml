@@ -27,10 +27,19 @@ export function TabPanel(props: TabPanelProps) {
     return (
         <>
             {visited &&
-            // @ts-ignore
-            <div className={'MuiTabPanel-root'}
-                 style={{paddingTop: '10px', ...style, display: id === tabId ? "block" : "none",}}
-                 {...other}>{children}</div>}
+                // @ts-ignore
+                <div className={'MuiTabPanel-root'}
+                     style={{paddingTop: '10px', ...style, display: id === tabId ? "block" : "none",}}
+                     {...other}>{children}</div>}
         </>
     )
+}
+
+
+export class DivInTabs extends React.Component<any> {
+    render() {
+        let {children, style} = this.props;
+        return <div style={style} className={'MuiButtonBase-root MuiTab-root MuiTab-textColorInherit'}
+                    onClick={e => e.stopPropagation()} children={children}/>;
+    }
 }

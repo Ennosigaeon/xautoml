@@ -1,6 +1,6 @@
 import React from "react";
 import {Candidate, Explanations, MetaInformation, PipelineStep, Structure} from "../model";
-import {Components, JupyterContext} from "../util";
+import {Colors, Components, JupyterContext} from "../util";
 import {TwoColumnLayout} from "../util/layout";
 import {LocalSurrogateComponent} from "./details/local_surrogate";
 import {FeatureImportanceComponent} from "./details/feature_importance";
@@ -12,7 +12,13 @@ import {PerformanceDetailsComponent} from "./details/performance_details";
 import {HPImportanceComp} from "./details/hp_importance";
 import {ConfigurationComponent} from "./details/configuration";
 import {PipelineVisualizationComponent} from "./details/pipeline_visualization";
-import {Box} from "@material-ui/core";
+import {Box, Button, Tab, Tabs} from "@material-ui/core";
+import {TabContext} from "@material-ui/lab";
+import {DivInTabs, TabPanel} from "../util/tabpanel";
+import {JupyterButton} from "../util/jupyter-button";
+import {ID} from "../jupyter";
+import {IMimeBundle} from "@jupyterlab/nbformat";
+import {GoDeploymentComponent} from "./usu_iap/deployment-dialog";
 
 interface CandidateInspectionsProps {
     candidate: Candidate
@@ -22,6 +28,7 @@ interface CandidateInspectionsProps {
     structures: Structure[]
     explanations: Explanations
 
+    iapEnabled: boolean
     onComparisonRequest: (type: ComparisonType, selectedRow: number) => void
 }
 
@@ -29,6 +36,7 @@ interface CandidateInspectionsState {
     selectedSample: number
     componentId: string
     componentLabel: string
+    openTab: string
 }
 
 export class CandidateInspections extends React.Component<CandidateInspectionsProps, CandidateInspectionsState> {
@@ -36,23 +44,23 @@ export class CandidateInspections extends React.Component<CandidateInspectionsPr
     static contextType = JupyterContext;
     context: React.ContextType<typeof JupyterContext>;
 
-    static readonly DOMAIN_HELP = 'Contains details about the behaviour of the selected model. All information ' +
-        'required to validate the behaviour of the model are available here.'
-
-    static readonly ML_HELP = 'Contains details about the creation of this model and the importance of its ' +
-        'hyperparameters.'
-
-    constructor(props: CandidateInspectionsProps) {
-        super(props);
+    constructor(props: CandidateInspectionsProps, context: React.ContextType<typeof JupyterContext>) {
+        super(props, context);
         this.state = {
             selectedSample: undefined,
             componentId: Components.SOURCE,
-            componentLabel: Components.SOURCE
+            componentLabel: Components.SOURCE,
+            openTab: this.context?.collapsedState.get<string>('candidate-inspection') || '1'
         }
+
+        this.context?.collapsedState.setIfNotPresent<string>('candidate-inspection', this.state.openTab)
 
         this.handleSampleSelection = this.handleSampleSelection.bind(this)
         this.onComparisonRequest = this.onComparisonRequest.bind(this)
         this.openComponent = this.openComponent.bind(this)
+        this.switchTab = this.switchTab.bind(this)
+        this.openCandidateInJupyter = this.openCandidateInJupyter.bind(this)
+        this.onDeploy = this.onDeploy.bind(this)
     }
 
     private openComponent(step: PipelineStep) {
@@ -72,6 +80,29 @@ export class CandidateInspections extends React.Component<CandidateInspectionsPr
         this.props.onComparisonRequest(type, this.state.selectedSample)
     }
 
+    private switchTab(_: any, selectedTab: string) {
+        this.setState({openTab: selectedTab})
+        this.context?.collapsedState.set<string>('candidate-inspection', selectedTab)
+    }
+
+    private openCandidateInJupyter(e: React.MouseEvent) {
+        this.context.createCell(`
+${ID}_X, ${ID}_y, ${ID}_pipeline = gcx().pipeline('${this.props.candidate.id}')
+${ID}_pipeline
+        `.trim())
+        e.stopPropagation()
+    }
+
+    private onDeploy(e: React.MouseEvent) {
+        this.context.executeCode<IMimeBundle>(`
+from xautoml.gui import export
+export('${this.props.candidate.id}')
+        `)
+        new GoDeploymentComponent('', this.context.fileBrowserFactory.createFileBrowser('usu_iap')).open()
+
+        e.stopPropagation()
+    }
+
     render() {
         const {candidate, structure, meta, structures, explanations} = this.props
         const {selectedSample, componentId, componentLabel} = this.state
@@ -79,7 +110,26 @@ export class CandidateInspections extends React.Component<CandidateInspectionsPr
         const model = new DetailsModel(structure, candidate, componentId, componentLabel, selectedSample)
 
         return (
-            <>
+            <TabContext value={this.state.openTab}>
+                <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
+                    <Tabs value={this.state.openTab} onChange={this.switchTab} TabIndicatorProps={{
+                        style: {backgroundColor: Colors.HIGHLIGHT}
+                    }}>
+                        <Tab label="Domain Insights" value={'1'}/>
+                        <Tab label="Machine Learning Insights" value={'2'}/>
+
+                        <DivInTabs style={{marginLeft: 'auto'}}>
+                            <JupyterButton onClick={this.openCandidateInJupyter}
+                                           active={this.context.canCreateCell()}/>
+                        </DivInTabs>
+                        {this.props.iapEnabled && <DivInTabs>
+                            <Button onClick={this.onDeploy} style={{margin: '0 10px'}}>Deploy</Button>
+                        </DivInTabs>
+                        }
+
+                    </Tabs>
+                </Box>
+
                 <h3>Insights for <i>
                     {Components.isPipEnd(model.component) ? `${model.component === Components.SOURCE ? 'Beginning' : 'End'} of the Pipeline` : `${model.algorithm} (${model.component})`}
                 </i>
@@ -95,59 +145,51 @@ export class CandidateInspections extends React.Component<CandidateInspectionsPr
                                                     selectedComponent={componentId}
                                                     onComponentSelection={this.openComponent}/>
                 </Box>
-                <hr/>
 
-                <CollapseComp name={'domain-insights'} showInitial={false} help={CandidateInspections.DOMAIN_HELP}>
-                    <h3>Domain Insights</h3>
-                    <>
-                        <CollapseComp name={'performance'} showInitial={false} help={PerformanceDetailsComponent.HELP}
-                                      onComparisonRequest={() => this.onComparisonRequest('performance')}>
-                            <h3>Performance Details</h3>
-                            <PerformanceDetailsComponent model={model} meta={meta}/>
-                        </CollapseComp>
+                <TabPanel value={'1'}>
+                    <CollapseComp name={'performance'} showInitial={false} help={PerformanceDetailsComponent.HELP}
+                                  onComparisonRequest={() => this.onComparisonRequest('performance')}>
+                        <h3>Performance Details</h3>
+                        <PerformanceDetailsComponent model={model} meta={meta}/>
+                    </CollapseComp>
 
-                        <CollapseComp name={'raw-dataset'} showInitial={false} help={RawDataset.HELP}>
-                            <h3>Data Set Preview</h3>
-                            <TwoColumnLayout widthRight={'25%'}>
-                                <RawDataset model={model} onSampleClick={this.handleSampleSelection}/>
-                                <LocalSurrogateComponent model={model} orientation={'vertical'}
-                                                         onComparisonRequest={this.onComparisonRequest}/>
-                            </TwoColumnLayout>
-                        </CollapseComp>
+                    <CollapseComp name={'raw-dataset'} showInitial={false} help={RawDataset.HELP}>
+                        <h3>Data Set Preview</h3>
+                        <TwoColumnLayout widthRight={'25%'}>
+                            <RawDataset model={model} onSampleClick={this.handleSampleSelection}/>
+                            <LocalSurrogateComponent model={model} orientation={'vertical'}
+                                                     onComparisonRequest={this.onComparisonRequest}/>
+                        </TwoColumnLayout>
+                    </CollapseComp>
 
-                        <CollapseComp name={'feature-importance'} showInitial={false}
-                                      help={FeatureImportanceComponent.HELP}
-                                      onComparisonRequest={() => this.onComparisonRequest('feature_importance')}>
-                            <h3>Feature Importance</h3>
-                            <FeatureImportanceComponent model={model}/>
-                        </CollapseComp>
+                    <CollapseComp name={'feature-importance'} showInitial={false}
+                                  help={FeatureImportanceComponent.HELP}
+                                  onComparisonRequest={() => this.onComparisonRequest('feature_importance')}>
+                        <h3>Feature Importance</h3>
+                        <FeatureImportanceComponent model={model}/>
+                    </CollapseComp>
 
-                        <CollapseComp name={'global-surrogate'} showInitial={false} help={GlobalSurrogateComponent.HELP}
-                                      onComparisonRequest={() => this.onComparisonRequest('global_surrogate')}>
-                            <h3>Global Surrogate</h3>
-                            <GlobalSurrogateComponent model={model}/>
-                        </CollapseComp>
-                    </>
-                </CollapseComp>
+                    <CollapseComp name={'global-surrogate'} showInitial={false} help={GlobalSurrogateComponent.HELP}
+                                  onComparisonRequest={() => this.onComparisonRequest('global_surrogate')}>
+                        <h3>Global Surrogate</h3>
+                        <GlobalSurrogateComponent model={model}/>
+                    </CollapseComp>
+                </TabPanel>
 
-                <hr/>
-                <CollapseComp name={'ml-insights'} showInitial={false} help={CandidateInspections.ML_HELP}>
-                    <h3>Machine Learning Insights</h3>
-                    <>
-                        <CollapseComp name={'config-origin'} showInitial={false} help={ConfigurationComponent.HELP}
-                                      onComparisonRequest={() => this.onComparisonRequest('configuration')}>
-                            <h3>Model Details</h3>
-                            <ConfigurationComponent model={model} structures={structures} explanations={explanations}/>
-                        </CollapseComp>
+                <TabPanel value={'2'}>
+                    <CollapseComp name={'config-origin'} showInitial={false} help={ConfigurationComponent.HELP}
+                                  onComparisonRequest={() => this.onComparisonRequest('configuration')}>
+                        <h3>Model Details</h3>
+                        <ConfigurationComponent model={model} structures={structures} explanations={explanations}/>
+                    </CollapseComp>
 
-                        <CollapseComp name={'hp-importance'} showInitial={false} help={HPImportanceComp.HELP}
-                                      onComparisonRequest={() => this.onComparisonRequest('hp_importance')}>
-                            <h3>Hyperparameter Importance</h3>
-                            <HPImportanceComp model={model} metric={meta.metric}/>
-                        </CollapseComp>
-                    </>
-                </CollapseComp>
-            </>
+                    <CollapseComp name={'hp-importance'} showInitial={false} help={HPImportanceComp.HELP}
+                                  onComparisonRequest={() => this.onComparisonRequest('hp_importance')}>
+                        <h3>Hyperparameter Importance</h3>
+                        <HPImportanceComp model={model} metric={meta.metric}/>
+                    </CollapseComp>
+                </TabPanel>
+            </TabContext>
         )
     }
 }

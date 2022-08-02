@@ -18,7 +18,7 @@ import {IMimeBundle} from "@jupyterlab/nbformat";
 import {GoDeploymentComponent} from "./usu_iap/deployment-dialog";
 import {Overlay} from "../util/overlay";
 import {CandidateInspections} from "./candidate_inspections";
-import KeyboardArrowDownIcon from "@material-ui/icons/KeyboardArrowDown";
+import {Search} from "@material-ui/icons";
 
 interface SingleCandidate {
     id: CandidateId;
@@ -189,7 +189,7 @@ export('${this.props.candidate.id}')
                         <JupyterButton onClick={this.openCandidateInJupyter} active={this.context.canCreateCell()}/>
                         {iapEnabled && <Button onClick={this.onDeploy} style={{margin: '0 10px'}}>Deploy</Button>}
                         <IconButton aria-label='expand row' size='small'>
-                            <KeyboardArrowDownIcon/>
+                            <Search/>
                         </IconButton>
                         {/*<BasicMenu onHide={this.onHide}/>*/}
                     </TableCell>
@@ -463,6 +463,7 @@ export class Leaderboard extends React.Component<LeaderboardProps, LeaderboardSt
                             meta={this.props.meta}
                             explanations={explanations}
                             onComparisonRequest={this.handleComparisonRequest}
+                            iapEnabled={this.props.iapEnabled}
                             structures={structures}/>
                     </Overlay>
                 }

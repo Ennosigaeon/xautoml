@@ -8,7 +8,7 @@ import {Jupyter} from "./jupyter";
 import {LoadingIndicator} from "./util/loading";
 import {Box, Button, Tab, Tabs} from "@material-ui/core";
 import {TabContext} from "@material-ui/lab";
-import {TabPanel} from "./util/tabpanel";
+import {DivInTabs, TabPanel} from "./util/tabpanel";
 import {SearchSpace} from "./components/search_space";
 import {GeneralInformation} from "./components/optimization_overview";
 import {Ensemble} from "./components/ensemble";
@@ -139,14 +139,6 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
     render() {
         const {runHistory, jupyter} = this.props
         const {selectedCandidates, showCandidate, mounted, openTab, hideUnselected, iapEnabled} = this.state
-
-        class DivInTabs extends React.Component<any> {
-            render() {
-                let {children, style} = this.props;
-                return <div style={style} className={'MuiButtonBase-root MuiTab-root MuiTab-textColorInherit'}
-                            onClick={e => e.stopPropagation()} children={children}/>;
-            }
-        }
 
         if (!mounted) {
             // Render loading indicator while waiting for delayed re-rendering with mounted container
