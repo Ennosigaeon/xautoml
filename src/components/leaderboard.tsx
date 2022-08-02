@@ -6,12 +6,11 @@ import TablePagination from '@material-ui/core/TablePagination';
 import TableRow from '@material-ui/core/TableRow';
 import TableSortLabel from '@material-ui/core/TableSortLabel';
 import Checkbox from '@material-ui/core/Checkbox';
-import {Button, IconButton, Menu, MenuItem, Table, TableContainer} from '@material-ui/core';
+import {Button, IconButton, Table, TableContainer} from '@material-ui/core';
 import {Candidate, CandidateId, Explanations, MetaInformation, Structure} from '../model';
 import {Components, JupyterContext, prettyPrint} from '../util';
 import {JupyterButton} from "../util/jupyter-button";
 import {ID} from "../jupyter";
-import {MoreVert} from "@material-ui/icons";
 import {Comparison} from "./comparison";
 import {ComparisonType, DetailsModel} from "./details/model";
 import {IMimeBundle} from "@jupyterlab/nbformat";
@@ -196,55 +195,6 @@ export('${this.props.candidate.id}')
                 </TableRow>
             </>
         );
-    }
-}
-
-interface BasicMenuProps {
-    onHide: () => void
-}
-
-class BasicMenu extends React.Component<BasicMenuProps, { open: boolean }> {
-
-    private readonly ref: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
-
-    constructor(props: BasicMenuProps) {
-        super(props)
-        this.state = {open: false}
-
-        this.handleClick = this.handleClick.bind(this)
-        this.handleClose = this.handleClose.bind(this)
-        this.handleHide = this.handleHide.bind(this)
-    }
-
-    private handleClick(e: React.MouseEvent<HTMLButtonElement>) {
-        this.setState((state) => ({open: !state.open}))
-        e.stopPropagation()
-    }
-
-    private handleClose(e: React.MouseEvent) {
-        this.setState({open: false})
-        e.stopPropagation()
-    }
-
-    private handleHide(e: React.MouseEvent) {
-        this.props.onHide()
-        this.handleClose(e)
-    }
-
-    render() {
-        return (
-            <div ref={this.ref} style={{display: 'inline'}}>
-                <IconButton aria-label='expand row' size='small' onClick={this.handleClick}>
-                    <MoreVert/>
-                </IconButton>
-                <Menu
-                    anchorEl={this.ref?.current}
-                    open={this.state.open}
-                    onClose={this.handleClose}>
-                    <MenuItem onClick={this.handleHide}>Hide</MenuItem>
-                </Menu>
-            </div>
-        )
     }
 }
 
