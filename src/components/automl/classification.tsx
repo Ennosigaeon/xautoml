@@ -136,7 +136,7 @@ export('ENSEMBLE')
         if (!!this.state.runhistory) {
             const runHistory = RunHistory.fromJson(this.state.runhistory);
             const jupyter = new Jupyter(undefined, undefined, this.props.kernel.getSessionContext(), this.props.fileBrowserFactory)
-            return <ReactRoot runHistory={runHistory} jupyter={jupyter}/>
+            return <ReactRoot runHistory={runHistory} entrypoint={'root'} kwargs={new Map()} jupyter={jupyter}/>
         }
 
         return (

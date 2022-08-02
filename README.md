@@ -65,6 +65,19 @@ main = XAutoML(rh, X_test, y_test)
 main.explain()
 ```
 
+### Checking Only Specific Aspects
+
+Instead of rendering the complete visualization, only specific standalone views can be rendered. For example, if you
+are only interested in checking the leaderboard, only it can be rendered using
+
+```python
+main.explain_leaderboard()
+```
+
+For basically all views a stand-alone view is available. Check the documentation of the various
+`XAutoML().render_*(...)` methods for more details.
+
+
 ### Docker
 
 XAutoML is also provided as a Docker container. The container is based on the popular *Jupyter Docker Stack*
