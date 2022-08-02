@@ -32,8 +32,8 @@ export class CollapseComp extends React.Component<CollapseProps, CollapseState> 
 
     constructor(props: CollapseProps, context: React.ContextType<typeof JupyterContext>) {
         super(props, context);
-        this.context?.collapsedState.setIfNotPresent(this.props.name, this.props.showInitial)
-        this.state = {show: this.context?.collapsedState.get(this.props.name) || (this.props.name === undefined && this.props.showInitial)}
+        this.context?.collapsedState.setIfNotPresent<boolean>(this.props.name, this.props.showInitial)
+        this.state = {show: this.context?.collapsedState.get<boolean>(this.props.name) || (this.props.name === undefined && this.props.showInitial)}
 
         this.toggleShow = this.toggleShow.bind(this)
         this.toggleShowOpen = this.toggleShowOpen.bind(this)
@@ -43,7 +43,7 @@ export class CollapseComp extends React.Component<CollapseProps, CollapseState> 
 
     private toggleShow(e: React.MouseEvent) {
         this.setState((state) => {
-            this.context?.collapsedState.set(this.props.name, !state.show)
+            this.context?.collapsedState.set<boolean>(this.props.name, !state.show)
             return {show: !state.show}
         })
         e.stopPropagation()

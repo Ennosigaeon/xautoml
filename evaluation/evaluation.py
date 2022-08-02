@@ -5,8 +5,9 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from scipy.stats import ttest_ind
-
 from sklearn.preprocessing import LabelEncoder
+
+pd.set_option('display.width', None)
 
 
 def load_data():
@@ -39,16 +40,26 @@ def load_data():
 def calculate_sus(df: pd.DataFrame):
     invert = [False, False, True, False, True, False, True, False, True, True]
 
-    for c, inv in zip(df.columns, invert):
-        if inv:
-            df.loc[:, c] = 4 - df.loc[:, c]
-        df.loc[:, c] = df.loc[:, c] * 2.5
+    de = df[df['Role'] == 'domain expert']
+    ar = df[df['Role'] == 'automl researcher']
+    ds = df[df['Role'] == 'data scientist']
 
-    score = df.sum(axis=1)
+    def proc_df(df: pd.DataFrame):
+        for c, inv in zip(df.columns, invert):
+            if inv:
+                df.loc[:, c] = 4 - df.loc[:, c]
+            df.loc[:, c] = df.loc[:, c] * 2.5
+        return df.mean(axis=0), df.sum(axis=1).std()
+
+    all, std_all = proc_df(df)
+    de, std_de = proc_df(de)
+    ar, std_ar = proc_df(ar)
+    ds, std_ds = proc_df(ds)
 
     print('###### System Usability Score ######')
-    print(df.mean(axis=0))
-    print(score.mean(), score.std())
+    df = pd.DataFrame({'all': all, 'de': de, 'ar': ar, 'ds': ds})
+    print(df)
+    print(pd.DataFrame({'mean': df.sum(axis=0), 'std': [std_all, std_de, std_ar, std_ds]}))
     print('\n\n')
 
 

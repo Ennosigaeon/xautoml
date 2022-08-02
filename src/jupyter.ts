@@ -39,9 +39,9 @@ export class ServerError extends Error {
 
 
 export class OpenedCache {
-    private cache: Map<string, boolean> = new Map()
+    private cache: Map<string, any> = new Map()
 
-    public setIfNotPresent(key: string, value: boolean) {
+    public setIfNotPresent<T>(key: string, value: T) {
         if (key === undefined)
             return
 
@@ -49,16 +49,16 @@ export class OpenedCache {
             this.cache.set(key, value)
     }
 
-    public get(key: string) {
+    public get<T>(key: string) {
         if (key === undefined)
             return false
         if (!this.cache.has(key))
-            return true
+            return false
 
         return this.cache.get(key)
     }
 
-    public set(key: string, value: boolean) {
+    public set<T>(key: string, value: T) {
         if (key === undefined)
             return
 

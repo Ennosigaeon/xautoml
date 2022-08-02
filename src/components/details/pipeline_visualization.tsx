@@ -73,7 +73,7 @@ interface PipelineVisualizationState {
 
 export class PipelineVisualizationComponent extends React.Component<PipelineVisualizationProps, PipelineVisualizationState> {
 
-    private static readonly NODE_HEIGHT = 26;
+    private static readonly NODE_HEIGHT = 30;
     private static readonly NODE_WIDTH = 100;
 
     static contextType = JupyterContext;
