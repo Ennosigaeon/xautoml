@@ -35,6 +35,10 @@ tr.MuiTableRow-root.MuiTableRow-hover:hover {
     background-color: var(--hover-color);
 }
 
+.LeaderboardRow-open {
+    background-color: var(--hover-color) !important;
+}
+
 .MuiTableContainer-root {
     overflow-y: hidden;
 }
@@ -587,8 +591,8 @@ text.pc-axis-label:hover {
 .overlay-container {
     padding: 10px;
     width: -webkit-calc(100% - 230px);
-    width:    -moz-calc(100% - 230px);
-    width:         calc(100% - 230px);
+    width: -moz-calc(100% - 230px);
+    width: calc(100% - 230px);
     margin-left: 230px;
     min-height: 100%;
     background-color: white;

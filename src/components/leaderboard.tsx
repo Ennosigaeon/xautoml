@@ -6,14 +6,9 @@ import TablePagination from '@material-ui/core/TablePagination';
 import TableRow from '@material-ui/core/TableRow';
 import TableSortLabel from '@material-ui/core/TableSortLabel';
 import Checkbox from '@material-ui/core/Checkbox';
-import {Box, Button, IconButton, Menu, MenuItem, Table, TableContainer} from '@material-ui/core';
-import {Candidate, CandidateId, Explanations, MetaInformation, PipelineStep, Structure} from '../model';
+import {Button, IconButton, Menu, MenuItem, Table, TableContainer} from '@material-ui/core';
+import {Candidate, CandidateId, Explanations, MetaInformation, Structure} from '../model';
 import {Components, JupyterContext, prettyPrint} from '../util';
-import {PipelineVisualizationComponent} from './details/pipeline_visualization';
-import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
-import KeyboardArrowUpIcon from '@material-ui/icons/KeyboardArrowUp';
-import Collapse from '@material-ui/core/Collapse';
-import {CandidateInspections} from './candidate_inspections';
 import {JupyterButton} from "../util/jupyter-button";
 import {ID} from "../jupyter";
 import {MoreVert} from "@material-ui/icons";
@@ -22,12 +17,17 @@ import {ComparisonType, DetailsModel} from "./details/model";
 import {IMimeBundle} from "@jupyterlab/nbformat";
 import {GoDeploymentComponent} from "./usu_iap/deployment-dialog";
 import {Overlay} from "../util/overlay";
+import {CandidateInspections} from "./candidate_inspections";
+import KeyboardArrowDownIcon from "@material-ui/icons/KeyboardArrowDown";
 
 interface SingleCandidate {
     id: CandidateId;
     pred_time: number;
     performance: number;
-    candidate: [Structure, Candidate];
+    classifier: string;
+    length: number;
+    candidate: Candidate;
+    structure: Structure
 }
 
 type Order = 'asc' | 'desc';
@@ -93,7 +93,7 @@ class LeaderboardHeader extends React.Component<LeaderboardHeaderProps> {
                                 : headCell.label}
                         </TableCell>
                     ))}
-                    <TableCell style={{width: '205px'}}/>
+                    <TableCell style={{width: '270px'}}/>
                 </TableRow>
             </TableHead>
         )
@@ -103,35 +103,22 @@ class LeaderboardHeader extends React.Component<LeaderboardHeaderProps> {
 
 interface LeaderboardRowProps {
     candidate: SingleCandidate
-    meta: MetaInformation
     selected: boolean
-    onRowClick: (id: CandidateId) => void
+    onRowClick: (candidate: SingleCandidate, select: boolean) => void
     onRowHide: (id: CandidateId) => void
-    onComparisonRequest: (type: ComparisonType, selectedRow: number) => void
-
-    structures: Structure[]
-    explanations: Explanations
 
     open: boolean
     iapEnabled: boolean
 }
 
-interface LeaderboardRowState {
-    open: boolean
-    selectedComponent: [string, string]
-}
-
-class LeaderboardRow extends React.Component<LeaderboardRowProps, LeaderboardRowState> {
+class LeaderboardRow extends React.Component<LeaderboardRowProps> {
 
     static contextType = JupyterContext;
     context: React.ContextType<typeof JupyterContext>;
 
     constructor(props: LeaderboardRowProps) {
         super(props);
-        this.state = {open: this.props.open, selectedComponent: [undefined, undefined]}
 
-        this.toggleDetails = this.toggleDetails.bind(this)
-        this.openComponent = this.openComponent.bind(this)
         this.openCandidateInJupyter = this.openCandidateInJupyter.bind(this)
         this.onRowClick = this.onRowClick.bind(this)
         this.onCheckBoxClick = this.onCheckBoxClick.bind(this)
@@ -139,53 +126,20 @@ class LeaderboardRow extends React.Component<LeaderboardRowProps, LeaderboardRow
         this.onDeploy = this.onDeploy.bind(this)
     }
 
-    componentDidUpdate(prevProps: Readonly<LeaderboardRowProps>, prevState: Readonly<LeaderboardRowState>, snapshot?: any) {
-        if (!prevProps.open && this.props.open)
-            this.setState({open: true})
-    }
-
-    private toggleDetails(e: React.MouseEvent) {
-        this.setState(state => {
-            if (state.open)
-                return {open: false, selectedComponent: [undefined, undefined]}
-            else
-                return {open: true, selectedComponent: [Components.SOURCE, Components.SOURCE]}
-        })
-        e.stopPropagation()
-    }
-
-    private openComponent(step: PipelineStep) {
-        if (this.state.open &&
-            (this.state.selectedComponent[0] === step.id || this.state.selectedComponent[0] === step.step_name)) {
-            // Close details when selecting the same step again
-            this.setState({open: false, selectedComponent: [undefined, undefined]})
-        } else {
-            // quick and dirty fix for dswizard to select pipeline steps.
-            // TODO clean-up the pipeline id, step_name, label mess
-            if (this.props.meta.framework === 'dswizard')
-                this.setState({open: true, selectedComponent: [step.id, step.label]})
-            else
-                this.setState({open: true, selectedComponent: [step.step_name, step.label]})
-        }
-    }
-
     private openCandidateInJupyter(e: React.MouseEvent) {
         this.context.createCell(`
-${ID}_X, ${ID}_y, ${ID}_pipeline = gcx().pipeline('${this.props.candidate.candidate[1].id}')
+${ID}_X, ${ID}_y, ${ID}_pipeline = gcx().pipeline('${this.props.candidate.id}')
 ${ID}_pipeline
         `.trim())
         e.stopPropagation()
     }
 
     private onRowClick(e: React.MouseEvent) {
-        if (e.ctrlKey)
-            this.props.onRowClick(this.props.candidate.id)
-        else
-            this.toggleDetails(e)
+        this.props.onRowClick(this.props.candidate, e.ctrlKey)
     }
 
     private onCheckBoxClick(e: React.MouseEvent) {
-        this.props.onRowClick(this.props.candidate.id)
+        this.props.onRowClick(this.props.candidate, true)
         e.stopPropagation()
     }
 
@@ -204,11 +158,7 @@ export('${this.props.candidate.id}')
     }
 
     render() {
-        const {candidate, meta, selected, structures, explanations, onComparisonRequest, iapEnabled} = this.props
-        const {open} = this.state
-
-        const selectedComponent = (open && this.state.selectedComponent[0] === undefined) ?
-            [Components.SOURCE, Components.SOURCE] : this.state.selectedComponent;
+        const {candidate, selected, iapEnabled} = this.props
 
         return (
             <>
@@ -216,6 +166,8 @@ export('${this.props.candidate.id}')
                           onClick={this.onRowClick}
                           role='checkbox'
                           tabIndex={-1}
+                          style={{cursor: 'pointer'}}
+                          className={this.props.open ? 'LeaderboardRow-open' : ''}
                           selected={selected}>
                     <TableCell padding='checkbox'>
                         <Checkbox checked={selected}
@@ -225,36 +177,21 @@ export('${this.props.candidate.id}')
                     <TableCell scope='row' padding='none'>{candidate.id}</TableCell>
                     <TableCell align='right'>{prettyPrint(candidate.performance, 4)}</TableCell>
                     <TableCell align='right'>{prettyPrint(candidate.pred_time, 3)}</TableCell>
-                    <TableCell align='right' style={{height: '50px'}} padding='none'>
-                        <PipelineVisualizationComponent structure={candidate.candidate[0].pipeline}
-                                                        candidate={candidate.candidate[1]}
-                                                        selectedComponent={selectedComponent[0]}
-                                                        onComponentSelection={this.openComponent}/>
+                    <TableCell align='right'>{candidate.length}</TableCell>
+                    <TableCell align='center'>
+                        <div className={'structure-graph_node'} style={{maxWidth: '200px', margin: 'auto'}}>
+                            <div className={'hierarchical-tree_node-content'}>
+                                <p>{candidate.classifier}</p>
+                            </div>
+                        </div>
                     </TableCell>
                     <TableCell>
                         <JupyterButton onClick={this.openCandidateInJupyter} active={this.context.canCreateCell()}/>
-                        {iapEnabled && <Button onClick={this.onDeploy}>Go</Button>}
-                        <IconButton aria-label='expand row' size='small' onClick={this.toggleDetails}>
-                            {this.state.open ? <KeyboardArrowUpIcon/> : <KeyboardArrowDownIcon/>}
+                        {iapEnabled && <Button onClick={this.onDeploy} style={{margin: '0 10px'}}>Deploy</Button>}
+                        <IconButton aria-label='expand row' size='small'>
+                            <KeyboardArrowDownIcon/>
                         </IconButton>
                         {/*<BasicMenu onHide={this.onHide}/>*/}
-                    </TableCell>
-                </TableRow>
-                <TableRow>
-                    <TableCell style={{padding: 0}} colSpan={6}>
-                        <Collapse in={this.state.open} timeout='auto' unmountOnExit={false} mountOnEnter={true}>
-                            <Box margin={1} style={{marginBottom: '5em'}}>
-                                <CandidateInspections
-                                    structure={candidate.candidate[0]}
-                                    candidate={candidate.candidate[1]}
-                                    componentId={selectedComponent[0]}
-                                    componentLabel={selectedComponent[1]}
-                                    meta={meta}
-                                    explanations={explanations}
-                                    onComparisonRequest={onComparisonRequest}
-                                    structures={structures}/>
-                            </Box>
-                        </Collapse>
                     </TableCell>
                 </TableRow>
             </>
@@ -333,7 +270,7 @@ interface LeaderboardState {
     rowsPerPage: number
 
     selectedRow: number
-    selectedCandidate: CandidateId
+    selectedCandidate: SingleCandidate
     comparisonType: ComparisonType
 }
 
@@ -352,6 +289,7 @@ export class Leaderboard extends React.Component<LeaderboardProps, LeaderboardSt
             page: 0,
             rowsPerPage: 10,
             selectedRow: undefined,
+            selectedCandidate: undefined,
             comparisonType: undefined
         }
 
@@ -382,15 +320,25 @@ export class Leaderboard extends React.Component<LeaderboardProps, LeaderboardSt
         }
     }
 
-    private handleRowClick(id: CandidateId): void {
-        const selected = new Set(this.props.selectedCandidates)
-        if (selected.has(id)) {
-            selected.delete(id)
-        } else {
-            selected.add(id)
-        }
+    private handleRowClick(candidate: SingleCandidate, select: boolean): void {
+        const id = candidate.id
+        if (select) {
+            const selected = new Set(this.props.selectedCandidates)
+            if (selected.has(id)) {
+                selected.delete(id)
+            } else {
+                selected.add(id)
+            }
 
-        this.props.onCandidateSelection(selected)
+            this.props.onCandidateSelection(selected)
+        } else {
+            if (this.state.selectedCandidate?.id === id)
+                this.setState({selectedCandidate: undefined})
+            else {
+                this.setState({selectedCandidate: candidate})
+            }
+
+        }
     }
 
     private handleChangePage(_: unknown, newPage: number) {
@@ -408,7 +356,7 @@ export class Leaderboard extends React.Component<LeaderboardProps, LeaderboardSt
         if (prevProps.showCandidate !== this.props.showCandidate && this.props.showCandidate !== undefined) {
             const idx = this.state.rows.map(c => c.id).indexOf(this.props.showCandidate)
             const page = Math.trunc(idx / this.state.rowsPerPage)
-            this.setState({page: page})
+            this.setState({page: page, selectedCandidate: this.state.rows.find(r => r.id === this.props.showCandidate)})
         }
     }
 
@@ -434,7 +382,10 @@ export class Leaderboard extends React.Component<LeaderboardProps, LeaderboardSt
                             id: c.id,
                             pred_time: c.runtime.prediction_time,
                             performance: c.loss,
-                            candidate: [structure, c]
+                            candidate: c,
+                            structure: structure,
+                            classifier: structure.pipeline[structure.pipeline.length - 1].label,
+                            length: structure.pipeline.length
                         }
                     )
                 })
@@ -447,10 +398,11 @@ export class Leaderboard extends React.Component<LeaderboardProps, LeaderboardSt
         const {rows, order, orderBy, page, rowsPerPage} = this.state
 
         const headCells: HeaderCell[] = [
-            {id: 'id', numeric: false, sortable: true, label: 'Id', width: '40px'},
+            {id: 'id', numeric: false, sortable: true, label: 'Id', width: '60px'},
             {id: 'performance', numeric: true, sortable: true, label: 'Performance', width: '100px'},
-            {id: 'pred_time', numeric: true, sortable: true, label: 'Pred. Time', width: '60px'},
-            {id: 'candidate', numeric: false, sortable: false, label: 'Pipeline', width: 'auto'}
+            {id: 'pred_time', numeric: true, sortable: true, label: 'Pred. Time', width: '120px'},
+            {id: 'length', numeric: true, sortable: true, label: 'Pipeline Length', width: '150px'},
+            {id: 'classifier', numeric: false, sortable: true, label: 'Classifier', width: 'auto'},
         ];
 
         return (
@@ -480,15 +432,11 @@ export class Leaderboard extends React.Component<LeaderboardProps, LeaderboardSt
                                     return (
                                         <LeaderboardRow key={row.id}
                                                         candidate={row}
-                                                        meta={this.props.meta}
                                                         selected={this.props.selectedCandidates.has(row.id)}
                                                         onRowClick={this.handleRowClick}
                                                         onRowHide={this.props.onCandidateHide}
-                                                        structures={structures}
-                                                        explanations={explanations}
-                                                        onComparisonRequest={this.handleComparisonRequest}
                                                         iapEnabled={iapEnabled}
-                                                        open={row.id === this.props.showCandidate}/>
+                                                        open={row.id === this.state.selectedCandidate?.id}/>
                                     );
                                 })}
                         </TableBody>
@@ -504,12 +452,25 @@ export class Leaderboard extends React.Component<LeaderboardProps, LeaderboardSt
                     onRowsPerPageChange={this.handleChangeRowsPerPage}
                 />
 
-
+                {this.state.selectedCandidate !== undefined &&
+                    <Overlay title={this.state.selectedCandidate.id} onClose={() => {
+                        this.setState({selectedCandidate: undefined})
+                    }}>
+                        <CandidateInspections
+                            key={this.state.selectedCandidate.id}
+                            structure={this.state.selectedCandidate.structure}
+                            candidate={this.state.selectedCandidate.candidate}
+                            meta={this.props.meta}
+                            explanations={explanations}
+                            onComparisonRequest={this.handleComparisonRequest}
+                            structures={structures}/>
+                    </Overlay>
+                }
                 {this.state.comparisonType !== undefined &&
                     <Overlay title={'Comparison'} onClose={() => this.handleComparisonRequest(undefined, undefined)}>
                         <Comparison meta={this.props.meta} type={this.state.comparisonType}
                                     models={rows.filter(r => this.props.selectedCandidates.has(r.id))
-                                        .map(r => new DetailsModel(r.candidate[0], r.candidate[1], Components.SOURCE, Components.SOURCE, this.state.selectedRow))}/>
+                                        .map(r => new DetailsModel(r.structure, r.candidate, Components.SOURCE, Components.SOURCE, this.state.selectedRow))}/>
                     </Overlay>
                 }
             </div>
