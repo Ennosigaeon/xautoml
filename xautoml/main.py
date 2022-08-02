@@ -1,7 +1,7 @@
 import time
 import warnings
 from copy import deepcopy
-from typing import Optional, List, Tuple, Dict
+from typing import Optional, List, Tuple, Dict, Set
 
 import numpy as np
 import pandas as pd
@@ -514,19 +514,96 @@ class XAutoML:
         return self.run_history.cid_to_candidate.get(cid).config.get_dictionary()
 
     def _repr_mimebundle_(self, include, exclude):
+        entrypoint = getattr(self, '_entrypoint', 'root')
+        kwargs = getattr(self, '_kwargs', {})
+
         return {
-            'application/xautoml+json': self.run_history.as_dict()
+            'application/xautoml+json': {
+                'entrypoint': entrypoint,
+                'kwargs': kwargs,
+                'runhistory': self.run_history.as_dict()
+            }
         }
 
-    def explain(self):
+    def explain(self, entrypoint: str = 'root', **kwargs):
         """
-        Create the visualization
-        :return:
+        Render the visualization for the complete optimization run
         """
         try:
+            self._entrypoint = entrypoint
+            self._kwargs = kwargs
+
             # noinspection PyPackageRequirements
             from IPython.core.display import display
             # noinspection PyTypeChecker
             return display(self)
         except ImportError:
             return str(self)
+
+    def explain_search_space(self):
+        """
+        Render the visualization containing only the search space
+        """
+        return self.explain('search_space')
+
+    def explain_ensemble(self):
+        """
+        Render the visualization containing only the ensemble
+        """
+        return self.explain('ensemble')
+
+    def explain_leaderboard(self):
+        """
+        Render the visualization containing only the leaderboard and candidate inspections
+        """
+        return self.explain('leaderboard')
+
+    def explain_candidate(self, cid: CandidateId):
+        """
+        Render the visualization containing only the insights for the provided candidate
+        :param cid: candidate id
+        """
+        return self.explain('candidate', cid=cid)
+
+    def explain_domain(self, cid: CandidateId, include: Set[str] = None, exclude: Set[str] = None):
+        """
+        Render the visualization containing only the domain insights for the provided candidate
+        :param cid: candidate id
+        :param include: List of views that should be rendered. Allowed values are {'performance', 'raw-dataset', 'feature-importance', 'global-surrogate'}.
+        Can not be used together with :param exclude. If not provided all views will be included.
+        :param exclude: List of views that should not be rendered. Allowed values are {'performance', 'raw-dataset', 'feature-importance', 'global-surrogate'}.
+        Can not be used together with :param include. If not provided, no view will be excluded.
+        """
+        include = self._validate_inc_exc(include, exclude,
+                                         {'performance', 'raw-dataset', 'feature-importance', 'global-surrogate'})
+        return self.explain('domain', cid=cid, include=include)
+
+    def explain_ml(self, cid: CandidateId, include: Set[str] = None, exclude: Set[str] = None):
+        """
+        Render the visualization containing only the machine learning insights for the provided candidate
+        :param cid: candidate id
+        :param include: List of views that should be rendered. Allowed values are {'config-origin', 'hp-importance'}.
+        Can not be used together with :param exclude. If not provided all views will be included.
+        :param exclude: List of views that should not be rendered. Allowed values are {'config-origin','hp-importance'}.
+        Can not be used together with :param include. If not provided, no view will be excluded.
+        """
+        include = self._validate_inc_exc(include, exclude, {'config-origin', 'hp-importance'})
+        return self.explain('ml', cid=cid, include=include)
+
+    @staticmethod
+    def _validate_inc_exc(include: Set[str], exclude: Set[str], allowed: Set[str]) -> Set[str]:
+        if include is not None and exclude is not None:
+            raise ValueError('Provide either include or exclude not both')
+
+        if include is not None:
+            include = set(include)
+            add = include - allowed
+            if len(add) > 0:
+                raise ValueError(f'Include must only contain values from {allowed}. Got {add}')
+            return include
+        if exclude is not None:
+            exclude = set(exclude)
+            add = exclude - allowed
+            if len(add) > 0:
+                raise ValueError(f'Exclude must only contain values from {allowed}. Got {add}')
+            return allowed - exclude

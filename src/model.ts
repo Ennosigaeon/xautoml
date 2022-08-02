@@ -5,6 +5,8 @@ export type CandidateId = string
 export type ConfigValue = number | string | boolean
 export type Prediction = number | string | boolean
 export type Config = Map<string, ConfigValue>
+export type Entrypoint = 'root' | 'search_space' | 'ensemble' | 'leaderboard' | 'candidate' | 'domain' | 'ml'
+
 
 export namespace BO {
     export class ConfigSpace {
@@ -362,5 +364,16 @@ export class RunHistory {
 
         return new RunHistory(MetaInformation.fromJson(runhistory.meta, losses),
             structures, Explanations.fromJson(runhistory.explanations))
+    }
+}
+
+export class OptimizationData {
+    constructor(public readonly entrypoint: Entrypoint,
+                public readonly kwargs: Map<string, any>,
+                public readonly runhistory: RunHistory) {
+    }
+
+    static fromJson(data: OptimizationData): OptimizationData {
+        return new OptimizationData(data.entrypoint, new Map(Object.entries(data.kwargs)), RunHistory.fromJson(data.runhistory))
     }
 }

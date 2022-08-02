@@ -1,7 +1,7 @@
 import React from "react";
 import {ReactWidget} from "@jupyterlab/apputils";
 import {IRenderMime} from "@jupyterlab/rendermime-interfaces";
-import {CandidateId, RunHistory} from "./model";
+import {CandidateId, Entrypoint, OptimizationData, RunHistory} from "./model";
 import {Colors, JupyterContext} from "./util";
 import {Leaderboard} from "./components/leaderboard";
 import {Jupyter} from "./jupyter";
@@ -13,6 +13,7 @@ import {SearchSpace} from "./components/search_space";
 import {GeneralInformation} from "./components/optimization_overview";
 import {Ensemble} from "./components/ensemble";
 import {IAPService} from "./components/usu_iap/service";
+import {CandidateInspections} from "./components/candidate_inspections";
 
 
 /**
@@ -26,7 +27,7 @@ const CLASS_NAME = 'mimerenderer-xautoml';
 export class JupyterWidget extends ReactWidget implements IRenderMime.IRenderer {
     private readonly _mimeType: string;
     private readonly jupyter: Jupyter;
-    private runHistory: RunHistory = undefined;
+    private data: OptimizationData = undefined;
 
     constructor(mimeType: string, jupyter: Jupyter) {
         super();
@@ -38,7 +39,7 @@ export class JupyterWidget extends ReactWidget implements IRenderMime.IRenderer 
 
     renderModel(model: IRenderMime.IMimeModel): Promise<void> {
         try {
-            this.runHistory = RunHistory.fromJson(model.data[this._mimeType] as unknown as RunHistory);
+            this.data = OptimizationData.fromJson(model.data[this._mimeType] as unknown as OptimizationData);
         } catch (e) {
             console.error('Failed to parse runHistory', e)
         }
@@ -49,13 +50,16 @@ export class JupyterWidget extends ReactWidget implements IRenderMime.IRenderer 
     }
 
     protected render() {
-        if (!this.runHistory)
+        if (!this.data)
             return <p>Error loading data...</p>
-        return <ReactRoot runHistory={this.runHistory} jupyter={this.jupyter}/>
+        return <ReactRoot runHistory={this.data.runhistory} entrypoint={this.data.entrypoint}
+                          kwargs={this.data.kwargs} jupyter={this.jupyter}/>
     }
 }
 
 interface ReactRootProps {
+    entrypoint: Entrypoint;
+    kwargs: Map<string, any>;
     runHistory: RunHistory;
     jupyter: Jupyter;
 }
@@ -136,9 +140,109 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
         this.setState({hideUnselected: checked})
     }
 
+    private renderLeaderBoard() {
+        const {runHistory} = this.props
+        const {selectedCandidates, showCandidate, iapEnabled, hideUnselected} = this.state
+
+        return (
+            <Leaderboard structures={runHistory.structures}
+                         selectedCandidates={selectedCandidates}
+                         hiddenCandidates={this.state.hiddenCandidates}
+                         hideUnselectedCandidates={hideUnselected}
+                         meta={runHistory.meta}
+                         explanations={runHistory.explanations}
+                         showCandidate={showCandidate}
+                         iapEnabled={iapEnabled}
+                         onCandidateSelection={this.onCandidateSelection}
+                         onCandidateHide={this.onCandidateHide}/>
+        )
+    }
+
+    private renderSearchSpace() {
+        const {runHistory} = this.props
+        const {selectedCandidates, hideUnselected} = this.state
+
+        return (
+            <SearchSpace structures={runHistory.structures}
+                         meta={runHistory.meta}
+                         explanations={runHistory.explanations}
+                         selectedCandidates={selectedCandidates}
+                         hideUnselectedCandidates={hideUnselected}
+                         onCandidateSelection={this.onCandidateSelection}/>
+        )
+    }
+
+    private renderEnsemble() {
+        return (
+            <Ensemble onCandidateSelection={this.onCandidateSelection} meta={this.props.runHistory.meta}/>
+        )
+    }
+
+    private renderRoot() {
+        const {runHistory} = this.props
+        const {selectedCandidates, openTab} = this.state
+
+        return (
+            <div style={{display: 'flex'}}>
+                <div style={{flexGrow: 0, flexShrink: 0, flexBasis: '275px', marginRight: '20px'}}>
+                    <GeneralInformation structures={runHistory.structures}
+                                        meta={runHistory.meta}
+                                        selectedCandidates={selectedCandidates}
+                                        onCandidateSelection={this.onCandidateSelection}/>
+                </div>
+                <div style={{flexGrow: 2}}>
+                    <TabContext value={openTab}>
+                        <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
+                            <Tabs value={openTab} onChange={this.switchTab} TabIndicatorProps={{
+                                style: {backgroundColor: Colors.HIGHLIGHT}
+                            }}>
+                                <Tab label="Candidates" value={'1'}/>
+                                <Tab label="Search Space" value={'2'}/>
+                                <Tab label="Ensembles" value={'3'}/>
+
+                                <DivInTabs style={{marginLeft: 'auto', cursor: 'default'}}>
+                                        <span className={'MuiTab-wrapper'}>
+                                            Selected Candidates: {selectedCandidates.size} / {runHistory.meta.n_configs - this.state.hiddenCandidates.size}
+                                        </span>
+                                </DivInTabs>
+                                <DivInTabs>
+                                    <Button onClick={() => this.onCandidateSelection(new Set())}>
+                                        Clear Selected
+                                    </Button>
+                                </DivInTabs>
+                            </Tabs>
+                        </Box>
+
+                        <TabPanel value={'1'}>{this.renderLeaderBoard()}</TabPanel>
+                        <TabPanel value={'2'}>{this.renderSearchSpace()}</TabPanel>
+                        <TabPanel value={'3'}>{this.renderEnsemble()}</TabPanel>
+                    </TabContext>
+                </div>
+            </div>
+        )
+    }
+
+    private renderCandidate(renderDomain: boolean, renderML: boolean) {
+        const {runHistory} = this.props
+        const {iapEnabled} = this.state
+
+        const candidate = runHistory.candidateMap.get(this.props.kwargs.get('cid'))
+        const include = this.props.kwargs.get('include') as string[]
+        const structure = runHistory.structures.find(s => s.configs.find(c => c.id === candidate.id) !== undefined)
+
+        return (
+            <CandidateInspections candidate={candidate} structure={structure} meta={runHistory.meta}
+                                  structures={runHistory.structures}
+                                  explanations={runHistory.explanations} iapEnabled={iapEnabled}
+                                  renderDomain={renderDomain} renderML={renderML} include={include}
+                                  onComparisonRequest={(_) => {
+                                  }}/>
+        )
+    }
+
     render() {
-        const {runHistory, jupyter} = this.props
-        const {selectedCandidates, showCandidate, mounted, openTab, hideUnselected, iapEnabled} = this.state
+        const {runHistory, entrypoint, jupyter} = this.props
+        const {mounted} = this.state
 
         if (!mounted) {
             // Render loading indicator while waiting for delayed re-rendering with mounted container
@@ -154,72 +258,13 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
         }
         return (
             <JupyterContext.Provider value={jupyter}>
-                <div style={{display: 'flex'}}>
-                    <div style={{flexGrow: 0, flexShrink: 0, flexBasis: '275px', marginRight: '20px'}}>
-                        <GeneralInformation structures={runHistory.structures}
-                                            meta={runHistory.meta}
-                                            selectedCandidates={selectedCandidates}
-                                            onCandidateSelection={this.onCandidateSelection}/>
-                    </div>
-                    <div style={{flexGrow: 2}}>
-                        <TabContext value={openTab}>
-                            <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
-                                <Tabs value={openTab} onChange={this.switchTab} TabIndicatorProps={{
-                                    style: {backgroundColor: Colors.HIGHLIGHT}
-                                }}>
-                                    <Tab label="Candidates" value={'1'}/>
-                                    <Tab label="Search Space" value={'2'}/>
-                                    <Tab label="Ensembles" value={'3'}/>
-
-                                    <DivInTabs style={{marginLeft: 'auto', cursor: 'default'}}>
-                                        <span className={'MuiTab-wrapper'}>
-                                            Selected Candidates: {selectedCandidates.size} / {runHistory.meta.n_configs - this.state.hiddenCandidates.size}
-                                        </span>
-                                    </DivInTabs>
-                                    <DivInTabs>
-                                        <Button onClick={() => this.onCandidateSelection(new Set())}>
-                                            Clear Selected
-                                        </Button>
-                                    </DivInTabs>
-                                    {/*<DivInTabs>*/}
-                                    {/*    <label className={'MuiFormControlLabel-root'}>*/}
-                                    {/*        <Checkbox checked={hideUnselected}*/}
-                                    {/*                  onChange={this.toggleHideUnselected}/>*/}
-                                    {/*        <span>Hide&nbsp;Unselected</span>*/}
-                                    {/*    </label>*/}
-                                    {/*</DivInTabs>*/}
-                                    {/*<DivInTabs>*/}
-                                    {/*    <Button onClick={this.resetHidden}>Clear Hidden</Button>*/}
-                                    {/*</DivInTabs>*/}
-                                </Tabs>
-                            </Box>
-
-                            <TabPanel value={'1'}>
-                                <Leaderboard structures={runHistory.structures}
-                                             selectedCandidates={selectedCandidates}
-                                             hiddenCandidates={this.state.hiddenCandidates}
-                                             hideUnselectedCandidates={hideUnselected}
-                                             meta={runHistory.meta}
-                                             explanations={runHistory.explanations}
-                                             showCandidate={showCandidate}
-                                             iapEnabled={iapEnabled}
-                                             onCandidateSelection={this.onCandidateSelection}
-                                             onCandidateHide={this.onCandidateHide}/>
-                            </TabPanel>
-                            <TabPanel value={'2'}>
-                                <SearchSpace structures={runHistory.structures}
-                                             meta={runHistory.meta}
-                                             explanations={runHistory.explanations}
-                                             selectedCandidates={selectedCandidates}
-                                             hideUnselectedCandidates={hideUnselected}
-                                             onCandidateSelection={this.onCandidateSelection}/>
-                            </TabPanel>
-                            <TabPanel value={'3'}>
-                                <Ensemble onCandidateSelection={this.onCandidateSelection} meta={runHistory.meta}/>
-                            </TabPanel>
-                        </TabContext>
-                    </div>
-                </div>
+                {entrypoint === 'root' && this.renderRoot()}
+                {entrypoint === 'search_space' && this.renderSearchSpace()}
+                {entrypoint === 'ensemble' && this.renderEnsemble()}
+                {entrypoint === 'leaderboard' && this.renderLeaderBoard()}
+                {entrypoint === 'candidate' && this.renderCandidate(true, true)}
+                {entrypoint === 'domain' && this.renderCandidate(true, false)}
+                {entrypoint === 'ml' && this.renderCandidate(false, true)}
             </JupyterContext.Provider>
         )
     }

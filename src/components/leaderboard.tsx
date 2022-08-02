@@ -415,6 +415,9 @@ export class Leaderboard extends React.Component<LeaderboardProps, LeaderboardSt
                             explanations={explanations}
                             onComparisonRequest={this.handleComparisonRequest}
                             iapEnabled={this.props.iapEnabled}
+                            renderML={true}
+                            renderDomain={true}
+                            include={undefined}
                             structures={structures}/>
                     </Overlay>
                 }

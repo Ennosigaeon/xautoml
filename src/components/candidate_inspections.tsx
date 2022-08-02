@@ -20,6 +20,103 @@ import {ID} from "../jupyter";
 import {IMimeBundle} from "@jupyterlab/nbformat";
 import {GoDeploymentComponent} from "./usu_iap/deployment-dialog";
 
+
+class DomainInsightsProps {
+    model: DetailsModel
+    meta: MetaInformation
+    include: string[]
+
+    onComparisonRequest: (type: ComparisonType) => void
+    onSampleClick: (idx: number) => void
+}
+
+export class DomainInsights extends React.Component<DomainInsightsProps> {
+    render() {
+        const {model, meta,} = this.props
+        const include = this.props.include === undefined ? ['performance', 'raw-dataset', 'feature-importance', 'global-surrogate'] : this.props.include
+
+        return (
+            <>
+                {include.includes('performance') &&
+                    <CollapseComp name={'performance'} showInitial={include.length === 1}
+                                  help={PerformanceDetailsComponent.HELP}
+                                  onComparisonRequest={() => this.props.onComparisonRequest('performance')}>
+                        <h3>Performance Details</h3>
+                        <PerformanceDetailsComponent model={model} meta={meta}/>
+                    </CollapseComp>
+                }
+
+                {include.includes('raw-dataset') &&
+                    <CollapseComp name={'raw-dataset'} showInitial={include.length === 1} help={RawDataset.HELP}>
+                        <h3>Data Set Preview</h3>
+                        <TwoColumnLayout widthRight={'25%'}>
+                            <RawDataset model={model} onSampleClick={this.props.onSampleClick}/>
+                            <LocalSurrogateComponent model={model} orientation={'vertical'}
+                                                     onComparisonRequest={this.props.onComparisonRequest}/>
+                        </TwoColumnLayout>
+                    </CollapseComp>
+                }
+
+                {include.includes('feature-importance') &&
+                    <CollapseComp name={'feature-importance'} showInitial={false}
+                                  help={FeatureImportanceComponent.HELP}
+                                  onComparisonRequest={() => this.props.onComparisonRequest('feature_importance')}>
+                        <h3>Feature Importance</h3>
+                        <FeatureImportanceComponent model={model}/>
+                    </CollapseComp>
+                }
+
+                {include.includes('global-surrogate') &&
+                    <CollapseComp name={'global-surrogate'} showInitial={false} help={GlobalSurrogateComponent.HELP}
+                                  onComparisonRequest={() => this.props.onComparisonRequest('global_surrogate')}>
+                        <h3>Global Surrogate</h3>
+                        <GlobalSurrogateComponent model={model}/>
+                    </CollapseComp>
+                }
+            </>
+        )
+    }
+}
+
+class MLInsightsProps {
+    model: DetailsModel
+    meta: MetaInformation
+    structures: Structure[]
+    explanations: Explanations
+    include: string[]
+
+    onComparisonRequest: (type: ComparisonType) => void
+}
+
+export class MLInsights extends React.Component<MLInsightsProps> {
+
+    render() {
+        const {model, meta, structures, explanations,} = this.props
+        const include = this.props.include === undefined ? ['config-origin', 'hp-importance'] : this.props.include
+
+        return (
+            <>
+                {include.includes('config-origin') &&
+                    <CollapseComp name={'config-origin'} showInitial={include.length === 1}
+                                  help={ConfigurationComponent.HELP}
+                                  onComparisonRequest={() => this.props.onComparisonRequest('configuration')}>
+                        <h3>Model Details</h3>
+                        <ConfigurationComponent model={model} structures={structures} explanations={explanations}/>
+                    </CollapseComp>
+                }
+
+                {include.includes('hp-importance') &&
+                    <CollapseComp name={'hp-importance'} showInitial={include.length === 1} help={HPImportanceComp.HELP}
+                                  onComparisonRequest={() => this.props.onComparisonRequest('hp_importance')}>
+                        <h3>Hyperparameter Importance</h3>
+                        <HPImportanceComp model={model} metric={meta.metric}/>
+                    </CollapseComp>
+                }
+            </>
+        )
+    }
+}
+
 interface CandidateInspectionsProps {
     candidate: Candidate
     structure: Structure
@@ -27,6 +124,10 @@ interface CandidateInspectionsProps {
 
     structures: Structure[]
     explanations: Explanations
+
+    renderDomain: boolean
+    renderML: boolean
+    include: string[]
 
     iapEnabled: boolean
     onComparisonRequest: (type: ComparisonType, selectedRow: number) => void
@@ -103,12 +204,30 @@ export('${this.props.candidate.id}')
         e.stopPropagation()
     }
 
-    render() {
-        const {candidate, structure, meta, structures, explanations} = this.props
-        const {selectedSample, componentId, componentLabel} = this.state
+    private renderHeader(model: DetailsModel) {
+        return (
+            <>
+                <h3>Insights for <i>
+                    {Components.isPipEnd(model.component) ? `${model.component === Components.SOURCE ? 'Beginning' : 'End'} of the Pipeline` : `${model.algorithm} (${model.component})`}
+                </i>
+                </h3>
+                <p>
+                    Select any step in the pipeline to calculate the analysis in the following views for the
+                    output generated by the selected pipeline step.
+                </p>
 
-        const model = new DetailsModel(structure, candidate, componentId, componentLabel, selectedSample)
+                <Box marginTop={2} marginBottom={2}>
+                    <PipelineVisualizationComponent structure={model.structure.pipeline}
+                                                    candidate={model.candidate}
+                                                    selectedComponent={model.component}
+                                                    onComponentSelection={this.openComponent}/>
+                </Box>
+            </>
+        )
+    }
 
+    private renderAll(model: DetailsModel) {
+        const {meta, structures, explanations} = this.props
         return (
             <TabContext value={this.state.openTab}>
                 <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
@@ -130,66 +249,40 @@ export('${this.props.candidate.id}')
                     </Tabs>
                 </Box>
 
-                <h3>Insights for <i>
-                    {Components.isPipEnd(model.component) ? `${model.component === Components.SOURCE ? 'Beginning' : 'End'} of the Pipeline` : `${model.algorithm} (${model.component})`}
-                </i>
-                </h3>
-                <p>
-                    Select any step in the pipeline to calculate the analysis in the following views for the
-                    output generated by the selected pipeline step.
-                </p>
-
-                <Box marginTop={2} marginBottom={2}>
-                    <PipelineVisualizationComponent structure={structure.pipeline}
-                                                    candidate={candidate}
-                                                    selectedComponent={componentId}
-                                                    onComponentSelection={this.openComponent}/>
-                </Box>
+                {this.renderHeader(model)}
 
                 <TabPanel value={'1'}>
-                    <CollapseComp name={'performance'} showInitial={false} help={PerformanceDetailsComponent.HELP}
-                                  onComparisonRequest={() => this.onComparisonRequest('performance')}>
-                        <h3>Performance Details</h3>
-                        <PerformanceDetailsComponent model={model} meta={meta}/>
-                    </CollapseComp>
-
-                    <CollapseComp name={'raw-dataset'} showInitial={false} help={RawDataset.HELP}>
-                        <h3>Data Set Preview</h3>
-                        <TwoColumnLayout widthRight={'25%'}>
-                            <RawDataset model={model} onSampleClick={this.handleSampleSelection}/>
-                            <LocalSurrogateComponent model={model} orientation={'vertical'}
-                                                     onComparisonRequest={this.onComparisonRequest}/>
-                        </TwoColumnLayout>
-                    </CollapseComp>
-
-                    <CollapseComp name={'feature-importance'} showInitial={false}
-                                  help={FeatureImportanceComponent.HELP}
-                                  onComparisonRequest={() => this.onComparisonRequest('feature_importance')}>
-                        <h3>Feature Importance</h3>
-                        <FeatureImportanceComponent model={model}/>
-                    </CollapseComp>
-
-                    <CollapseComp name={'global-surrogate'} showInitial={false} help={GlobalSurrogateComponent.HELP}
-                                  onComparisonRequest={() => this.onComparisonRequest('global_surrogate')}>
-                        <h3>Global Surrogate</h3>
-                        <GlobalSurrogateComponent model={model}/>
-                    </CollapseComp>
+                    <DomainInsights model={model} meta={meta} onComparisonRequest={this.onComparisonRequest}
+                                    onSampleClick={this.handleSampleSelection} include={undefined}/>
                 </TabPanel>
 
                 <TabPanel value={'2'}>
-                    <CollapseComp name={'config-origin'} showInitial={false} help={ConfigurationComponent.HELP}
-                                  onComparisonRequest={() => this.onComparisonRequest('configuration')}>
-                        <h3>Model Details</h3>
-                        <ConfigurationComponent model={model} structures={structures} explanations={explanations}/>
-                    </CollapseComp>
-
-                    <CollapseComp name={'hp-importance'} showInitial={false} help={HPImportanceComp.HELP}
-                                  onComparisonRequest={() => this.onComparisonRequest('hp_importance')}>
-                        <h3>Hyperparameter Importance</h3>
-                        <HPImportanceComp model={model} metric={meta.metric}/>
-                    </CollapseComp>
+                    <MLInsights model={model} meta={meta} structures={structures} explanations={explanations}
+                                onComparisonRequest={this.onComparisonRequest} include={undefined}/>
                 </TabPanel>
             </TabContext>
+        )
+    }
+
+    render() {
+        const {candidate, structure, meta, structures, explanations, renderDomain, renderML, include} = this.props
+        const {selectedSample, componentId, componentLabel} = this.state
+
+        const model = new DetailsModel(structure, candidate, componentId, componentLabel, selectedSample)
+
+        return (
+            <>
+                {(renderDomain && renderML) && this.renderAll(model)}
+                {(renderDomain && !renderML) &&
+                    <DomainInsights model={model} meta={meta} onComparisonRequest={this.onComparisonRequest}
+                                    onSampleClick={this.handleSampleSelection} include={include}/>
+                }
+                {(!renderDomain && renderML) &&
+                    <MLInsights model={model} meta={meta} structures={structures} explanations={explanations}
+                                onComparisonRequest={this.onComparisonRequest} include={include}/>
+                }
+                {(!renderDomain && !renderML) && <p>Render either <i>renderDomain</i> or <i>renderML</i></p>}
+            </>
         )
     }
 }
