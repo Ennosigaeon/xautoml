@@ -19,5 +19,7 @@ user_study/**/output/
 evaluation/
 /dist
 
-examples/_auto-sklearn_
-examples/_dswizard_
+examples/_auto-sklearn_/
+_auto-sklearn_/
+examples/_dswizard_/
+_dswizard_/
