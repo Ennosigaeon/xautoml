@@ -17,8 +17,8 @@ def get_31() -> XAutoML:
     with open('/opt/xautoml/dswizard/output/fixed/ensemble_31.pkl', 'rb') as f:
         ensemble = pickle.load(f)
 
-    # structure = raw.data[(0, 2, None)]
-    # structure.results[2].model_file = 'res/31/models_0-2-2.pkl'
+    structure = raw.data[(0, 2, None)]
+    structure.results[2].model_file = 'res/31/models_0-2-2.pkl'
 
     rh = import_dswizard(raw, ensemble)
     X, y = openml_task(31, 0, test=True)

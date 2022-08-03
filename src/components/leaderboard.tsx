@@ -424,7 +424,7 @@ export class Leaderboard extends React.Component<LeaderboardProps, LeaderboardSt
                 {this.state.comparisonType !== undefined &&
                     <Overlay title={'Comparison'} onClose={() => this.handleComparisonRequest(undefined, undefined)}>
                         <Comparison meta={this.props.meta} type={this.state.comparisonType}
-                                    models={rows.filter(r => this.props.selectedCandidates.has(r.id))
+                                    models={rows.filter(r => this.props.selectedCandidates.has(r.id) || r.id === this.state.selectedCandidate?.id)
                                         .map(r => new DetailsModel(r.structure, r.candidate, Components.SOURCE, Components.SOURCE, this.state.selectedRow))}/>
                     </Overlay>
                 }

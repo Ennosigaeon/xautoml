@@ -182,6 +182,7 @@ ${ID}_dt
                                 <span>Max. Leaf Nodes</span>
                                 <Slider min={0} max={this.ticks.length - 1}
                                         defaultValue={this.ticks.indexOf(dt.max_leaf_nodes)}
+                                        value={this.ticks.indexOf(dt.max_leaf_nodes)}
                                         step={null} marks={marks}
                                         onChange={this.onMaxLeavesChange}/>
                             </div>

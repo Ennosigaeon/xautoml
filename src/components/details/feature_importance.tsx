@@ -152,34 +152,34 @@ ${ID}_pdp
 
         return (
             <>
-                <div style={{height: '250px', flexGrow: 1}}>
-                    <LoadingIndicator loading={data === undefined}/>
-                    {pdp &&
-                        <>
-                            <div style={{display: "flex", justifyContent: "space-between", marginBottom: '1em'}}
-                                 className={'pdp'}>
-                                <Heading help={PDPComp.HELP}>
-                                    <h4>
-                                        Partial Dependencies for Feature <i>{feature}</i> and class&nbsp;
-                                        {this.props.data.size > 2 ?
-                                            <FormControl variant="standard" size="small">
-                                                <Select value={this.state.clazz}
-                                                        onChange={this.handleClassChange}
-                                                        style={{marginLeft: '10px', marginRight: '10px'}}>
-                                                    {Array.from(this.props.data.keys()).map(clazz => <MenuItem
-                                                        value={clazz}>{clazz}</MenuItem>)}
-                                                </Select>
-                                            </FormControl> : <i>{this.state.clazz}</i>
-                                        }</h4>
-                                </Heading>
-                                <JupyterButton onClick={this.exportDataFrame} active={this.context.canCreateCell()}/>
-                            </div>
+                <LoadingIndicator loading={data === undefined}/>
+                {pdp &&
+                    <>
+                        <div style={{display: "flex", justifyContent: "space-between", marginBottom: '1em'}}
+                             className={'pdp'}>
+                            <Heading help={PDPComp.HELP}>
+                                <h4>
+                                    Partial Dependencies for Feature <i>{feature}</i> and class&nbsp;
+                                    {this.props.data.size > 2 ?
+                                        <FormControl variant="standard" size="small">
+                                            <Select value={this.state.clazz}
+                                                    onChange={this.handleClassChange}
+                                                    style={{marginLeft: '10px', marginRight: '10px'}}>
+                                                {Array.from(this.props.data.keys()).map(clazz => <MenuItem
+                                                    value={clazz}>{clazz}</MenuItem>)}
+                                            </Select>
+                                        </FormControl> : <i>{this.state.clazz}</i>
+                                    }</h4>
+                            </Heading>
+                            <JupyterButton onClick={this.exportDataFrame} active={this.context.canCreateCell()}/>
+                        </div>
 
+                        <div style={{height: '250px', flexGrow: 1, marginBottom: '5px', marginRight: '5px'}}>
                             {typeof pdp.avg[0].x === 'number' && this.renderNumerical(data)}
                             {typeof pdp.avg[0].x === 'string' && this.renderCategorical(data)}
-                        </>
-                    }
-                </div>
+                        </div>
+                    </>
+                }
             </>
         )
     }

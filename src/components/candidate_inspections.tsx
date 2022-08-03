@@ -33,7 +33,7 @@ class DomainInsightsProps {
 export class DomainInsights extends React.Component<DomainInsightsProps> {
     render() {
         const {model, meta,} = this.props
-        const include = this.props.include === undefined ? ['performance', 'raw-dataset', 'feature-importance', 'global-surrogate'] : this.props.include
+        const include = (!this.props.include) ? ['performance', 'raw-dataset', 'feature-importance', 'global-surrogate'] : this.props.include
 
         return (
             <>
@@ -92,7 +92,7 @@ export class MLInsights extends React.Component<MLInsightsProps> {
 
     render() {
         const {model, meta, structures, explanations,} = this.props
-        const include = this.props.include === undefined ? ['config-origin', 'hp-importance'] : this.props.include
+        const include = (!this.props.include) ? ['config-origin', 'hp-importance'] : this.props.include
 
         return (
             <>

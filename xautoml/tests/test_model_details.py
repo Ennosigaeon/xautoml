@@ -89,7 +89,7 @@ def test_lime_for_auto_sklearn():
 
 def test_performance_data():
     main = get_31()
-    X, y, pipeline = main.pipeline('00:02:02')
+    X, y, pipeline = main.pipeline('00:02:00')
 
     details = ModelDetails()
     cm = details.calculate_performance_data(X, y, pipeline, 'roc_auc')

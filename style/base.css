@@ -121,11 +121,6 @@ tr.MuiTableRow-root.MuiTableRow-hover:hover {
     left: 0;
 }
 
-.recharts-surface {
-    overflow: visible;
-}
-
-
 /** Hierarchical Tree */
 .hierarchical-tree_node-container {
     display: flex;

@@ -160,7 +160,7 @@ class SingleHP extends React.Component<SingleHPProps> {
         }
 
         return (
-            <div>
+            <div style={{marginTop: '-125px'}}>
                 <div style={{display: "flex", alignItems: "end"}}>
                     <div>
                         <p>{description}</p>
@@ -170,7 +170,7 @@ class SingleHP extends React.Component<SingleHPProps> {
 
                 {additionalData && additionalData}
 
-                <div style={{height: '250px', width: '100%'}}>
+                <div style={{height: '250px', width: '100%', marginTop: '20px'}}>
                     <ResponsiveContainer>
                         {plot}
                     </ResponsiveContainer>
@@ -335,10 +335,11 @@ ${ID}_hp_interactions
                             marginLeft: '20px',
                             flexGrow: 1,
                             flexShrink: 1,
-                            minWidth: 'auto'
+                            minWidth: 'auto',
+                            marginTop: marginTop
                         }}>
                             {selectedRow === undefined ?
-                                <p style={{marginTop: marginTop}}>
+                                <p>
                                     Select a hyperparameter (pair) on the left side to get a detailed visualization of
                                     the correlation of the selected hyperparameter (pairs) in combination with the
                                     marginal performance.

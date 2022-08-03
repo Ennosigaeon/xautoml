@@ -61,7 +61,7 @@ export class HyperparameterTable extends React.Component<ConfigurationTableProps
             return <p>No Configuration</p>
         else
             return (
-                <Table className={'jp-RenderedHTMLCommon'}>
+                <Table className={'jp-RenderedHTMLCommon'} style={{display: 'block', overflowX: 'scroll'}}>
                     <TableBody>
                         {this.props.twoColumns ? this.renderTwoColumns() : this.renderSingleColumn()}
                     </TableBody>

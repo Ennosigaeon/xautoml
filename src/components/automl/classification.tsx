@@ -11,7 +11,7 @@ import {ClassifierConfiguration} from "./classifier_configuration";
 import {Box} from "@material-ui/core";
 import {IMimeBundle} from "@jupyterlab/nbformat";
 import ReactRoot from "../../xautoml";
-import {RunHistory} from "../../model";
+import {OptimizationData} from "../../model";
 import {GoDeploymentComponent} from "../usu_iap/deployment-dialog";
 import {IAPService} from "../usu_iap/service";
 import {PathExt} from "@jupyterlab/coreutils";
@@ -25,7 +25,7 @@ interface ClassificationRootState {
     classifierValid: boolean
     dataSetValid: boolean
 
-    runhistory: RunHistory
+    data: OptimizationData
 
     deploymentEnabled: boolean
 }
@@ -54,7 +54,7 @@ export class ClassificationRoot extends React.Component<ClassificationRootProps,
             classifierValid: true,
             dataSetValid: false,
 
-            runhistory: undefined,
+            data: undefined,
 
             deploymentEnabled: false
         }
@@ -114,7 +114,7 @@ optimize('${classifier.optimizer}', ${classifier.runtime}, ${classifier.timeout}
 from xautoml.gui import render_xautoml
 render_xautoml()
         `).then(response => {
-            this.setState({runhistory: response[this.props.mimeType] as unknown as RunHistory})
+            this.setState({data: OptimizationData.fromJson(response[this.props.mimeType] as unknown as OptimizationData)})
         })
     }
 
@@ -133,15 +133,14 @@ export('ENSEMBLE')
     }
 
     render() {
-        if (!!this.state.runhistory) {
-            const runHistory = RunHistory.fromJson(this.state.runhistory);
+        if (!!this.state.data) {
             const jupyter = new Jupyter(undefined, undefined, this.props.kernel.getSessionContext(), this.props.fileBrowserFactory)
-            return <ReactRoot runHistory={runHistory} entrypoint={'root'} kwargs={new Map()} jupyter={jupyter}/>
+            return <ReactRoot runHistory={this.state.data.runhistory} entrypoint={this.state.data.entrypoint} kwargs={new Map()} jupyter={jupyter}/>
         }
 
         return (
             <Box component={'div'} m={2} className={'automl'}>
-                {!this.state.runhistory &&
+                {!this.state.data &&
                     <>
                         <h1>AutoML Classification</h1>
                         <TwoColumnLayout flexShrinkLeft={"0.25"} flexGrowRight={"0.75"}>
