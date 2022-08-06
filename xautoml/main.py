@@ -558,17 +558,21 @@ class XAutoML:
         """
         return self.explain('leaderboard')
 
-    def explain_candidate(self, cid: CandidateId):
+    def explain_candidate(self, cid: CandidateId = None, rank: int = None):
         """
         Render the visualization containing only the insights for the provided candidate
-        :param cid: candidate id
+        :param cid: candidate id. Provide either cid or rank.
+        :param rank: rank of the candidate. Provide either cid or rank.
         """
+        cid = self._resolve_cid(cid, rank)
         return self.explain('candidate', cid=cid)
 
-    def explain_domain(self, cid: CandidateId, include: Set[str] = None, exclude: Set[str] = None):
+    def explain_domain(self, cid: CandidateId = None, rank: int = None, include: Set[str] = None,
+                       exclude: Set[str] = None):
         """
         Render the visualization containing only the domain insights for the provided candidate
-        :param cid: candidate id
+        :param cid: candidate id. Provide either cid or rank.
+        :param rank: rank of the candidate. Provide either cid or rank.
         :param include: List of views that should be rendered. Allowed values are {'performance', 'raw-dataset', 'feature-importance', 'global-surrogate'}.
         Can not be used together with :param exclude. If not provided all views will be included.
         :param exclude: List of views that should not be rendered. Allowed values are {'performance', 'raw-dataset', 'feature-importance', 'global-surrogate'}.
@@ -576,19 +580,45 @@ class XAutoML:
         """
         include = self._validate_inc_exc(include, exclude,
                                          {'performance', 'raw-dataset', 'feature-importance', 'global-surrogate'})
+        cid = self._resolve_cid(cid, rank)
         return self.explain('domain', cid=cid, include=include)
 
-    def explain_ml(self, cid: CandidateId, include: Set[str] = None, exclude: Set[str] = None):
+    def explain_ml(self, cid: CandidateId = None, rank: int = None, include: Set[str] = None, exclude: Set[str] = None):
         """
         Render the visualization containing only the machine learning insights for the provided candidate
-        :param cid: candidate id
+        :param cid: candidate id. Provide either cid or rank.
+        :param rank: rank of the candidate. Provide either cid or rank.
         :param include: List of views that should be rendered. Allowed values are {'config-origin', 'hp-importance'}.
         Can not be used together with :param exclude. If not provided all views will be included.
         :param exclude: List of views that should not be rendered. Allowed values are {'config-origin','hp-importance'}.
         Can not be used together with :param include. If not provided, no view will be excluded.
         """
         include = self._validate_inc_exc(include, exclude, {'config-origin', 'hp-importance'})
+        cid = self._resolve_cid(cid, rank)
         return self.explain('ml', cid=cid, include=include)
+
+    def explain_structure(self, cid: CandidateId = None, rank: int = None):
+        """
+        Render the visualization containing only the pipeline structure visualization the provided candidate
+        :param cid: candidate id. Provide either cid or rank.
+        :param rank: rank of the candidate. Provide either cid or rank.
+        """
+        cid = self._resolve_cid(cid, rank)
+        return self.explain('structure', cid=cid)
+
+    def _resolve_cid(self, cid: CandidateId, rank: int) -> CandidateId:
+        if cid is not None and rank is not None:
+            raise ValueError('Provide either cid or rank not both')
+        if cid is not None:
+            return cid
+        if rank is not None:
+            keys = sorted(
+                self.run_history.cid_to_candidate,
+                key=lambda key: self.run_history.cid_to_candidate[key].loss,
+                reverse=not self.run_history.meta.is_minimization
+            )
+            return keys[rank]
+        raise ValueError('Provide either cid or rank')
 
     @staticmethod
     def _validate_inc_exc(include: Set[str], exclude: Set[str], allowed: Set[str]) -> Set[str]:

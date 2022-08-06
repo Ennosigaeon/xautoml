@@ -265,6 +265,7 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
                 {entrypoint === 'candidate' && this.renderCandidate(true, true)}
                 {entrypoint === 'domain' && this.renderCandidate(true, false)}
                 {entrypoint === 'ml' && this.renderCandidate(false, true)}
+                {entrypoint === 'structure' && this.renderCandidate(false, false)}
             </JupyterContext.Provider>
         )
     }
