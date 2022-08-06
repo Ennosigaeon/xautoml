@@ -211,6 +211,8 @@ interface LeaderboardProps {
     onCandidateSelection: (cid: Set<CandidateId>) => void;
     onCandidateHide: (cid: CandidateId) => void;
     iapEnabled: boolean;
+
+    include: {domain: string[], ml: string[]}
 }
 
 interface LeaderboardState {
@@ -417,7 +419,7 @@ export class Leaderboard extends React.Component<LeaderboardProps, LeaderboardSt
                             iapEnabled={this.props.iapEnabled}
                             renderML={true}
                             renderDomain={true}
-                            include={undefined}
+                            include={this.props.include}
                             structures={structures}/>
                     </Overlay>
                 }

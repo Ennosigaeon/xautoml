@@ -127,7 +127,10 @@ interface CandidateInspectionsProps {
 
     renderDomain: boolean
     renderML: boolean
-    include: string[]
+    include: {
+        domain: string[],
+        ml: string[]
+    }
 
     iapEnabled: boolean
     onComparisonRequest: (type: ComparisonType, selectedRow: number) => void
@@ -245,33 +248,36 @@ export('${this.props.candidate.id}')
 
                 <TabPanel value={'1'}>
                     <DomainInsights model={model} meta={meta} onComparisonRequest={this.onComparisonRequest}
-                                    onSampleClick={this.handleSampleSelection} include={undefined}/>
+                                    onSampleClick={this.handleSampleSelection} include={this.props.include?.domain}/>
                 </TabPanel>
 
                 <TabPanel value={'2'}>
                     <MLInsights model={model} meta={meta} structures={structures} explanations={explanations}
-                                onComparisonRequest={this.onComparisonRequest} include={undefined}/>
+                                onComparisonRequest={this.onComparisonRequest} include={this.props.include?.ml}/>
                 </TabPanel>
             </TabContext>
         )
     }
 
     render() {
-        const {candidate, structure, meta, structures, explanations, renderDomain, renderML, include} = this.props
+        const {candidate, structure, meta, structures, explanations, include} = this.props
         const {selectedSample, componentId, componentLabel} = this.state
 
         const model = new DetailsModel(structure, candidate, componentId, componentLabel, selectedSample)
+
+        const renderDomain = this.props.renderDomain && (include?.domain === undefined || include?.domain?.length > 0)
+        const renderML = this.props.renderML && (include?.ml === undefined || include?.ml?.length > 0)
 
         return (
             <>
                 {(renderDomain && renderML) && this.renderAll(model)}
                 {(renderDomain && !renderML) &&
                     <DomainInsights model={model} meta={meta} onComparisonRequest={this.onComparisonRequest}
-                                    onSampleClick={this.handleSampleSelection} include={include}/>
+                                    onSampleClick={this.handleSampleSelection} include={include?.domain}/>
                 }
                 {(!renderDomain && renderML) &&
                     <MLInsights model={model} meta={meta} structures={structures} explanations={explanations}
-                                onComparisonRequest={this.onComparisonRequest} include={include}/>
+                                onComparisonRequest={this.onComparisonRequest} include={include?.ml}/>
                 }
                 {(!renderDomain && !renderML) &&
                     <PipelineVisualizationComponent structure={model.structure.pipeline}

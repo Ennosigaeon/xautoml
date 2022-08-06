@@ -9,6 +9,9 @@ from xautoml.graph_similarity import pipeline_to_networkx, export_json
 
 CandidateId = str
 
+CANDIDATE_KEYS = {'domain', 'ml'}
+DOMAIN_KEYS = {'performance', 'raw-dataset', 'feature-importance', 'global-surrogate'}
+ML_KEYS = {'config-origin', 'hp-importance'}
 
 @dataclass()
 class MetaInformation:

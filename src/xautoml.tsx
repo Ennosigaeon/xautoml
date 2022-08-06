@@ -142,7 +142,8 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
 
     private renderLeaderBoard() {
         const {runHistory} = this.props
-        const {selectedCandidates, showCandidate, iapEnabled, hideUnselected} = this.state
+        const {selectedCandidates, showCandidate, iapEnabled, hideUnselected, } = this.state
+        const include = this.props.kwargs.get('include') as {ml: string[], domain: string[]}
 
         return (
             <Leaderboard structures={runHistory.structures}
@@ -153,6 +154,7 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
                          explanations={runHistory.explanations}
                          showCandidate={showCandidate}
                          iapEnabled={iapEnabled}
+                         include={include}
                          onCandidateSelection={this.onCandidateSelection}
                          onCandidateHide={this.onCandidateHide}/>
         )
@@ -227,7 +229,7 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
         const {iapEnabled} = this.state
 
         const candidate = runHistory.candidateMap.get(this.props.kwargs.get('cid'))
-        const include = this.props.kwargs.get('include') as string[]
+        const include = this.props.kwargs.get('include') as {ml: string[], domain: string[]}
         const structure = runHistory.structures.find(s => s.configs.find(c => c.id === candidate.id) !== undefined)
 
         return (
