@@ -1,27 +1,32 @@
-Evaluated Candidates,
-T01,What performance does the best pipeline have?
-T02,Is the best pipeline performing significantly better than the rest?
-T03,Are better pipelines found over time?
-T04,How many pipelines were generated in total?
-T05,How many pipelines use an <ALGORITHM> as first step in pipeline?
-,
-Candidate Inspection,
-T10,What steps does the pipeline have?
-T11,Which classifier does the pipeline use?
-T12,Are there some steps in the pipeline that do not have to be there?
-T13,How fast is a prediction using this pipeline?
-T14,Which are the most important hyperparameters?
-T15,Why was a single sample predicted as <CLASS>?
-T16,Do you understand how this pipeline was sampled?
-,
-Search Space,
-T20,What does the search space look like?
-T21,Which classifier was most often used in all candidates?
-T22,Are there some algorithms that were never evaluated?
-T23,How many hyperparameters does the random forest have?
-T24,What range should <HYPERPARAMETER> be to yield a good performance?
-T25,Can you explain the how the search algorithm works?
-,
-Ensemble Inspection,
-T30,Which is the most important member in the ensemble?
-T31,Are there models which should be removed from the ensemble?
+General,,
+All,T01,What performance does the best pipeline have?
+All,T02,Is the best pipeline performing significantly better than the rest?
+All,T03,Are better pipelines found over time?
+All,T04,How many pipelines were generated in total?
+All,T05,How long did the optimization take?
+All,T06,How was the optimization configured?
+,,
+Domain Expertise,,
+All,T10,What performance does the model have regarding specific metrics?
+All,T11,Why was a single sample predicted as <CLASS>?
+All,T12,How does this pipeline approximately work?
+All,T13,Which features are important?
+Experts,T14,Does the model produce sensible predictions?
+Experts,T15,Does the model select reasonable features for the predictions?
+Experts,T16,Are there superfluous features in the data set?
+,,
+ML Expertise,,
+All,T20,What steps does the pipeline have?
+All,T21,Which classifier does the pipeline use?
+All,T22,How fast is a prediction using this pipeline?
+Experts,T23,Which are the hyperparameters of this pipeline?
+Experts,T24,Which are the most important hyperparameters?
+Experts,T25,What range should <HYPERPARAMETER> be to yield a good performance?
+,,
+AutoML Expertise,,
+All,T30,Can you explain the how the search algorithm for pipelines works?
+All,T31,Can you explain the how the search algorithm for hyperparameters works?
+Experts,T32,What does the search space look like?
+Experts,T33,How many hyperparameters does the random forest have?
+Experts,T34,Does the search algorithm converge to a local minimum?
+Experts,T35,Do you think the underlying search space is well selected?
