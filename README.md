@@ -67,6 +67,16 @@ main.explain()
 
 ### Checking Only Specific Aspects
 
+If you want to see only specific information in XAutoML, you can include only specific visualizations. For example,
+if you only want to validate the model behaviour, you can exclude all technical ML details by using
+
+```python
+main.explain(include={'overview', 'candidate:domain', 'ensemble'})
+```
+
+
+### Standalone Visualizations
+
 Instead of rendering the complete visualization, only specific standalone views can be rendered. For example, if you
 are only interested in checking the leaderboard, only it can be rendered using
 

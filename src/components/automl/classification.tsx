@@ -135,7 +135,7 @@ export('ENSEMBLE')
     render() {
         if (!!this.state.data) {
             const jupyter = new Jupyter(undefined, undefined, this.props.kernel.getSessionContext(), this.props.fileBrowserFactory)
-            return <ReactRoot runHistory={this.state.data.runhistory} entrypoint={this.state.data.entrypoint} kwargs={new Map()} jupyter={jupyter}/>
+            return <ReactRoot runHistory={this.state.data.runhistory} entrypoint={this.state.data.entrypoint} kwargs={new Map()} jupyter={jupyter} include={ReactRoot.CHILD_VIEWS}/>
         }
 
         return (

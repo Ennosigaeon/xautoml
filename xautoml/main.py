@@ -15,7 +15,7 @@ from xautoml.ensemble import EnsembleInspection
 from xautoml.graph_similarity import pipeline_to_networkx, GraphMatching, export_json
 from xautoml.hp_importance import HPImportance
 from xautoml.model_details import ModelDetails, DecisionTreeResult, LimeResult, GlobalSurrogateResult
-from xautoml.models import RunHistory, CandidateId, CandidateStructure, ML_KEYS, DOMAIN_KEYS, CANDIDATE_KEYS
+from xautoml.models import RunHistory, CandidateId, CandidateStructure, ML_KEYS, DOMAIN_KEYS, ROOT_KEYS, CANDIDATE_KEYS
 from xautoml.output import DESCRIPTION, OutputCalculator, COMPLETE
 from xautoml.roc_auc import RocCurve
 from xautoml.util import pipeline_utils
@@ -525,10 +525,7 @@ class XAutoML:
             }
         }
 
-    def explain(self, entrypoint: str = 'root', **kwargs):
-        """
-        Render the visualization for the complete optimization run
-        """
+    def _explain(self, entrypoint: str = 'root', **kwargs):
         try:
             self._entrypoint = entrypoint
             self._kwargs = kwargs
@@ -540,43 +537,71 @@ class XAutoML:
         except ImportError:
             return str(self)
 
+    def explain(self, include: Set[str] = None, exclude: Set[str] = None):
+        """
+        Render the visualization for the complete optimization run
+
+        :param include: Dict of lists of views that should be rendered. Allowed keys are `{'overview', 'leaderboard', 'search_space', 'ensemble'}`
+           and listed in :func:`~XAutoML.explain_leaderboard`. Can not be used together with :param exclude. If not
+           provided all views will be included.
+        :param exclude: List of views that should not be rendered. Allowed keys are `{'overview', 'leaderboard', 'search_space', 'ensemble'}`
+           and listed in :func:`~XAutoML.explain_leaderboard`. Can not be used together with :param include. If not
+           provided, no view will be excluded.
+        """
+        include = {} if include is None else include
+        exclude = {} if exclude is None else exclude
+
+        replacements = [('leaderboard', CANDIDATE_KEYS), ('candidate:domain', DOMAIN_KEYS), ('candidate:ml', ML_KEYS)]
+        include = XAutoML._expand_restrictions(include, replacements)
+        exclude = XAutoML._expand_restrictions(exclude, replacements)
+
+        allowed = ROOT_KEYS.copy()
+        allowed.update(DOMAIN_KEYS, ML_KEYS)
+        include = XAutoML._validate_inc_exc(include, exclude, allowed)
+
+        return self._explain('root', include=include)
+
     def explain_search_space(self):
         """
         Render the visualization containing only the search space
         """
-        return self.explain('search_space')
+        return self._explain('search_space')
 
     def explain_ensemble(self):
         """
         Render the visualization containing only the ensemble
         """
-        return self.explain('ensemble')
+        return self._explain('ensemble')
 
-    def explain_leaderboard(self, include: Dict[str, Set[str]] = None, exclude: Dict[str, Set[str]] = None):
+    def explain_leaderboard(self, include: Set[str] = None, exclude: Set[str] = None):
         """
         Render the visualization containing only the leaderboard and candidate inspections
-        :param include: Dict of lists of views that should be rendered. Allowed keys are {'ml', 'domain'}.
-        Can not be used together with :param exclude. If not provided all views will be included.
-        :param exclude: List of views that should not be rendered. Allowed values are {'ml', 'domain'}.
-        Can not be used together with :param include. If not provided, no view will be excluded.
+        :param include: Dict of lists of views that should be rendered. Allowed keys are `{'candidate:domain', 'candidate:ml'}`
+           and listed in :func:`~XAutoML.explain_candidate`. Can not be used together with :param exclude. If not
+           provided all views will be included.
+        :param exclude: List of views that should not be rendered. Allowed keys are `{'candidate:domain', 'candidate:ml'}`
+           and listed in :func:`~XAutoML.explain_candidate`. Can not be used together with :param include. If not
+           provided, no view will be excluded.
         """
         include = self._validate_candidate_inc_exc(include, exclude)
-        return self.explain('leaderboard', include=include)
+        return self._explain('leaderboard', include=include)
 
-    def explain_candidate(self, cid: CandidateId = None, rank: int = None, include: Dict[str, Set[str]] = None,
-                          exclude: Dict[str, Set[str]] = None):
+    def explain_candidate(self, cid: CandidateId = None, rank: int = None, include: Set[str] = None,
+                          exclude: Set[str] = None):
         """
         Render the visualization containing only the insights for the provided candidate
         :param cid: candidate id. Provide either cid or rank.
         :param rank: rank of the candidate. Provide either cid or rank.
-        :param include: Dict of lists of views that should be rendered. Allowed keys are {'ml', 'domain'}.
-        Can not be used together with :param exclude. If not provided all views will be included.
-        :param exclude: List of views that should not be rendered. Allowed values are {'ml', 'domain'}.
-        Can not be used together with :param include. If not provided, no view will be excluded.
+        :param include: Dict of lists of views that should be rendered. Allowed keys are listed in
+          :func:`~XAutoML.explain_domain` and :func:`~XAutoML.explain_ml`. Can not be used together with :param exclude.
+          If not provided all views will be included.
+        :param exclude: List of views that should not be rendered. Allowed keys are listed in
+          :func:`~XAutoML.explain_domain` and :func:`~XAutoML.explain_ml`. Can not be used together with :param include.
+          If not provided, no view will be excluded.
         """
         cid = self._resolve_cid(cid, rank)
         include = self._validate_candidate_inc_exc(include, exclude)
-        return self.explain('candidate', cid=cid, include=include)
+        return self._explain('candidate', cid=cid, include=include)
 
     def explain_domain(self, cid: CandidateId = None, rank: int = None, include: Set[str] = None,
                        exclude: Set[str] = None):
@@ -584,28 +609,32 @@ class XAutoML:
         Render the visualization containing only the domain insights for the provided candidate
         :param cid: candidate id. Provide either cid or rank.
         :param rank: rank of the candidate. Provide either cid or rank.
-        :param include: List of views that should be rendered. Allowed values are {'performance', 'raw-dataset', 'feature-importance', 'global-surrogate'}.
-        Can not be used together with :param exclude. If not provided all views will be included.
-        :param exclude: List of views that should not be rendered. Allowed values are {'performance', 'raw-dataset', 'feature-importance', 'global-surrogate'}.
-        Can not be used together with :param include. If not provided, no view will be excluded.
+        :param include: List of views that should be rendered. Allowed values are {'candidate:domain:performance',
+          'candidate:domain:raw-dataset', 'candidate:domain:feature-importance', 'candidate:domain:global-surrogate'}.
+          Can not be used together with :param exclude. If not provided all views will be included.
+        :param exclude: List of views that should not be rendered. Allowed values are {'candidate:domain:performance',
+          'candidate:domain:raw-dataset', 'candidate:domain:feature-importance', 'candidate:domain:global-surrogate'}.
+          Can not be used together with :param include. If not provided, no view will be excluded.
         """
         include = self._validate_inc_exc(include, exclude, DOMAIN_KEYS)
         cid = self._resolve_cid(cid, rank)
-        return self.explain('domain', cid=cid, include={'domain': include})
+        return self._explain('candidate:domain', cid=cid, include=include)
 
     def explain_ml(self, cid: CandidateId = None, rank: int = None, include: Set[str] = None, exclude: Set[str] = None):
         """
         Render the visualization containing only the machine learning insights for the provided candidate
         :param cid: candidate id. Provide either cid or rank.
         :param rank: rank of the candidate. Provide either cid or rank.
-        :param include: List of views that should be rendered. Allowed values are {'config-origin', 'hp-importance'}.
-        Can not be used together with :param exclude. If not provided all views will be included.
-        :param exclude: List of views that should not be rendered. Allowed values are {'config-origin','hp-importance'}.
-        Can not be used together with :param include. If not provided, no view will be excluded.
+        :param include: List of views that should be rendered. Allowed values are {'candidate:ml:config-origin',
+          'candidate:ml:hp-importance'}. Can not be used together with :param exclude. If not provided all views will be
+          included.
+        :param exclude: List of views that should not be rendered. Allowed values are {'candidate:ml:config-origin',
+          'candidate:ml:hp-importance'}. Can not be used together with :param include. If not provided, no view will be
+          excluded.
         """
         include = self._validate_inc_exc(include, exclude, ML_KEYS)
         cid = self._resolve_cid(cid, rank)
-        return self.explain('ml', cid=cid, include={'ml': include})
+        return self._explain('candidate:ml', cid=cid, include=include)
 
     def explain_structure(self, cid: CandidateId = None, rank: int = None):
         """
@@ -614,7 +643,7 @@ class XAutoML:
         :param rank: rank of the candidate. Provide either cid or rank.
         """
         cid = self._resolve_cid(cid, rank)
-        return self.explain('structure', cid=cid)
+        return self._explain('candidate:structure', cid=cid)
 
     def _resolve_cid(self, cid: CandidateId, rank: int) -> CandidateId:
         if cid is not None and rank is not None:
@@ -632,16 +661,19 @@ class XAutoML:
 
     @staticmethod
     def _validate_inc_exc(include: Set[str], exclude: Set[str], allowed: Set[str]) -> Set[str]:
-        if include is not None and exclude is not None:
+        include = include if include is not None else {}
+        exclude = exclude if exclude is not None else {}
+
+        if len(include) > 0 and len(exclude) > 0:
             raise ValueError('Provide either include or exclude not both')
 
-        if include is not None:
+        if len(include) > 0:
             include = set(include)
             add = include - allowed
             if len(add) > 0:
                 raise ValueError(f'Include must only contain values from {allowed}. Got {add}')
             return include
-        if exclude is not None:
+        if len(exclude) > 0:
             exclude = set(exclude)
             add = exclude - allowed
             if len(add) > 0:
@@ -650,14 +682,23 @@ class XAutoML:
         return allowed
 
     @staticmethod
-    def _validate_candidate_inc_exc(include: Dict[str, Set[str]], exclude: Dict[str, Set[str]]):
-        XAutoML._validate_inc_exc(set(include.keys()) if include is not None else None,
-                                  set(exclude.keys()) if exclude is not None else None,
-                                  CANDIDATE_KEYS)
+    def _validate_candidate_inc_exc(include: Set[str], exclude: Set[str]):
         include = {} if include is None else include
         exclude = {} if exclude is None else exclude
 
-        return {
-            'domain': XAutoML._validate_inc_exc(include.get('domain'), exclude.get('domain'), DOMAIN_KEYS),
-            'ml': XAutoML._validate_inc_exc(include.get('ml'), exclude.get('ml'), ML_KEYS)
-        }
+        replacements = [('candidate:domain', DOMAIN_KEYS), ('candidate:ml', ML_KEYS)]
+        include = XAutoML._expand_restrictions(include, replacements)
+        exclude = XAutoML._expand_restrictions(exclude, replacements)
+
+        allowed = DOMAIN_KEYS.copy()
+        allowed.update(ML_KEYS)
+        include = XAutoML._validate_inc_exc(include, exclude, allowed)
+        return include
+
+    @staticmethod
+    def _expand_restrictions(set_: Set[str], replacements: List[Tuple[str, Set[str]]]):
+        for original, replacement in replacements:
+            if original in set_:
+                set_.remove(original)
+                set_.update(replacement)
+        return set_

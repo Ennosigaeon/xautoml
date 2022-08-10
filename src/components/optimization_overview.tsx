@@ -24,6 +24,8 @@ interface GeneralInformationState {
 
 export class GeneralInformation extends React.Component<GeneralInformationProps, GeneralInformationState> {
 
+    static CHILD_VIEWS = ['overview']
+
     constructor(props: GeneralInformationProps) {
         super(props)
         this.state = {timeline: [], openTab: '1'}

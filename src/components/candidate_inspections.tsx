@@ -31,13 +31,15 @@ class DomainInsightsProps {
 }
 
 export class DomainInsights extends React.Component<DomainInsightsProps> {
-    render() {
-        const {model, meta,} = this.props
-        const include = (!this.props.include) ? ['performance', 'raw-dataset', 'feature-importance', 'global-surrogate'] : this.props.include
 
+    static CHILD_VIEWS = ['candidate:domain:performance', 'candidate:domain:raw-dataset',
+        'candidate:domain:feature-importance', 'candidate:domain:global-surrogate']
+
+    render() {
+        const {model, meta, include} = this.props
         return (
             <>
-                {include.includes('performance') &&
+                {include.includes('candidate:domain:performance') &&
                     <CollapseComp name={'performance'} showInitial={include.length === 1}
                                   help={PerformanceDetailsComponent.HELP}
                                   onComparisonRequest={() => this.props.onComparisonRequest('performance')}>
@@ -46,7 +48,7 @@ export class DomainInsights extends React.Component<DomainInsightsProps> {
                     </CollapseComp>
                 }
 
-                {include.includes('raw-dataset') &&
+                {include.includes('candidate:domain:raw-dataset') &&
                     <CollapseComp name={'raw-dataset'} showInitial={include.length === 1} help={RawDataset.HELP}>
                         <h3>Data Set Preview</h3>
                         <TwoColumnLayout widthRight={'25%'}>
@@ -57,7 +59,7 @@ export class DomainInsights extends React.Component<DomainInsightsProps> {
                     </CollapseComp>
                 }
 
-                {include.includes('feature-importance') &&
+                {include.includes('candidate:domain:feature-importance') &&
                     <CollapseComp name={'feature-importance'} showInitial={false}
                                   help={FeatureImportanceComponent.HELP}
                                   onComparisonRequest={() => this.props.onComparisonRequest('feature_importance')}>
@@ -66,7 +68,7 @@ export class DomainInsights extends React.Component<DomainInsightsProps> {
                     </CollapseComp>
                 }
 
-                {include.includes('global-surrogate') &&
+                {include.includes('candidate:domain:global-surrogate') &&
                     <CollapseComp name={'global-surrogate'} showInitial={false} help={GlobalSurrogateComponent.HELP}
                                   onComparisonRequest={() => this.props.onComparisonRequest('global_surrogate')}>
                         <h3>Global Surrogate</h3>
@@ -90,14 +92,14 @@ class MLInsightsProps {
 
 export class MLInsights extends React.Component<MLInsightsProps> {
 
-    render() {
-        const {model, meta, structures, explanations,} = this.props
-        const include = (!this.props.include) ? ['config-origin', 'hp-importance'] : this.props.include
+    static CHILD_VIEWS = ['candidate:ml:configuration', 'candidate:ml:hp-importance']
 
+    render() {
+        const {model, meta, structures, explanations, include} = this.props
         return (
             <>
-                {include.includes('config-origin') &&
-                    <CollapseComp name={'config-origin'} showInitial={include.length === 1}
+                {include.includes('candidate:ml:configuration') &&
+                    <CollapseComp name={'configuration'} showInitial={include.length === 1}
                                   help={ConfigurationComponent.HELP}
                                   onComparisonRequest={() => this.props.onComparisonRequest('configuration')}>
                         <h3>Model Details</h3>
@@ -105,7 +107,7 @@ export class MLInsights extends React.Component<MLInsightsProps> {
                     </CollapseComp>
                 }
 
-                {include.includes('hp-importance') &&
+                {include.includes('candidate:ml:hp-importance') &&
                     <CollapseComp name={'hp-importance'} showInitial={include.length === 1} help={HPImportanceComp.HELP}
                                   onComparisonRequest={() => this.props.onComparisonRequest('hp_importance')}>
                         <h3>Hyperparameter Importance</h3>
@@ -127,10 +129,7 @@ interface CandidateInspectionsProps {
 
     renderDomain: boolean
     renderML: boolean
-    include: {
-        domain: string[],
-        ml: string[]
-    }
+    include: string[]
 
     iapEnabled: boolean
     onComparisonRequest: (type: ComparisonType, selectedRow: number) => void
@@ -147,6 +146,8 @@ export class CandidateInspections extends React.Component<CandidateInspectionsPr
 
     static contextType = JupyterContext;
     context: React.ContextType<typeof JupyterContext>;
+
+    static CHILD_VIEWS = DomainInsights.CHILD_VIEWS.concat(MLInsights.CHILD_VIEWS);
 
     constructor(props: CandidateInspectionsProps, context: React.ContextType<typeof JupyterContext>) {
         super(props, context);
@@ -248,12 +249,12 @@ export('${this.props.candidate.id}')
 
                 <TabPanel value={'1'}>
                     <DomainInsights model={model} meta={meta} onComparisonRequest={this.onComparisonRequest}
-                                    onSampleClick={this.handleSampleSelection} include={this.props.include?.domain}/>
+                                    onSampleClick={this.handleSampleSelection} include={this.props.include}/>
                 </TabPanel>
 
                 <TabPanel value={'2'}>
                     <MLInsights model={model} meta={meta} structures={structures} explanations={explanations}
-                                onComparisonRequest={this.onComparisonRequest} include={this.props.include?.ml}/>
+                                onComparisonRequest={this.onComparisonRequest} include={this.props.include}/>
                 </TabPanel>
             </TabContext>
         )
@@ -265,19 +266,19 @@ export('${this.props.candidate.id}')
 
         const model = new DetailsModel(structure, candidate, componentId, componentLabel, selectedSample)
 
-        const renderDomain = this.props.renderDomain && (include?.domain === undefined || include?.domain?.length > 0)
-        const renderML = this.props.renderML && (include?.ml === undefined || include?.ml?.length > 0)
+        const renderDomain = include.filter(i => DomainInsights.CHILD_VIEWS.includes(i)).length > 0
+        const renderML = include.filter(i => MLInsights.CHILD_VIEWS.includes(i)).length > 0
 
         return (
             <>
                 {(renderDomain && renderML) && this.renderAll(model)}
                 {(renderDomain && !renderML) &&
                     <DomainInsights model={model} meta={meta} onComparisonRequest={this.onComparisonRequest}
-                                    onSampleClick={this.handleSampleSelection} include={include?.domain}/>
+                                    onSampleClick={this.handleSampleSelection} include={include}/>
                 }
                 {(!renderDomain && renderML) &&
                     <MLInsights model={model} meta={meta} structures={structures} explanations={explanations}
-                                onComparisonRequest={this.onComparisonRequest} include={include?.ml}/>
+                                onComparisonRequest={this.onComparisonRequest} include={include}/>
                 }
                 {(!renderDomain && !renderML) &&
                     <PipelineVisualizationComponent structure={model.structure.pipeline}

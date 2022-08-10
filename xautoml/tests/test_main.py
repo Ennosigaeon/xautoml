@@ -106,3 +106,8 @@ def test_ensemble_overview():
 def test_ensemble_predictions():
     main = get_autosklearn()
     print(main._ensemble_predictions(15).data)
+
+
+def test_explain():
+    main = get_autosklearn()
+    print(main.explain(include={'overview', 'leaderboard'}).data)

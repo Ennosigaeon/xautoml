@@ -212,7 +212,7 @@ interface LeaderboardProps {
     onCandidateHide: (cid: CandidateId) => void;
     iapEnabled: boolean;
 
-    include: {domain: string[], ml: string[]}
+    include: string[];
 }
 
 interface LeaderboardState {
@@ -228,6 +228,8 @@ interface LeaderboardState {
 }
 
 export class Leaderboard extends React.Component<LeaderboardProps, LeaderboardState> {
+
+    static CHILD_VIEWS = CandidateInspections.CHILD_VIEWS
 
     constructor(props: LeaderboardProps) {
         super(props);

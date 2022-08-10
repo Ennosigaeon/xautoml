@@ -5,7 +5,16 @@ export type CandidateId = string
 export type ConfigValue = number | string | boolean
 export type Prediction = number | string | boolean
 export type Config = Map<string, ConfigValue>
-export type Entrypoint = 'root' | 'search_space' | 'ensemble' | 'leaderboard' | 'candidate' | 'domain' | 'ml' | 'structure'
+export type Entrypoint =
+    'root'
+    | 'overview'
+    | 'leaderboard'
+    | 'search_space'
+    | 'ensemble'
+    | 'candidate'
+    | 'candidate:domain'
+    | 'candidate:ml'
+    | 'candidate:structure'
 
 
 export namespace BO {

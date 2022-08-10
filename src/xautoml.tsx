@@ -52,13 +52,16 @@ export class JupyterWidget extends ReactWidget implements IRenderMime.IRenderer 
     protected render() {
         if (!this.data)
             return <p>Error loading data...</p>
-        return <ReactRoot runHistory={this.data.runhistory} entrypoint={this.data.entrypoint}
+
+        const include = (!this.data.kwargs.get('include')) ? ReactRoot.CHILD_VIEWS : this.data.kwargs.get('include')
+        return <ReactRoot runHistory={this.data.runhistory} entrypoint={this.data.entrypoint} include={include}
                           kwargs={this.data.kwargs} jupyter={this.jupyter}/>
     }
 }
 
 interface ReactRootProps {
     entrypoint: Entrypoint;
+    include: string[];
     kwargs: Map<string, any>;
     runHistory: RunHistory;
     jupyter: Jupyter;
@@ -75,6 +78,8 @@ interface ReactRootState {
 }
 
 export default class ReactRoot extends React.Component<ReactRootProps, ReactRootState> {
+
+    static CHILD_VIEWS = Leaderboard.CHILD_VIEWS.concat(SearchSpace.CHILD_VIEWS).concat(Ensemble.CHILD_VIEWS).concat(GeneralInformation.CHILD_VIEWS)
 
     private readonly container: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
 
@@ -142,8 +147,8 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
 
     private renderLeaderBoard() {
         const {runHistory} = this.props
-        const {selectedCandidates, showCandidate, iapEnabled, hideUnselected, } = this.state
-        const include = this.props.kwargs.get('include') as {ml: string[], domain: string[]}
+        const {selectedCandidates, showCandidate, iapEnabled, hideUnselected,} = this.state
+        const include = this.props.include
 
         return (
             <Leaderboard structures={runHistory.structures}
@@ -181,26 +186,29 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
     }
 
     private renderRoot() {
-        const {runHistory} = this.props
+        const {runHistory, include} = this.props
         const {selectedCandidates, openTab} = this.state
+        const renderLeaderboard = include.filter(i => Leaderboard.CHILD_VIEWS.includes(i)).length > 0
 
         return (
             <div style={{display: 'flex'}}>
-                <div style={{flexGrow: 0, flexShrink: 0, flexBasis: '275px', marginRight: '20px'}}>
-                    <GeneralInformation structures={runHistory.structures}
-                                        meta={runHistory.meta}
-                                        selectedCandidates={selectedCandidates}
-                                        onCandidateSelection={this.onCandidateSelection}/>
-                </div>
+                {include.includes('overview') &&
+                    <div style={{flexGrow: 0, flexShrink: 0, flexBasis: '275px', marginRight: '20px'}}>
+                        <GeneralInformation structures={runHistory.structures}
+                                            meta={runHistory.meta}
+                                            selectedCandidates={selectedCandidates}
+                                            onCandidateSelection={this.onCandidateSelection}/>
+                    </div>
+                }
                 <div style={{flexGrow: 2}}>
                     <TabContext value={openTab}>
                         <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
                             <Tabs value={openTab} onChange={this.switchTab} TabIndicatorProps={{
                                 style: {backgroundColor: Colors.HIGHLIGHT}
                             }}>
-                                <Tab label="Candidates" value={'1'}/>
-                                <Tab label="Search Space" value={'2'}/>
-                                <Tab label="Ensembles" value={'3'}/>
+                                {renderLeaderboard && <Tab label="Candidates" value={'1'}/>}
+                                {include.includes('search_space') && <Tab label="Search Space" value={'2'}/>}
+                                {include.includes('ensemble') && <Tab label="Ensembles" value={'3'}/>}
 
                                 <DivInTabs style={{marginLeft: 'auto', cursor: 'default'}}>
                                         <span className={'MuiTab-wrapper'}>
@@ -215,9 +223,10 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
                             </Tabs>
                         </Box>
 
-                        <TabPanel value={'1'}>{this.renderLeaderBoard()}</TabPanel>
-                        <TabPanel value={'2'}>{this.renderSearchSpace()}</TabPanel>
-                        <TabPanel value={'3'}>{this.renderEnsemble()}</TabPanel>
+                        {renderLeaderboard && <TabPanel value={'1'}>{this.renderLeaderBoard()}</TabPanel>}
+                        {include.includes('search_space') &&
+                            <TabPanel value={'2'}>{this.renderSearchSpace()}</TabPanel>}
+                        {include.includes('ensemble') && <TabPanel value={'3'}>{this.renderEnsemble()}</TabPanel>}
                     </TabContext>
                 </div>
             </div>
@@ -225,11 +234,10 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
     }
 
     private renderCandidate(renderDomain: boolean, renderML: boolean) {
-        const {runHistory} = this.props
+        const {runHistory, include} = this.props
         const {iapEnabled} = this.state
 
         const candidate = runHistory.candidateMap.get(this.props.kwargs.get('cid'))
-        const include = this.props.kwargs.get('include') as {ml: string[], domain: string[]}
         const structure = runHistory.structures.find(s => s.configs.find(c => c.id === candidate.id) !== undefined)
 
         return (
@@ -265,9 +273,9 @@ export default class ReactRoot extends React.Component<ReactRootProps, ReactRoot
                 {entrypoint === 'ensemble' && this.renderEnsemble()}
                 {entrypoint === 'leaderboard' && this.renderLeaderBoard()}
                 {entrypoint === 'candidate' && this.renderCandidate(true, true)}
-                {entrypoint === 'domain' && this.renderCandidate(true, false)}
-                {entrypoint === 'ml' && this.renderCandidate(false, true)}
-                {entrypoint === 'structure' && this.renderCandidate(false, false)}
+                {entrypoint === 'candidate:domain' && this.renderCandidate(true, false)}
+                {entrypoint === 'candidate:ml' && this.renderCandidate(false, true)}
+                {entrypoint === 'candidate:structure' && this.renderCandidate(false, false)}
             </JupyterContext.Provider>
         )
     }

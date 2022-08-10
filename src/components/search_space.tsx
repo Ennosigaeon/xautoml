@@ -30,6 +30,8 @@ interface SearchSpaceState {
 
 export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceState> {
 
+    static CHILD_VIEWS = ['search_space']
+
     private readonly cids: CandidateId[]
 
     constructor(props: SearchSpaceProps) {
@@ -187,7 +189,8 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
                 {structures.length > 0 &&
                     <div style={{display: 'flex'}}>
                         <div style={{flex: '1', overflowX: 'hidden', margin: 0, marginRight: '5px'}}>
-                            <CollapseComp name={'config-similarity'} showInitial={true} help={OptimizationProgress.HELP}>
+                            <CollapseComp name={'config-similarity'} showInitial={true}
+                                          help={OptimizationProgress.HELP}>
                                 <h3>Optimization Progress</h3>
                                 <OptimizationProgress structures={structures}
                                                       selectedCandidates={selectedCandidates}

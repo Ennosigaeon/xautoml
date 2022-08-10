@@ -32,6 +32,8 @@ interface EnsembleState {
 
 export class Ensemble extends React.Component<EnsembleProps, EnsembleState> {
 
+    static CHILD_VIEWS = ['ensemble']
+
     static contextType = JupyterContext;
     context: React.ContextType<typeof JupyterContext>;
 
