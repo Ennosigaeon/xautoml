@@ -371,16 +371,15 @@ div.structure-graph_tooltip {
 
 /** Parallel Coordinates */
 .pc-border {
-    fill: rgba(255, 255, 255, 0.85);
-    stroke: #DFE3E6;
+    fill: rgba(55, 121, 154, 0.33);
     stroke-width: 1px;
     pointer-events: all;
     cursor: pointer;
 }
 
 .pc-choice > .pc-border:hover {
-    stroke: var(--jp-brand-color1) !important;
-    fill: rgba(255, 255, 255, 0.4);
+    stroke: var(--hover-color) !important;
+    fill: rgba(171, 226, 251, 0.5);
     stroke-width: 1px;
 }
 
@@ -417,14 +416,14 @@ div.structure-graph_tooltip {
 }
 
 .pc-axis > path {
-    stroke: #b8b8b8;
+    stroke: #212121;
     stroke-width: 1px;
     pointer-events: none;
 }
 
 text.pc-axis-tick {
     font-size: 11px;
-    fill: #b8b8b8;
+    fill: #212121;
 }
 
 text.pc-axis-y-tick {

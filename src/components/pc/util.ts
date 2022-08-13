@@ -53,7 +53,7 @@ export namespace ParCord {
             const weights = axes.map(a => a.getWidthWeight() - 1)
             const ids = [].concat(...axes.map((a, i) => [a.id, ...Array(...Array(weights[i])).map((_, j) => `_${a.id}_${j}_`)]))
 
-            const scale = d3.scaleBand(ids, range).padding(0.1)
+            const scale = d3.scaleBand(ids, range).paddingInner(0.).paddingOuter(0.1)
             scales.push(scale)
         }
         return scales

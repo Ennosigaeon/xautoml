@@ -72,7 +72,7 @@ export class PCChoice extends React.Component<CPCPChoiceProps, {}> {
                 }
 
                 {!choice.isCollapsed() && <>
-                    {parent && <rect x={x} y={y} width={width} height={height} onClick={this.collapse}
+                    {parent && <rect x={x} y={y} width={width} height={height} onClick={this.collapse} rx={4} ry={4}
                                      className={'pc-border'}/>}
                     {columns.map(column => (
                         <g>
