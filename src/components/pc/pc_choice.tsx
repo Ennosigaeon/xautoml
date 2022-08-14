@@ -19,6 +19,8 @@ export class PCChoice extends React.Component<CPCPChoiceProps, {}> {
     static contextType = cpc.CPCContext;
     context: React.ContextType<typeof cpc.CPCContext>;
 
+    static PADDING = 5;
+
     constructor(props: CPCPChoiceProps) {
         super(props);
 
@@ -72,8 +74,9 @@ export class PCChoice extends React.Component<CPCPChoiceProps, {}> {
                 }
 
                 {!choice.isCollapsed() && <>
-                    {parent && <rect x={x} y={y} width={width} height={height} onClick={this.collapse} rx={4} ry={4}
-                                     className={'pc-border'}/>}
+                    {parent &&
+                        <rect x={x + PCChoice.PADDING} y={y} width={width - 2 * PCChoice.PADDING} height={height}
+                              onClick={this.collapse} rx={4} ry={4} className={'pc-border'}/>}
                     {columns.map(column => (
                         <g>
                             {column.map(row => <PCAxis key={row.id}
