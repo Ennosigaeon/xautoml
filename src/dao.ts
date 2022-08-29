@@ -89,7 +89,7 @@ export interface PerformanceData {
     val_score: number
     accuracy: number
     cm: ConfusionMatrixData
-    report: Map<string, { precision: number, recall: number, 'f1-support': number, support: number }>
+    report: Map<string, { precision: number, recall: number, 'f1-score': number, support: number }>
 }
 
 export interface ConfusionMatrixData {

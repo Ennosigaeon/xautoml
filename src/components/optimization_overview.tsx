@@ -1,13 +1,13 @@
-import MetaInformationTable from "./general/meta_information";
 import {CollapseComp} from "../util/collapse";
 import PerformanceTimeline, {TimelineRecord} from "./general/performance_timeline";
 import {RocCurve} from "./general/roc_curve";
 import React from "react";
-import {Candidate, CandidateId, MetaInformation, Structure} from "../model";
+import {Candidate, CandidateId, ConfigValue, MetaInformation, Structure} from "../model";
 import {TabContext, TabPanel} from "@material-ui/lab";
 import {Box, Tab, Tabs} from "@material-ui/core";
-import {Colors} from "../util";
+import {Colors, prettyPrint} from "../util";
 import PerformanceDistribution from "./general/performance_distribution";
+import {KeyValue} from "../util/KeyValue";
 
 
 interface GeneralInformationProps {
@@ -49,9 +49,34 @@ export class GeneralInformation extends React.Component<GeneralInformationProps,
         const {meta, selectedCandidates, onCandidateSelection} = this.props
         const {openTab} = this.state
 
+        const start = new Date(0)
+        start.setUTCSeconds(meta.start_time)
+        const end = new Date(0)
+        end.setUTCSeconds(meta.end_time)
+
+        const configValues: [string, ConfigValue][] = []
+        meta.config.forEach((value, key) => configValues.push([key, value]))
+
         return (
             <>
-                <MetaInformationTable meta={meta}/>
+                <CollapseComp name={'optimization-statistics'} showInitial={true}
+                              help={'View the most important settings and statistics for this optimization run.'}>
+                    <h4>Optimization Overview</h4>
+                    <>
+                        <KeyValue key_={'Framework'} value={meta.framework}/>
+                        {meta.openml_task !== undefined && meta.openml_fold !== undefined &&
+                            <KeyValue key_={'Data Set'} value={`Task ${meta.openml_task} on Fold ${meta.openml_fold}`}
+                                      href={`https://www.openml.org/t/${meta.openml_task}`}/>
+                        }
+                        <KeyValue key_={'Start Time'} value={start}/>
+                        <KeyValue key_={'End Time'} value={end}/>
+                        <KeyValue key_={'Metric'} value={meta.metric}/>
+                        <KeyValue key_={'Best Performance'} prec={4} value={meta.bestPerformance}/>
+                        <KeyValue key_={'Total Nr. Candidates'} value={meta.n_configs}/>
+                        <KeyValue key_={'Unique Structures'} value={meta.n_structures}/>
+                    </>
+                </CollapseComp>
+
                 <CollapseComp name={'performance-overview'} showInitial={true} help={PerformanceTimeline.HELP}>
                     <h4>Performance Overview</h4>
                     <TabContext value={openTab}>
@@ -77,6 +102,18 @@ export class GeneralInformation extends React.Component<GeneralInformationProps,
                 <CollapseComp name={'roc-curve'} showInitial={true} help={RocCurve.HELP}>
                     <h4>ROC Curve</h4>
                     <RocCurve selectedCandidates={selectedCandidates} height={250}/>
+                </CollapseComp>
+
+                <CollapseComp name={'optimization-settings'} showInitial={false}
+                              help={'View additional settings for this optimization run.'}>
+                    <h4>Optimization Configuration</h4>
+                    <>
+                        {configValues.map(([key, value]) =>
+                            <div className={'overview-row'} key={key}>
+                                {key}: {prettyPrint(value)}
+                            </div>
+                        )}
+                    </>
                 </CollapseComp>
             </>
         )

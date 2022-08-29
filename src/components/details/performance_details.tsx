@@ -85,14 +85,16 @@ ${ID}_cm
                     {data &&
                         <div className={'performance-wrapper'}>
                             <div style={{flexGrow: 0, flexShrink: 1,}}>
-                                <Heading help={'Displays the training and validation performance in addition with the' +
-                                    'validation accuracy. Furthermore, the training duration and time for creating' +
-                                    'predictions using this model are displayed.'}>
+                                <Heading help={'Displays the training and validation performance in addition with ' +
+                                    'the validation accuracy. Furthermore, the training duration and time for ' +
+                                    'creating predictions using this model are displayed. If multi-fidelity ' +
+                                    'approximations are used, the budget terms represents the generic budget used ' +
+                                    'for this candidate.'}>
                                     <h4>Metrics</h4>
                                 </Heading>
 
                                 <KeyValue key_={`Training ${meta.metric}`} value={model.candidate.loss} prec={4}/>
-                                <KeyValue key_={`Validation ${meta.metric}`} value={data.val_score} prec={4}/>
+                                <KeyValue key_={`Test ${meta.metric}`} value={data.val_score} prec={4}/>
                                 {meta.metric !== 'accuracy' &&
                                     <KeyValue key_={`Validation Accuracy`} value={data.accuracy} prec={4}/>}
                                 <KeyValue key_={'Training Duration'}
@@ -117,6 +119,7 @@ ${ID}_cm
                                             <TableCell component="th"/>
                                             <TableCell component="th" scope="row">Precision</TableCell>
                                             <TableCell component="th" scope="row">Recall</TableCell>
+                                            <TableCell component="th" scope="row">f1 Score</TableCell>
                                             <TableCell component="th" scope="row">Support</TableCell>
                                         </TableRow>
 
@@ -125,6 +128,7 @@ ${ID}_cm
                                                 <TableCell component="th" scope="col">{clazz}</TableCell>
                                                 <TableCell>{prettyPrint(data.report.get(clazz).precision)}</TableCell>
                                                 <TableCell>{prettyPrint(data.report.get(clazz).recall)}</TableCell>
+                                                <TableCell>{prettyPrint(data.report.get(clazz)['f1-score'])}</TableCell>
                                                 <TableCell>{prettyPrint(data.report.get(clazz).support)}</TableCell>
                                             </TableRow>
                                         )}
@@ -143,7 +147,8 @@ ${ID}_cm
                                 </Heading>
                                 <ConfusionMatrix cm={data.cm}/>
 
-                                <JupyterButton onClick={this.exportConfusionMatrix} active={this.context.canCreateCell()}/>
+                                <JupyterButton onClick={this.exportConfusionMatrix}
+                                               active={this.context.canCreateCell()}/>
                             </div>
 
                             <div style={{flexGrow: 0, flexBasis: "25%"}}>

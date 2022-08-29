@@ -355,7 +355,7 @@ export class Leaderboard extends React.Component<LeaderboardProps, LeaderboardSt
         const headCells: HeaderCell[] = [
             {id: 'id', numeric: false, sortable: true, label: 'Id', width: '60px'},
             {id: 'performance', numeric: true, sortable: true, label: 'Performance', width: '100px'},
-            {id: 'pred_time', numeric: true, sortable: true, label: 'Pred. Time', width: '120px'},
+            {id: 'pred_time', numeric: true, sortable: true, label: 'Pred. Time (sec)', width: '130px'},
             {id: 'length', numeric: true, sortable: true, label: 'Pipeline Length', width: '150px'},
             {id: 'classifier', numeric: false, sortable: true, label: 'Classifier', width: 'auto'},
         ];
