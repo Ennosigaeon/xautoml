@@ -171,7 +171,7 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
 
                 <CollapseComp name={'bayesian-explanations'} showInitial={true} help={ParallelCoordinates.HELP}>
                     <h3>Hyperparameter Optimization</h3>
-                    <ParallelCoordinates structures={structures}
+                    <ParallelCoordinates structures={structures.slice(0, 4)}
                                          perfAxis={{
                                              domain: [meta.bestPerformance, meta.worstPerformance],
                                              log: false,

@@ -1,7 +1,7 @@
 import * as cpc from "./model";
 import {PARENT_MARKER} from "./model";
 import * as d3 from "d3";
-import {BO, Candidate, ConfigValue, Structure} from "../../model";
+import {BO, Candidate, ConfigValue, PipelineStep, Structure} from "../../model";
 
 export namespace ParCord {
 
@@ -106,6 +106,9 @@ export namespace ParCord {
 
         structures.forEach(structure => {
             structure.pipeline.slice(1).forEach(step => {
+                if (filterStep(step)) {
+                    return
+                }
                 const idx = Math.max(-1, ...step.parentIds.map(pid => nameToIndex.get(pid))
                     .filter(pid => pid !== undefined)) + 1
                 nameToIndex.set(step.id, idx)
@@ -178,6 +181,9 @@ export namespace ParCord {
         const nameToIndex = new Map<string, number>()
         candidates.forEach(([_, structure]) => {
             structure.pipeline.slice(1).forEach(step => {
+                if (filterStep(step)) {
+                    return
+                }
                 const idx = Math.max(-1, ...step.parentIds.map(pid => nameToIndex.get(pid))
                     .filter(pid => pid !== undefined)) + 1
                 nameToIndex.set(step.id, idx)
@@ -188,6 +194,9 @@ export namespace ParCord {
         const lines = candidates.map(([candidate, structure]) => {
             const points = new Array<cpc.LinePoint>()
             structure.pipeline.slice(1).map(step => {
+                if (filterStep(step)) {
+                    return
+                }
                 const commonStepName = step.step_name
                 points.push(new cpc.LinePoint(`${nameToIndex.get(step.id)}.${commonStepName}.${PARENT_MARKER}`, commonStepName))
                 points.push(new cpc.LinePoint(`${nameToIndex.get(step.id)}.${commonStepName}`, step.label))
@@ -212,4 +221,12 @@ export namespace ParCord {
         }).sort((a, b) => a.timestamp - b.timestamp)
         return lines
     }
+}
+
+
+function filterStep(step: PipelineStep): boolean {
+    return step.id.startsWith('data_preprocessor:feature_type:categorical_transformer:encoding') ||
+        step.id.startsWith('data_preprocessor:feature_type:categorical_transformer:category_shift') ||
+        step.id.startsWith('data_preprocessor:feature_type:categorical_transformer:category_coalescence') ||
+        step.id.startsWith('data_preprocessor:feature_type:numerical_transformer:variance_threshold')
 }
