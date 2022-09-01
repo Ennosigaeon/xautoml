@@ -28,3 +28,10 @@
 - Filter Machine Learning insights by selected pipeline step
 - Std Bars in Importance view are not immediately loaded
 - Add hover to Optimization Progress (over even all) with minimal candidate information
+- Overlap ROC legend on left side
+- Optimization Configuration: object object
+- Auto-Sklearn Pipeline two steps selected
+- ConfigSpace Constants Name wrong
+- Ensemble overview at top
+- More details in performance overview (more bars)
+- Explain more feature in tooltips, e.g. ctrl+click, time slider, select HP name, ...
