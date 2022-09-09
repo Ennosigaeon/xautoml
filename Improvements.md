@@ -37,3 +37,5 @@
 - Explain more feature in tooltips, e.g. ctrl+click, time slider, select HP name, ...
 - Ctrl+Click should scroll to correct position
 - Add tooltip to table headers to explain columns
+- Filter/Sort By selected candidates
+- Fidelity -> Approximation Quality in Global Surrogate
