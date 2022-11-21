@@ -17,6 +17,9 @@ but we plan to add support for further AutoML systems. You can find a video intr
 [![XAutoML: A Visual Analytics Tool for Establishing Trust in Automated Machine Learning](https://yt-embed.herokuapp.com/embed?v=AyqMrdlds7o)](https://www.youtube.com/watch?v=AyqMrdlds7o "XAutoML: A Visual Analytics Tool for Establishing Trust in Automated Machine Learning")
 
 
+**Important:** XAutoML requires JavaScript support. This implies that embedded Jupyter Notebooks in VS Code, PyCharm,
+... may not work properly. Please use XAutoML in a browser for now.
+
 ## Install
 
 Create a new environment with python >= 3.7 and make sure swig is installed either on your system or inside the
