@@ -10,6 +10,8 @@ interface TwoColumnLayoutProps {
 
     flexGrowLeft: string
     flexGrowRight: string
+
+    children?: React.ReactNode
 }
 
 export class TwoColumnLayout extends React.PureComponent<TwoColumnLayoutProps> {
@@ -30,10 +32,20 @@ export class TwoColumnLayout extends React.PureComponent<TwoColumnLayoutProps> {
         const children = React.Children.toArray(this.props.children);
         return (
             <div style={{display: 'flex', justifyContent: 'space-around'}}>
-                <div style={{flex: `${flexGrowLeft} ${flexShrinkLeft} ${widthLeft}`, overflowX: 'hidden', margin: '5px', marginRight: '10px'}}>
+                <div style={{
+                    flex: `${flexGrowLeft} ${flexShrinkLeft} ${widthLeft}`,
+                    overflowX: 'hidden',
+                    margin: '5px',
+                    marginRight: '10px'
+                }}>
                     {children[0]}
                 </div>
-                <div style={{flex: `${flexGrowRight} ${flexShrinkRight} ${widthRight}`, margin: '5px', marginLeft: '10px', minWidth: 'auto'}}>
+                <div style={{
+                    flex: `${flexGrowRight} ${flexShrinkRight} ${widthRight}`,
+                    margin: '5px',
+                    marginLeft: '10px',
+                    minWidth: 'auto'
+                }}>
                     {children[1]}
                 </div>
             </div>

@@ -25,6 +25,8 @@ interface GraphNodeProps<Datum> extends GraphElementProps {
 
     onClick?: (d: Datum, e?: React.MouseEvent) => void;
     onAlternativeClick?: (d: Datum, e?: React.MouseEvent) => void;
+
+    children?: React.ReactNode
 }
 
 export class GraphNode<Datum> extends React.Component<GraphNodeProps<Datum>, {}> {

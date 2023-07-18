@@ -6,6 +6,7 @@ import {Close} from "@material-ui/icons";
 interface OverlayProps {
     title: string
     onClose: () => void
+    children?: React.ReactNode
 }
 
 interface OverlayState {

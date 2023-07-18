@@ -4,6 +4,7 @@ import React from "react";
 
 interface HeadingProps {
     help?: string
+    children?: React.ReactNode
 }
 
 export class Heading extends React.Component<HeadingProps> {

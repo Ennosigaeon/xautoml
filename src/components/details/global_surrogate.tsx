@@ -118,7 +118,10 @@ export class GlobalSurrogateComponent extends React.Component<GlobalSurrogatePro
         )
     }
 
-    private onMaxLeavesChange(idx: number) {
+    private onMaxLeavesChange(idx: number | number[]) {
+        if (Array.isArray(idx))
+            idx = idx[0]
+
         this.setState({dt: this.state.data.candidates[idx]})
         if (this.props.onDTIndexChange !== undefined)
             this.props.onDTIndexChange(idx)
@@ -187,7 +190,8 @@ ${ID}_dt
                                         onChange={this.onMaxLeavesChange}/>
                             </div>
                             <div style={{flexGrow: 1, alignSelf: "center"}}>
-                                <JupyterButton style={{float: "right"}} onClick={this.exportTree} active={this.context.canCreateCell()}/>
+                                <JupyterButton style={{float: "right"}} onClick={this.exportTree}
+                                               active={this.context.canCreateCell()}/>
                             </div>
                         </div>
                         {loading ? <LoadingIndicator loading={loading}/> :

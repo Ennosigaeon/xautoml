@@ -7,6 +7,7 @@ interface FlexibleSvgProps {
     onContainerChange?: (container: React.RefObject<HTMLDivElement>) => void
 
     _svg?: React.ForwardedRef<SVGSVGElement>
+    children?: React.ReactNode
 }
 
 interface FlexibleSvgState {

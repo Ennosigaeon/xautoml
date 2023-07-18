@@ -73,7 +73,10 @@ export class SearchSpace extends React.Component<SearchSpaceProps, SearchSpaceSt
         this.onHyperparameterReset = this.onHyperparameterReset.bind(this)
     }
 
-    private changeTimestamp(v: number) {
+    private changeTimestamp(v: number | number[]) {
+        if (Array.isArray(v))
+            v = v[0]
+
         if (this.cids.length <= 100)
             this.setState({timestamp: v})
         else

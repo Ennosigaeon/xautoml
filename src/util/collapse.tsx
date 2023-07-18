@@ -13,6 +13,7 @@ interface CollapseProps {
     help?: string
 
     onComparisonRequest?: () => void
+    children?: React.ReactNode
 }
 
 interface CollapseState {

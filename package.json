@@ -63,7 +63,7 @@
     "d3-dag": "^0.8.2",
     "memoize-one": "^6.0.0",
     "memoizee": "^0.4.15",
-    "rc-slider": "^9.7.0",
+    "rc-slider": "^10.2.1",
     "react-move": "^6.5.0",
     "recharts": "^2.1.8"
   },
