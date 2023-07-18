@@ -7,6 +7,7 @@ import pingouin as pg
 import seaborn as sns
 from scipy.stats import ttest_ind
 from sklearn.preprocessing import LabelEncoder
+from statsmodels.stats.multitest import multipletests
 
 pd.set_option('display.width', None)
 
@@ -232,13 +233,23 @@ def calculate_trust_result(text_df: pd.DataFrame, vis_df: pd.DataFrame):
 
     vis_df.columns = text_df.columns
     print('###### Trust (sec:insights + tab:evaluation_results) ######')
+    pvals = []
     for col in text_df.columns[:5]:
         text = text_df.loc[:, col]
         vis = vis_df.loc[:, col]
 
         t = ttest_ind(text.values, vis.values, alternative='less')
+        pvals.append(t.pvalue)
+
+    rejected, pvals2, alpha_sidak, alpha_bonferroni = multipletests(pvals, alpha=0.05, method='holm', is_sorted=False,
+                                                                   returnsorted=False)
+
+    for col, pval in zip(text_df.columns[:5], pvals2):
+        text = text_df.loc[:, col]
+        vis = vis_df.loc[:, col]
+
         print(
-            f'{col}, \({text.mean() + 1:.2f} \pm {text.std():.2f}\), \({vis.mean() + 1:.2f} \pm {vis.std():.2f}\), \(p = {t.pvalue:.2e}\), \(d = {cohen_d(text, vis):.2f}\)')
+            f'{col}, \({text.mean() + 1:.2f} \pm {text.std():.2f}\), \({vis.mean() + 1:.2f} \pm {vis.std():.2f}\), \(p = {pval:.2e}\), \(d = {cohen_d(text, vis):.2f}\)')
 
     text_de, vis_de = text_df[text_df['Domain Expert']], vis_df[vis_df['Domain Expert']]
     text_ar, vis_ar = text_df[text_df['AutoML Expert']], vis_df[vis_df['AutoML Expert']]
@@ -278,12 +289,39 @@ def index(df: pd.DataFrame, slice_) -> pd.DataFrame:
     return df2
 
 
+def calculate_prior_knowledge(df: pd.DataFrame):
+    print('###### Prior knowledge ######')
+
+    for df, name in zip([df, df[df['Domain Expert']], df[df['AutoML Expert']], df[df['ML Expert']]],
+                        ['All', 'Domain Expert', 'AutoML Expert', 'ML Expert']):
+        for col in df.columns[:5]:
+            print(f'{name} {col}, \({df[col].mean() + 1:.2f} \pm {df[col].std():.2f}\)')
+        print()
+
+
+def calculate_learning_effects(df: pd.DataFrame):
+    print('###### Learning effects ######')
+
+    answers = df.iloc[:, 11:22].dropna(axis=1)
+    reappearing = answers[df['Reappearing'] == 1]
+    new_ = answers[df['Reappearing'] == 0]
+
+    pvals = []
+    for col in reappearing.columns:
+        pvals.append(ttest_ind(reappearing[col], new_[col]).pvalue)
+    rejected, pvals2, alpha_sidak, alpha_bonferroni = multipletests(pvals, alpha=0.05, method='holm', is_sorted=False,
+                                                                    returnsorted=False)
+    print(pvals)
+
+
 questionnaire, requirements, tasks = load_data()
+calculate_learning_effects(questionnaire)
 print_visual_design(index(questionnaire, slice(23, 29)))
 calculate_sus(index(questionnaire, slice(30, 40)))
 plot_priority_distribution(requirements)
 calculate_task_success(tasks)
 calculate_trust_result(index(questionnaire, slice(11, 16)), index(questionnaire, slice(17, 22)))
+calculate_prior_knowledge(index(questionnaire, slice(41, 46)))
 
 print('Correlation ML expertise and understanding of ML model')
 print(questionnaire.iloc[:, [8, 12]].corr())
