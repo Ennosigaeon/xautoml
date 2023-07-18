@@ -1,6 +1,6 @@
-FROM jupyter/scipy-notebook:2022-05-09
+FROM jupyter/scipy-notebook:python-3.10
 
-ENV VERSION=0.1.3
+ENV VERSION=0.1.4
 
 COPY dist/xautoml-$VERSION.tar.gz /tmp/
 

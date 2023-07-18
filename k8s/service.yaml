@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+    name: xautoml
+    labels:
+        name: xautoml
+spec:
+    type: ClusterIP
+    ports:
+        -   port: 8888
+            targetPort: 8888
+            protocol: TCP
+            name: http
+    selector:
+        name: xautoml

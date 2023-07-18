@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: xautoml
+    labels:
+        name: xautoml
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            name: xautoml
+    template:
+        metadata:
+            labels:
+                name: xautoml
+        spec:
+            securityContext:
+                runAsUser: 0
+                fsGroup: 0
+            containers:
+                -   name: xautoml
+                    image: mz93/xautoml:latest
+                    imagePullPolicy: IfNotPresent
+                    ports:
+                        - containerPort: 8888
+                    command:
+                        - /bin/bash
+                        - -c
+                        - |
+                            start.sh jupyter lab --LabApp.token='fabos' --LabApp.ip='0.0.0.0' --LabApp.allow_root=True
+                    resources:
+                        requests:
+                            memory: 500Mi
+                            cpu: 250m
+            restartPolicy: Always

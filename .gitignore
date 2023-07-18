@@ -23,3 +23,4 @@ examples/_auto-sklearn_/
 _auto-sklearn_/
 examples/_dswizard_/
 _dswizard_/
+.yarn/
