@@ -71,7 +71,7 @@ export class DataSetSelector extends React.Component<DataSetProps, DataSetState>
         const fileDialog = FileDialog.getOpenFiles({
             manager: fileBrowser.model.manager,
             filter: value => {
-                return value.mimetype === 'text/csv'
+                return value.mimetype === 'text/csv' || value.type === 'directory'
             },
             title: 'Select'
         });
