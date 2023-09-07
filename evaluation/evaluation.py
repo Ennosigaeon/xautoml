@@ -1,5 +1,6 @@
 import math
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -110,7 +111,7 @@ def plot_priority_distribution(df: pd.DataFrame, group=True, aggregate=False):
         'Domain Expert': offset - mean.loc[mean['role'] == 'Domain Expert', 'y'].reset_index(drop=True),
         'Data Scientist': offset - mean.loc[mean['role'] == 'Data Scientist', 'y'].reset_index(drop=True),
         'AutoML Researcher': offset - mean.loc[mean['role'] == 'AutoML Researcher', 'y'].reset_index(drop=True),
-        'All': offset - data.groupby('x').mean()['y'].reset_index(drop=True)
+        'All': offset - data.groupby('x').mean(numeric_only=True)['y'].reset_index(drop=True)
     })
 
     print('Average card rank (tab:card_sorting_results)')
@@ -197,12 +198,16 @@ def plot_priority_distribution(df: pd.DataFrame, group=True, aggregate=False):
 
     print('\n\n')
 
-    sns.set_theme(style="whitegrid")
+    sns.set_theme()
     fig, ax = plt.subplots(1, 1, figsize=(15, 5))
     fig.tight_layout()
 
     sns.violinplot(data=data, x='x', y='y', hue='role', split=False, palette='pastel', ax=ax)
     sns.despine(left=True)
+
+    hatch = ['/', '\\', '.'] * len(data['x'].unique())
+    ihatch = iter(hatch)
+    _ = [i.set_hatch(next(ihatch)) for i in ax.get_children() if isinstance(i, mpl.collections.PolyCollection)]
 
     ax.set_ylim(-1, offset + 1)
     ax.set_yticklabels([])
@@ -210,16 +215,24 @@ def plot_priority_distribution(df: pd.DataFrame, group=True, aggregate=False):
     ax.set_xlabel(None)
     box = ax.get_position()
     ax.set_position([box.x0 + 0.015, box.y0 + box.height * 0.15, box.width, box.height * 0.8])
-    ax.legend(loc='upper center', bbox_to_anchor=(0.5, 1.13), ncol=3)
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, 1.13), ncol=4)
     if group:
         plt.xticks(rotation=15)
-        fig.text(0.0125, 0.2, 'least important', rotation=90, va='bottom')
-        fig.text(0.0125, 0.95, 'most important', rotation=90, va='top')
+        fig.text(0.04, 0.2, 'least important', rotation=90, va='bottom')
+        fig.text(0.04, 0.95, 'most important', rotation=90, va='top')
         ax.legend(loc='upper center', bbox_to_anchor=(0.5, 1.13), ncol=3)
     else:
         plt.xticks(rotation=25, ha='right', rotation_mode='anchor')
         fig.text(0.025, 0.225, 'least important', rotation=90, va='bottom')
         fig.text(0.025, 0.91, 'most important', rotation=90, va='top')
+
+    ihatch = iter(['//', '\\\\', '..'])
+    [i.set_hatch(next(ihatch)) for i in ax.get_legend().legendHandles]
+    for patch in ax.get_legend().get_patches():
+        patch.set_height(14)
+        patch.set_width(28)
+        patch.set_y(-3)
+
     fig.show()
     fig.savefig('requirement_cards.pdf')
 
@@ -242,7 +255,7 @@ def calculate_trust_result(text_df: pd.DataFrame, vis_df: pd.DataFrame):
         pvals.append(t.pvalue)
 
     rejected, pvals2, alpha_sidak, alpha_bonferroni = multipletests(pvals, alpha=0.05, method='holm', is_sorted=False,
-                                                                   returnsorted=False)
+                                                                    returnsorted=False)
 
     for col, pval in zip(text_df.columns[:5], pvals2):
         text = text_df.loc[:, col]
