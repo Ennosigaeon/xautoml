@@ -202,6 +202,7 @@ def plot_priority_distribution(df: pd.DataFrame, group=True, aggregate=False):
     fig, ax = plt.subplots(1, 1, figsize=(15, 5))
     fig.tight_layout()
 
+    # data = data[data['role'].isin({'Domain Expert', 'Data Scientist'})]
     sns.violinplot(data=data, x='x', y='y', hue='role', split=False, palette='pastel', ax=ax)
     sns.despine(left=True)
 
