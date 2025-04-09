@@ -24,3 +24,4 @@ _auto-sklearn_/
 examples/_dswizard_/
 _dswizard_/
 .yarn/
+venv/

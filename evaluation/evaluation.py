@@ -10,14 +10,16 @@ from scipy.stats import ttest_ind
 from sklearn.preprocessing import LabelEncoder
 from statsmodels.stats.multitest import multipletests
 
-pd.set_option('display.width', None)
+pd.set_option("display.width", None)
 
 
 def load_data():
-    questionnaire = pd.read_excel('XAutoML.xlsx')
+    questionnaire = pd.read_excel("XAutoML.xlsx")
 
     encoder = LabelEncoder()
-    encoder.classes_ = np.array(['strongly disagree', 'disagree', 'neutral', 'agree', 'strongly agree'])
+    encoder.classes_ = np.array(
+        ["strongly disagree", "disagree", "neutral", "agree", "strongly agree"]
+    )
 
     for c in questionnaire.columns:
         try:
@@ -27,14 +29,16 @@ def load_data():
             pass
     questionnaire.columns = questionnaire.columns.str.strip()
 
-    requirements = pd.read_excel('task_results.ods', sheet_name='Requirements', skiprows=1)
-    requirements = requirements.drop(index=[24], columns=['Unnamed: 1']).T
+    requirements = pd.read_excel(
+        "task_results.ods", sheet_name="Requirements", skiprows=1
+    )
+    requirements = requirements.drop(index=[24], columns=["Unnamed: 1"]).T
     requirements.columns = requirements.iloc[0]
     requirements = requirements[1:]
-    requirements = requirements.dropna(axis=0, how='any')
+    requirements = requirements.dropna(axis=0, how="any")
 
-    tasks = pd.read_excel('task_results.ods', sheet_name='Study 2')
-    tasks = tasks.dropna(axis=1, how='all').dropna(axis=0, how='all')
+    tasks = pd.read_excel("task_results.ods", sheet_name="Study 2")
+    tasks = tasks.dropna(axis=1, how="all").dropna(axis=0, how="all")
     tasks.index = tasks.iloc[:, 2]
     tasks.drop(columns=tasks.columns[:4], inplace=True)
 
@@ -44,9 +48,9 @@ def load_data():
 def calculate_sus(df: pd.DataFrame):
     invert = [False, True, False, True, False, True, False, True, False, True]
 
-    de = df[df['Domain Expert']]
-    ar = df[df['AutoML Expert']]
-    ds = df[df['ML Expert']]
+    de = df[df["Domain Expert"]]
+    ar = df[df["AutoML Expert"]]
+    ds = df[df["ML Expert"]]
 
     def proc_df(df: pd.DataFrame):
         for c, inv in zip(df.columns[:10], invert):
@@ -60,32 +64,56 @@ def calculate_sus(df: pd.DataFrame):
     ar, std_ar = proc_df(ar)
     ds, std_ds = proc_df(ds)
 
-    print('###### System Usability Score ######')
-    df = pd.DataFrame({'de': de, 'ds': ds, 'ar': ar, 'all': all, })
-    with pd.option_context('display.precision', 2):
+    print("###### System Usability Score ######")
+    df = pd.DataFrame(
+        {
+            "de": de,
+            "ds": ds,
+            "ar": ar,
+            "all": all,
+        }
+    )
+    with pd.option_context("display.precision", 2):
         print(df)
-        print(pd.DataFrame({'mean': df.sum(axis=0), 'std': [std_all, std_de, std_ar, std_ds]}))
-        print('\n\n')
+        print(
+            pd.DataFrame(
+                {"mean": df.sum(axis=0), "std": [std_all, std_de, std_ar, std_ds]}
+            )
+        )
+        print("\n\n")
 
 
 def print_visual_design(df: pd.DataFrame):
-    de = df[df['Domain Expert']].drop(columns=['Role', 'Domain Expert', 'ML Expert', 'AutoML Expert'])
-    ar = df[df['AutoML Expert']].drop(columns=['Role', 'Domain Expert', 'ML Expert', 'AutoML Expert'])
-    ds = df[df['ML Expert']].drop(columns=['Role', 'Domain Expert', 'ML Expert', 'AutoML Expert'])
-    df = df.drop(columns=['Role', 'Domain Expert', 'ML Expert', 'AutoML Expert'])
+    de = df[df["Domain Expert"]].drop(
+        columns=["Role", "Domain Expert", "ML Expert", "AutoML Expert"]
+    )
+    ar = df[df["AutoML Expert"]].drop(
+        columns=["Role", "Domain Expert", "ML Expert", "AutoML Expert"]
+    )
+    ds = df[df["ML Expert"]].drop(
+        columns=["Role", "Domain Expert", "ML Expert", "AutoML Expert"]
+    )
+    df = df.drop(columns=["Role", "Domain Expert", "ML Expert", "AutoML Expert"])
 
-    mean = pd.DataFrame([de.mean() + 1, ds.mean() + 1, ar.mean() + 1, df.mean() + 1], index=['DE', 'DS', 'AR', 'all']).T
-    std = pd.DataFrame([de.std(), ds.std(), ar.std(), df.std()], index=['DE', 'DS', 'AR', 'all']).T
+    mean = pd.DataFrame(
+        [de.mean() + 1, ds.mean() + 1, ar.mean() + 1, df.mean() + 1],
+        index=["DE", "DS", "AR", "all"],
+    ).T
+    std = pd.DataFrame(
+        [de.std(), ds.std(), ar.std(), df.std()], index=["DE", "DS", "AR", "all"]
+    ).T
 
-    print('###### Visual Design (tab:usability_results) ######')
+    print("###### Visual Design (tab:usability_results) ######")
     for idx, row in mean.iterrows():
-        print(f'{idx} \t\\({row[0]:.2f}\\)\t& \\({row[1]:.2f}\\)\t& \\({row[2]:.2f}\\)\t& \\({row[3]:.2f}\\) \\\\')
-    print('\n\n')
+        print(
+            f"{idx} \t\\({row[0]:.2f}\\)\t& \\({row[1]:.2f}\\)\t& \\({row[2]:.2f}\\)\t& \\({row[3]:.2f}\\) \\\\"
+        )
+    print("\n\n")
 
 
-def plot_priority_distribution(df: pd.DataFrame, group=True, aggregate=False):
+def plot_priority_distribution(df: pd.DataFrame, group=True, aggregate=True):
     def calc_user_group(value: str):
-        return value.strip().split('.')[0]
+        return value.strip().split(".")[0]
 
     x = []
     y = []
@@ -100,134 +128,154 @@ def plot_priority_distribution(df: pd.DataFrame, group=True, aggregate=False):
     y = 24 - np.array(y).flatten()
     m = np.array(m).flatten()
 
-    data = pd.DataFrame({'x': x, 'y': y, 'role': m})
+    data = pd.DataFrame({"x": x, "y": y, "role": m})
 
     if aggregate:
-        data['y'] = (data['y'] / 5).astype(int)
+        data["y"] = (data["y"] / 5).astype(int)
 
-    mean = data.groupby(by=['x', 'role']).mean().reset_index()
-    offset = data['y'].max() + 1
-    mean = pd.DataFrame({
-        'Domain Expert': offset - mean.loc[mean['role'] == 'Domain Expert', 'y'].reset_index(drop=True),
-        'Data Scientist': offset - mean.loc[mean['role'] == 'Data Scientist', 'y'].reset_index(drop=True),
-        'AutoML Researcher': offset - mean.loc[mean['role'] == 'AutoML Researcher', 'y'].reset_index(drop=True),
-        'All': offset - data.groupby('x').mean(numeric_only=True)['y'].reset_index(drop=True)
-    })
+    mean = data.groupby(by=["x", "role"]).mean().reset_index()
+    offset = data["y"].max() + 1
+    mean = pd.DataFrame(
+        {
+            "Domain Expert": offset
+            - mean.loc[mean["role"] == "Domain Expert", "y"].reset_index(drop=True),
+            "Data Scientist": offset
+            - mean.loc[mean["role"] == "Data Scientist", "y"].reset_index(drop=True),
+            "AutoML Researcher": offset
+            - mean.loc[mean["role"] == "AutoML Researcher", "y"].reset_index(drop=True),
+            "All": offset
+            - data.groupby("x").mean(numeric_only=True)["y"].reset_index(drop=True),
+        }
+    )
 
-    print('Average card rank (tab:card_sorting_results)')
+    print("Average card rank (tab:card_sorting_results)")
     for _, row in mean.iterrows():
-        print(f'\\({row[0]:.1f}\\)\t& \\({row[1]:.1f}\\)\t& \\({row[2]:.1f}\\)\t& \\({row[3]:.1f}\\) \\\\')
-    print('\n\n')
+        print(
+            f"\\({row[0]:.1f}\\)\t& \\({row[1]:.1f}\\)\t& \\({row[2]:.1f}\\)\t& \\({row[3]:.1f}\\) \\\\"
+        )
+    print("\n\n")
 
     if group:
         replacements = {
-            '#01': ['#02', '#03', '#04'],
-            '#05': ['#06', '#07', '#08'],
-            '#09': ['#10', '#11', '#12'],
-            '#15': ['#16'],
-            '#17': ['#18'],
-            '#19': ['#20'],
-            '#23': ['#24']
+            "#01": ["#02", "#03", "#04"],
+            "#05": ["#06", "#07", "#08"],
+            "#09": ["#10", "#11", "#12"],
+            "#15": ["#16"],
+            "#17": ["#18"],
+            "#19": ["#20"],
+            "#23": ["#24"],
         }
 
         for key, values in replacements.items():
             for value in values:
-                data.loc[data['x'] == value, 'x'] = key
+                data.loc[data["x"] == value, "x"] = key
 
         rename = {
-            '#01': 'R01-R04 Input Data',
-            '#05': 'R05-R08 Pre-Proc Data',
-            '#09': 'R09-R12 Feat-Eng Data',
-            '#13': 'R13 Complete Pipeline',
-            '#14': 'R14 Search Space',
-            '#15': 'R15-R16 Search Strategy',
-            '#17': 'R17-R18 Perf Metrics',
-            '#19': 'R19-R20 Explanations',
-            '#21': 'R21 View HP',
-            '#22': 'R22 Comp Perf',
-            '#23': 'R23-R24 Comp Pipe',
+            "#01": "R01-R04 Input Data",
+            "#05": "R05-R08 Pre-Proc Data",
+            "#09": "R09-R12 Feat-Eng Data",
+            "#13": "R13 Complete Pipeline",
+            "#14": "R14 Search Space",
+            "#15": "R15-R16 Search Strategy",
+            "#17": "R17-R18 Perf Metrics",
+            "#19": "R19-R20 Explanations",
+            "#21": "R21 View HP",
+            "#22": "R22 Comp Perf",
+            "#23": "R23-R24 Comp Pipe",
         }
     else:
         rename = {
-            '#01': 'R01 View Input',
-            '#02': 'R02 Desc Input',
-            '#03': 'R03 Input Stat',
-            '#04': 'R04 Plot Input',
-            '#05': 'R05 View Pre-Proc',
-            '#06': 'R06 Desc Pre-Proc',
-            '#07': 'R07 Pre-Proc Stat',
-            '#08': 'R08 Plot Pre-Proc',
-            '#09': 'R09 View Feat-Eng',
-            '#10': 'R10 Feat-Eng Stat',
-            '#11': 'R11 Plot Feat-Eng',
-            '#12': 'R12 Desc Feat-Eng',
-            '#13': 'R13 Complete Pipe',
-            '#14': 'R14 Search Space',
-            '#15': 'R15 Pipe Search Strat',
-            '#16': 'R16 HP Search Strat',
-            '#17': 'R17 View Perf Metrics',
-            '#18': 'R18 Plot Perf Visual',
-            '#19': 'R19 Global Expl',
-            '#20': 'R20 Local Expl',
-            '#21': 'R21 View HP',
-            '#22': 'R22 Comp Perf',
-            '#23': 'R23 Comp Pipe',
-            '#24': 'R24 Comp HP'
+            "#01": "R01 View Input",
+            "#02": "R02 Desc Input",
+            "#03": "R03 Input Stat",
+            "#04": "R04 Plot Input",
+            "#05": "R05 View Pre-Proc",
+            "#06": "R06 Desc Pre-Proc",
+            "#07": "R07 Pre-Proc Stat",
+            "#08": "R08 Plot Pre-Proc",
+            "#09": "R09 View Feat-Eng",
+            "#10": "R10 Feat-Eng Stat",
+            "#11": "R11 Plot Feat-Eng",
+            "#12": "R12 Desc Feat-Eng",
+            "#13": "R13 Complete Pipe",
+            "#14": "R14 Search Space",
+            "#15": "R15 Pipe Search Strat",
+            "#16": "R16 HP Search Strat",
+            "#17": "R17 View Perf Metrics",
+            "#18": "R18 Plot Perf Visual",
+            "#19": "R19 Global Expl",
+            "#20": "R20 Local Expl",
+            "#21": "R21 View HP",
+            "#22": "R22 Comp Perf",
+            "#23": "R23 Comp Pipe",
+            "#24": "R24 Comp HP",
         }
 
     for old, new in rename.items():
-        data.loc[data['x'] == old, 'x'] = new
+        data.loc[data["x"] == old, "x"] = new
 
     # TODO
-    # data.loc[data['role'] == 'AutoML Researcher', 'role'] = 'Data Scientist'
+    data.loc[data["role"] == "AutoML Researcher", "role"] = "Data Scientist"
 
-    print('Difference between user groups per card')
-    for card in data['x'].unique():
-        ds = data[(data['x'] == card) & (data['role'] == 'Data Scientist')]
-        de = data[(data['x'] == card) & (data['role'] == 'Domain Expert')]
-        ar = data[(data['x'] == card) & (data['role'] == 'AutoML Researcher')]
+    print("Difference between user groups per card")
+    for card in data["x"].unique():
+        ds = data[(data["x"] == card) & (data["role"] == "Data Scientist")]
+        de = data[(data["x"] == card) & (data["role"] == "Domain Expert")]
+        ar = data[(data["x"] == card) & (data["role"] == "AutoML Researcher")]
 
-        res = pg.welch_anova(dv='y', between='role', data=data[data['x'] == card])
-        if any(res['p-unc'] < 0.05):
-            print(f'{card}\n{pg.pairwise_gameshowell(dv="y", between="role", data=data[data["x"] == card])}')
+        res = pg.welch_anova(dv="y", between="role", data=data[data["x"] == card])
+        if any(res["p-unc"] < 0.05):
+            print(
+                f"{card}\n{pg.pairwise_gameshowell(dv='y', between='role', data=data[data['x'] == card])}"
+            )
 
         # t = f_oneway(ds['y'].values, de['y'].values, ar['y'].values)
         # t = ttest_ind(ar['y'].values, de['y'].values)
         # if t.pvalue < 0.05:
         #     print(f'{card} {t.pvalue:.5f}')
 
-    print('\n\n')
+    print("\n\n")
 
     sns.set_theme()
     fig, ax = plt.subplots(1, 1, figsize=(15, 5))
     fig.tight_layout()
+    plt.subplots_adjust(right=0.965)
 
     # data = data[data['role'].isin({'Domain Expert', 'Data Scientist'})]
-    sns.violinplot(data=data, x='x', y='y', hue='role', split=False, palette='pastel', ax=ax)
+    sns.violinplot(
+        data=data, x="x", y="y", hue="role", split=False, palette="pastel", ax=ax
+    )
     sns.despine(left=True)
 
-    hatch = ['/', '\\', '.'] * len(data['x'].unique())
+    hatch = ["/", "\\"] * len(data["x"].unique())
     ihatch = iter(hatch)
-    _ = [i.set_hatch(next(ihatch)) for i in ax.get_children() if isinstance(i, mpl.collections.PolyCollection)]
+    _ = [
+        i.set_hatch(next(ihatch))
+        for i in ax.get_children()
+        if isinstance(i, mpl.collections.PolyCollection)
+    ]
 
-    ax.set_ylim(-1, offset + 1)
+    ax.set_ylim(-1, offset)
     ax.set_yticklabels([])
     ax.set_ylabel(None)
     ax.set_xlabel(None)
+    ax.tick_params(axis="both", which="major", labelsize=14)
     box = ax.get_position()
-    ax.set_position([box.x0 + 0.015, box.y0 + box.height * 0.15, box.width, box.height * 0.8])
-    ax.legend(loc='upper center', bbox_to_anchor=(0.5, 1.13), ncol=4)
+    ax.set_position(
+        [box.x0 + 0.015, box.y0 + box.height * 0.15, box.width, box.height * 0.8]
+    )
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, 1.13), ncol=4)
     if group:
         plt.xticks(rotation=15)
-        fig.text(0.04, 0.2, 'least important', rotation=90, va='bottom')
-        fig.text(0.04, 0.95, 'most important', rotation=90, va='top')
-        ax.legend(loc='upper center', bbox_to_anchor=(0.5, 1.13), ncol=3)
+        fig.text(0.035, 0.2, "least important", rotation=90, va="bottom", fontsize=14)
+        fig.text(0.035, 0.95, "most important", rotation=90, va="top", fontsize=14)
+        ax.legend(loc="upper center", bbox_to_anchor=(0.5, 1.14), ncol=3, fontsize=14)
     else:
-        plt.xticks(rotation=25, ha='right', rotation_mode='anchor')
-        fig.text(0.025, 0.225, 'least important', rotation=90, va='bottom')
-        fig.text(0.025, 0.91, 'most important', rotation=90, va='top')
+        plt.xticks(rotation=25, ha="right", rotation_mode="anchor")
+        fig.text(0.025, 0.225, "least important", rotation=90, va="bottom")
+        fig.text(0.025, 0.91, "most important", rotation=90, va="top")
 
-    ihatch = iter(['//', '\\\\', '..'])
+    ihatch = iter(["//", "\\\\", ".."])
     [i.set_hatch(next(ihatch)) for i in ax.get_legend().legendHandles]
     for patch in ax.get_legend().get_patches():
         patch.set_height(14)
@@ -235,7 +283,7 @@ def plot_priority_distribution(df: pd.DataFrame, group=True, aggregate=False):
         patch.set_y(-3)
 
     fig.show()
-    fig.savefig('requirement_cards.pdf')
+    fig.savefig("requirement_cards.pdf")
 
 
 def calculate_trust_result(text_df: pd.DataFrame, vis_df: pd.DataFrame):
@@ -243,88 +291,97 @@ def calculate_trust_result(text_df: pd.DataFrame, vis_df: pd.DataFrame):
         nx = len(x)
         ny = len(y)
         dof = nx + ny - 2
-        return (x.mean() - y.mean()) / math.sqrt(((nx - 1) * x.std() ** 2 + (ny - 1) * y.std() ** 2) / dof)
+        return (x.mean() - y.mean()) / math.sqrt(
+            ((nx - 1) * x.std() ** 2 + (ny - 1) * y.std() ** 2) / dof
+        )
 
     vis_df.columns = text_df.columns
-    print('###### Trust (sec:insights + tab:evaluation_results) ######')
+    print("###### Trust (sec:insights + tab:evaluation_results) ######")
     pvals = []
     for col in text_df.columns[:5]:
         text = text_df.loc[:, col]
         vis = vis_df.loc[:, col]
 
-        t = ttest_ind(text.values, vis.values, alternative='less')
+        t = ttest_ind(text.values, vis.values, alternative="less")
         pvals.append(t.pvalue)
 
-    rejected, pvals2, alpha_sidak, alpha_bonferroni = multipletests(pvals, alpha=0.05, method='holm', is_sorted=False,
-                                                                    returnsorted=False)
+    rejected, pvals2, alpha_sidak, alpha_bonferroni = multipletests(
+        pvals, alpha=0.05, method="holm", is_sorted=False, returnsorted=False
+    )
 
     for col, pval in zip(text_df.columns[:5], pvals2):
         text = text_df.loc[:, col]
         vis = vis_df.loc[:, col]
 
         print(
-            f'{col}, \({text.mean() + 1:.2f} \pm {text.std():.2f}\), \({vis.mean() + 1:.2f} \pm {vis.std():.2f}\), \(p = {pval:.2e}\), \(d = {cohen_d(text, vis):.2f}\)')
+            f"{col}, \({text.mean() + 1:.2f} \pm {text.std():.2f}\), \({vis.mean() + 1:.2f} \pm {vis.std():.2f}\), \(p = {pval:.2e}\), \(d = {cohen_d(text, vis):.2f}\)"
+        )
 
-    text_de, vis_de = text_df[text_df['Domain Expert']], vis_df[vis_df['Domain Expert']]
-    text_ar, vis_ar = text_df[text_df['AutoML Expert']], vis_df[vis_df['AutoML Expert']]
-    text_ds, vis_ds = text_df[text_df['ML Expert']], vis_df[vis_df['ML Expert']]
+    text_de, vis_de = text_df[text_df["Domain Expert"]], vis_df[vis_df["Domain Expert"]]
+    text_ar, vis_ar = text_df[text_df["AutoML Expert"]], vis_df[vis_df["AutoML Expert"]]
+    text_ds, vis_ds = text_df[text_df["ML Expert"]], vis_df[vis_df["ML Expert"]]
 
     for col in text_df.columns[:5]:
         print(col)
         print(
-            f'\\({text_de[col].mean() + 1:.2f}\\)\t& \\({text_ds[col].mean() + 1:.2f}\\)\t& \\({text_ar[col].mean() + 1:.2f}\\)\t& \\({text_df[col].mean() + 1:.2f}\\) \\\\')
+            f"\\({text_de[col].mean() + 1:.2f}\\)\t& \\({text_ds[col].mean() + 1:.2f}\\)\t& \\({text_ar[col].mean() + 1:.2f}\\)\t& \\({text_df[col].mean() + 1:.2f}\\) \\\\"
+        )
         print(
-            f'\\({vis_de[col].mean() + 1:.2f}\\)\t& \\({vis_ds[col].mean() + 1:.2f}\\)\t& \\({vis_ar[col].mean() + 1:.2f}\\)\t& \\({vis_df[col].mean() + 1:.2f}\\) \\\\')
+            f"\\({vis_de[col].mean() + 1:.2f}\\)\t& \\({vis_ds[col].mean() + 1:.2f}\\)\t& \\({vis_ar[col].mean() + 1:.2f}\\)\t& \\({vis_df[col].mean() + 1:.2f}\\) \\\\"
+        )
 
-    print('\n\n')
+    print("\n\n")
 
 
 def calculate_task_success(df: pd.DataFrame):
     encoder = LabelEncoder()
-    encoder.classes_ = np.array(['n', 'y', '-'])
+    encoder.classes_ = np.array(["n", "y", "-"])
 
     for c in df.columns:
         df.loc[:, c] = encoder.transform(df.loc[:, c])
         df.loc[df[c] == 2, c] = np.nan
 
-    with pd.option_context('display.precision', 0):
-        print('Task success percentage (tab:study_tasks)')
+    with pd.option_context("display.precision", 0):
+        print("Task success percentage (tab:study_tasks)")
         print(df.mean(axis=1) * 100)
         print(df.mean().mean() * 100)
-        print('\n\n')
+        print("\n\n")
 
 
 def index(df: pd.DataFrame, slice_) -> pd.DataFrame:
     df2 = df.iloc[:, slice_]
-    df2['Role'] = df['Role']
-    df2['Domain Expert'] = df['I am a Domain Expert'] > 2
-    df2['ML Expert'] = df['I am an ML Expert'] > 2
-    df2['AutoML Expert'] = df['I am an AutoML Expert'] > 2
+    df2["Role"] = df["Role"]
+    df2["Domain Expert"] = df["I am a Domain Expert"] > 2
+    df2["ML Expert"] = df["I am an ML Expert"] > 2
+    df2["AutoML Expert"] = df["I am an AutoML Expert"] > 2
     return df2
 
 
 def calculate_prior_knowledge(df: pd.DataFrame):
-    print('###### Prior knowledge ######')
+    print("###### Prior knowledge ######")
 
-    for df, name in zip([df, df[df['Domain Expert']], df[df['AutoML Expert']], df[df['ML Expert']]],
-                        ['All', 'Domain Expert', 'AutoML Expert', 'ML Expert']):
+    for df, name in zip(
+        [df, df[df["Domain Expert"]], df[df["AutoML Expert"]], df[df["ML Expert"]]],
+        ["All", "Domain Expert", "AutoML Expert", "ML Expert"],
+    ):
         for col in df.columns[:5]:
-            print(f'{name} {col}, \({df[col].mean() + 1:.2f} \pm {df[col].std():.2f}\)')
+            print(f"{name} {col}, \({df[col].mean() + 1:.2f} \pm {df[col].std():.2f}\)")
         print()
 
 
 def calculate_learning_effects(df: pd.DataFrame):
-    print('###### Learning effects ######')
+    print("###### Learning effects ######")
 
     answers = df.iloc[:, 11:22].dropna(axis=1)
-    reappearing = answers[df['Reappearing'] == 1]
-    new_ = answers[df['Reappearing'] == 0]
+    reappearing = answers[df["Reappearing"] == 1]
+    new_ = answers[df["Reappearing"] == 0]
 
     pvals = []
     for col in reappearing.columns:
         pvals.append(ttest_ind(reappearing[col], new_[col]).pvalue)
-    rejected, pvals2, alpha_sidak, alpha_bonferroni = multipletests(pvals, alpha=0.05, method='holm', is_sorted=False,
-                                                                    returnsorted=False)
+    rejected, pvals2, alpha_sidak, alpha_bonferroni = multipletests(
+        pvals, alpha=0.05, method="holm", is_sorted=False, returnsorted=False
+    )
     print(pvals)
 
 
@@ -337,5 +394,5 @@ calculate_task_success(tasks)
 calculate_trust_result(index(questionnaire, slice(11, 16)), index(questionnaire, slice(17, 22)))
 calculate_prior_knowledge(index(questionnaire, slice(41, 46)))
 
-print('Correlation ML expertise and understanding of ML model')
+print("Correlation ML expertise and understanding of ML model")
 print(questionnaire.iloc[:, [8, 12]].corr())
